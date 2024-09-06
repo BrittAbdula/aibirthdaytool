@@ -1,0 +1,176 @@
+{
+    "extName": {
+      "message": "Geburtstags-KI"
+    },
+    "extDescription": {
+      "message": "KI-gesteuerter Geburtstagsnachrichtengenerator für verschiedene Empfänger und Anlässe."
+    },
+    "settings": {
+      "message": "Einstellungen"
+    },
+    "language": {
+      "message": "Sprache"
+    },
+    "recipient": {
+      "message": "Empfänger"
+    },
+    "selectRecipient": {
+      "message": "Empfänger auswählen"
+    },
+    "father": {
+      "message": "Vater (Papa)"
+    },
+    "mother": {
+      "message": "Mutter (Mama)"
+    },
+    "wife": {
+      "message": "Ehefrau"
+    },
+    "husband": {
+      "message": "Ehemann"
+    },
+    "boyfriend": {
+      "message": "Freund"
+    },
+    "girlfriend": {
+      "message": "Freundin"
+    },
+    "sister": {
+      "message": "Schwester"
+    },
+    "brother": {
+      "message": "Bruder"
+    },
+    "friend": {
+      "message": "Freund/in"
+    },
+    "classmate": {
+      "message": "Klassenkamerad/in"
+    },
+    "colleague": {
+      "message": "Kollege/in"
+    },
+    "other": {
+      "message": "Andere"
+    },
+    "specifyRecipient": {
+      "message": "Empfänger angeben (max. 100 Wörter)"
+    },
+    "enterRecipient": {
+      "message": "Empfänger eingeben"
+    },
+    "age": {
+      "message": "Alter"
+    },
+    "traits": {
+      "message": "Eigenschaften (Optional, max. 3)"
+    },
+    "tone": {
+      "message": "Ton (Optional)"
+    },
+    "selectTone": {
+      "message": "Ton auswählen"
+    },
+    "sincereandwarm": {
+      "message": "Aufrichtig und warmherzig"
+    },
+    "playfulandcute": {
+      "message": "Verspielt und niedlich"
+    },
+    "romanticandpoetic": {
+      "message": "Romantisch und poetisch"
+    },
+    "lightheartedandjoyful": {
+      "message": "Unbeschwert und fröhlich"
+    },
+    "inspirationalandencouraging": {
+      "message": "Inspirierend und ermutigend"
+    },
+    "thankful": {
+      "message": "Dankbar"
+    },
+    "formal": {
+      "message": "Formal"
+    },
+    "custom": {
+      "message": "Benutzerdefiniert"
+    },
+    "messageLength": {
+      "message": "Nachrichtenlänge (Optional)"
+    },
+    "short": {
+      "message": "Kurz (20-50 Wörter)"
+    },
+    "medium": {
+      "message": "Mittel (50-120 Wörter)"
+    },
+    "long": {
+      "message": "Lang (120-250 Wörter)"
+    },
+    "customTone": {
+      "message": "Benutzerdefinierter Ton (max. 100 Wörter)"
+    },
+    "enterCustomTone": {
+      "message": "Benutzerdefinierten Ton eingeben"
+    },
+    "messageLanguage": {
+      "message": "Nachrichtensprache (Optional)"
+    },
+    "generateMessage": {
+      "message": "Geburtstagsnachricht generieren"
+    },
+    "stop": {
+      "message": "Stopp"
+    },
+    "copy": {
+      "message": "Kopieren"
+    },
+    "dependable": {
+      "message": "Zuverlässig"
+    },
+    "loyal": {
+      "message": "Treu"
+    },
+    "thoughtful": {
+      "message": "Rücksichtsvoll"
+    },
+    "supportive": {
+      "message": "Unterstützend"
+    },
+    "kind": {
+      "message": "Freundlich"
+    },
+    "creative": {
+      "message": "Kreativ"
+    },
+    "energetic": {
+      "message": "Energiegeladen"
+    },
+    "spontaneous": {
+      "message": "Spontan"
+    },
+    "adventurous": {
+      "message": "Abenteuerlustig"
+    },
+    "fulloflife": {
+      "message": "Voller Leben"
+    },
+    "affectionate": {
+      "message": "Liebevoll"
+    },
+    "witty": {
+      "message": "Geistreich"
+    },
+    "fun": {
+      "message": "Spaßig"
+    },
+    "humorous": {
+      "message": "Humorvoll"
+    },
+    "smart": {
+      "message": "Klug"
+    },
+    "beautiful": {
+      "message": "Schön"
+    }
+  }

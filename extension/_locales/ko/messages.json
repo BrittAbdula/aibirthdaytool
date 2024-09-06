@@ -1,0 +1,176 @@
+{
+    "extName": {
+      "message": "생일 AI"
+    },
+    "extDescription": {
+      "message": "다양한 수신자와 상황에 맞는 AI 기반 생일 메시지 생성기."
+    },
+    "settings": {
+      "message": "설정"
+    },
+    "language": {
+      "message": "언어"
+    },
+    "recipient": {
+      "message": "수신자"
+    },
+    "selectRecipient": {
+      "message": "수신자 선택"
+    },
+    "father": {
+      "message": "아버지 (아빠)"
+    },
+    "mother": {
+      "message": "어머니 (엄마)"
+    },
+    "wife": {
+      "message": "아내"
+    },
+    "husband": {
+      "message": "남편"
+    },
+    "boyfriend": {
+      "message": "남자친구"
+    },
+    "girlfriend": {
+      "message": "여자친구"
+    },
+    "sister": {
+      "message": "자매"
+    },
+    "brother": {
+      "message": "형제"
+    },
+    "friend": {
+      "message": "친구"
+    },
+    "classmate": {
+      "message": "동급생"
+    },
+    "colleague": {
+      "message": "동료"
+    },
+    "other": {
+      "message": "기타"
+    },
+    "specifyRecipient": {
+      "message": "수신자 지정 (최대 100단어)"
+    },
+    "enterRecipient": {
+      "message": "수신자 입력"
+    },
+    "age": {
+      "message": "나이"
+    },
+    "traits": {
+      "message": "특성 (선택사항, 최대 3개)"
+    },
+    "tone": {
+      "message": "톤 (선택사항)"
+    },
+    "selectTone": {
+      "message": "톤 선택"
+    },
+    "sincereandwarm": {
+      "message": "진실하고 따뜻한"
+    },
+    "playfulandcute": {
+      "message": "장난스럽고 귀여운"
+    },
+    "romanticandpoetic": {
+      "message": "로맨틱하고 시적인"
+    },
+    "lightheartedandjoyful": {
+      "message": "가볍고 즐거운"
+    },
+    "inspirationalandencouraging": {
+      "message": "영감을 주고 격려하는"
+    },
+    "thankful": {
+      "message": "감사한"
+    },
+    "formal": {
+      "message": "격식있는"
+    },
+    "custom": {
+      "message": "사용자 정의"
+    },
+    "messageLength": {
+      "message": "메시지 길이 (선택사항)"
+    },
+    "short": {
+      "message": "짧음 (20-50단어)"
+    },
+    "medium": {
+      "message": "중간 (50-120단어)"
+    },
+    "long": {
+      "message": "긴 (120-250단어)"
+    },
+    "customTone": {
+      "message": "사용자 정의 톤 (최대 100단어)"
+    },
+    "enterCustomTone": {
+      "message": "사용자 정의 톤 입력"
+    },
+    "messageLanguage": {
+      "message": "메시지 언어 (선택사항)"
+    },
+    "generateMessage": {
+      "message": "생일 메시지 생성"
+    },
+    "stop": {
+      "message": "중지"
+    },
+    "copy": {
+      "message": "복사"
+    },
+    "dependable": {
+      "message": "신뢰할 수 있는"
+    },
+    "loyal": {
+      "message": "충실한"
+    },
+    "thoughtful": {
+      "message": "사려 깊은"
+    },
+    "supportive": {
+      "message": "지지하는"
+    },
+    "kind": {
+      "message": "친절한"
+    },
+    "creative": {
+      "message": "창의적인"
+    },
+    "energetic": {
+      "message": "활기찬"
+    },
+    "spontaneous": {
+      "message": "자발적인"
+    },
+    "adventurous": {
+      "message": "모험적인"
+    },
+    "fulloflife": {
+      "message": "생기 넘치는"
+    },
+    "affectionate": {
+      "message": "애정 어린"
+    },
+    "witty": {
+      "message": "재치 있는"
+    },
+    "fun": {
+      "message": "재미있는"
+    },
+    "humorous": {
+      "message": "유머러스한"
+    },
+    "smart": {
+      "message": "똑똑한"
+    },
+    "beautiful": {
+      "message": "아름다운"
+    }
+  }

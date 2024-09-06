@@ -1,0 +1,176 @@
+{
+    "extName": {
+      "message": "IA d'anniversaire"
+    },
+    "extDescription": {
+      "message": "Générateur de messages d'anniversaire alimenté par l'IA pour divers destinataires et occasions."
+    },
+    "settings": {
+      "message": "Paramètres"
+    },
+    "language": {
+      "message": "Langue"
+    },
+    "recipient": {
+      "message": "Destinataire"
+    },
+    "selectRecipient": {
+      "message": "Sélectionner le destinataire"
+    },
+    "father": {
+      "message": "Père (Papa)"
+    },
+    "mother": {
+      "message": "Mère (Maman)"
+    },
+    "wife": {
+      "message": "Épouse"
+    },
+    "husband": {
+      "message": "Mari"
+    },
+    "boyfriend": {
+      "message": "Petit ami"
+    },
+    "girlfriend": {
+      "message": "Petite amie"
+    },
+    "sister": {
+      "message": "Sœur"
+    },
+    "brother": {
+      "message": "Frère"
+    },
+    "friend": {
+      "message": "Ami(e)"
+    },
+    "classmate": {
+      "message": "Camarade de classe"
+    },
+    "colleague": {
+      "message": "Collègue"
+    },
+    "other": {
+      "message": "Autre"
+    },
+    "specifyRecipient": {
+      "message": "Préciser le destinataire (max 100 mots)"
+    },
+    "enterRecipient": {
+      "message": "Entrer le destinataire"
+    },
+    "age": {
+      "message": "Âge"
+    },
+    "traits": {
+      "message": "Traits (Optionnel, max 3)"
+    },
+    "tone": {
+      "message": "Ton (Optionnel)"
+    },
+    "selectTone": {
+      "message": "Sélectionner le ton"
+    },
+    "sincereandwarm": {
+      "message": "Sincère et chaleureux"
+    },
+    "playfulandcute": {
+      "message": "Espiègle et mignon"
+    },
+    "romanticandpoetic": {
+      "message": "Romantique et poétique"
+    },
+    "lightheartedandjoyful": {
+      "message": "Léger et joyeux"
+    },
+    "inspirationalandencouraging": {
+      "message": "Inspirant et encourageant"
+    },
+    "thankful": {
+      "message": "Reconnaissant"
+    },
+    "formal": {
+      "message": "Formel"
+    },
+    "custom": {
+      "message": "Personnalisé"
+    },
+    "messageLength": {
+      "message": "Longueur du message (Optionnel)"
+    },
+    "short": {
+      "message": "Court (20-50 mots)"
+    },
+    "medium": {
+      "message": "Moyen (50-120 mots)"
+    },
+    "long": {
+      "message": "Long (120-250 mots)"
+    },
+    "customTone": {
+      "message": "Ton personnalisé (max 100 mots)"
+    },
+    "enterCustomTone": {
+      "message": "Entrer le ton personnalisé"
+    },
+    "messageLanguage": {
+      "message": "Langue du message (Optionnel)"
+    },
+    "generateMessage": {
+      "message": "Générer le message d'anniversaire"
+    },
+    "stop": {
+      "message": "Arrêter"
+    },
+    "copy": {
+      "message": "Copier"
+    },
+    "dependable": {
+      "message": "Fiable"
+    },
+    "loyal": {
+      "message": "Loyal"
+    },
+    "thoughtful": {
+      "message": "Attentionné"
+    },
+    "supportive": {
+      "message": "Encourageant"
+    },
+    "kind": {
+      "message": "Gentil"
+    },
+    "creative": {
+      "message": "Créatif"
+    },
+    "energetic": {
+      "message": "Énergique"
+    },
+    "spontaneous": {
+      "message": "Spontané"
+    },
+    "adventurous": {
+      "message": "Aventureux"
+    },
+    "fulloflife": {
+      "message": "Plein de vie"
+    },
+    "affectionate": {
+      "message": "Affectueux"
+    },
+    "witty": {
+      "message": "Spirituel"
+    },
+    "fun": {
+      "message": "Amusant"
+    },
+    "humorous": {
+      "message": "Humoristique"
+    },
+    "smart": {
+      "message": "Intelligent"
+    },
+    "beautiful": {
+      "message": "Beau/Belle"
+    }
+  }

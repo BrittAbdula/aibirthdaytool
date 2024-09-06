@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Birthday AI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="sidebar.css">
+</head>
+<body>
+    <div class="header">
+        <div class="logo">
+            <img src="images/logo.png" alt="EmojiTell Logo">
+            <span id="extName">Birthday AI</span>
+        </div>
+        <span class="material-icons settings-icon" id="settingsIcon">settings</span>
+    </div>
+
+    <div id="settingsPanel" style="display: none;">
+        <h2>Settings</h2>
+        <div class="form-group">
+            <label for="uiLanguage">Language</label>
+            <select id="uiLanguage">
+                <option value="en">English</option>
+                <option value="es">Español</option>
+                <option value="fr">Français</option>
+                <option value="de">Deutsch</option>
+                <option value="ar">العربية</option>
+                <option value="tw">繁體中文</option>
+                <option value="zh">中文</option>
+                <option value="ja">日本語</option>
+                <option value="ko">한국어</option>
+                <option value="tw">繁體中文</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="form-group">
+            <label for="recipient">Recipient</label>
+            <select id="recipient">
+                <option value="">Select Recipient</option>
+                <option value="Father">Father (Dad)</option>
+                <option value="Mother">Mother (Mom)</option>
+                <option value="Wife">Wife</option>
+                <option value="Husband">Husband</option>
+                <option value="Boyfriend">Boyfriend</option>
+                <option value="Girlfriend">Girlfriend</option>
+                <option value="Sister">Sister</option>
+                <option value="Brother">Brother</option>
+                <option value="Friend">Friend</option>
+                <option value="Classmate">Classmate</option>
+                <option value="Colleague">Colleague</option>
+                <option value="Other">Other</option>
+            </select>
+        </div>
+        <div class="form-group" id="otherRecipientGroup" style="display: none;">
+            <label for="otherRecipient">Specify Recipient (max 100 words)</label>
+            <input type="text" id="otherRecipient" placeholder="Enter recipient" maxlength="100">
+            <span id="otherRecipientWordCount">0/100</span>
+        </div>
+        <div class="form-group">
+            <label for="age">Age</label>
+            <div class="range-container">
+                <input type="range" id="age" min="1" max="120" value="30">
+                <span id="ageValue">30</span>
+            </div>
+        </div>
+        <div class="form-group">
+            <label  for="traitsContainer">Traits (Optional, max 3)</label>
+            <div class="traits-container" id="traitsContainer">
+                <div class="trait-bubble">Dependable</div>
+                <div class="trait-bubble">Loyal</div>
+                <div class="trait-bubble">Thoughtful</div>
+                <div class="trait-bubble">Supportive</div>
+                <div class="trait-bubble">Kind</div>
+                <div class="trait-bubble">Creative</div>
+                <div class="trait-bubble">Energetic</div>
+                <div class="trait-bubble">Spontaneous</div>
+                <div class="trait-bubble">Adventurous</div>
+                <div class="trait-bubble">Full of Life</div>
+                <div class="trait-bubble">Affectionate</div>
+                <div class="trait-bubble">Witty</div>
+                <div class="trait-bubble">Fun</div>
+                <div class="trait-bubble">Humorous</div>
+                <div class="trait-bubble">Smart</div>
+                <div class="trait-bubble">Beautiful</div>
+            </div>
+        </div>
+        <div class="form-group  optional-group">
+            <div class="flex-container">
+                <div class="flex-item">
+                    <label for="tone">Tone (Optional)</label>
+                    <select id="tone">
+                        <option value="">Select Tone</option>
+                        <option value="Sincere and Warm">Sincere and Warm</option>
+                        <option value="Playful and Cute">Playful and Cute</option>
+                        <option value="Romantic and Poetic">Romantic and Poetic</option>
+                        <option value="Lighthearted and Joyful">Lighthearted and Joyful</option>
+                        <option value="Inspirational and Encouraging">Inspirational and Encouraging</option>
+                        <option value="Thankful">Thankful</option>
+                        <option value="Formal">Formal</option>
+                        <option value="Custom">Custom</option>
+                    </select>
+                </div>
+                <div class="flex-item">
+                    <label for="messageLength">Message Length (Optional)</label>
+                    <select id="messageLength">
+                        <option value="Short">Short (20-50 words)</option>
+                        <option value="Medium">Medium (50-120 words)</option>
+                        <option value="Long">Long (120-250 words)</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        <div class="form-group" id="customToneGroup" style="display: none;">
+            <label for="customTone">Custom Tone (max 100 words)</label>
+            <input type="text" id="customTone" placeholder="Enter custom tone" maxlength="100">
+            <span id="customToneWordCount">0/100</span>
+        </div>
+        <div class="form-group">
+            <label for="language">Message Language (Optional)</label>
+            <select id="language">
+                <option value="English">English</option>
+                <option value="Español">Español</option>
+                <option value="हिन्दी">हिन्दी</option>
+                <option value="العربية">العربية</option>
+                <option value="日本語">日本語</option>
+                <option value="한국어">한국어</option>
+                <option value="繁體中文">繁體中文</option>
+                <option value="中文">中文</option>
+                <option value="Français">Français</option>
+                <option value="Русский">Русский</option>
+                <option value="Português">Português</option>
+                <option value="Deutsch">Deutsch</option>
+                <option value="Italiano">Italiano</option>
+            </select>
+        </div>
+        <button id="generate">Generate Birthday Message</button>
+        <div id="result" style="display: none;">
+            <div id="stopButtonContainer">
+                <button class="result-action-button" id="stopButton" title="Stop">
+                    <i class="material-icons">stop</i>
+                </button>
+            </div>
+            <div id="messageContent"></div>
+            <div class="result-actions">
+                <button class="result-action-button" id="copyButton" title="Copy">
+                    <i class="material-icons">content_copy</i>
+                </button>
+                <button class="result-action-button" id="closeButton" title="Close">
+                    <i class="material-icons">close</i>
+                </button>
+            </div>
+        </div>
+    </div>
+    <script src="sidebar.js"></script>
+</body>
+</html>

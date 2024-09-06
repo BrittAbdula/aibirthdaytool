@@ -1,0 +1,176 @@
+{
+  "extName": {
+    "message": "生日AI"
+  },
+  "extDescription": {
+    "message": "AI驱动的生日消息生成器，适用于各种收件人和场合。"
+  },
+  "settings": {
+    "message": "设置"
+  },
+  "language": {
+    "message": "语言"
+  },
+  "recipient": {
+    "message": "收件人"
+  },
+  "selectRecipient": {
+    "message": "选择收件人"
+  },
+  "father": {
+    "message": "父亲（爸爸）"
+  },
+  "mother": {
+    "message": "母亲（妈妈）"
+  },
+  "wife": {
+    "message": "妻子"
+  },
+  "husband": {
+    "message": "丈夫"
+  },
+  "boyfriend": {
+    "message": "男朋友"
+  },
+  "girlfriend": {
+    "message": "女朋友"
+  },
+  "sister": {
+    "message": "姐妹"
+  },
+  "brother": {
+    "message": "兄弟"
+  },
+  "friend": {
+    "message": "朋友"
+  },
+  "classmate": {
+    "message": "同学"
+  },
+  "colleague": {
+    "message": "同事"
+  },
+  "other": {
+    "message": "其他"
+  },
+  "specifyRecipient": {
+    "message": "指定收件人（最多100字）"
+  },
+  "enterRecipient": {
+    "message": "输入收件人"
+  },
+  "age": {
+    "message": "年龄"
+  },
+  "traits": {
+    "message": "特征（可选，最多3个）"
+  },
+  "tone": {
+    "message": "语气（可选）"
+  },
+  "selectTone": {
+    "message": "选择语气"
+  },
+  "sincereandwarm": {
+    "message": "诚挚温暖"
+  },
+  "playfulandcute": {
+    "message": "俏皮可爱"
+  },
+  "romanticandpoetic": {
+    "message": "浪漫诗意"
+  },
+  "lightheartedandjoyful": {
+    "message": "轻松愉快"
+  },
+  "inspirationalandencouraging": {
+    "message": "鼓舞激励"
+  },
+  "thankful": {
+    "message": "感恩"
+  },
+  "formal": {
+    "message": "正式"
+  },
+  "custom": {
+    "message": "自定义"
+  },
+  "messageLength": {
+    "message": "消息长度（可选）"
+  },
+  "short": {
+    "message": "短（20-50字）"
+  },
+  "medium": {
+    "message": "中（50-120字）"
+  },
+  "long": {
+    "message": "长（120-250字）"
+  },
+  "customTone": {
+    "message": "自定义语气（最多100字）"
+  },
+  "enterCustomTone": {
+    "message": "输入自定义语气"
+  },
+  "messageLanguage": {
+    "message": "消息语言（可选）"
+  },
+  "generateMessage": {
+    "message": "生成生日消息"
+  },
+  "stop": {
+    "message": "停止"
+  },
+  "copy": {
+    "message": "复制"
+  },
+  "dependable": {
+    "message": "可靠"
+  },
+  "loyal": {
+    "message": "忠诚"
+  },
+  "thoughtful": {
+    "message": "体贴"
+  },
+  "supportive": {
+    "message": "支持"
+  },
+  "kind": {
+    "message": "善良"
+  },
+  "creative": {
+    "message": "创意"
+  },
+  "energetic": {
+    "message": "充满活力"
+  },
+  "spontaneous": {
+    "message": "自发"
+  },
+  "adventurous": {
+    "message": "爱冒险"
+  },
+  "fulloflife": {
+    "message": "充满生气"
+  },
+  "affectionate": {
+    "message": "深情"
+  },
+  "witty": {
+    "message": "机智"
+  },
+  "fun": {
+    "message": "有趣"
+  },
+  "humorous": {
+    "message": "幽默"
+  },
+  "smart": {
+    "message": "聪明"
+  },
+  "beautiful": {
+    "message": "美丽"
+  }
+}

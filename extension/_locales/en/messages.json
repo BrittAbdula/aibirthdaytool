@@ -1,0 +1,176 @@
+{
+    "extName": {
+      "message": "Birthday AI"
+    },
+    "extDescription": {
+      "message": "AI-powered birthday message generator for various recipients and occasions."
+    },
+    "settings": {
+      "message": "Settings"
+    },
+    "language": {
+      "message": "Language"
+    },
+    "recipient": {
+      "message": "Recipient"
+    },
+    "selectRecipient": {
+      "message": "Select Recipient"
+    },
+    "father": {
+      "message": "Father (Dad)"
+    },
+    "mother": {
+      "message": "Mother (Mom)"
+    },
+    "wife": {
+      "message": "Wife"
+    },
+    "husband": {
+      "message": "Husband"
+    },
+    "boyfriend": {
+      "message": "Boyfriend"
+    },
+    "girlfriend": {
+      "message": "Girlfriend"
+    },
+    "sister": {
+      "message": "Sister"
+    },
+    "brother": {
+      "message": "Brother"
+    },
+    "friend": {
+      "message": "Friend"
+    },
+    "classmate": {
+      "message": "Classmate"
+    },
+    "colleague": {
+      "message": "Colleague"
+    },
+    "other": {
+      "message": "Other"
+    },
+    "specifyRecipient": {
+      "message": "Specify Recipient (max 100 words)"
+    },
+    "enterRecipient": {
+      "message": "Enter recipient"
+    },
+    "age": {
+      "message": "Age"
+    },
+    "traits": {
+      "message": "Traits (Optional, max 3)"
+    },
+    "tone": {
+      "message": "Tone (Optional)"
+    },
+    "selectTone": {
+      "message": "Select Tone"
+    },
+    "sincereandwarm": {
+      "message": "Sincere and Warm"
+    },
+    "playfulandcute": {
+      "message": "Playful and Cute"
+    },
+    "romanticandpoetic": {
+      "message": "Romantic and Poetic"
+    },
+    "lightheartedandjoyful": {
+      "message": "Lighthearted and Joyful"
+    },
+    "inspirationalandencouraging": {
+      "message": "Inspirational and Encouraging"
+    },
+    "thankful": {
+      "message": "Thankful"
+    },
+    "formal": {
+      "message": "Formal"
+    },
+    "custom": {
+      "message": "Custom"
+    },
+    "messageLength": {
+      "message": "Message Length (Optional)"
+    },
+    "short": {
+      "message": "Short (20-50 words)"
+    },
+    "medium": {
+      "message": "Medium (50-120 words)"
+    },
+    "long": {
+      "message": "Long (120-250 words)"
+    },
+    "customTone": {
+      "message": "Custom Tone (max 100 words)"
+    },
+    "enterCustomTone": {
+      "message": "Enter custom tone"
+    },
+    "messageLanguage": {
+      "message": "Message Language (Optional)"
+    },
+    "generateMessage": {
+      "message": "Generate Birthday Message"
+    },
+    "stop": {
+      "message": "Stop"
+    },
+    "copy": {
+      "message": "Copy"
+    },
+    "dependable": {
+      "message": "Dependable"
+    },
+    "loyal": {
+      "message": "Loyal"
+    },
+    "thoughtful": {
+      "message": "Thoughtful"
+    },
+    "supportive": {
+      "message": "Supportive"
+    },
+    "kind": {
+      "message": "Kind"
+    },
+    "creative": {
+      "message": "Creative"
+    },
+    "energetic": {
+      "message": "Energetic"
+    },
+    "spontaneous": {
+      "message": "Spontaneous"
+    },
+    "adventurous": {
+      "message": "Adventurous"
+    },
+    "fulloflife": {
+      "message": "Full of Life"
+    },
+    "affectionate": {
+      "message": "Affectionate"
+    },
+    "witty": {
+      "message": "Witty"
+    },
+    "fun": {
+      "message": "Fun"
+    },
+    "humorous": {
+      "message": "Humorous"
+    },
+    "smart": {
+      "message": "Smart"
+    },
+    "beautiful": {
+      "message": "Beautiful"
+    }
+  }

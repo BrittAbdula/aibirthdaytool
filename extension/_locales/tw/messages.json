@@ -1,0 +1,176 @@
+{
+    "extName": {
+      "message": "生日AI"
+    },
+    "extDescription": {
+      "message": "AI驅動的生日訊息生成器，適用於各種收件人和場合。"
+    },
+    "settings": {
+      "message": "設置"
+    },
+    "language": {
+      "message": "語言"
+    },
+    "recipient": {
+      "message": "收件人"
+    },
+    "selectRecipient": {
+      "message": "選擇收件人"
+    },
+    "father": {
+      "message": "父親（爸爸）"
+    },
+    "mother": {
+      "message": "母親（媽媽）"
+    },
+    "wife": {
+      "message": "妻子"
+    },
+    "husband": {
+      "message": "丈夫"
+    },
+    "boyfriend": {
+      "message": "男朋友"
+    },
+    "girlfriend": {
+      "message": "女朋友"
+    },
+    "sister": {
+      "message": "姐妹"
+    },
+    "brother": {
+      "message": "兄弟"
+    },
+    "friend": {
+      "message": "朋友"
+    },
+    "classmate": {
+      "message": "同學"
+    },
+    "colleague": {
+      "message": "同事"
+    },
+    "other": {
+      "message": "其他"
+    },
+    "specifyRecipient": {
+      "message": "指定收件人（最多100字）"
+    },
+    "enterRecipient": {
+      "message": "輸入收件人"
+    },
+    "age": {
+      "message": "年齡"
+    },
+    "traits": {
+      "message": "特徵（可選，最多3個）"
+    },
+    "tone": {
+      "message": "語氣（可選）"
+    },
+    "selectTone": {
+      "message": "選擇語氣"
+    },
+    "sincereandwarm": {
+      "message": "誠摯溫暖"
+    },
+    "playfulandcute": {
+      "message": "俏皮可愛"
+    },
+    "romanticandpoetic": {
+      "message": "浪漫詩意"
+    },
+    "lightheartedandjoyful": {
+      "message": "輕鬆愉快"
+    },
+    "inspirationalandencouraging": {
+      "message": "鼓舞激勵"
+    },
+    "thankful": {
+      "message": "感恩"
+    },
+    "formal": {
+      "message": "正式"
+    },
+    "custom": {
+      "message": "自定義"
+    },
+    "messageLength": {
+      "message": "訊息長度（可選）"
+    },
+    "short": {
+      "message": "短（20-50字）"
+    },
+    "medium": {
+      "message": "中（50-120字）"
+    },
+    "long": {
+      "message": "長（120-250字）"
+    },
+    "customTone": {
+      "message": "自定義語氣（最多100字）"
+    },
+    "enterCustomTone": {
+      "message": "輸入自定義語氣"
+    },
+    "messageLanguage": {
+      "message": "訊息語言（可選）"
+    },
+    "generateMessage": {
+      "message": "生成生日訊息"
+    },
+    "stop": {
+      "message": "停止"
+    },
+    "copy": {
+      "message": "複製"
+    },
+    "dependable": {
+      "message": "可靠"
+    },
+    "loyal": {
+      "message": "忠誠"
+    },
+    "thoughtful": {
+      "message": "體貼"
+    },
+    "supportive": {
+      "message": "支持"
+    },
+    "kind": {
+      "message": "善良"
+    },
+    "creative": {
+      "message": "創意"
+    },
+    "energetic": {
+      "message": "充滿活力"
+    },
+    "spontaneous": {
+      "message": "自發"
+    },
+    "adventurous": {
+      "message": "愛冒險"
+    },
+    "fulloflife": {
+      "message": "充滿生氣"
+    },
+    "affectionate": {
+      "message": "深情"
+    },
+    "witty": {
+      "message": "機智"
+    },
+    "fun": {
+      "message": "有趣"
+    },
+    "humorous": {
+      "message": "幽默"
+    },
+    "smart": {
+      "message": "聰明"
+    },
+    "beautiful": {
+      "message": "美麗"
+    }
+  }

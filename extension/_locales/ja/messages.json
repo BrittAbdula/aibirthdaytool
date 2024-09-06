@@ -1,0 +1,176 @@
+{
+    "extName": {
+      "message": "誕生日AI"
+    },
+    "extDescription": {
+      "message": "様々な受取人や機会に対応するAI駆動の誕生日メッセージジェネレーター。"
+    },
+    "settings": {
+      "message": "設定"
+    },
+    "language": {
+      "message": "言語"
+    },
+    "recipient": {
+      "message": "受取人"
+    },
+    "selectRecipient": {
+      "message": "受取人を選択"
+    },
+    "father": {
+      "message": "父親（お父さん）"
+    },
+    "mother": {
+      "message": "母親（お母さん）"
+    },
+    "wife": {
+      "message": "妻"
+    },
+    "husband": {
+      "message": "夫"
+    },
+    "boyfriend": {
+      "message": "彼氏"
+    },
+    "girlfriend": {
+      "message": "彼女"
+    },
+    "sister": {
+      "message": "姉妹"
+    },
+    "brother": {
+      "message": "兄弟"
+    },
+    "friend": {
+      "message": "友達"
+    },
+    "classmate": {
+      "message": "クラスメイト"
+    },
+    "colleague": {
+      "message": "同僚"
+    },
+    "other": {
+      "message": "その他"
+    },
+    "specifyRecipient": {
+      "message": "受取人を指定（最大100語）"
+    },
+    "enterRecipient": {
+      "message": "受取人を入力"
+    },
+    "age": {
+      "message": "年齢"
+    },
+    "traits": {
+      "message": "特徴（任意、最大3つ）"
+    },
+    "tone": {
+      "message": "トーン（任意）"
+    },
+    "selectTone": {
+      "message": "トーンを選択"
+    },
+    "sincereandwarm": {
+      "message": "誠実で温かい"
+    },
+    "playfulandcute": {
+      "message": "遊び心があって可愛い"
+    },
+    "romanticandpoetic": {
+      "message": "ロマンチックで詩的"
+    },
+    "lightheartedandjoyful": {
+      "message": "軽やかで楽しい"
+    },
+    "inspirationalandencouraging": {
+      "message": "励ましと勇気を与える"
+    },
+    "thankful": {
+      "message": "感謝"
+    },
+    "formal": {
+      "message": "正式"
+    },
+    "custom": {
+      "message": "カスタム"
+    },
+    "messageLength": {
+      "message": "メッセージの長さ（任意）"
+    },
+    "short": {
+      "message": "短い（20-50語）"
+    },
+    "medium": {
+      "message": "中程度（50-120語）"
+    },
+    "long": {
+      "message": "長い（120-250語）"
+    },
+    "customTone": {
+      "message": "カスタムトーン（最大100語）"
+    },
+    "enterCustomTone": {
+      "message": "カスタムトーンを入力"
+    },
+    "messageLanguage": {
+      "message": "メッセージの言語（任意）"
+    },
+    "generateMessage": {
+      "message": "誕生日メッセージを生成"
+    },
+    "stop": {
+      "message": "停止"
+    },
+    "copy": {
+      "message": "コピー"
+    },
+    "dependable": {
+      "message": "頼りになる"
+    },
+    "loyal": {
+      "message": "忠実"
+    },
+    "thoughtful": {
+      "message": "思慮深い"
+    },
+    "supportive": {
+      "message": "サポーティブ"
+    },
+    "kind": {
+      "message": "親切"
+    },
+    "creative": {
+      "message": "創造的"
+    },
+    "energetic": {
+      "message": "活発"
+    },
+    "spontaneous": {
+      "message": "自発的"
+    },
+    "adventurous": {
+      "message": "冒険好き"
+    },
+    "fulloflife": {
+      "message": "生き生きとした"
+    },
+    "affectionate": {
+      "message": "愛情深い"
+    },
+    "witty": {
+      "message": "機知に富んだ"
+    },
+    "fun": {
+      "message": "楽しい"
+    },
+    "humorous": {
+      "message": "ユーモアのある"
+    },
+    "smart": {
+      "message": "賢い"
+    },
+    "beautiful": {
+      "message": "美しい"
+    }
+  }

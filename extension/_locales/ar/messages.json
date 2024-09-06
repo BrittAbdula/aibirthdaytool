@@ -1,0 +1,176 @@
+{
+    "extName": {
+      "message": "الذكاء الاصطناعي لأعياد الميلاد"
+    },
+    "extDescription": {
+      "message": "مولد رسائل أعياد الميلاد المدعوم بالذكاء الاصطناعي لمختلف المستلمين والمناسبات."
+    },
+    "settings": {
+      "message": "الإعدادات"
+    },
+    "language": {
+      "message": "اللغة"
+    },
+    "recipient": {
+      "message": "المستلم"
+    },
+    "selectRecipient": {
+      "message": "اختر المستلم"
+    },
+    "father": {
+      "message": "الأب (بابا)"
+    },
+    "mother": {
+      "message": "الأم (ماما)"
+    },
+    "wife": {
+      "message": "الزوجة"
+    },
+    "husband": {
+      "message": "الزوج"
+    },
+    "boyfriend": {
+      "message": "الصديق"
+    },
+    "girlfriend": {
+      "message": "الصديقة"
+    },
+    "sister": {
+      "message": "الأخت"
+    },
+    "brother": {
+      "message": "الأخ"
+    },
+    "friend": {
+      "message": "الصديق/ة"
+    },
+    "classmate": {
+      "message": "زميل/ة الدراسة"
+    },
+    "colleague": {
+      "message": "زميل/ة العمل"
+    },
+    "other": {
+      "message": "آخر"
+    },
+    "specifyRecipient": {
+      "message": "حدد المستلم (بحد أقصى 100 كلمة)"
+    },
+    "enterRecipient": {
+      "message": "أدخل المستلم"
+    },
+    "age": {
+      "message": "العمر"
+    },
+    "traits": {
+      "message": "السمات (اختياري، بحد أقصى 3)"
+    },
+    "tone": {
+      "message": "النبرة (اختياري)"
+    },
+    "selectTone": {
+      "message": "اختر النبرة"
+    },
+    "sincereandwarm": {
+      "message": "صادق ودافئ"
+    },
+    "playfulandcute": {
+      "message": "مرح ولطيف"
+    },
+    "romanticandpoetic": {
+      "message": "رومانسي وشاعري"
+    },
+    "lightheartedandjoyful": {
+      "message": "خفيف وسعيد"
+    },
+    "inspirationalandencouraging": {
+      "message": "ملهم ومشجع"
+    },
+    "thankful": {
+      "message": "ممتن"
+    },
+    "formal": {
+      "message": "رسمي"
+    },
+    "custom": {
+      "message": "مخصص"
+    },
+    "messageLength": {
+      "message": "طول الرسالة (اختياري)"
+    },
+    "short": {
+      "message": "قصير (20-50 كلمة)"
+    },
+    "medium": {
+      "message": "متوسط (50-120 كلمة)"
+    },
+    "long": {
+      "message": "طويل (120-250 كلمة)"
+    },
+    "customTone": {
+      "message": "نبرة مخصصة (بحد أقصى 100 كلمة)"
+    },
+    "enterCustomTone": {
+      "message": "أدخل النبرة المخصصة"
+    },
+    "messageLanguage": {
+      "message": "لغة الرسالة (اختياري)"
+    },
+    "generateMessage": {
+      "message": "إنشاء رسالة عيد الميلاد"
+    },
+    "stop": {
+      "message": "توقف"
+    },
+    "copy": {
+      "message": "نسخ"
+    },
+    "dependable": {
+      "message": "يعتمد عليه"
+    },
+    "loyal": {
+      "message": "مخلص"
+    },
+    "thoughtful": {
+      "message": "مراعي"
+    },
+    "supportive": {
+      "message": "داعم"
+    },
+    "kind": {
+      "message": "لطيف"
+    },
+    "creative": {
+      "message": "مبدع"
+    },
+    "energetic": {
+      "message": "نشيط"
+    },
+    "spontaneous": {
+      "message": "تلقائي"
+    },
+    "adventurous": {
+      "message": "مغامر"
+    },
+    "fulloflife": {
+      "message": "مفعم بالحياة"
+    },
+    "affectionate": {
+      "message": "عاطفي"
+    },
+    "witty": {
+      "message": "ذكي"
+    },
+    "fun": {
+      "message": "مرح"
+    },
+    "humorous": {
+      "message": "فكاهي"
+    },
+    "smart": {
+      "message": "ذكي"
+    },
+    "beautiful": {
+      "message": "جميل"
+    }
+  }
