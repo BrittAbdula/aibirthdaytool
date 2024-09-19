@@ -59,6 +59,10 @@ const config: Config = {
   				'4': 'hsl(var(--chart-4))',
   				'5': 'hsl(var(--chart-5))'
   			}
+  		},
+  		'purple': {
+  			800: '#4C1D95',
+  			900: '#3C1A75',
   		}
   	}
   },

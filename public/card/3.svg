@@ -1,0 +1,34 @@
+<svg width="400" height="600" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#fff0f5;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#f0f8ff;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+
+  <rect width="100%" height="100%" fill="url(#bg-gradient)" />
+
+  <text x="200" y="80" font-family="楷体, KaiTi" font-size="32" fill="#4a4a4a" text-anchor="middle">生日快乐</text>
+
+  <line x1="50" y1="100" x2="350" y2="100" stroke="#7a7a7a" stroke-width="1" />
+
+  <text x="200" y="150" font-family="宋体, SimSun" font-size="24" fill="#4a4a4a" text-anchor="middle">占婧</text>
+
+  <text x="200" y="200" font-family="宋体, SimSun" font-size="16" fill="#4a4a4a" text-anchor="middle">
+    <tspan x="200" dy="0">占，如占卜未来，洞察先机。</tspan>
+    <tspan x="200" dy="25">婧，似明净之水，澄澈纯粹。</tspan>
+  </text>
+
+  <text x="200" y="300" font-family="楷体, KaiTi" font-size="18" fill="#4a4a4a" text-anchor="middle">
+    <tspan x="200" dy="0">愿你如晨星般明亮，</tspan>
+    <tspan x="200" dy="30">似清泉般纯净。</tspan>
+    <tspan x="200" dy="30">在人生的旅途中，</tspan>
+    <tspan x="200" dy="30">洞察先机，智慧如泉。</tspan>
+    <tspan x="200" dy="30">愿你的未来如你的名字，</tspan>
+    <tspan x="200" dy="30">明净而美好，璀璨而深远。</tspan>
+  </text>
+
+  <path d="M70,500 Q200,420 330,500" fill="none" stroke="#7a7a7a" stroke-width="1" />
+  <path d="M180,530 Q200,510 220,530 Q200,550 180,530" fill="none" stroke="#7a7a7a" stroke-width="1" />
+  <circle cx="200" cy="530" r="3" fill="#7a7a7a" />
+</svg>

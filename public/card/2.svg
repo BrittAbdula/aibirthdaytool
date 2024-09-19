@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="600" viewBox="0 0 400 600">
+  <defs>
+    <linearGradient id="bg-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FFE5B4;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#FFC0CB;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <rect width="100%" height="100%" fill="url(#bg-gradient)" />
+  
+  <text x="200" y="80" font-family="'楷体', cursive" font-size="36" fill="#8B4513" text-anchor="middle">生日快乐</text>
+  
+  <line x1="50" y1="100" x2="350" y2="100" stroke="#8B4513" stroke-width="2" />
+  
+  <text x="200" y="140" font-family="'Arial', sans-serif" font-size="24" fill="#8B4513" text-anchor="middle">占婧</text>
+  <text x="200" y="170" font-family="'Arial', sans-serif" font-size="16" fill="#8B4513" text-anchor="middle">Zhan Jing</text>
+  <text x="200" y="200" font-family="'Arial', sans-serif" font-size="16" fill="#8B4513" text-anchor="middle">セン セイ</text>
+  
+  <text x="200" y="260" font-family="'楷体', serif" font-size="20" fill="#8B4513" text-anchor="middle">
+    <tspan x="200" dy="0">占星之婧，闪耀人间，</tspan>
+    <tspan x="200" dy="30">如晨露静美，似晚霞绚烂。</tspan>
+    <tspan x="200" dy="30">愿你的生命如诗如画，</tspan>
+    <tspan x="200" dy="30">在岁月长河中永远璀璨。</tspan>
+  </text>
+  
+  <g transform="translate(200, 400)">
+    <circle cx="0" cy="0" r="60" fill="#FFD700" />
+    <circle cx="-30" cy="-30" r="10" fill="#FF6347" />
+    <circle cx="30" cy="-30" r="10" fill="#FF6347" />
+    <path d="M-30,20 Q0,40 30,20" fill="none" stroke="#8B4513" stroke-width="3" />
+  </g>
+  
+  <text x="200" y="550" font-family="'楷体', cursive" font-size="18" fill="#8B4513" text-anchor="middle">来自你的朋友</text>
+</svg>

@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 
-export default function BirthdayWishGenerator() {
+export default function BirthdayCardGenerator() {
   const [name, setName] = useState('')
   const [age, setAge] = useState('')
   const [message, setMessage] = useState('')
@@ -14,22 +14,22 @@ export default function BirthdayWishGenerator() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    // Here you would typically call your LLM API to generate the personalized blessing
-    console.log('Generating birthday wish for:', { name, age, message })
+    // 这里您通常会调用LLM API来生成个性化祝福
+    console.log('生成生日祝福：', { name, age, message })
   }
 
   return (
-    <div className="min-h-screen bg-[#faf7e8] flex flex-col items-center justify-center p-4">
+    <div className="h-full flex flex-col items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="mb-8 text-center">
-          <h1 className="text-5xl font-bold mb-2">
-            <span className="bg-black text-white px-2">CREATE A</span>
+          <h1 className="text-4xl font-bold mb-2">
+            <span className="bg-black text-white px-2">Create</span>
           </h1>
-          <h1 className="text-5xl font-bold mb-2">
-            <span className="bg-[#ff6b6b] text-white px-2">BIRTHDAY</span>
+          <h1 className="text-4xl font-bold mb-2">
+            <span className="bg-[#ff6b6b] text-white px-2">Birthday</span>
           </h1>
-          <h1 className="text-5xl font-bold">
-            <span className="bg-[#4ecdc4] text-white px-2">CARD!</span>
+          <h1 className="text-4xl font-bold">
+            <span className="bg-[#4ecdc4] text-white px-2">Card!</span>
           </h1>
         </div>
 
@@ -65,37 +65,11 @@ export default function BirthdayWishGenerator() {
                 required
               />
             </div>
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="customUrl"
-                checked={customUrl}
-                onCheckedChange={(checked) => setCustomUrl(checked as boolean)}
-              />
-              <label
-                htmlFor="customUrl"
-                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-              >
-                Get a custom URL for $0.99!
-              </label>
-            </div>
             <Button type="submit" className="w-full bg-[#a364d9] hover:bg-[#8a4bbd]">
-              CREATE
+              Create
             </Button>
           </div>
         </form>
-      </div>
-
-      <div className="fixed top-4 left-4">
-        <Gift className="w-12 h-12 text-[#ff6b6b]" />
-      </div>
-      <div className="fixed top-4 right-4">
-        <Cake className="w-12 h-12 text-[#ffa502]" />
-      </div>
-      <div className="fixed bottom-4 left-4">
-        <PartyPopper className="w-12 h-12 text-[#ff6b6b]" />
-      </div>
-      <div className="fixed bottom-4 right-4">
-        <Gift className="w-12 h-12 text-[#4ecdc4]" />
       </div>
     </div>
   )

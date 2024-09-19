@@ -1,7 +1,7 @@
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Terms of Service - AI Birthday Message Generator",
+  title: "Terms of Service - AI Birthday Card Generator",
   alternates: {
     canonical: '/terms-of-service/',
   }

@@ -1,0 +1,88 @@
+<div class="card">
+  <div class="balloon">
+    <div class="face">
+      <div class="eye left"></div>
+      <div class="eye right"></div>
+      <div class="mouth"></div>
+    </div>
+    <div class="hat"></div>
+  </div>
+  <div class="confetti"></div>
+  <h1 class="message">HAPPY BDAY</h1>
+</div>
+
+<style>
+  .card {
+    width: 300px;
+    height: 400px;
+    background-color: white;
+    position: relative;
+  }
+  
+  .balloon {
+    width: 200px;
+    height: 200px;
+    background-color: yellow;
+    border-radius: 50%;
+    position: absolute;
+    top: 50px;
+    left: 50px;
+  }
+  
+  .face {
+    position: relative;
+  }
+  
+  .eye {
+    width: 20px;
+    height: 20px;
+    background-color: black;
+    border-radius: 50%;
+    position: absolute;
+  }
+  
+  .eye.left {
+    top: 60px;
+    left: 60px;
+  }
+  
+  .eye.right {
+    top: 60px;
+    right: 60px;
+  }
+  
+  .mouth {
+    width: 80px;
+    height: 40px;
+    border-bottom: 10px solid black;
+    border-radius: 0 0 40px 40px;
+    position: absolute;
+    bottom: 50px;
+    left: 60px;
+  }
+  
+  .hat {
+    width: 0;
+    height: 0;
+    border-left: 40px solid transparent;
+    border-right: 40px solid transparent;
+    border-bottom: 80px solid purple;
+    position: absolute;
+    top: -60px;
+    left: 60px;
+    transform: rotate(15deg);
+  }
+  
+  .message {
+    font-family: 'Comic Sans MS', cursive;
+    color: purple;
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+  
+  .confetti {
+    /* Add confetti style here */
+  }
+</style>
