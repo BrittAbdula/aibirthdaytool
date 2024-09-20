@@ -1,6 +1,6 @@
 import Image from 'next/image';
 
-const SVG_COUNT = 10; // 假设我们有10个SVG文件，您可以根据实际情况调整这个数字
+const SVG_COUNT = 12; // 假设我们有10个SVG文件，您可以根据实际情况调整这个数字
 
 export default function CardGallery() {
   const svgFiles = Array.from({ length: SVG_COUNT }, (_, i) => `/card/${i + 1}.svg`);

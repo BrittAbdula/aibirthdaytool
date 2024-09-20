@@ -1,76 +1,137 @@
 'use client'
-import React, { useState } from 'react'
-import { Gift, Cake, PartyPopper } from 'lucide-react'
+import React, { useState, useEffect } from 'react'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Checkbox } from "@/components/ui/checkbox"
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select"
+import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card"
 
 export default function BirthdayCardGenerator() {
+  const [cardType, setCardType] = useState('birthday')
   const [name, setName] = useState('')
-  const [age, setAge] = useState('')
-  const [message, setMessage] = useState('')
-  const [customUrl, setCustomUrl] = useState(false)
+  const [svgContent, setSvgContent] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
 
-  const handleSubmit = (e: React.FormEvent) => {
+  useEffect(() => {
+    // 加载初始SVG内容
+    fetch('/card/1.svg')
+      .then(response => response.text())
+      .then(data => {
+        setSvgContent(data)
+      })
+      .catch(error => {
+        console.error('加载初始SVG时出错:', error)
+        setSvgContent('<svg><text>无法加载初始卡片。</text></svg>')
+      })
+  }, [])
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // 这里您通常会调用LLM API来生成个性化祝福
-    console.log('生成生日祝福：', { name, age, message })
+    setIsLoading(true)
+    try {
+      const response = await fetch('/api/generate-card', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ cardType, name }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to generate card');
+      }
+
+      const data = await response.json();
+      setSvgContent(data.svgContent);
+    } catch (error) {
+      console.error("Error generating card content:", error)
+      setSvgContent("<svg><text>Sorry, we couldn't generate a card at this time. Please try again later.</text></svg>")
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
-    <div className="h-full flex flex-col items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        <div className="mb-8 text-center">
-          <h1 className="text-4xl font-bold mb-2">
-            <span className="bg-black text-white px-2">Create</span>
-          </h1>
-          <h1 className="text-4xl font-bold mb-2">
-            <span className="bg-[#ff6b6b] text-white px-2">Birthday</span>
-          </h1>
-          <h1 className="text-4xl font-bold">
-            <span className="bg-[#4ecdc4] text-white px-2">Card!</span>
-          </h1>
-        </div>
-
-        <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-lg p-6">
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="name">Name</Label>
+    <main className="container mx-auto px-4 py-12">
+      <h1 className="text-4xl font-bold text-center mb-12 text-purple-700">MewTruCard Generator</h1>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+        <Card className="p-6">
+          <CardHeader>
+            <CardTitle>Create Your Card</CardTitle>
+            <CardDescription>Fill in the details for your custom card</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="cardType">Card Type</Label>
+              <Select value={cardType} onValueChange={setCardType}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select card type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="birthday">Birthday Card</SelectItem>
+                  <SelectItem value="love">Love Card</SelectItem>
+                  <SelectItem value="congratulations">Congratulations Card</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="name">Recipient&apos;s Name</Label>
               <Input
                 id="name"
                 placeholder="Enter name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                required
               />
             </div>
-            <div>
-              <Label htmlFor="age">Age</Label>
-              <Input
-                id="age"
-                placeholder="Enter age"
-                value={age}
-                onChange={(e) => setAge(e.target.value)}
-                required
-              />
-            </div>
-            <div>
-              <Label htmlFor="message">Message</Label>
-              <Input
-                id="message"
-                placeholder="Enter custom message"
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                required
-              />
-            </div>
-            <Button type="submit" className="w-full bg-[#a364d9] hover:bg-[#8a4bbd]">
-              Create
+          </CardContent>
+          <CardFooter>
+            <Button className="w-full" onClick={handleSubmit} disabled={isLoading}>
+              {isLoading ? 'Generating...' : 'Generate Card'}
             </Button>
+          </CardFooter>
+        </Card>
+
+        <div>
+          <h2 className="text-2xl font-semibold mb-4 text-purple-700">Preview</h2>
+          <div className="bg-white p-4 rounded-lg shadow-lg min-h-[600px] flex items-center justify-center">
+            {svgContent ? (
+              <div dangerouslySetInnerHTML={{ __html: svgContent }} />
+            ) : (
+              <p className="text-gray-500">Your card preview will appear here</p>
+            )}
           </div>
-        </form>
+        </div>
       </div>
-    </div>
+
+      <section className="mt-16">
+        <h2 className="text-3xl font-semibold mb-6 text-center text-purple-700">Why Choose MewTruCard?</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <Card>
+            <CardHeader>
+              <CardTitle>Personalized</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p>Create unique cards with custom messages and designs for your loved ones.</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle>Quick & Easy</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p>Generate beautiful cards in seconds with our user-friendly interface.</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle>Variety</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p>Choose from a wide range of card types for every occasion and celebration.</p>
+            </CardContent>
+          </Card>
+        </div>
+      </section>
+    </main>
   )
 }

@@ -1,0 +1,49 @@
+<svg width="400" height="600" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg-gradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#FFF0F5;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#FFB6C1;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- 背景 -->
+  <rect width="100%" height="100%" fill="url(#bg-gradient)" />
+  
+  <!-- 装饰元素：花朵 -->
+  <g transform="translate(320,50)">
+    <path d="M0,0 C5,-10 10,-10 15,0 C20,-10 25,-10 30,0 C35,-10 40,-10 45,0 C50,-10 55,-10 60,0 C55,10 50,10 45,0 C40,10 35,10 30,0 C25,10 20,10 15,0 C10,10 5,10 0,0 Z" fill="#FF69B4">
+      <animateTransform attributeName="transform" type="rotate" from="0 30 0" to="360 30 0" dur="20s" repeatCount="indefinite"/>
+    </path>
+    <circle cx="30" cy="0" r="5" fill="#FFD700"/>
+  </g>
+  
+  <!-- 标题 -->
+  <text x="200" y="80" font-family="楷体, serif" font-size="36" fill="#DB7093" text-anchor="middle">早安，徐欣</text>
+  
+  <!-- 分隔线 -->
+  <line x1="50" y1="100" x2="350" y2="100" stroke="#FFC0CB" stroke-width="2" />
+  
+  <!-- 姓名解析 -->
+  <text x="50" y="150" font-family="宋体, serif" font-size="16" fill="#8B4513">
+    <tspan x="50" dy="0">徐：从容不迫，如清晨徐徐展开</tspan>
+    <tspan x="50" dy="25">欣：欣欣向荣，似花朵绽放般喜悦</tspan>
+  </text>
+  
+  <!-- 日期祝福 -->
+  <text x="50" y="240" font-family="宋体, serif" font-size="16" fill="#8B4513">
+    <tspan x="50" dy="0">金秋九月，丹桂飘香</tspan>
+    <tspan x="50" dy="25">二十寓意圆满如月</tspan>
+    <tspan x="50" dy="25">如您芳名，欣欣向荣</tspan>
+    <tspan x="50" dy="25">愿这个早晨，徐徐展开美好</tspan>
+  </text>
+  
+  <!-- 祝福语 -->
+  <text x="200" y="380" font-family="楷体, serif" font-size="18" fill="#DB7093" text-anchor="middle">
+    <tspan x="200" dy="0">愿您如晨光般温柔明媚</tspan>
+    <tspan x="200" dy="30">似秋菊般绽放欣喜</tspan>
+    <tspan x="200" dy="30">以从容姿态迎接崭新一天</tspan>
+  </text>
+  
+  <!-- 日期 -->
+  <text x="200" y="560" font-family="Arial, sans-serif" font-size="14" fill="#8B4513" text-anchor="middle">2024.9.20</text>
+</svg>

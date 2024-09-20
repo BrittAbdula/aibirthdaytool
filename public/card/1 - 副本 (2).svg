@@ -1,0 +1,50 @@
+<svg width="400" height="600" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg-gradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#E6F3FF;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#B3D9FF;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- 背景 -->
+  <rect width="100%" height="100%" fill="url(#bg-gradient)" />
+  
+  <!-- 装饰元素：云朵 -->
+  <path d="M80,50 Q100,30 120,50 T160,50 T200,50 T240,50 Q260,30 280,50" fill="white" opacity="0.8">
+    <animate attributeName="d" values="M80,50 Q100,30 120,50 T160,50 T200,50 T240,50 Q260,30 280,50;
+                                       M80,55 Q100,35 120,55 T160,55 T200,55 T240,55 Q260,35 280,55;
+                                       M80,50 Q100,30 120,50 T160,50 T200,50 T240,50 Q260,30 280,50"
+             dur="10s" repeatCount="indefinite" />
+  </path>
+  
+  <!-- 标题 -->
+  <text x="200" y="80" font-family="楷体, serif" font-size="36" fill="#4A4A4A" text-anchor="middle">早安，吴晓彬</text>
+  
+  <!-- 分隔线 -->
+  <line x1="50" y1="100" x2="350" y2="100" stroke="#87CEFA" stroke-width="2" />
+  
+  <!-- 姓名解析 -->
+  <text x="50" y="150" font-family="宋体, serif" font-size="16" fill="#4A4A4A">
+    <tspan x="50" dy="0">吴：草木茂盛，寓意生机勃勃</tspan>
+    <tspan x="50" dy="25">晓：晨曦初现，象征希望与新生</tspan>
+    <tspan x="50" dy="25">彬：文质彬彬，代表优雅有礼</tspan>
+  </text>
+  
+  <!-- 日期祝福 -->
+  <text x="50" y="270" font-family="宋体, serif" font-size="16" fill="#4A4A4A">
+    <tspan x="50" dy="0">金秋九月，硕果累累</tspan>
+    <tspan x="50" dy="25">二十正值月之圆满</tspan>
+    <tspan x="50" dy="25">如您姓名，晨光初现</tspan>
+    <tspan x="50" dy="25">愿这个早晨，彬彬有礼地开启</tspan>
+  </text>
+  
+  <!-- 祝福语 -->
+  <text x="200" y="420" font-family="楷体, serif" font-size="18" fill="#4A4A4A" text-anchor="middle">
+    <tspan x="200" dy="0">愿您如晓光般明亮清新</tspan>
+    <tspan x="200" dy="30">似秋叶般绚烂多彩</tspan>
+    <tspan x="200" dy="30">以彬彬之姿迎接崭新一天</tspan>
+  </text>
+  
+  <!-- 日期 -->
+  <text x="200" y="560" font-family="Arial, sans-serif" font-size="14" fill="#4A4A4A" text-anchor="middle">2024.9.20</text>
+</svg>
