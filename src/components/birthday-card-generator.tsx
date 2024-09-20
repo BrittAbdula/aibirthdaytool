@@ -93,14 +93,45 @@ export default function BirthdayCardGenerator() {
 
         <div>
           <h2 className="text-2xl font-semibold mb-4 text-purple-700">Preview</h2>
-          <div className="bg-white p-4 rounded-lg shadow-lg min-h-[600px] flex items-center justify-center">
-            {svgContent ? (
-              <div dangerouslySetInnerHTML={{ __html: svgContent }} />
+          <div className="bg-white p-4 rounded-lg shadow-lg min-h-[600px] flex items-center justify-center relative overflow-hidden">
+            {isLoading ? (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="loading-animation">
+                  <div className="circle"></div>
+                  <div className="circle"></div>
+                  <div className="circle"></div>
+                </div>
+              </div>
             ) : (
-              <p className="text-gray-500">Your card preview will appear here</p>
+              <div dangerouslySetInnerHTML={{ __html: svgContent }} />
             )}
           </div>
         </div>
+        <style jsx>{`
+        .loading-animation {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+        }
+        .circle {
+          width: 20px;
+          height: 20px;
+          background-color: #8B5CF6;
+          border-radius: 50%;
+          margin: 0 10px;
+          animation: bounce 0.5s ease-in-out infinite;
+        }
+        .circle:nth-child(2) {
+          animation-delay: 0.1s;
+        }
+        .circle:nth-child(3) {
+          animation-delay: 0.2s;
+        }
+        @keyframes bounce {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-20px); }
+        }
+      `}</style>
       </div>
 
       <section className="mt-16">
