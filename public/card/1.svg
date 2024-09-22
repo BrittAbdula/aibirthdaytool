@@ -1,46 +1,28 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="400" height="600" viewBox="0 0 400 600">
-  <rect width="100%" height="100%" fill="#f0e6fa"></rect>
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="600">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Dancing+Script&amp;family=Roboto+Slab:wght@300&amp;display=swap');
+    text { font-family: 'Roboto Slab', serif; fill: #555; }
+    .title { font-family: 'Dancing Script', cursive; font-size: 32px; }
+  </style>
   
-  <path d="M0,50 Q200,0 400,50 L400,550 Q200,600 0,550 Z" fill="#e6f0fa"></path>
+  <rect width="100%" height="100%" fill="#FFF5E6"/>
   
-  <circle cx="50" cy="50" r="20" fill="#ffd1dc"></circle>
-  <circle cx="350" cy="50" r="20" fill="#ffd1dc"></circle>
-  <circle cx="50" cy="550" r="20" fill="#ffd1dc"></circle>
-  <circle cx="350" cy="550" r="20" fill="#ffd1dc"></circle>
+  <text x="200" y="80" text-anchor="middle" class="title">Happy Birthday!</text>
   
-  <text x="200" y="100" font-family="Arial, sans-serif" font-size="48" fill="#ff69b4" text-anchor="middle">
-    Happy Birthday
+  <line x1="50" y1="100" x2="350" y2="100" stroke="#FFB6C1" stroke-width="2"/>
+  
+  <text x="200" y="150" text-anchor="middle" font-size="24">Mini</text>
+  
+  <text x="50" y="200" font-size="16">
+    <tspan x="50" dy="0">Mighty in spirit, infinitely grand,</tspan>
+    <tspan x="50" dy="24">Nestled in life's palm like a grain of sand.</tspan>
+    <tspan x="50" dy="24">Immense potential in a compact form,</tspan>
+    <tspan x="50" dy="24">Your presence, a gentle, joyous storm.</tspan>
   </text>
   
-  <text x="200" y="180" font-family="Arial, sans-serif" font-size="64" font-weight="bold" fill="#8a2be2" text-anchor="middle">
-    ZengHui
-  </text>
+  <circle cx="200" cy="400" r="80" fill="none" stroke="#FFB6C1" stroke-width="2"/>
+  <text x="200" y="405" text-anchor="middle" font-size="14">Small but mighty,</text>
+  <text x="200" y="425" text-anchor="middle" font-size="14">a world in miniature.</text>
   
-  <text x="200" y="260" font-family="Arial, sans-serif" font-size="24" fill="#4b0082" text-anchor="middle">
-    Wishing you a day filled with
-  </text>
-  
-  <text x="200" y="290" font-family="Arial, sans-serif" font-size="24" fill="#4b0082" text-anchor="middle">
-    joy, laughter, and love!
-  </text>
-  
-  <path d="M180,350 Q200,320 220,350 T260,350" fill="none" stroke="#ff69b4" stroke-width="4"></path>
-  
-  <g transform="translate(100,400)">
-    <path d="M0,0 L30,60 L60,0 L30,80 Z" fill="#ffd700"></path>
-    <circle cx="30" cy="20" r="10" fill="#ff4500"></circle>
-  </g>
-  
-  <g transform="translate(300,420) rotate(30)">
-    <rect x="-5" y="-40" width="10" height="80" fill="#98fb98"></rect>
-    <circle cx="0" cy="-50" r="20" fill="#ff69b4"></circle>
-  </g>
-  
-  <text x="200" y="550" font-family="Arial, sans-serif" font-size="18" fill="#4b0082" text-anchor="middle">
-    May your year ahead be filled with
-  </text>
-  
-  <text x="200" y="575" font-family="Arial, sans-serif" font-size="18" fill="#4b0082" text-anchor="middle">
-    wonderful surprises and achievements!
-  </text>
+  <text x="200" y="550" text-anchor="middle" font-size="12">May your day be as special as you are!</text>
 </svg>
