@@ -1,32 +1,46 @@
-<svg width="400" height="600" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <linearGradient id="bg-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#ffe6cc;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#ffcc99;stop-opacity:1" />
-    </linearGradient>
-  </defs>
-
-  <rect width="100%" height="100%" fill="url(#bg-gradient)" />
-
-  <text x="200" y="80" font-family="Brush Script MT, cursive" font-size="36" fill="#00008B" text-anchor="middle">Happy Birthday!</text>
-
-  <line x1="50" y1="100" x2="350" y2="100" stroke="#4B0082" stroke-width="2" />
-
-  <text x="200" y="140" font-family="Georgia, serif" font-size="24" fill="#00008B" text-anchor="middle">27 Years of Wonderful You</text>
-
-  <text x="200" y="200" font-family="Georgia, serif" font-size="16" fill="#00008B" text-anchor="middle">
-    <tspan x="200" dy="0">At 27, you stand at the threshold of infinite possibilities.</tspan>
-    <tspan x="200" dy="24">Like a flower in full bloom, you radiate beauty and potential.</tspan>
-    <tspan x="200" dy="24">Your journey has just begun, and the world awaits</tspan>
-    <tspan x="200" dy="24">your unique gifts and boundless spirit.</tspan>
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="600" viewBox="0 0 400 600">
+  <rect width="100%" height="100%" fill="#f0e6fa"></rect>
+  
+  <path d="M0,50 Q200,0 400,50 L400,550 Q200,600 0,550 Z" fill="#e6f0fa"></path>
+  
+  <circle cx="50" cy="50" r="20" fill="#ffd1dc"></circle>
+  <circle cx="350" cy="50" r="20" fill="#ffd1dc"></circle>
+  <circle cx="50" cy="550" r="20" fill="#ffd1dc"></circle>
+  <circle cx="350" cy="550" r="20" fill="#ffd1dc"></circle>
+  
+  <text x="200" y="100" font-family="Arial, sans-serif" font-size="48" fill="#ff69b4" text-anchor="middle">
+    Happy Birthday
   </text>
-
-  <circle cx="200" cy="380" r="80" fill="none" stroke="#4B0082" stroke-width="2" />
-  <path d="M200,300 Q230,380 200,460 Q170,380 200,300" fill="#98FB98" stroke="#4B0082" stroke-width="2" />
-
-  <text x="200" y="540" font-family="Georgia, serif" font-size="16" fill="#00008B" text-anchor="middle" font-style="italic">
-    <tspan x="200" dy="0">"The two most important days in your life are</tspan>
-    <tspan x="200" dy="24">the day you are born and the day you find out why."</tspan>
-    <tspan x="200" dy="24">- Mark Twain</tspan>
+  
+  <text x="200" y="180" font-family="Arial, sans-serif" font-size="64" font-weight="bold" fill="#8a2be2" text-anchor="middle">
+    ZengHui
+  </text>
+  
+  <text x="200" y="260" font-family="Arial, sans-serif" font-size="24" fill="#4b0082" text-anchor="middle">
+    Wishing you a day filled with
+  </text>
+  
+  <text x="200" y="290" font-family="Arial, sans-serif" font-size="24" fill="#4b0082" text-anchor="middle">
+    joy, laughter, and love!
+  </text>
+  
+  <path d="M180,350 Q200,320 220,350 T260,350" fill="none" stroke="#ff69b4" stroke-width="4"></path>
+  
+  <g transform="translate(100,400)">
+    <path d="M0,0 L30,60 L60,0 L30,80 Z" fill="#ffd700"></path>
+    <circle cx="30" cy="20" r="10" fill="#ff4500"></circle>
+  </g>
+  
+  <g transform="translate(300,420) rotate(30)">
+    <rect x="-5" y="-40" width="10" height="80" fill="#98fb98"></rect>
+    <circle cx="0" cy="-50" r="20" fill="#ff69b4"></circle>
+  </g>
+  
+  <text x="200" y="550" font-family="Arial, sans-serif" font-size="18" fill="#4b0082" text-anchor="middle">
+    May your year ahead be filled with
+  </text>
+  
+  <text x="200" y="575" font-family="Arial, sans-serif" font-size="18" fill="#4b0082" text-anchor="middle">
+    wonderful surprises and achievements!
   </text>
 </svg>
