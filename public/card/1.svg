@@ -1,28 +1,32 @@
 <svg width="400" height="600" xmlns="http://www.w3.org/2000/svg">
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Dancing+Script&amp;family=Roboto+Slab:wght@300&amp;display=swap');
-    text { font-family: 'Roboto Slab', serif; fill: #555; }
-    .title { font-family: 'Dancing Script', cursive; font-size: 32px; }
-  </style>
-  
-  <rect width="100%" height="100%" fill="#FFF5E6" />
-  
-  <text x="200" y="80" text-anchor="middle" class="title">Happy Birthday!</text>
-  
-  <line x1="50" y1="100" x2="350" y2="100" stroke="#FFB6C1" stroke-width="2" />
-  
-  <text x="200" y="150" text-anchor="middle" font-size="24">Mini</text>
-  
-  <text x="50" y="200" font-size="16">
-    <tspan x="50" dy="0">Mighty in spirit, infinitely grand,</tspan>
-    <tspan x="50" dy="24">Nestled in life's palm like a grain of sand.</tspan>
-    <tspan x="50" dy="24">Immense potential in a compact form,</tspan>
-    <tspan x="50" dy="24">Your presence, a gentle, joyous storm.</tspan>
+  <defs>
+    <linearGradient id="bg-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffe6cc;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#ffcc99;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+
+  <rect width="100%" height="100%" fill="url(#bg-gradient)" />
+
+  <text x="200" y="80" font-family="Brush Script MT, cursive" font-size="36" fill="#00008B" text-anchor="middle">Happy Birthday!</text>
+
+  <line x1="50" y1="100" x2="350" y2="100" stroke="#4B0082" stroke-width="2" />
+
+  <text x="200" y="140" font-family="Georgia, serif" font-size="24" fill="#00008B" text-anchor="middle">27 Years of Wonderful You</text>
+
+  <text x="200" y="200" font-family="Georgia, serif" font-size="16" fill="#00008B" text-anchor="middle">
+    <tspan x="200" dy="0">At 27, you stand at the threshold of infinite possibilities.</tspan>
+    <tspan x="200" dy="24">Like a flower in full bloom, you radiate beauty and potential.</tspan>
+    <tspan x="200" dy="24">Your journey has just begun, and the world awaits</tspan>
+    <tspan x="200" dy="24">your unique gifts and boundless spirit.</tspan>
   </text>
-  
-  <circle cx="200" cy="400" r="80" fill="none" stroke="#FFB6C1" stroke-width="2" />
-  <text x="200" y="405" text-anchor="middle" font-size="14">Small but mighty,</text>
-  <text x="200" y="425" text-anchor="middle" font-size="14">a world in miniature.</text>
-  
-  <text x="200" y="550" text-anchor="middle" font-size="12">May your day be as special as you are!</text>
+
+  <circle cx="200" cy="380" r="80" fill="none" stroke="#4B0082" stroke-width="2" />
+  <path d="M200,300 Q230,380 200,460 Q170,380 200,300" fill="#98FB98" stroke="#4B0082" stroke-width="2" />
+
+  <text x="200" y="540" font-family="Georgia, serif" font-size="16" fill="#00008B" text-anchor="middle" font-style="italic">
+    <tspan x="200" dy="0">"The two most important days in your life are</tspan>
+    <tspan x="200" dy="24">the day you are born and the day you find out why."</tspan>
+    <tspan x="200" dy="24">- Mark Twain</tspan>
+  </text>
 </svg>

@@ -1,0 +1,46 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&display=swap');
+
+:root {
+  --background-color: #FFF9F0;
+  --text-color: #4A4A4A;
+  --accent-color: #FFC0CB;
+  --font-family: 'Playfair Display', serif;
+}
+
+body {
+  background-color: var(--background-color);
+  color: var(--text-color);
+  font-family: var(--font-family);
+}
+
+.card {
+  background-color: white;
+  border: 1px solid var(--accent-color);
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.btn-primary {
+  background-color: var(--accent-color);
+  color: var(--text-color);
+}
+
+.btn-primary:hover {
+  background-color: #FFD1DC;
+}
+
+@keyframes flicker {
+  0% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 0.5;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+.animate-flicker {
+  animation: flicker 2s infinite;
+}
