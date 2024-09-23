@@ -3,13 +3,22 @@ import { generateCardContent } from '@/lib/gpt';
 
 export async function POST(request: Request) {
   try {
-    const { cardType, name } = await request.json();
+    const { cardType, name, age, relationship, tone, bestWishes, senderName, additionalInfo } = await request.json();
 
-    if (!cardType || !name) {
+    if (!cardType || !relationship) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    const svgContent = await generateCardContent(cardType, name);
+    const svgContent = await generateCardContent({ 
+      cardType, 
+      name, 
+      age, 
+      relationship, 
+      tone, 
+      bestWishes, 
+      senderName, 
+      additionalInfo 
+    });
     return NextResponse.json({ svgContent });
   } catch (error) {
     console.error('Error generating card:', error);

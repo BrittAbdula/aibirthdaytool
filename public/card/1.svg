@@ -1,28 +1,46 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="400" height="600">
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Dancing+Script&amp;family=Roboto+Slab:wght@300&amp;display=swap');
-    text { font-family: 'Roboto Slab', serif; fill: #555; }
-    .title { font-family: 'Dancing Script', cursive; font-size: 32px; }
-  </style>
+<svg width="400" height="600" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+  </defs>
   
-  <rect width="100%" height="100%" fill="#FFF5E6"/>
+  <!-- Background -->
+  <rect x="0" y="0" width="400" height="600" fill="#f0f4f8"/>
+  <rect x="20" y="20" width="360" height="560" fill="#ffffff"/>
   
-  <text x="200" y="80" text-anchor="middle" class="title">Happy Birthday!</text>
+  <!-- Decorative elements -->
+  <rect x="20" y="20" width="120" height="120" fill="#ff9999" opacity="0.7"/>
+  <circle cx="360" cy="560" r="60" fill="#99ccff" opacity="0.7"/>
+  <polygon points="200,40 240,120 160,120" fill="#99ff99" opacity="0.7"/>
   
-  <line x1="50" y1="100" x2="350" y2="100" stroke="#FFB6C1" stroke-width="2"/>
+  <!-- Title -->
+  <text x="200" y="80" font-family="'Brush Script MT', cursive" font-size="40" fill="#333333" text-anchor="middle">Birthday Wishes</text>
   
-  <text x="200" y="150" text-anchor="middle" font-size="24">Mini</text>
+  <!-- Divider -->
+  <line x1="50" y1="100" x2="350" y2="100" stroke="#333333" stroke-width="2"/>
   
-  <text x="50" y="200" font-size="16">
-    <tspan x="50" dy="0">Mighty in spirit, infinitely grand,</tspan>
-    <tspan x="50" dy="24">Nestled in life's palm like a grain of sand.</tspan>
-    <tspan x="50" dy="24">Immense potential in a compact form,</tspan>
-    <tspan x="50" dy="24">Your presence, a gentle, joyous storm.</tspan>
+  <!-- Main content -->
+  <text x="50" y="140" font-family="Merriweather, serif" font-size="16" fill="#555555">
+    <tspan x="50" dy="0">Dear Alice,</tspan>
+    <tspan x="50" dy="30">As you turn 30, may your path be as lovely as your name suggests:</tspan>
+    <tspan x="50" dy="25">A - Adventurous in spirit</tspan>
+    <tspan x="50" dy="25">L - Lively in laughter</tspan>
+    <tspan x="50" dy="25">I - Inspiring to others</tspan>
+    <tspan x="50" dy="25">C - Courageous in pursuit of dreams</tspan>
+    <tspan x="50" dy="25">E - Enchanting in your unique way</tspan>
+    <tspan x="50" dy="35">Your love for nature and philosophy reflects the depth of your</tspan>
+    <tspan x="50" dy="25">character. May this year bring you wisdom like ancient trees</tspan>
+    <tspan x="50" dy="25">and wonder like starry nights.</tspan>
+    <tspan x="50" dy="35">Here's to embracing the beauty of your 30th year, where</tspan>
+    <tspan x="50" dy="25">each day unfolds like a new page in your book of life.</tspan>
+    <tspan x="50" dy="35">Happy Birthday!</tspan>
+    <tspan x="50" dy="30">Your friend,</tspan>
+    <tspan x="50" dy="25">Bob</tspan>
   </text>
   
-  <circle cx="200" cy="400" r="80" fill="none" stroke="#FFB6C1" stroke-width="2"/>
-  <text x="200" y="405" text-anchor="middle" font-size="14">Small but mighty,</text>
-  <text x="200" y="425" text-anchor="middle" font-size="14">a world in miniature.</text>
-  
-  <text x="200" y="550" text-anchor="middle" font-size="12">May your day be as special as you are!</text>
+  <!-- Simple illustration -->
+  <g transform="translate(280, 400) scale(0.7)">
+    <path d="M0,100 Q50,-30 100,100 T200,100" fill="none" stroke="#555555" stroke-width="3"/>
+    <circle cx="0" cy="100" r="10" fill="#99ff99"/>
+    <circle cx="100" cy="100" r="10" fill="#ff9999"/>
+    <circle cx="200" cy="100" r="10" fill="#99ccff"/>
+  </g>
 </svg>

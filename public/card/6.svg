@@ -1,41 +1,32 @@
 <svg width="400" height="600" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <linearGradient id="bg-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#FFD700;stop-opacity:0.3" />
-      <stop offset="100%" style="stop-color:#C0C0C0;stop-opacity:0.3" />
-    </linearGradient>
-  </defs>
+  <rect width="100%" height="100%" fill="#f0e6f6"></rect>
   
-  <rect width="100%" height="100%" fill="url(#bg-gradient)" />
+  <!-- Decorative elements -->
+  <circle cx="50" cy="50" r="30" fill="#ffd1dc"></circle>
+  <circle cx="350" cy="550" r="40" fill="#b0e0e6"></circle>
+  <path d="M0 300 Q200 200 400 300" stroke="#ffa07a" stroke-width="5" fill="none"></path>
   
-  <text x="200" y="80" font-family="cursive" font-size="36" fill="#8B4513" text-anchor="middle">生日快乐</text>
+  <!-- Balloon strings -->
+  <line x1="100" y1="200" x2="100" y2="100" stroke="#a9a9a9" stroke-width="2"></line>
+  <line x1="300" y1="180" x2="300" y2="80" stroke="#a9a9a9" stroke-width="2"></line>
   
-  <line x1="50" y1="100" x2="350" y2="100" stroke="#8B4513" stroke-width="2" />
+  <!-- Balloons -->
+  <ellipse cx="100" cy="80" rx="40" ry="50" fill="#ffb6c1"></ellipse>
+  <ellipse cx="300" cy="60" rx="40" ry="50" fill="#98fb98"></ellipse>
   
-  <text x="200" y="140" font-family="Arial, sans-serif" font-size="24" fill="#8B4513" text-anchor="middle">占婧</text>
-  <text x="200" y="170" font-family="Arial, sans-serif" font-size="16" fill="#8B4513" text-anchor="middle">Zhan Jing</text>
-  <text x="200" y="200" font-family="Arial, sans-serif" font-size="16" fill="#8B4513" text-anchor="middle">せん せい</text>
+  <!-- Card message -->
+  <text x="200" y="280" font-family="Arial, sans-serif" font-size="24" fill="#4b0082" text-anchor="middle">Happy Birthday, Mom!</text>
   
-  <foreignObject x="50" y="230" width="300" height="200">
-    <div xmlns="http://www.w3.org/1999/xhtml" style="font-family: 'STKaiti', 'SimSun', serif; font-size: 18px; color: #8B4513; text-align: center;">
-      占，如星辰占据夜空；婧，似晶莹剔透的美玉。
-      你的名字仿佛是上天的精心安排，
-      预示着你将在这世间占据一方天地，
-      散发出独特而纯净的光芒。
-      愿你如占卜未来的智者，洞察生命的奥秘；
-      如婧静的湖面，倒映出内心的美好。
-      生日快乐，愿你的人生如你的名字一般，
-      占尽天时地利，婧美如初见。
-    </div>
-  </foreignObject>
+  <text x="200" y="320" font-family="Arial, sans-serif" font-size="16" fill="#4b0082" text-anchor="middle">To the world's most amazing mother,</text>
+  <text x="200" y="350" font-family="Arial, sans-serif" font-size="16" fill="#4b0082" text-anchor="middle">may your day be filled with joy and laughter!</text>
+  <text x="200" y="380" font-family="Arial, sans-serif" font-size="16" fill="#4b0082" text-anchor="middle">Wishing you good health and happiness always.</text>
   
-  <g transform="translate(200, 450)">
-    <circle cx="0" cy="0" r="50" fill="#FFD700" opacity="0.5" />
-    <text x="0" y="5" font-family="Arial, sans-serif" font-size="14" fill="#8B4513" text-anchor="middle">占婧</text>
-    <circle cx="-30" cy="-30" r="10" fill="#FF69B4" />
-    <circle cx="30" cy="-30" r="10" fill="#FF69B4" />
-    <path d="M-20,20 Q0,40 20,20" stroke="#8B4513" stroke-width="2" fill="none" />
-  </g>
+  <text x="200" y="440" font-family="Arial, sans-serif" font-size="18" fill="#4b0082" text-anchor="middle">With all my love,</text>
+  <text x="200" y="470" font-family="Arial, sans-serif" font-size="18" fill="#4b0082" text-anchor="middle">Your Child</text>
   
-  <text x="200" y="570" font-family="cursive" font-size="18" fill="#8B4513" text-anchor="middle">来自你的朋友</text>
+  <!-- Cake -->
+  <rect x="150" y="500" width="100" height="60" fill="#ffdab9"></rect>
+  <rect x="140" y="490" width="120" height="20" fill="#d2691e"></rect>
+  <circle cx="200" cy="490" r="5" fill="#ff69b4"></circle>
+  <line x1="200" y1="490" x2="200" y2="470" stroke="#ffd700" stroke-width="2"></line>
 </svg>
