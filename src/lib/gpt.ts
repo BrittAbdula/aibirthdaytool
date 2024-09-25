@@ -103,8 +103,8 @@ Your response should only include the complete SVG code for the birthday card, e
             method: "POST",
             headers: {
                 "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
-                "HTTP-Referer": YOUR_SITE_URL,
-                "X-Title": YOUR_SITE_NAME,
+                "HTTP-Referer": 'https://mewtrucard.com/',
+                "X-Title": 'MewTruCard',
                 "Content-Type": "application/json"
             },
             body: JSON.stringify({
