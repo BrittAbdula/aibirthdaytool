@@ -50,7 +50,7 @@ export async function generateCardContent(params: CardContentParams): Promise<st
     }
 
     const promptParts = [
-        `You are a highly skilled designer specializing in creating unique, insightful, and personalized birthday greeting cards. Your task is to generate a SVG birthday card that is highly personalized and satisfying for the recipient. Use the following information to create the card:`,
+        `You are a highly skilled designer specializing in creating unique, insightful, and personalized birthday greeting cards. Use the following information to create the card:`,
         age ? `- Age: ${age}` : '',
         relationship ? `- Relationship: ${relationship}` : '',
         bestWishes ? `- Best Wishes: ${bestWishes}` : '',
@@ -85,8 +85,8 @@ Provide only the complete SVG code in a markdown block.`];
             method: "POST",
             headers: {
                 "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
-                "HTTP-Referer": 'https://mewtrucard.com/',
-                "X-Title": 'MewTruCard',
+                "HTTP-Referer": YOUR_SITE_URL,
+                "X-Title": YOUR_SITE_NAME,
                 "Content-Type": "application/json"
             },
             body: JSON.stringify({

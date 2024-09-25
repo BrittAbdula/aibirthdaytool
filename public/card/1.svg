@@ -1,66 +1,55 @@
 <svg width="400" height="600" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <linearGradient id="bg-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#FFF5E6;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#FFE0B2;stop-opacity:1" />
+      <stop offset="0%" style="stop-color:#f9d5e5;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#eeac99;stop-opacity:1" />
     </linearGradient>
     <filter id="drop-shadow">
-      <feGaussianBlur in="SourceAlpha" stdDeviation="2"/>
-      <feOffset dx="2" dy="2" result="offsetblur"/>
-      <feFlood flood-color="#00000033"/>
-      <feComposite in2="offsetblur" operator="in"/>
+      <feGaussianBlur in="SourceAlpha" stdDeviation="2" />
+      <feOffset dx="2" dy="2" result="offsetblur" />
+      <feFlood flood-color="#00000033" />
+      <feComposite in2="offsetblur" operator="in" />
       <feMerge>
-        <feMergeNode/>
-        <feMergeNode in="SourceGraphic"/>
+        <feMergeNode />
+        <feMergeNode in="SourceGraphic" />
       </feMerge>
     </filter>
   </defs>
   
-  <rect width="100%" height="100%" fill="url(#bg-gradient)"/>
+  <!-- Background -->
+  <rect width="100%" height="100%" fill="url(#bg-gradient)" />
   
-  <g filter="url(#drop-shadow)">
-    <path d="M50,50 Q200,20 350,50 Q380,300 350,550 Q200,580 50,550 Q20,300 50,50 Z" fill="#FFFFFF" stroke="#FFB74D" stroke-width="3"/>
+  <!-- Decorative elements -->
+  <g id="decorations">
+    <!-- Butterfly symbolizing freedom -->
+    <path d="M200,100 Q230,80 260,100 T320,100 Q290,130 320,160 T260,160 Q230,180 200,160 T140,160 Q170,130 140,100 T200,100" fill="#ff9999" filter="url(#drop-shadow)" />
+    <path d="M198,130 L202,130 L200,160 Z" fill="#663366" />
+    
+    <!-- Flower symbolizing health and growth -->
+    <g transform="translate(100,450) rotate(-30)">
+      <path d="M0,0 Q20,-20 0,-40 Q-20,-20 0,0" fill="#ffcccc" />
+      <path d="M0,0 Q20,20 40,0 Q20,-20 0,0" fill="#ffcccc" />
+      <path d="M0,0 Q-20,20 0,40 Q20,20 0,0" fill="#ffcccc" />
+      <path d="M0,0 Q-20,-20 -40,0 Q-20,20 0,0" fill="#ffcccc" />
+      <circle cx="0" cy="0" r="10" fill="#ffff99" />
+    </g>
   </g>
   
-  <text x="200" y="100" font-family="STKaiti, Kaiti SC, serif" font-size="36" text-anchor="middle" fill="#FF8F00">生日快乐</text>
-  <text x="200" y="150" font-family="STKaiti, Kaiti SC, serif" font-size="48" text-anchor="middle" fill="#FF6F00">曾丽</text>
-  
-  <g transform="translate(200,300) scale(0.7)">
-    <path d="M0,-100 A100,100 0 0,1 86.6,-50 L0,0 Z" fill="#FFA726"/>
-    <path d="M86.6,-50 A100,100 0 0,1 86.6,50 L0,0 Z" fill="#FB8C00"/>
-    <path d="M86.6,50 A100,100 0 0,1 0,100 L0,0 Z" fill="#F57C00"/>
-    <path d="M0,100 A100,100 0 0,1 -86.6,50 L0,0 Z" fill="#EF6C00"/>
-    <path d="M-86.6,50 A100,100 0 0,1 -86.6,-50 L0,0 Z" fill="#E65100"/>
-    <path d="M-86.6,-50 A100,100 0 0,1 0,-100 L0,0 Z" fill="#FF9800"/>
-    <circle cx="0" cy="0" r="30" fill="#FFFFFF"/>
-    <text x="0" y="10" font-family="Arial, sans-serif" font-size="28" text-anchor="middle" fill="#FF6F00">35</text>
-  </g>
-  
-  <text x="200" y="450" font-family="STXihei, Heiti SC, sans-serif" font-size="16" text-anchor="middle" fill="#333333">
-    <tspan x="200" dy="0">愿你如阳光般温暖，如清风般自由，</tspan>
-    <tspan x="200" dy="24">在人生的画布上挥洒属于你的绚丽色彩。</tspan>
-    <tspan x="200" dy="24">健康快乐，自由飞翔！</tspan>
+  <!-- Main text -->
+  <text x="200" y="250" font-family="Arial, sans-serif" font-size="24" fill="#663366" text-anchor="middle">
+    亲爱的曾丽，生日快乐！
   </text>
   
-  <text x="200" y="540" font-family="STKaiti, Kaiti SC, serif" font-size="20" text-anchor="middle" fill="#FF6F00">爱你的哥哥：曾辉</text>
+  <!-- Personalized message -->
+  <text x="200" y="300" font-family="Arial, sans-serif" font-size="16" fill="#663366" text-anchor="middle">
+    <tspan x="200" dy="0">愿你如蝴蝶般自由翱翔，</tspan>
+    <tspan x="200" dy="25">如鲜花般绽放健康。</tspan>
+    <tspan x="200" dy="25">35岁的你更加美丽动人，</tspan>
+    <tspan x="200" dy="25">愿幸福与你常伴。</tspan>
+  </text>
   
-  <g transform="translate(60,70) rotate(-30)">
-    <path d="M0,0 Q10,-10 20,0 Q30,10 40,0 Q50,-10 60,0" fill="none" stroke="#FFA726" stroke-width="3"/>
-    <path d="M0,10 Q10,0 20,10 Q30,20 40,10 Q50,0 60,10" fill="none" stroke="#FB8C00" stroke-width="3"/>
-  </g>
-  
-  <g transform="translate(340,70) rotate(30) scale(-1,1)">
-    <path d="M0,0 Q10,-10 20,0 Q30,10 40,0 Q50,-10 60,0" fill="none" stroke="#FFA726" stroke-width="3"/>
-    <path d="M0,10 Q10,0 20,10 Q30,20 40,10 Q50,0 60,10" fill="none" stroke="#FB8C00" stroke-width="3"/>
-  </g>
-  
-  <g transform="translate(60,530) rotate(-15)">
-    <path d="M0,0 Q10,-10 20,0 Q30,10 40,0 Q50,-10 60,0" fill="none" stroke="#FFA726" stroke-width="3"/>
-    <path d="M0,10 Q10,0 20,10 Q30,20 40,10 Q50,0 60,10" fill="none" stroke="#FB8C00" stroke-width="3"/>
-  </g>
-  
-  <g transform="translate(340,530) rotate(15) scale(-1,1)">
-    <path d="M0,0 Q10,-10 20,0 Q30,10 40,0 Q50,-10 60,0" fill="none" stroke="#FFA726" stroke-width="3"/>
-    <path d="M0,10 Q10,0 20,10 Q30,20 40,10 Q50,0 60,10" fill="none" stroke="#FB8C00" stroke-width="3"/>
-  </g>
+  <!-- Signature -->
+  <text x="320" y="550" font-family="Arial, sans-serif" font-size="16" fill="#663366" text-anchor="end">
+    爱你的哥哥，曾辉
+  </text>
 </svg>

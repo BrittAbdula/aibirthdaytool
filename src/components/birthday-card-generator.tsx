@@ -10,6 +10,8 @@ import { ChevronDownIcon, ChevronUpIcon } from '@radix-ui/react-icons'
 import confetti from 'canvas-confetti'
 import { Slider } from "@/components/ui/slider"
 import { Textarea } from "@/components/ui/textarea"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+
 
 // Flickering Grid 组件
 const FlickeringGrid = () => {
@@ -103,11 +105,13 @@ export default function BirthdayCardGenerator() {
   const [isLoading, setIsLoading] = useState(false)
   const [showAdvancedOptions, setShowAdvancedOptions] = useState(false)
   const [age, setAge] = useState<number | null>(null)
+  const [error, setError] = useState<string | null>(null)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
     setSvgContent(null)
+    setError(null)
     try {
       const response = await fetch('/api/generate-card', {
         method: 'POST',
@@ -143,6 +147,7 @@ export default function BirthdayCardGenerator() {
     } catch (error) {
       console.error("Error generating card:", error)
       setSvgContent(null)
+      setError(error instanceof Error ? error.message : 'error')
     } finally {
       setIsLoading(false)
     }
@@ -151,6 +156,11 @@ export default function BirthdayCardGenerator() {
   return (
     <main className="container mx-auto px-4 py-8 sm:py-12 bg-[#FFF9F0]">
       <h1 className="text-3xl sm:text-4xl font-serif font-bold text-center mb-8 sm:mb-12 text-[#4A4A4A]">MewTruCard Generator</h1>
+      {error && (
+        <Alert variant="destructive" className="mb-4">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
       <div className="flex flex-col lg:flex-row justify-center items-center gap-8 lg:gap-16">
         <Card className="p-4 sm:p-6 bg-white border border-[#FFC0CB] shadow-md w-full max-w-md relative">
           <CardHeader>
