@@ -120,7 +120,9 @@ Your response should only include the complete SVG code for the birthday card, e
         }
 
         const data: GPTResponse = await response.json();
+        console.log("data", data);
         const content = data.choices[0].message.content;
+        console.log("content", content);
 
         // 提取 SVG 内容
         const svgMatch = content.match(/<svg[\s\S]*?<\/svg>/);
