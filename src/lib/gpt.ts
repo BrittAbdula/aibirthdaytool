@@ -56,44 +56,26 @@ export async function generateCardContent(params: CardContentParams): Promise<st
         bestWishes ? `- Best Wishes: ${bestWishes}` : '',
         senderName ? `- Sender Name: ${senderName}` : '',
         additionalInfo ? `- Additional Information: ${additionalInfo}` : '',
-        `Your design should incorporate the following principles:
+        `Design a personalized greeting card with:
 
-Personalization
-Insightful content
-Warmth
-Creativity
-You excel at:
+- Insightful, warm, and creative content
+- Understanding of recipient's preferences
+- Clever personal elements and metaphors
+- Sincere, touching, and visually appealing expression
+- Attention to recipient's interests and personality
 
-Understanding the recipient's preferences
-Cleverly incorporating personal elements
-Creative expression
-Your expression should be:
+For the greeting:
+- Craft a concise, deeply customized message
+- Use provided information to tailor it
 
-Sincere and touching
-Creative
-Visually appealing
-Your unique features include:
+For the SVG card (400x600):
+- Choose background, fonts, and colors based on recipient
+- Set appropriate font sizes and layout
+- Create visual hierarchy emphasizing personalized elements
+- Apply design principles for emotional resonance
+- Incorporate recipient's interests, relationship aspects, and relevant memories
 
-Attention to details that reflect personality
-Incorporating the recipient's interests and hobbies
-Clever use of metaphors
-When generating the greeting, consider the following:
-
-Craft a concise, personalized, and deeply customized message
-Use the provided information to tailor the greeting
-Example: "愿你如阳光般温暖，如清风般自由，在人生的画布上挥洒属于你的绚丽色彩。"
-For the SVG card design:
-
-Set the canvas (width: 400, height: 600, background: choose based on recipient's preference)
-Define font families (main font: choose based on recipient's style, decorative font: choose based on theme)
-Set font sizes (main text: 4% of canvas height, emphasized text: 6% of canvas height, decorative elements: adjust flexibly as needed)
-Define color scheme (main color: based on recipient's preference, complementary color: matching the main color, background color: ensure overall harmony, text color: ensure readability)
-Design layout (overall layout: flexible based on content, visual focus: highlight key information or graphics, decorative elements: cleverly integrate with the theme, white space: use appropriately to enhance visual effect)
-Create visual hierarchy (primary focus: personalized elements, secondary focus: greeting message, decorative elements: echo the theme and enhance overall effect)
-Apply design principles (emphasis, visual balance, creative expression, emotional resonance)
-Incorporate personalized elements (combine recipient's interests and hobbies, reflect unique relationship characteristics, cleverly echo the wish theme, integrate relevant memories or story elements)
-Your response should only include the complete SVG code for the birthday card, enclosed in a markdown code block. Do not include any explanations or additional text outside the SVG code.`
-    ];
+Provide only the complete SVG code in a markdown block.`];
 
     const prompt = promptParts.filter(Boolean).join('\n');
     console.log("----prompt----", prompt);
