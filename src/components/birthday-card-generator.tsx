@@ -8,6 +8,8 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card"
 import { ChevronDownIcon, ChevronUpIcon } from '@radix-ui/react-icons'
 import confetti from 'canvas-confetti'
+import { Slider } from "@/components/ui/slider"
+import { Textarea } from "@/components/ui/textarea"
 
 // Flickering Grid 组件
 const FlickeringGrid = () => {
@@ -34,27 +36,73 @@ const personalityTraitsOptions = [
 ]
 
 const toneOptions = [
-  'Sincere and Warm', 'Playful and Cute', 'Romantic and Poetic', 
+  'Sincere and Warm', 'Playful and Cute', 'Romantic and Poetic',
   'Lighthearted and Joyful', 'Inspirational and Encouraging', 'Thankful', 'Formal'
 ]
 
 const bestWishesOptions = [
-  'Success', 'Happiness', 'Good Health', 'Love and Joy', 
+  'Success', 'Happiness', 'Good Health', 'Love and Joy',
   'Adventures', 'Career Advancement'
 ]
+
+const AgeSelector = ({ age, setAge }: { age: number | null, setAge: (age: number | null) => void }) => {
+  const handleSliderChange = (value: number[]) => {
+    setAge(value[0] || null)
+  }
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value === '' ? null : parseInt(e.target.value)
+    if (value === null || (!isNaN(value) && value >= 0 && value <= 120)) {
+      setAge(value)
+    }
+  }
+
+  return (
+    <div className="space-y-2">
+      <Label htmlFor="age">Age (Optional)</Label>
+      <div className="flex items-center space-x-4">
+        <Slider
+          id="age-slider"
+          min={0}
+          max={120}
+          step={1}
+          value={[age || 0]}
+          onValueChange={handleSliderChange}
+          className="flex-grow custom-slider"
+        />
+        <Input
+          id="age-input"
+          type="number"
+          min={0}
+          max={120}
+          value={age === null ? '' : age}
+          onChange={handleInputChange}
+          className="w-16 text-center"
+        />
+      </div>
+      <div className="flex justify-between text-xs text-gray-500">
+        <span>0</span>
+        <span>30</span>
+        <span>60</span>
+        <span>90</span>
+        <span>120</span>
+      </div>
+    </div>
+  )
+}
 
 export default function BirthdayCardGenerator() {
   const [cardType, setCardType] = useState('birthday')
   const [name, setName] = useState('')
-  const [age, setAge] = useState('')
-  const [relationship, setRelationship] = useState('')
+  const [relationship, setRelationship] = useState('Myself')
   const [tone, setTone] = useState('')
-  const [bestWishes, setBestWishes] = useState<string[]>([])
+  const [bestWishes, setBestWishes] = useState('Happiness')
   const [senderName, setSenderName] = useState('')
   const [additionalInfo, setAdditionalInfo] = useState('')
   const [svgContent, setSvgContent] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [showAdvancedOptions, setShowAdvancedOptions] = useState(false)
+  const [age, setAge] = useState<number | null>(null)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -66,14 +114,14 @@ export default function BirthdayCardGenerator() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ 
-          cardType, 
-          name, 
-          age, 
-          relationship, 
-          bestWishes, 
-          senderName, 
-          additionalInfo 
+        body: JSON.stringify({
+          cardType,
+          name,
+          age,
+          relationship,
+          bestWishes,
+          senderName,
+          additionalInfo
         }),
       });
 
@@ -104,62 +152,57 @@ export default function BirthdayCardGenerator() {
     <main className="container mx-auto px-4 py-8 sm:py-12 bg-[#FFF9F0]">
       <h1 className="text-3xl sm:text-4xl font-serif font-bold text-center mb-8 sm:mb-12 text-[#4A4A4A]">MewTruCard Generator</h1>
       <div className="flex flex-col lg:flex-row justify-center items-center gap-8 lg:gap-16">
-        <Card className="p-4 sm:p-6 bg-white border border-[#FFC0CB] shadow-md w-full max-w-md">
+        <Card className="p-4 sm:p-6 bg-white border border-[#FFC0CB] shadow-md w-full max-w-md relative">
           <CardHeader>
             <CardTitle className="font-serif text-[#4A4A4A]">Create Your MewTruCard</CardTitle>
-            <CardDescription className="text-[#4A4A4A]">Fill in the details for your custom card</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="cardType">Card Type</Label>
+            <CardDescription className="text-[#4A4A4A]">Fill in your custom card details</CardDescription>
+            <div className="absolute top-2 right-2">
               <Select value={cardType} onValueChange={setCardType}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select card type" />
+                <SelectTrigger className="w-[140px] h-8 text-sm bg-transparent border-none focus:ring-0 focus:ring-offset-0">
+                  <SelectValue />
+                  <ChevronDownIcon className="h-4 w-4 opacity-50" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="birthday" className="bg-pink-100">Birthday Card</SelectItem>
-                  <SelectItem value="love" className="bg-red-100">Love Card</SelectItem>
-                  <SelectItem value="congratulations" className="bg-yellow-100">Congratulations Card</SelectItem>
+                  <SelectItem value="birthday">Birthday Card</SelectItem>
+                  <SelectItem value="love">Love Card</SelectItem>
+                  <SelectItem value="congratulations">Congratulations Card</SelectItem>
                 </SelectContent>
               </Select>
             </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="relationship">To</Label>
               <Select value={relationship} onValueChange={setRelationship}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select relationship" />
+                  <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Father" className="bg-blue-100">Father</SelectItem>
-                  <SelectItem value="Mother" className="bg-green-100">Mother</SelectItem>
-                  <SelectItem value="Wife" className="bg-pink-100">Wife</SelectItem>
-                  <SelectItem value="Husband" className="bg-purple-100">Husband</SelectItem>
-                  <SelectItem value="Boyfriend" className="bg-red-100">Boyfriend</SelectItem>
-                  <SelectItem value="Girlfriend" className="bg-yellow-100">Girlfriend</SelectItem>
-                  <SelectItem value="Friend" className="bg-orange-100">Friend</SelectItem>
+                  <SelectItem value="Myself">Myself</SelectItem>
+                  <SelectItem value="Friend">Friend</SelectItem>
+                  <SelectItem value="Father">Father</SelectItem>
+                  <SelectItem value="Mother">Mother</SelectItem>
+                  <SelectItem value="Wife">Wife</SelectItem>
+                  <SelectItem value="Husband">Husband</SelectItem>
+                  <SelectItem value="Boyfriend">Boyfriend</SelectItem>
+                  <SelectItem value="Girlfriend">Girlfriend</SelectItem>
+                  <SelectItem value="Brother">Brother</SelectItem>
+                  <SelectItem value="Sister">Sister</SelectItem>
                 </SelectContent>
               </Select>
             </div>
+            <div className="space-y-2">
+              <Label htmlFor="name">Recipient&apos;s Name</Label>
+              <Input
+                id="name"
+                placeholder="Enter name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+              />
+            </div>
             {showAdvancedOptions && (
               <>
-                <div className="space-y-2">
-                  <Label htmlFor="age">Age (Optional)</Label>
-                  <Input
-                    id="age"
-                    placeholder="Enter age"
-                    value={age}
-                    onChange={(e) => setAge(e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="name">Recipient&apos;s Name/Nickname (Optional)</Label>
-                  <Input
-                    id="name"
-                    placeholder="Enter name"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                  />
-                </div>
+                <AgeSelector age={age} setAge={setAge} />
                 <div className="space-y-2">
                   <Label htmlFor="tone">Tone of the Message (Optional)</Label>
                   <Select value={tone} onValueChange={setTone}>
@@ -168,7 +211,7 @@ export default function BirthdayCardGenerator() {
                     </SelectTrigger>
                     <SelectContent>
                       {toneOptions.map(tone => (
-                        <SelectItem key={tone} value={tone} className="bg-gray-100">{tone}</SelectItem>
+                        <SelectItem key={tone} value={tone}>{tone}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -184,7 +227,7 @@ export default function BirthdayCardGenerator() {
                           name="bestWishes"
                           value={wish}
                           checked={bestWishes.includes(wish)}
-                          onChange={() => setBestWishes([wish])}
+                          onChange={() => setBestWishes(wish)}
                           className="hidden"
                         />
                         <span className={`px-4 py-2 rounded-full cursor-pointer ${bestWishes.includes(wish) ? 'bg-pink-200 text-pink-800' : 'bg-gray-200 text-gray-800'}`}>
@@ -195,6 +238,17 @@ export default function BirthdayCardGenerator() {
                   </div>
                 </div>
                 <div className="space-y-2">
+                  <Label htmlFor="additionalInfo">Additional Information (Optional)</Label>
+                   <Textarea
+    id="additionalInfo"
+                    placeholder="Anything you want to say or your Story"
+    value={additionalInfo}
+    onChange={(e) => setAdditionalInfo(e.target.value)}
+    rows={2}
+    className="resize-none"
+  />
+                </div>
+                <div className="space-y-2">
                   <Label htmlFor="senderName">Your Name (Optional)</Label>
                   <Input
                     id="senderName"
@@ -203,19 +257,10 @@ export default function BirthdayCardGenerator() {
                     onChange={(e) => setSenderName(e.target.value)}
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="additionalInfo">Additional Information (Optional)</Label>
-                  <Input
-                    id="additionalInfo"
-                    placeholder="Enter additional information"
-                    value={additionalInfo}
-                    onChange={(e) => setAdditionalInfo(e.target.value)}
-                  />
-                </div>
               </>
             )}
             <div className="flex justify-end">
-              <button 
+              <button
                 className="text-[#FFC0CB] hover:text-[#FFD1DC] focus:outline-none"
                 onClick={() => setShowAdvancedOptions(!showAdvancedOptions)}
               >
@@ -231,7 +276,7 @@ export default function BirthdayCardGenerator() {
         </Card>
 
         <div className="flex flex-col lg:flex-row items-center justify-center my-4 lg:my-0">
-          <svg className="w-12 h-12 lg:w-16 lg:h-16 text-[#FFC0CB] transform rotate-90 lg:rotate-0" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <svg className="w-12 h-12 lg:w-16 lg:h-16 text-[#b19bff] transform rotate-90 lg:rotate-0" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M4 12H20M20 12L14 6M20 12L14 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </div>
