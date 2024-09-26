@@ -1,15 +1,20 @@
 import { Metadata } from "next";
 import BirthdayCardGenerator from "@/components/birthday-card-generator";
+import { HowToUse } from "@/components/HowToUse";
+import { WhyChooseMewTruCard } from "@/components/WhyChooseMewTruCard";
 
 export const metadata: Metadata = {
-  title: "MewTruCard - AI Birthday Card Generator",
-  description: "Create personalized birthday cards with our AI-powered generator",
+  title: "MewTruCard - AI Greeting Card Generator",
+  description: "Create personalized cards for birthdays, love, holidays, and more with MewTruCard's AI-powered generator. Easy to use with a variety of beautiful templates."
 };
 
 export default function Home() {
   return (
-    <main>
+    <main className="container mx-auto px-4 py-8">
+      <h1 className="text-3xl sm:text-4xl font-serif font-bold text-center mb-8 sm:mb-12 text-[#4A4A4A]">MewTruCard Generator</h1>
       <BirthdayCardGenerator />
+      <HowToUse />
+      <WhyChooseMewTruCard />
     </main>
   );
 }

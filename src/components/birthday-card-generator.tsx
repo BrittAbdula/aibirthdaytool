@@ -1,5 +1,5 @@
 'use client'
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import Image from 'next/image'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -11,6 +11,8 @@ import confetti from 'canvas-confetti'
 import { Slider } from "@/components/ui/slider"
 import { Textarea } from "@/components/ui/textarea"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { ImageViewer } from '@/components/ImageViewer'
+import { extractTextFromSvg } from '@/lib/utils'
 
 
 // Flickering Grid 组件
@@ -107,6 +109,13 @@ export default function BirthdayCardGenerator() {
   const [age, setAge] = useState<number | null>(null)
   const [error, setError] = useState<string | null>(null)
 
+  useEffect(() => {
+    fetch('/card/1.svg')
+      .then(response => response.text())
+      .then(svgContent => setSvgContent(svgContent))
+      .catch(error => console.error('load default svg failed:', error))
+  }, [])
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
@@ -155,7 +164,6 @@ export default function BirthdayCardGenerator() {
 
   return (
     <main className="container mx-auto px-4 py-8 sm:py-12 bg-[#FFF9F0]">
-      <h1 className="text-3xl sm:text-4xl font-serif font-bold text-center mb-8 sm:mb-12 text-[#4A4A4A]">MewTruCard Generator</h1>
       {error && (
         <Alert variant="destructive" className="mb-4">
           <AlertDescription>{error}</AlertDescription>
@@ -176,6 +184,13 @@ export default function BirthdayCardGenerator() {
                   <SelectItem value="birthday">Birthday Card</SelectItem>
                   <SelectItem value="love">Love Card</SelectItem>
                   <SelectItem value="congratulations">Congratulations Card</SelectItem>
+                  <SelectItem value="thankyou">Thank You Card</SelectItem>
+                  <SelectItem value="holiday">Holiday Card</SelectItem>
+                  <SelectItem value="getwell">Get Well Soon Card</SelectItem>
+                  <SelectItem value="farewell">Farewell Card</SelectItem>
+                  <SelectItem value="sympathy">Sympathy Card</SelectItem>
+                  <SelectItem value="invitation">Invitation Card</SelectItem>
+                  <SelectItem value="anniversary">Anniversary Card</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -249,14 +264,14 @@ export default function BirthdayCardGenerator() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="additionalInfo">Additional Information (Optional)</Label>
-                   <Textarea
-    id="additionalInfo"
+                  <Textarea
+                    id="additionalInfo"
                     placeholder="Anything you want to say or your Story"
-    value={additionalInfo}
-    onChange={(e) => setAdditionalInfo(e.target.value)}
-    rows={2}
-    className="resize-none"
-  />
+                    value={additionalInfo}
+                    onChange={(e) => setAdditionalInfo(e.target.value)}
+                    rows={2}
+                    className="resize-none"
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="senderName">Your Name (Optional)</Label>
@@ -298,10 +313,7 @@ export default function BirthdayCardGenerator() {
             ) : (
               <div className="w-full h-full flex items-center justify-center overflow-hidden">
                 {svgContent ? (
-                  <div
-                    className="w-full h-full flex items-center justify-center"
-                    dangerouslySetInnerHTML={{ __html: svgContent }}
-                  />
+                  <ImageViewer svgContent={svgContent} alt={extractTextFromSvg(svgContent || 'Birthday Card')} />
                 ) : (
                   <Image
                     src="/card/1.svg"
@@ -316,36 +328,6 @@ export default function BirthdayCardGenerator() {
           </div>
         </div>
       </div>
-
-      <section className="mt-24">
-        <h2 className="text-3xl font-serif font-semibold mb-8 text-center text-[#4A4A4A]">Why Choose MewTruCard?</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-12 max-w-5xl mx-auto">
-          <Card className="bg-white border border-[#FFC0CB]">
-            <CardHeader>
-              <CardTitle className="font-serif text-[#4A4A4A]">Personalized</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-[#4A4A4A]">Create unique cards with custom messages and designs for your loved ones.</p>
-            </CardContent>
-          </Card>
-          <Card className="bg-white border border-[#FFC0CB]">
-            <CardHeader>
-              <CardTitle className="font-serif text-[#4A4A4A]">Quick & Easy</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-[#4A4A4A]">Generate beautiful cards in seconds with our user-friendly interface.</p>
-            </CardContent>
-          </Card>
-          <Card className="bg-white border border-[#FFC0CB]">
-            <CardHeader>
-              <CardTitle className="font-serif text-[#4A4A4A]">Variety</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-[#4A4A4A]">Choose from a wide range of card types for every occasion and celebration.</p>
-            </CardContent>
-          </Card>
-        </div>
-      </section>
     </main>
   )
 }

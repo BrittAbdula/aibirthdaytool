@@ -4,6 +4,7 @@ import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import '@/styles/globals.css';
+import { Toaster } from "@/components/ui/toaster";
 
 const playfair = Playfair_Display({ subsets: ["latin"] });
 
@@ -24,6 +25,7 @@ export default function RootLayout({
           <Header />
           <main className="flex-grow">{children}</main>
           <Footer />
+          <Toaster />
         </div>
       </body>
     </html>

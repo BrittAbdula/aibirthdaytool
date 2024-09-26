@@ -1,7 +1,7 @@
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
 const YOUR_SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'http://MewTruCard.COM';
 const YOUR_SITE_NAME = 'MewTruCard';
-import { prompt_cn, prompt_en } from './prompt';
+import { prompt_cn, prompt_en, prompt_other } from './prompt';
 
 interface GPTResponse {
     choices: {
@@ -22,17 +22,35 @@ interface CardContentParams {
     additionalInfo?: string;
 }
 
+const cardTypeEnum = [
+    { value: 'birthday', label: 'Birthday Card' },
+    { value: 'love', label: 'Love Card' },
+    { value: 'congratulations', label: 'Congratulations Card' },
+    { value: 'thankyou', label: 'Thank You Card' },
+    { value: 'holiday', label: 'Holiday Card' },
+    { value: 'getwell', label: 'Get Well Soon Card' },
+    { value: 'farewell', label: 'Farewell Card' },
+    { value: 'sympathy', label: 'Sympathy Card' },
+    { value: 'invitation', label: 'Invitation Card' },
+    { value: 'anniversary', label: 'Anniversary Card' }
+];
+
 export async function generateCardContent(params: CardContentParams): Promise<string> {
     const { cardType, name, age, relationship, tone, bestWishes, senderName, additionalInfo } = params;
     console.log("params", params);
-    if (cardType !== 'birthday' || !name) {
+
+    if (!cardTypeEnum.find(item => item.value === cardType) || !name) {
         return defSVG;
     }
 
 
-    const sys_prompt = prompt_en;
-    const usr_prompt = `Recipient: ${name}
+    const sys_prompt = cardType === 'birthday' ? prompt_en : prompt_other;
+    const usr_prompt = `${cardType !== 'birthday' ? `cardType: ${cardType}\n` : ''}Recipient: ${name}
     ${age ? `Age: ${age}\n` : ''}${relationship ? `Relationship: ${relationship}\n` : ''}${tone ? `Tone: ${tone}\n` : ''}${bestWishes ? `Best Wishes: ${bestWishes}\n` : ''}${senderName ? `Sender Name: ${senderName}\n` : ''}${additionalInfo ? `Additional Info: ${additionalInfo}` : ''}`.trim();
+    
+    if (usr_prompt.length >= 800) {
+        return defSVG;
+    }
     console.log("----sys_prompt----", sys_prompt);
     console.log("----usr_prompt----", usr_prompt);
     const startTime = Date.now(); // 记录开始时间

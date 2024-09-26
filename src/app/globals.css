@@ -67,3 +67,19 @@
     @apply bg-background text-foreground;
   }
 }
+
+@layer utilities {
+  .container {
+    @apply px-4 sm:px-6 lg:px-8;
+  }
+}
+
+@media (max-width: 640px) {
+  .text-3xl {
+    font-size: 1.75rem;
+  }
+  
+  .card-title {
+    font-size: 1.5rem;
+  }
+}
