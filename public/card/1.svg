@@ -1,55 +1,34 @@
 <svg width="400" height="600" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <linearGradient id="bg-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#f9d5e5;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#eeac99;stop-opacity:1" />
+      <stop offset="0%" style="stop-color:#ffe6e6;stop-opacity:1"></stop>
+      <stop offset="100%" style="stop-color:#ffb3b3;stop-opacity:1"></stop>
     </linearGradient>
-    <filter id="drop-shadow">
-      <feGaussianBlur in="SourceAlpha" stdDeviation="2" />
-      <feOffset dx="2" dy="2" result="offsetblur" />
-      <feFlood flood-color="#00000033" />
-      <feComposite in2="offsetblur" operator="in" />
-      <feMerge>
-        <feMergeNode />
-        <feMergeNode in="SourceGraphic" />
-      </feMerge>
-    </filter>
   </defs>
   
-  <!-- Background -->
-  <rect width="100%" height="100%" fill="url(#bg-gradient)" />
+  <rect width="100%" height="100%" fill="url(#bg-gradient)"></rect>
   
-  <!-- Decorative elements -->
-  <g id="decorations">
-    <!-- Butterfly symbolizing freedom -->
-    <path d="M200,100 Q230,80 260,100 T320,100 Q290,130 320,160 T260,160 Q230,180 200,160 T140,160 Q170,130 140,100 T200,100" fill="#ff9999" filter="url(#drop-shadow)" />
-    <path d="M198,130 L202,130 L200,160 Z" fill="#663366" />
-    
-    <!-- Flower symbolizing health and growth -->
-    <g transform="translate(100,450) rotate(-30)">
-      <path d="M0,0 Q20,-20 0,-40 Q-20,-20 0,0" fill="#ffcccc" />
-      <path d="M0,0 Q20,20 40,0 Q20,-20 0,0" fill="#ffcccc" />
-      <path d="M0,0 Q-20,20 0,40 Q20,20 0,0" fill="#ffcccc" />
-      <path d="M0,0 Q-20,-20 -40,0 Q-20,20 0,0" fill="#ffcccc" />
-      <circle cx="0" cy="0" r="10" fill="#ffff99" />
-    </g>
-  </g>
+  <text x="200" y="80" font-family="Brush Script MT, cursive" font-size="32" fill="#8B4513" text-anchor="middle">Happy Birthday,</text>
+  <text x="200" y="120" font-family="Brush Script MT, cursive" font-size="40" fill="#8B4513" text-anchor="middle">Isabella</text>
   
-  <!-- Main text -->
-  <text x="200" y="250" font-family="Arial, sans-serif" font-size="24" fill="#663366" text-anchor="middle">
-    亲爱的曾丽，生日快乐！
+  <line x1="50" y1="150" x2="350" y2="150" stroke="#D2691E" stroke-width="2"></line>
+  
+  <text x="200" y="200" font-family="Georgia, serif" font-size="18" fill="#4A0E0E" text-anchor="middle">
+    <tspan x="200" dy="0">In the garden of life, a blossom so fair,</tspan>
+    <tspan x="200" dy="25">A promise of beauty beyond compare.</tspan>
+    <tspan x="200" dy="25">Twenty-six petals, each a year's treasure,</tspan>
+    <tspan x="200" dy="25">Unfolding with grace in abundant measure.</tspan>
+    <tspan x="200" dy="25">May love's gentle touch and joy's sweet song,</tspan>
+    <tspan x="200" dy="25">Guide your path as you bloom all year long.</tspan>
   </text>
   
-  <!-- Personalized message -->
-  <text x="200" y="300" font-family="Arial, sans-serif" font-size="16" fill="#663366" text-anchor="middle">
-    <tspan x="200" dy="0">愿你如蝴蝶般自由翱翔，</tspan>
-    <tspan x="200" dy="25">如鲜花般绽放健康。</tspan>
-    <tspan x="200" dy="25">35岁的你更加美丽动人，</tspan>
-    <tspan x="200" dy="25">愿幸福与你常伴。</tspan>
-  </text>
+  <text x="200" y="420" font-family="Arial, sans-serif" font-size="16" fill="#8B4513" text-anchor="middle">With all my love,</text>
+  <text x="200" y="450" font-family="Brush Script MT, cursive" font-size="24" fill="#8B4513" text-anchor="middle">Andy</text>
   
-  <!-- Signature -->
-  <text x="320" y="550" font-family="Arial, sans-serif" font-size="16" fill="#663366" text-anchor="end">
-    爱你的哥哥，曾辉
-  </text>
+  <circle cx="50" cy="500" r="30" fill="#FF69B4" opacity="0.7"></circle>
+  <circle cx="350" cy="500" r="30" fill="#FF69B4" opacity="0.7"></circle>
+  
+  <path d="M200,530 Q170,560 200,590 Q230,560 200,530" fill="#FF1493"></path>
+  <circle cx="200" cy="520" r="10" fill="#FFD700"></circle>
+  <rect x="190" y="530" width="20" height="40" fill="#8B4513"></rect>
 </svg>
