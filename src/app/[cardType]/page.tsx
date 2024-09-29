@@ -26,7 +26,7 @@ export async function generateMetadata({ params }: CardGeneratorPageProps): Prom
         title: `${cardName} Card Generator - MewTruCard`,
         description: `Create personalized ${cardType} cards with MewTruCard's AI-powered generator. Easy to use with beautiful ${cardType} card templates.`,
         alternates: {
-            canonical: `https://www.mewtrucard.com/${cardType}/`,
+            canonical: `https://mewtrucard.com/${cardType}/`,
         },
     };
 }

@@ -9,6 +9,7 @@ import { Toaster } from "@/components/ui/toaster";
 const playfair = Playfair_Display({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL || 'https://mewtrucard.com/'),
   title: "MewTruCard - AI Birthday Card Generator",
   description: "Generate personalized birthday cards using AI",
 };
