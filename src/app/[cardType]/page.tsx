@@ -4,10 +4,8 @@ import { Suspense } from "react";
 import { Metadata } from "next/types";
 import { CardType, getCardConfig } from "@/lib/card-config";
 import CardTypeBubbles from "@/components/CardTypeBubbles";
+import CardGenerator from "@/components/CardGenerator";
 
-const DynamicCardGenerator = dynamic(() => import("@/components/CardGenerator"), {
-    loading: () => <p>Loading...</p>,
-});
 
 interface CardGeneratorPageProps {
     params: {
@@ -48,7 +46,7 @@ export default function CardGeneratorPage({ params }: CardGeneratorPageProps) {
                 <span className="text-pink-500">{cardName}</span> MewTruCard Generator
             </h1>
             <Suspense fallback={<div>Loading card generator...</div>}>
-                <DynamicCardGenerator wishCardType={cardType} />
+                <CardGenerator wishCardType={cardType} />
             </Suspense>
             <CardTypeBubbles currentType={cardType} />
         </div>
