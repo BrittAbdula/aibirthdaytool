@@ -5,22 +5,30 @@ export const dynamic = 'force-dynamic';
 
 export async function POST(request: Request) {
   try {
-    const { cardType, name, age, relationship, tone, bestWishes, senderName, additionalInfo } = await request.json();
+    const {
+      cardType,
+      recipientName,
+      relationship,
+      senderName,
+      message,
+      ...otherFields
+    } = await request.json();
 
-    if (!cardType ) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+    if (!cardType) {
+      return NextResponse.json({ error: 'Missing required field: cardType' }, { status: 400 });
     }
 
-    const svgContent = await generateCardContent({ 
-      cardType, 
-      name, 
-      age, 
-      relationship, 
-      tone, 
-      bestWishes, 
-      senderName, 
-      additionalInfo 
-    });
+    // Combine all fields into a single object
+    const cardData = {
+      cardType,
+      recipientName,
+      relationship,
+      senderName,
+      message,
+      ...otherFields
+    };
+
+    const svgContent = await generateCardContent(cardData);
     return NextResponse.json({ svgContent });
   } catch (error) {
     console.error('Error generating card:', error);
