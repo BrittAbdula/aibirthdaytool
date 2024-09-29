@@ -7,7 +7,7 @@ export async function POST(request: Request) {
   try {
     const { cardType, name, age, relationship, tone, bestWishes, senderName, additionalInfo } = await request.json();
 
-    if (!cardType || !relationship) {
+    if (!cardType ) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
