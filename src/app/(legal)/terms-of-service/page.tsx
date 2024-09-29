@@ -43,7 +43,7 @@ export default function TermsOfService() {
             <p>You agree not to engage in any of the following prohibited conduct while using the Service:</p>
             <ul className="list-disc pl-6">
               <li>Violating any applicable law or regulation, including but not limited to copyright, trademark, or other intellectual property laws.</li>
-              <li>Uploading, posting, or transmitting any Content that is unlawful, harmful, threatening, abusive, harassing, defamatory, vulgar, obscene, or invasive of another's privacy.</li>
+              <li>Uploading, posting, or transmitting any Content that is unlawful, harmful, threatening, abusive, harassing, defamatory, vulgar, obscene, or invasive of another&apos;s privacy.</li>
               <li>Impersonating any person or entity, or falsely stating or misrepresenting your affiliation with a person or entity.</li>
               <li>Interfering with or disrupting the Service or its servers and networks.</li>
             </ul>
@@ -60,12 +60,12 @@ export default function TermsOfService() {
 
             <h2 className="text-2xl font-semibold">7. Limitation of Liability</h2>
             <p>
-              In no event shall MewTruCard Inc. be liable for any indirect, special, incidental, or consequential damages arising out of or in connection with the Service, including but not limited to lost profits, business interruption, or loss of data. MewTruCard Inc.'s total liability to you for any and all claims shall not exceed $100.
+              In no event shall MewTruCard Inc. be liable for any indirect, special, incidental, or consequential damages arising out of or in connection with the Service, including but not limited to lost profits, business interruption, or loss of data. MewTruCard Inc.&apos;s total liability to you for any and all claims shall not exceed $100.
             </p>
 
             <h2 className="text-2xl font-semibold">8. Indemnification</h2>
             <p>
-              You agree to indemnify and hold MewTruCard Inc., its affiliates, officers, agents, and employees harmless from any claim or demand, including reasonable attorneys' fees, made by any third party due to or arising out of your use of the Service, your violation of these Terms of Service, or your violation of any rights of another.
+              You agree to indemnify and hold MewTruCard Inc., its affiliates, officers, agents, and employees harmless from any claim or demand, including reasonable attorneys&apos; fees, made by any third party due to or arising out of your use of the Service, your violation of these Terms of Service, or your violation of any rights of another.
             </p>
 
             <h2 className="text-2xl font-semibold">9. Governing Law</h2>
