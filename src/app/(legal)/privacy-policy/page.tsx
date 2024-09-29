@@ -55,7 +55,7 @@ export default function PrivacyPolicy() {
               We take the security of your data seriously. We use industry-standard encryption and other measures to protect your information from unauthorized access, disclosure, or misuse. In the event of a data breach, we will notify you and any relevant authorities as required by law.
             </p>
 
-            <h2 className="text-2xl font-semibold">Children's Privacy Protection</h2>
+            <h2 className="text-2xl font-semibold">Children&apos;s Privacy Protection</h2>
             <p>
               Our services are not available to children under the age of 13, and we do not knowingly collect information from them. Any person under 13 needs the consent of their parents or guardian to use the products or services of MewTruCard.
             </p>
