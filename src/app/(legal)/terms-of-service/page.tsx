@@ -55,7 +55,7 @@ export default function TermsOfService() {
 
             <h2 className="text-2xl font-semibold">6. Disclaimers</h2>
             <p>
-              The Service is provided "as is" and "as available" without warranties of any kind, either express or implied. MewTruCard Inc. does not warrant that the Service will be uninterrupted or error-free, or that defects will be corrected. MewTruCard Inc. disclaims all warranties, including but not limited to warranties of merchantability, fitness for a particular purpose, and non-infringement.
+              The Service is provided &quot;as is&quot; and &quot;as available&quot; without warranties of any kind, either express or implied. MewTruCard Inc. does not warrant that the Service will be uninterrupted or error-free, or that defects will be corrected. MewTruCard Inc. disclaims all warranties, including but not limited to warranties of merchantability, fitness for a particular purpose, and non-infringement.
             </p>
 
             <h2 className="text-2xl font-semibold">7. Limitation of Liability</h2>
