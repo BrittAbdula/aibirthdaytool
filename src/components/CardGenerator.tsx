@@ -1,6 +1,7 @@
 'use client'
 import React, { useState, useEffect } from 'react'
 import Image from 'next/image'
+import { useRouter } from 'next/navigation'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -13,9 +14,9 @@ import { Textarea } from "@/components/ui/textarea"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import ImageViewer from '@/components/ImageViewer'
 import { extractTextFromSvg } from '@/lib/utils'
+import { CardType, getCardConfig, getAllCardTypes, CardConfig } from '@/lib/card-config'
 
-
-// Flickering Grid 组件
+// Flickering Grid component
 const FlickeringGrid = () => {
   return (
     <div className="w-full h-full grid grid-cols-10 grid-rows-15 gap-1">
@@ -32,16 +33,6 @@ const FlickeringGrid = () => {
     </div>
   )
 }
-
-const toneOptions = [
-  'Sincere and Warm', 'Playful and Cute', 'Romantic and Poetic',
-  'Lighthearted and Joyful', 'Inspirational and Encouraging', 'Thankful', 'Formal'
-]
-
-const bestWishesOptions = [
-  'Success', 'Happiness', 'Good Health', 'Love and Joy',
-  'Adventures', 'Career Advancement'
-]
 
 const AgeSelector = ({ age, setAge }: { age: number | null, setAge: (age: number | null) => void }) => {
   const handleSliderChange = (value: number[]) => {
@@ -89,19 +80,20 @@ const AgeSelector = ({ age, setAge }: { age: number | null, setAge: (age: number
   )
 }
 
-export default function BirthdayCardGenerator() {
-  const [cardType, setCardType] = useState('birthday')
-  const [name, setName] = useState('')
-  const [relationship, setRelationship] = useState('Myself')
-  const [tone, setTone] = useState('')
-  const [bestWishes, setBestWishes] = useState('Happiness')
-  const [senderName, setSenderName] = useState('')
-  const [additionalInfo, setAdditionalInfo] = useState('')
+export default function CardGenerator({ wishCardType }: { wishCardType: CardType }) {
+  const [currentCardType, setCurrentCardType] = useState<CardType>(wishCardType)
+  const [formData, setFormData] = useState<Record<string, any>>({})
   const [svgContent, setSvgContent] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [showAdvancedOptions, setShowAdvancedOptions] = useState(false)
-  const [age, setAge] = useState<number | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const router = useRouter()
+
+  useEffect(() => {
+    setCurrentCardType(wishCardType)
+  }, [wishCardType])
+
+  const cardConfig = getCardConfig(currentCardType)
 
   useEffect(() => {
     fetch('/card/1.svg')
@@ -109,6 +101,14 @@ export default function BirthdayCardGenerator() {
       .then(svgContent => setSvgContent(svgContent))
       .catch(error => console.error('load default svg failed:', error))
   }, [])
+
+  const handleInputChange = (name: string, value: string | number) => {
+    setFormData(prev => ({ ...prev, [name]: value }))
+  }
+
+  const handleCardTypeChange = (newCardType: CardType) => {
+    router.push(`/${newCardType}`)
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -122,13 +122,8 @@ export default function BirthdayCardGenerator() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          cardType,
-          name,
-          age,
-          relationship,
-          bestWishes,
-          senderName,
-          additionalInfo
+          cardType: currentCardType,
+          ...formData
         }),
       });
 
@@ -156,8 +151,64 @@ export default function BirthdayCardGenerator() {
     }
   }
 
+  const renderField = (field: CardConfig['fields'][0]) => {
+    switch (field.type) {
+      case 'text':
+      case 'number':
+        return (
+          <Input
+            id={field.name}
+            type={field.type}
+            value={formData[field.name] || ''}
+            onChange={(e) => handleInputChange(field.name, e.target.value)}
+            placeholder={field.placeholder}
+          />
+        )
+      case 'textarea':
+        return (
+          <Textarea
+            id={field.name}
+            value={formData[field.name] || ''}
+            onChange={(e) => handleInputChange(field.name, e.target.value)}
+            placeholder={field.placeholder}
+            rows={2}
+            className="resize-none"
+          />
+        )
+      case 'select':
+        return (
+          <Select
+            value={formData[field.name] || ''}
+            onValueChange={(value) => handleInputChange(field.name, value)}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder={field.placeholder} />
+            </SelectTrigger>
+            <SelectContent>
+              {field.options?.map((option: string) => (
+                <SelectItem key={option} value={option}>{option}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )
+      case 'age':
+        return (
+          <AgeSelector
+            age={formData[field.name] || null}
+            setAge={(value: number | null) => handleInputChange(field.name, value || '')}
+          />
+        )
+      default:
+        return null
+    }
+  }
+
+  if (!cardConfig) {
+    return <div>Invalid card type</div>
+  }
+
   return (
-    <main className="container mx-auto py-8 sm:py-12 bg-[#FFF9F0]">
+    <main className="container mx-auto px-4 py-8 sm:py-12 bg-[#FFF9F0]">
       {error && (
         <Alert variant="destructive" className="mb-4">
           <AlertDescription>{error}</AlertDescription>
@@ -166,117 +217,37 @@ export default function BirthdayCardGenerator() {
       <div className="flex flex-col lg:flex-row justify-center items-center gap-8 lg:gap-16">
         <Card className="p-4 sm:p-6 bg-white border border-[#FFC0CB] shadow-md w-full max-w-md relative">
           <CardHeader>
-            <CardTitle className="font-serif text-[#4A4A4A]">Create Your MewTruCard</CardTitle>
+            <CardTitle className="font-serif text-[#4A4A4A]">{cardConfig.title}</CardTitle>
             <CardDescription className="text-[#4A4A4A]">Fill in your custom card details</CardDescription>
             <div className="absolute top-2 right-2">
-              <Select value={cardType} onValueChange={setCardType}>
+              <Select value={currentCardType} onValueChange={handleCardTypeChange}>
                 <SelectTrigger className="w-[140px] h-8 text-sm bg-transparent border-none focus:ring-0 focus:ring-offset-0">
                   <SelectValue />
                   <ChevronDownIcon className="h-4 w-4 opacity-50" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="birthday">Birthday Card</SelectItem>
-                  <SelectItem value="love">Love Card</SelectItem>
-                  <SelectItem value="congratulations">Congratulations Card</SelectItem>
-                  <SelectItem value="thankyou">Thank You Card</SelectItem>
-                  <SelectItem value="holiday">Holiday Card</SelectItem>
-                  <SelectItem value="getwell">Get Well Soon Card</SelectItem>
-                  <SelectItem value="farewell">Farewell Card</SelectItem>
-                  <SelectItem value="sympathy">Sympathy Card</SelectItem>
-                  <SelectItem value="invitation">Invitation Card</SelectItem>
-                  <SelectItem value="anniversary">Anniversary Card</SelectItem>
-                  <SelectItem value="sorry">Sorry Card</SelectItem>
+                  {getAllCardTypes().map((cardType) => (
+                    <SelectItem key={cardType.type} value={cardType.type}>{cardType.label}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="relationship">To</Label>
-              <Select value={relationship} onValueChange={setRelationship}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Myself">Myself</SelectItem>
-                  <SelectItem value="Friend">Friend</SelectItem>
-                  <SelectItem value="Father">Father</SelectItem>
-                  <SelectItem value="Mother">Mother</SelectItem>
-                  <SelectItem value="Wife">Wife</SelectItem>
-                  <SelectItem value="Husband">Husband</SelectItem>
-                  <SelectItem value="Boyfriend">Boyfriend</SelectItem>
-                  <SelectItem value="Girlfriend">Girlfriend</SelectItem>
-                  <SelectItem value="Brother">Brother</SelectItem>
-                  <SelectItem value="Sister">Sister</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="name">Recipient&apos;s Name</Label>
-              <Input
-                id="name"
-                placeholder="Enter name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-              />
-            </div>
-            {showAdvancedOptions && (
+            {cardConfig.fields.map((field) => (
+              <div key={field.name} className="space-y-2">
+                <Label htmlFor={field.name}>{field.label}</Label>
+                {renderField(field)}
+              </div>
+            ))}
+            {showAdvancedOptions && cardConfig.advancedFields && (
               <>
-                <AgeSelector age={age} setAge={setAge} />
-                <div className="space-y-2">
-                  <Label htmlFor="tone">Tone of the Message (Optional)</Label>
-                  <Select value={tone} onValueChange={setTone}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select tone" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {toneOptions.map(tone => (
-                        <SelectItem key={tone} value={tone}>{tone}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="bestWishes">Best Wishes (Optional)</Label>
-                  <div className="flex flex-wrap gap-2">
-                    {bestWishesOptions.map(wish => (
-                      <label key={wish} className="flex items-center space-x-2">
-                        <input
-                          type="radio"
-                          id={wish}
-                          name="bestWishes"
-                          value={wish}
-                          checked={bestWishes.includes(wish)}
-                          onChange={() => setBestWishes(wish)}
-                          className="hidden"
-                        />
-                        <span className={`px-4 py-2 rounded-full cursor-pointer ${bestWishes.includes(wish) ? 'bg-pink-200 text-pink-800' : 'bg-gray-200 text-gray-800'}`}>
-                          {wish}
-                        </span>
-                      </label>
-                    ))}
+                {cardConfig.advancedFields.map((field) => (
+                  <div key={field.name} className="space-y-2">
+                    <Label htmlFor={field.name}>{field.label}</Label>
+                    {renderField(field)}
                   </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="additionalInfo">Additional Information (Optional)</Label>
-                  <Textarea
-                    id="additionalInfo"
-                    placeholder="Anything you want to say or your Story"
-                    value={additionalInfo}
-                    onChange={(e) => setAdditionalInfo(e.target.value)}
-                    rows={2}
-                    className="resize-none"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="senderName">Your Name (Optional)</Label>
-                  <Input
-                    id="senderName"
-                    placeholder="Enter your name"
-                    value={senderName}
-                    onChange={(e) => setSenderName(e.target.value)}
-                  />
-                </div>
+                ))}
               </>
             )}
             <div className="flex justify-end">
@@ -308,11 +279,11 @@ export default function BirthdayCardGenerator() {
             ) : (
               <div className="w-full h-full flex items-center justify-center overflow-hidden">
                 {svgContent ? (
-                  <ImageViewer svgContent={svgContent} alt={extractTextFromSvg(svgContent || 'Birthday Card')} />
+                  <ImageViewer svgContent={svgContent} alt={extractTextFromSvg(svgContent || 'Generated Card')} />
                 ) : (
                   <Image
                     src="/card/1.svg"
-                    alt="Default Birthday Card"
+                    alt="Default Card"
                     width={400}
                     height={600}
                     className="w-full h-auto object-contain"

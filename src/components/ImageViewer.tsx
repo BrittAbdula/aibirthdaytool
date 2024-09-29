@@ -1,55 +1,42 @@
 'use client'
 
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { DownloadIcon, CopyIcon } from '@radix-ui/react-icons'
 import { useToast } from "@/hooks/use-toast"
 import { Toaster } from "@/components/ui/toaster"
+import NextImage from 'next/image'
+import { isMobile } from 'react-device-detect';
 
 interface ImageViewerProps {
   svgContent: string
   alt: string
 }
 
-export function ImageViewer({ svgContent, alt }: ImageViewerProps) {
+export default function ImageViewer({ svgContent, alt }: ImageViewerProps) {
   const [open, setOpen] = useState(false)
-  const svgRef = useRef<SVGSVGElement | null>(null)
   const { toast } = useToast()
+  const [imageSrc, setImageSrc] = useState<string>('')
 
   useEffect(() => {
-    if (open) {
-      const parser = new DOMParser()
-      const svgDoc = parser.parseFromString(svgContent, 'image/svg+xml')
-      const svgElement = svgDoc.documentElement
-      if (svgElement instanceof SVGSVGElement) {
-        svgRef.current = svgElement
-      } else {
-        console.error('Invalid SVG content')
-      }
-    }
-  }, [open, svgContent])
+    const dataUrl = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svgContent)}`
+    setImageSrc(dataUrl)
+  }, [svgContent])
 
   const convertSvgToPng = (): Promise<string> => {
     return new Promise((resolve, reject) => {
-      if (!svgRef.current) {
-        reject('SVG element not found')
-        return
-      }
-
-      const svgData = new XMLSerializer().serializeToString(svgRef.current)
-      const canvas = document.createElement('canvas')
-      const ctx = canvas.getContext('2d')
-
       const img = new Image()
       img.onload = () => {
+        const canvas = document.createElement('canvas')
         canvas.width = img.width
         canvas.height = img.height
+        const ctx = canvas.getContext('2d')
         ctx?.drawImage(img, 0, 0)
         resolve(canvas.toDataURL('image/png'))
       }
       img.onerror = () => reject('Error loading SVG')
-      img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)))
+      img.src = imageSrc
     })
   }
 
@@ -75,6 +62,15 @@ export function ImageViewer({ svgContent, alt }: ImageViewerProps) {
   }
 
   const handleDownload = async () => {
+    if (isMobile) {
+      toast({
+        title: "Save Image",
+        description: "Long press the image and select 'Save Image' to download.",
+        duration: 5000,
+      });
+      return;
+    }
+
     try {
       const pngDataUrl = await convertSvgToPng()
       const link = document.createElement('a')
@@ -101,15 +97,26 @@ export function ImageViewer({ svgContent, alt }: ImageViewerProps) {
     <>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>
-          <div
-            className="w-full h-full flex items-center justify-center cursor-pointer hover:opacity-90 transition-opacity"
-            dangerouslySetInnerHTML={{ __html: svgContent }}
-          />
+          <div className="w-full h-full flex items-center justify-center cursor-pointer hover:opacity-90 transition-opacity">
+            <NextImage
+              src={imageSrc}
+              alt={alt}
+              width={400}
+              height={600}
+              className="max-w-full max-h-full"
+            />
+          </div>
         </DialogTrigger>
         <DialogContent className="sm:max-w-[90vw] md:max-w-[80vw] lg:max-w-[70vw] xl:max-w-[60vw] bg-[#FFF9F0] border border-[#FFC0CB] p-0">
           <div className="flex flex-col items-center justify-center h-full">
             <div className="w-full h-[calc(100vh-200px)] overflow-auto flex items-center justify-center p-4">
-              <div dangerouslySetInnerHTML={{ __html: svgContent }} className="max-w-full max-h-full" aria-label={alt} />
+              <NextImage
+                src={imageSrc}
+                alt={alt}
+                width={400}
+                height={600}
+                className="max-w-full max-h-full"
+              />
             </div>
             <div className="flex justify-between p-4 bg-white w-full border-t border-[#ada9a9]">
               <div className="w-full max-w-md mx-auto flex justify-between">
@@ -119,7 +126,7 @@ export function ImageViewer({ svgContent, alt }: ImageViewerProps) {
                 </Button>
                 <Button onClick={handleDownload} className="bg-[#FFC0CB] text-[#4A4A4A] hover:bg-[#FFD1DC] transition-colors">
                   <DownloadIcon className="mr-2 h-4 w-4" />
-                  Download
+                  {isMobile ? "Save to Album" : "Download"}
                 </Button>
               </div>
             </div>

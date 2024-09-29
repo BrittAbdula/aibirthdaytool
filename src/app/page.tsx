@@ -1,5 +1,5 @@
 import { Metadata } from "next";
-import BirthdayCardGenerator from "@/components/birthday-card-generator";
+import CardGenerator from "@/components/CardGenerator";
 import { HowToUse } from "@/components/HowToUse";
 import { WhyChooseMewTruCard } from "@/components/WhyChooseMewTruCard";
 
@@ -12,7 +12,7 @@ export default function Home() {
   return (
     <main className="container mx-auto px-4 py-8">
       <h1 className="text-3xl sm:text-4xl font-serif font-bold text-center mb-8 sm:mb-12 text-[#4A4A4A]">MewTruCard Generator</h1>
-      <BirthdayCardGenerator />
+      <CardGenerator wishCardType="birthday" />
       <HowToUse />
       <WhyChooseMewTruCard />
     </main>

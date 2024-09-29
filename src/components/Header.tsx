@@ -2,6 +2,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { useState } from 'react';
+import SparklesText from '@/components/ui/sparkles-text'
 
 function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -17,9 +18,16 @@ function Header() {
               width={40}
               height={40}
             />
-            <span className="text-xl md:text-2xl font-serif font-bold text-[#4A4A4A]">
+            
+            <SparklesText
+                text='MewTruCard'
+                className="text-xl md:text-2xl font-serif font-bold text-[#4A4A4A]"
+                sparklesCount={20}
+                colors={{ first: "#A07CFE", second: "#FE8FB5" }}
+            />
+            {/* <span className="text-xl md:text-2xl font-serif font-bold text-[#4A4A4A]">
               MewTruCard
-            </span>
+            </span> */}
           </Link>
           <div className="hidden md:flex space-x-6">
             <Link href="/" className="text-[#4A4A4A] hover:text-[#FFC0CB] font-serif">Home</Link>

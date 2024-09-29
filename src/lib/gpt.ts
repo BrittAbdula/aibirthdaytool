@@ -1,7 +1,9 @@
+import { CardType } from './card-config';
+import { getPromptForCardType } from './prompt';
+
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
 const YOUR_SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'http://MewTruCard.COM';
 const YOUR_SITE_NAME = 'MewTruCard';
-import { prompt_cn, prompt_en, prompt_other } from './prompt';
 
 interface GPTResponse {
     choices: {
@@ -12,48 +14,29 @@ interface GPTResponse {
 }
 
 interface CardContentParams {
-    cardType: string;
-    relationship: string;
-    name?: string;
-    age?: string;
-    tone?: string;
-    bestWishes?: string;
-    senderName?: string;
-    additionalInfo?: string;
+    cardType: CardType;
+    [key: string]: any;
 }
 
-const cardTypeEnum = [
-    { value: 'birthday', label: 'Birthday Card' },
-    { value: 'love', label: 'Love Card' },
-    { value: 'congratulations', label: 'Congratulations Card' },
-    { value: 'thankyou', label: 'Thank You Card' },
-    { value: 'holiday', label: 'Holiday Card' },
-    { value: 'getwell', label: 'Get Well Soon Card' },
-    { value: 'farewell', label: 'Farewell Card' },
-    { value: 'sympathy', label: 'Sympathy Card' },
-    { value: 'invitation', label: 'Invitation Card' },
-    { value: 'anniversary', label: 'Anniversary Card' }
-];
-
 export async function generateCardContent(params: CardContentParams): Promise<string> {
-    const { cardType, name, age, relationship, tone, bestWishes, senderName, additionalInfo } = params;
-    console.log("params", params);
+    const { cardType, ...otherParams } = params;
+    console.log("Generating card content for:", cardType, otherParams);
 
-    if (!cardTypeEnum.find(item => item.value === cardType) || !name) {
-        return defSVG;
+    const prompt = getPromptForCardType(cardType);
+    const userPrompt = Object.entries(otherParams)
+        .filter(([_, value]) => value !== '' && value !== undefined)
+        .map(([key, value]) => `${key}: ${value}`)
+        .join('\n');
+
+    if (userPrompt.length >= 800) {
+        console.warn("User prompt too long, returning default SVG");
+        return defaultSVG;
     }
 
+    console.log("System prompt:", prompt);
+    console.log("User prompt:", userPrompt);
 
-    const sys_prompt = cardType === 'birthday' ? prompt_en : prompt_other;
-    const usr_prompt = `${cardType !== 'birthday' ? `cardType: ${cardType}\n` : ''}Recipient: ${name}
-    ${age ? `Age: ${age}\n` : ''}${relationship ? `Relationship: ${relationship}\n` : ''}${tone ? `Tone: ${tone}\n` : ''}${bestWishes ? `Best Wishes: ${bestWishes}\n` : ''}${senderName ? `Sender Name: ${senderName}\n` : ''}${additionalInfo ? `Additional Info: ${additionalInfo}` : ''}`.trim();
-    
-    if (usr_prompt.length >= 800) {
-        return defSVG;
-    }
-    console.log("----sys_prompt----", sys_prompt);
-    console.log("----usr_prompt----", usr_prompt);
-    const startTime = Date.now(); // 记录开始时间
+    const startTime = Date.now();
 
     try {
         const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
@@ -67,8 +50,8 @@ export async function generateCardContent(params: CardContentParams): Promise<st
             body: JSON.stringify({
                 "model": "anthropic/claude-3.5-sonnet",
                 "messages": [
-                    { "role": "system", "content": sys_prompt },
-                    { "role": "user", "content": usr_prompt },
+                    { "role": "system", "content": prompt },
+                    { "role": "user", "content": userPrompt },
                 ],
             })
         });
@@ -78,22 +61,20 @@ export async function generateCardContent(params: CardContentParams): Promise<st
         }
 
         const data: GPTResponse & { usage?: { total_tokens: number } } = await response.json();
-        const endTime = Date.now(); // 记录结束时间
-        const duration = endTime - startTime; // 计算耗时
+        const endTime = Date.now();
+        const duration = endTime - startTime;
 
-        console.log("请求耗时:", duration, "毫秒");
-        console.log("Token消耗:", data.usage?.total_tokens || "未提供");
-        // console.log("data", data);
+        console.log("Request duration:", duration, "ms");
+        console.log("Tokens used:", data.usage?.total_tokens || "Not provided");
 
         const content = data.choices[0].message.content;
-
-        // 提取 SVG 内容
         const svgMatch = content.match(/<svg[\s\S]*?<\/svg>/);
+
         if (svgMatch) {
-            return svgMatch[0]; // 返回匹配到的 SVG 内容
+            return svgMatch[0];
         } else {
-            console.warn("未找到有效的 SVG 内容，返回默认 SVG");
-            return defSVG;
+            console.warn("No valid SVG content found, returning default SVG");
+            return defaultSVG;
         }
     } catch (error) {
         console.error("Error calling GPT API:", error);
@@ -101,23 +82,6 @@ export async function generateCardContent(params: CardContentParams): Promise<st
     }
 }
 
-const defSVG = `<svg width="400" height="600" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <linearGradient id="bg-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#ffe6cc;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#ffcc99;stop-opacity:1" />
-    </linearGradient>
-  </defs>
-
-  <rect width="100%" height="100%" fill="url(#bg-gradient)" />
-
-  <text x="200" y="250" font-family="Brush Script MT, cursive" font-size="60" fill="#00008B" text-anchor="middle">Coming</text>
-  <text x="200" y="350" font-family="Brush Script MT, cursive" font-size="60" fill="#00008B" text-anchor="middle">Soon</text>
-
-  <line x1="50" y1="400" x2="350" y2="400" stroke="#4B0082" stroke-width="2" />
-
-  <circle cx="200" cy="480" r="50" fill="none" stroke="#4B0082" stroke-width="2" />
-  <path d="M200,430 Q220,480 200,530 Q180,480 200,430" fill="#98FB98" stroke="#4B0082" stroke-width="2" />
-
-  <text x="200" y="570" font-family="Georgia, serif" font-size="16" fill="#00008B" text-anchor="middle" font-style="italic">Stay tuned for something special!</text>
-</svg>`
+const defaultSVG = `<svg width="400" height="600" xmlns="http://www.w3.org/2000/svg">
+  <!-- Error content -->
+</svg>`;
