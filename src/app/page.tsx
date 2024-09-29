@@ -5,7 +5,10 @@ import { WhyChooseMewTruCard } from "@/components/WhyChooseMewTruCard";
 
 export const metadata: Metadata = {
   title: "MewTruCard - AI Greeting Card Generator",
-  description: "Create personalized cards for birthdays, love, holidays, and more with MewTruCard's AI-powered generator. Easy to use with a variety of beautiful templates."
+  description: "Create personalized cards for birthdays, love, holidays, and more with MewTruCard's AI-powered generator. Easy to use with a variety of beautiful templates.",
+  alternates: {
+    canonical: "https://www.mewtrucard.com/",
+  },
 };
 
 export default function Home() {
