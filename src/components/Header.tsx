@@ -46,7 +46,7 @@ function Header() {
         {isMenuOpen && (
           <div className="mt-4 md:hidden">
             <Link href="/" className="block py-2 text-[#4A4A4A] hover:text-[#FFC0CB] font-serif">Home</Link>
-            <Link href="/birthday-card-gallery" className="block py-2 text-[#4A4A4A] hover:text-[#FFC0CB] font-serif">Gallery</Link>
+            <Link href="/card-gallery" className="block py-2 text-[#4A4A4A] hover:text-[#FFC0CB] font-serif">Gallery</Link>
             <Link href="/" className="block py-2 text-[#4A4A4A] hover:text-[#FFC0CB] font-serif">Login</Link>
           </div>
         )}
