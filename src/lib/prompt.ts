@@ -1,22 +1,14 @@
 import { CardType } from './card-config';
 
-const basePrompt = `
-You are an expert card designer and message creator. Your task is to generate a personalized SVG card based on the given card type and user input. The card should be visually appealing, emotionally resonant, and tailored to the specific occasion.
+interface PromptConfig {
+  prompt: string;
+  version: string;
+}
 
-Follow these guidelines:
-1. Create an SVG card with dimensions 400x600 pixels.
-2. Use appropriate colors, fonts, and design elements for the card type.
-3. Include the recipient's name (if provided) in a prominent position.
-4. Craft a heartfelt message that reflects the card type and incorporates any additional information provided.
-5. Add suitable decorative elements or illustrations that complement the card's theme.
-6. Ensure the text is legible and properly positioned within the SVG.
-7. Only output the SVG code, without any additional text or explanations.
-
-Remember to adjust the tone, style, and content based on the specific card type and user input.
-`;
-
-const cardTypePrompts: Record<CardType, string> = {
-    birthday: `;; Purpose: After the user enters their name and possibly other information (e.g., birthdate, hobbies), generate a warm, heartfelt, and surprising birthday card. The user's name is displayed on the card, but the birthday wish itself does not explicitly mention the name.
+const cardTypePrompts: Record<CardType, PromptConfig[]> = {
+  birthday: [
+    {
+      prompt: `;; Purpose: After the user enters their name and possibly other information (e.g., birthdate, hobbies), generate a warm, heartfelt, and surprising birthday card. The user's name is displayed on the card, but the birthday wish itself does not explicitly mention the name.
 
 ;; Set the following as your System Prompt
 (defun BirthdayWishesMaster ()
@@ -51,7 +43,7 @@ design-principles '(elegant gentle minimal))
 separator
 (wish-output name_analysis)
 (if extra_elements (subtle-details-output extra_elements))
-; birthday-themed illustrations that don’t overlap with the text
+; birthday-themed illustrations that don't overlap with the text
 (birthday-illustrations))))
 
 (defun GenerateWish (user_input)
@@ -63,50 +55,60 @@ separator
 ;; 1. Upon initiation, the user will input their name and optionally other information (e.g., birthdate, hobbies); the system will call (GenerateWish user_input)
 ;; 2. Automatically generate a symbolic, name-inspired birthday wish and output an SVG card, subtly incorporating other details, and displaying the recipient's name on the card. Only output the SVG content, no other text.
 `,
-    love: `
-${basePrompt}
-For love cards:
-- Use romantic colors like reds, pinks, and purples.
-- Include heart shapes or other symbols of love and affection.
-- Craft a message that expresses deep feelings, appreciation, or romantic sentiments.
-    `,
-    congratulations: `
-${basePrompt}
-For congratulations cards:
-- Use vibrant and positive colors.
-- Include celebratory elements like confetti, stars, or a trophy.
-- Craft a message that acknowledges the recipient's achievement and expresses pride or admiration.
-    `,
-    thankyou: `
-${basePrompt}
-For thank you cards:
-- Use warm and appreciative colors.
-- Include elements that symbolize gratitude, such as clasped hands or a gift box.
-- Craft a message that expresses sincere thanks and acknowledges the specific reason for gratitude.
-    `,
-    holiday: `
-${basePrompt}
-For holiday cards:
-- Use colors and elements appropriate to the specific holiday mentioned.
-- Include holiday-specific symbols or decorations.
-- Craft a message that conveys warm wishes for the holiday season and potentially references holiday traditions or sentiments.
-    `,
-    anniversary: `
-${basePrompt}
-For anniversary cards:
-- Use elegant and romantic colors.
-- Include symbols of lasting love, such as intertwined rings or a couple silhouette.
-- Craft a message that celebrates the couple's journey together and potentially references the number of years they've been together.
-    `,
-    sorry: `
-${basePrompt}
-For sorry cards:
-- Use subdued and sincere colors.
-- Include elements that symbolize reconciliation or healing, such as a bridge or mended heart.
-- Craft a heartfelt message of apology that acknowledges the mistake and expresses a desire to make amends.
-    `,
+      version: "1.0"
+    }
+  ],
+  love: [
+    {
+      prompt: `As an expert in romantic card design, create a personalized SVG love card (400x600 pixels) based on the user's input. Use romantic colors like reds, pinks, and purples. Include heart shapes or other symbols of love and affection. Craft a message that expresses deep feelings, appreciation, or romantic sentiments. Incorporate the recipient's name and any additional details provided. Ensure the text is legible and properly positioned. Output only the SVG code.`,
+      version: "1.0"
+    }
+  ],
+  congratulations: [
+    {
+      prompt: `Design a celebratory SVG congratulations card (400x600 pixels) based on the user's input. Use vibrant, joyful colors and include elements that represent achievement or success (e.g., stars, trophies, confetti). Craft an uplifting message that acknowledges the recipient's accomplishment. Incorporate the recipient's name and any specific details about their achievement. Ensure the text is legible and properly positioned. Output only the SVG code.`,
+      version: "1.0"
+    }
+  ],
+  thankyou: [
+    {
+      prompt: `Create a heartfelt SVG thank you card (400x600 pixels) based on the user's input. Use warm, appreciative colors and include elements that symbolize gratitude (e.g., hands, hearts, flowers). Craft a sincere message of thanks, incorporating specific details about what the person is being thanked for. Include the recipient's name prominently. Ensure the text is legible and properly positioned. Output only the SVG code.`,
+      version: "1.0"
+    }
+  ],
+  holiday: [
+    {
+      prompt: `Design a festive SVG holiday card (400x600 pixels) based on the user's input and the specific holiday mentioned. Use colors and elements appropriate to the holiday (e.g., red and green for Christmas, orange and black for Halloween). Craft a message that captures the spirit of the holiday and any personal touches provided by the user. Include the recipient's name if provided. Ensure the text is legible and properly positioned. Output only the SVG code.`,
+      version: "1.0"
+    }
+  ],
+  anniversary: [
+    {
+      prompt: `Create a romantic SVG anniversary card (400x600 pixels) based on the user's input. Use elegant colors like gold, silver, or deep reds. Include symbols of lasting love and commitment (e.g., intertwined rings, hearts, flowers). Craft a message that celebrates the couple's journey together, incorporating any specific details provided (like years together or shared memories). Include the couple's names prominently. Ensure the text is legible and properly positioned. Output only the SVG code.`,
+      version: "1.0"
+    }
+  ],
+  sorry: [
+    {
+      prompt: `Design a thoughtful SVG apology card (400x600 pixels) based on the user's input. Use soft, subdued colors to convey sincerity. Include elements that symbolize reconciliation or making amends (e.g., olive branches, mended hearts). Craft a genuine message of apology, incorporating specific details about the situation if provided. Include the recipient's name sensitively. Ensure the text is legible and properly positioned. Output only the SVG code.`,
+      version: "1.0"
+    }
+  ]
 };
 
-export function getPromptForCardType(cardType: CardType): string {
-    return cardTypePrompts[cardType] || basePrompt;
+export function getPromptForCardType(cardType: CardType, version?: string): PromptConfig {
+  const prompts = cardTypePrompts[cardType];
+  if (!prompts || prompts.length === 0) {
+    throw new Error(`No prompts found for card type: ${cardType}`);
+  }
+  
+  if (version) {
+    const specificVersionPrompt = prompts.find(p => p.version === version);
+    if (specificVersionPrompt) {
+      return specificVersionPrompt;
+    }
+    console.warn(`Prompt version ${version} not found for card type ${cardType}. Using latest version.`);
+  }
+  
+  return prompts[0]; // 默认返回第一个（最新的）版本
 }

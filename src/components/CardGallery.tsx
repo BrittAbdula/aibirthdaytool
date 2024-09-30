@@ -1,26 +1,22 @@
-import Image from 'next/image';
+import { getRecentCards, Card } from '@/lib/cards';
+import ImageViewer from './ImageViewer';
+import { extractSvgFromResponse } from '@/lib/utils';
 
-const SVG_COUNT = 12; // 假设我们有10个SVG文件，您可以根据实际情况调整这个数字
-
-export default function CardGallery() {
-  const svgFiles = Array.from({ length: SVG_COUNT }, (_, i) => `/card/${i + 1}.svg`);
+export default async function CardGallery() {
+  const cards: Card[] = await getRecentCards(1, 12);
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-6 text-center">AI Birthday Card Gallery </h1>
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-        {svgFiles.map((svgFile, index) => (
-          <div key={index} className="border rounded-lg overflow-hidden shadow-lg">
-            <Image
-              src={svgFile}
-              alt={`SVG Card ${index + 1}`}
-              width={400}
-              height={600}
-              className="w-full h-auto"
-            />
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+      {cards.map((card) => {
+        const svgContent = extractSvgFromResponse(card.responseContent);
+        return (
+          <div key={card.id} className="border rounded-lg shadow-lg flex items-center justify-center p-4" style={{ minHeight: '300px' }}>
+            <div className="w-full h-full flex items-center justify-center">
+              <ImageViewer svgContent={svgContent} alt={`Card ${card.id}`} />
+            </div>
           </div>
-        ))}
-      </div>
+        );
+      })}
     </div>
   );
 }

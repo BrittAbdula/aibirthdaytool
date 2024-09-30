@@ -16,3 +16,8 @@ export function extractTextFromSvg(svgContent: string): string {
     .join(' ')
 }
 
+export function extractSvgFromResponse(responseContent: string): string {
+  const svgRegex = /<svg[\s\S]*?<\/svg>/i;
+  const match = responseContent.match(svgRegex);
+  return match ? match[0] : '';
+}

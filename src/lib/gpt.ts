@@ -1,5 +1,6 @@
 import { CardType } from './card-config';
 import { getPromptForCardType } from './prompt';
+import { prisma } from './prisma'; 
 
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
 const YOUR_SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'http://MewTruCard.COM';
@@ -15,14 +16,45 @@ interface GPTResponse {
 
 interface CardContentParams {
     cardType: CardType;
+    version?: string;
     [key: string]: any;
 }
 
+async function logApiRequest(params: {
+    cardType: CardType;
+    userInputs: Record<string, any>;
+    promptVersion: string;
+    responseContent: string;
+    tokensUsed: number;
+    duration: number;
+    isError: boolean;
+    errorMessage?: string;
+}) {
+    try {
+        await prisma.apiLog.create({
+            data: {
+                cardType: params.cardType,
+                userInputs: params.userInputs,
+                promptVersion: params.promptVersion,
+                responseContent: params.responseContent,
+                tokensUsed: params.tokensUsed,
+                duration: params.duration,
+                isError: params.isError,
+                errorMessage: params.errorMessage,
+            },
+        });
+    } catch (error) {
+        console.error("Error logging API request to database:", error);
+    }
+}
+
 export async function generateCardContent(params: CardContentParams): Promise<string> {
-    const { cardType, ...otherParams } = params;
+    const { cardType, version, ...otherParams } = params;
     console.log("Generating card content for:", cardType, otherParams);
 
-    const prompt = getPromptForCardType(cardType);
+    const promptConfig = getPromptForCardType(cardType, version);
+    const { prompt, version: promptVersion } = promptConfig;
+
     const userPrompt = Object.entries(otherParams)
         .filter(([_, value]) => value !== '' && value !== undefined)
         .map(([key, value]) => `${key}: ${value}`)
@@ -32,9 +64,6 @@ export async function generateCardContent(params: CardContentParams): Promise<st
         console.warn("User prompt too long, returning default SVG");
         return defaultSVG;
     }
-
-    console.log("System prompt:", prompt);
-    console.log("User prompt:", userPrompt);
 
     const startTime = Date.now();
 
@@ -70,6 +99,17 @@ export async function generateCardContent(params: CardContentParams): Promise<st
         const content = data.choices[0].message.content;
         const svgMatch = content.match(/<svg[\s\S]*?<\/svg>/);
 
+        // 记录 API 请求到数据库
+        await logApiRequest({
+            cardType,
+            userInputs: otherParams,
+            promptVersion,
+            responseContent: content,
+            tokensUsed: data.usage?.total_tokens || 0,
+            duration,
+            isError: false,
+        });
+
         if (svgMatch) {
             return svgMatch[0];
         } else {
@@ -78,6 +118,19 @@ export async function generateCardContent(params: CardContentParams): Promise<st
         }
     } catch (error) {
         console.error("Error calling GPT API:", error);
+        
+        // 记录错误到数据库
+        await logApiRequest({
+            cardType,
+            userInputs: otherParams,
+            promptVersion,
+            responseContent: "",
+            tokensUsed: 0,
+            duration: Date.now() - startTime,
+            isError: true,
+            errorMessage: error instanceof Error ? error.message : String(error),
+        });
+
         throw error;
     }
 }
