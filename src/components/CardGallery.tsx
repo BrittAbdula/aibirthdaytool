@@ -9,7 +9,7 @@ export default async function CardGallery() {
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
       {cards.map((card) => {
         const svgContent = extractSvgFromResponse(card.responseContent);
-        const alt = extractTextFromSvg(card.responseContent);
+        const alt = extractTextFromSvg(svgContent);
         return (
           <div key={card.id} className="border rounded-lg shadow-lg flex items-center justify-center p-4" style={{ minHeight: '300px' }}>
             <div className="w-full h-full flex items-center justify-center">
