@@ -5,6 +5,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import '@/styles/globals.css';
 import { Toaster } from "@/components/ui/toaster";
+import { GoogleAnalytics } from '@next/third-parties/google'
 
 const playfair = Playfair_Display({ subsets: ["latin"] });
 
@@ -28,6 +29,7 @@ export default function RootLayout({
           <Footer />
           <Toaster />
         </div>
+        <GoogleAnalytics gaId="G-TR8BTB7YVW" />
       </body>
     </html>
   );
