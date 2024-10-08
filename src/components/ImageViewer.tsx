@@ -56,7 +56,7 @@ export default function ImageViewer({ svgContent, alt }: ImageViewerProps) {
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Copy failed. Please try again.",
+        description: "Copy failed. Please Long press the image to copy.",
       })
     }
   }

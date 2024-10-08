@@ -15,7 +15,6 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import ImageViewer from '@/components/ImageViewer'
 import { extractTextFromSvg } from '@/lib/utils'
 import { CardType, getCardConfig, getAllCardTypes, CardConfig } from '@/lib/card-config'
-
 // Flickering Grid component
 const FlickeringGrid = () => {
   return (
@@ -57,7 +56,7 @@ const AgeSelector = ({ age, setAge }: { age: number | null, setAge: (age: number
           step={1}
           value={[age || 0]}
           onValueChange={handleSliderChange}
-          className="flex-grow custom-slider"
+          className="flex-grow custom-slider text-base"
         />
         <Input
           id="age-input"
@@ -80,14 +79,16 @@ const AgeSelector = ({ age, setAge }: { age: number | null, setAge: (age: number
   )
 }
 
-export default function CardGenerator({ wishCardType }: { wishCardType: CardType }) {
+export default function CardGenerator({ wishCardType, initialTemplate }: { wishCardType: CardType, initialTemplate: string | null }) {
   const [currentCardType, setCurrentCardType] = useState<CardType>(wishCardType)
+  const [currentTemplate, setCurrentTemplate] = useState<string>(initialTemplate || '')
   const [formData, setFormData] = useState<Record<string, any>>({})
   const [svgContent, setSvgContent] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [showAdvancedOptions, setShowAdvancedOptions] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
+  const sampleCard = `/card/${wishCardType}.svg`
 
   useEffect(() => {
     setCurrentCardType(wishCardType)
@@ -95,12 +96,12 @@ export default function CardGenerator({ wishCardType }: { wishCardType: CardType
 
   const cardConfig = getCardConfig(currentCardType)
 
-  useEffect(() => {
-    fetch('/card/1.svg')
-      .then(response => response.text())
-      .then(svgContent => setSvgContent(svgContent))
-      .catch(error => console.error('load default svg failed:', error))
-  }, [])
+  // useEffect(() => {
+  //   fetch('/card/1.svg')
+  //     .then(response => response.text())
+  //     .then(svgContent => setSvgContent(svgContent))
+  //     .catch(error => console.error('load default svg failed:', error))
+  // }, [])
 
   const handleInputChange = (name: string, value: string | number) => {
     setFormData(prev => ({ ...prev, [name]: value }))
@@ -123,6 +124,7 @@ export default function CardGenerator({ wishCardType }: { wishCardType: CardType
         },
         body: JSON.stringify({
           cardType: currentCardType,
+          templateId: currentTemplate,
           ...formData
         }),
       });
@@ -162,6 +164,7 @@ export default function CardGenerator({ wishCardType }: { wishCardType: CardType
             value={formData[field.name] || ''}
             onChange={(e) => handleInputChange(field.name, e.target.value)}
             placeholder={field.placeholder}
+            className="text-base"
           />
         )
       case 'textarea':
@@ -172,7 +175,7 @@ export default function CardGenerator({ wishCardType }: { wishCardType: CardType
             onChange={(e) => handleInputChange(field.name, e.target.value)}
             placeholder={field.placeholder}
             rows={2}
-            className="resize-none"
+            className="resize-none text-base"
           />
         )
       case 'select':
@@ -250,14 +253,20 @@ export default function CardGenerator({ wishCardType }: { wishCardType: CardType
                 ))}
               </>
             )}
-            <div className="flex justify-end">
-              <button
-                className="text-[#FFC0CB] hover:text-[#FFD1DC] focus:outline-none"
-                onClick={() => setShowAdvancedOptions(!showAdvancedOptions)}
-              >
-                {showAdvancedOptions ? <ChevronUpIcon className="w-6 h-6" /> : <ChevronDownIcon className="w-6 h-6" />}
-              </button>
-            </div>
+            {cardConfig.advancedFields && cardConfig.advancedFields.length > 0 && (
+              <div className="flex justify-end">
+                <button
+                  className="text-[#FFC0CB] hover:text-[#FFD1DC] focus:outline-none"
+                  onClick={() => setShowAdvancedOptions(!showAdvancedOptions)}
+                >
+                  {showAdvancedOptions ? (
+                    <ChevronUpIcon className="w-6 h-6" />
+                  ) : (
+                    <ChevronDownIcon className="w-6 h-6" />
+                  )}
+                </button>
+              </div>
+            )}
           </CardContent>
           <CardFooter>
             <Button className="w-full bg-[#FFC0CB] text-[#4A4A4A] hover:bg-[#FFD1DC]" onClick={handleSubmit} disabled={isLoading}>
@@ -282,8 +291,8 @@ export default function CardGenerator({ wishCardType }: { wishCardType: CardType
                   <ImageViewer svgContent={svgContent} alt={extractTextFromSvg(svgContent || 'Generated Card')} />
                 ) : (
                   <Image
-                    src="/card/1.svg"
-                    alt="Default Card"
+                    src={sampleCard}
+                    alt={`Default ${wishCardType} Card`}
                     width={400}
                     height={600}
                     className="w-full h-auto object-contain"

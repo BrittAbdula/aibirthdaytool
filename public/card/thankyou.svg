@@ -1,0 +1,34 @@
+<svg width="400" height="600" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffe6e6;stop-opacity:1"></stop>
+      <stop offset="100%" style="stop-color:#ffb3b3;stop-opacity:1"></stop>
+    </linearGradient>
+  </defs>
+  
+  <rect width="100%" height="100%" fill="url(#bg-gradient)"></rect>
+  
+  <text x="200" y="80" font-family="Brush Script MT, cursive" font-size="32" fill="#8B4513" text-anchor="middle">Happy Birthday,</text>
+  <text x="200" y="120" font-family="Brush Script MT, cursive" font-size="40" fill="#8B4513" text-anchor="middle">Isabella</text>
+  
+  <line x1="50" y1="150" x2="350" y2="150" stroke="#D2691E" stroke-width="2"></line>
+  
+  <text x="200" y="200" font-family="Georgia, serif" font-size="18" fill="#4A0E0E" text-anchor="middle">
+    <tspan x="200" dy="0">In the garden of life, a blossom so fair,</tspan>
+    <tspan x="200" dy="25">A promise of beauty beyond compare.</tspan>
+    <tspan x="200" dy="25">Twenty-six petals, each a year's treasure,</tspan>
+    <tspan x="200" dy="25">Unfolding with grace in abundant measure.</tspan>
+    <tspan x="200" dy="25">May love's gentle touch and joy's sweet song,</tspan>
+    <tspan x="200" dy="25">Guide your path as you bloom all year long.</tspan>
+  </text>
+  
+  <text x="200" y="420" font-family="Arial, sans-serif" font-size="16" fill="#8B4513" text-anchor="middle">With all my love,</text>
+  <text x="200" y="450" font-family="Brush Script MT, cursive" font-size="24" fill="#8B4513" text-anchor="middle">Andy</text>
+  
+  <circle cx="50" cy="500" r="30" fill="#FF69B4" opacity="0.7"></circle>
+  <circle cx="350" cy="500" r="30" fill="#FF69B4" opacity="0.7"></circle>
+  
+  <path d="M200,530 Q170,560 200,590 Q230,560 200,530" fill="#FF1493"></path>
+  <circle cx="200" cy="520" r="10" fill="#FFD700"></circle>
+  <rect x="190" y="530" width="20" height="40" fill="#8B4513"></rect>
+</svg>

@@ -25,3 +25,15 @@ model ApiLog {
   isError           Boolean  @default(false)
   errorMessage      String?  @db.Text
 }
+
+model Template {
+  id             String   @id @default(cuid())
+  cardType       String
+  promptVersion  String
+  name           String
+  description    String
+  previewSvg     String   @db.Text
+  promptContent  String   @db.Text
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}

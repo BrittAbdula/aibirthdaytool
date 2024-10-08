@@ -6,7 +6,6 @@ import { CardType, getCardConfig } from "@/lib/card-config";
 import CardTypeBubbles from "@/components/CardTypeBubbles";
 import CardGenerator from "@/components/CardGenerator";
 
-
 interface CardGeneratorPageProps {
     params: {
         cardType: string;
@@ -31,24 +30,36 @@ export async function generateMetadata({ params }: CardGeneratorPageProps): Prom
     };
 }
 
-export default function CardGeneratorPage({ params }: CardGeneratorPageProps) {
+export default async function CardGeneratorPage({ params }: CardGeneratorPageProps) {
     const cardType = params.cardType as CardType;
     const cardName = (params.cardType as string).charAt(0).toUpperCase() + (params.cardType as string).slice(1) as CardType;
     const cardConfig = getCardConfig(cardType);
-
     if (!cardConfig) {
         notFound();
     }
 
     return (
-        <div className="container mx-auto py-8">
-            <h1 className="text-3xl sm:text-4xl font-serif font-bold text-center mb-8 sm:mb-12 text-[#4A4A4A]">
+        <div className="container mx-auto px-4 py-8 sm:py-12">
+            <h1 className="text-3xl sm:text-4xl font-serif font-bold text-center mb-8 sm:mb-12 text-gray-800">
                 <span className="text-pink-500">{cardName}</span> MewTruCard Generator
             </h1>
-            <Suspense fallback={<div>Loading card generator...</div>}>
-                <CardGenerator wishCardType={cardType} />
+            <Suspense fallback={<div className="text-center text-gray-600">Loading card generator...</div>}>
+                <CardGenerator wishCardType={cardType} initialTemplate={null} />
             </Suspense>
-            <CardTypeBubbles currentType={cardType} />
+            {/* <h2 className="text-2xl font-serif font-semibold text-center mt-12 mb-6 text-gray-700">
+            <span className="text-pink-500">{cardName} Card</span> Templates
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 justify-items-center">
+                {templates.map((template) => (
+                    <Template key={template.id} template={template} />
+                ))}
+            </div> */}
+            <h2 className="text-2xl font-serif font-semibold text-center mt-12 mb-6 text-gray-700">
+              Other Card Types
+            </h2>
+            <div className="mt-12">
+                <CardTypeBubbles currentType={cardType} />
+            </div>
         </div>
     );
 }

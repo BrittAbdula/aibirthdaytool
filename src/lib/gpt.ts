@@ -1,6 +1,6 @@
 import { CardType } from './card-config';
-import { getPromptForCardType } from './prompt';
-import { prisma } from './prisma'; 
+import { prisma } from './prisma';
+import { getTemplateByCardType } from './template-config';
 
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
 const YOUR_SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'http://MewTruCard.COM';
@@ -17,6 +17,7 @@ interface GPTResponse {
 interface CardContentParams {
     cardType: CardType;
     version?: string;
+    templateId?: string;
     [key: string]: any;
 }
 
@@ -49,11 +50,14 @@ async function logApiRequest(params: {
 }
 
 export async function generateCardContent(params: CardContentParams): Promise<string> {
-    const { cardType, version, ...otherParams } = params;
-    console.log("Generating card content for:", cardType, otherParams);
+    const { cardType, version, templateId, ...otherParams } = params;
+    console.log("Generating card content for:", cardType, version, templateId, otherParams);
 
-    const promptConfig = getPromptForCardType(cardType, version);
-    const { prompt, version: promptVersion } = promptConfig;
+    const template = await getTemplateByCardType(cardType);
+
+    if (!template) {
+        throw new Error(`No template found for id: ${templateId}`);
+    }
 
     const userPrompt = Object.entries(otherParams)
         .filter(([_, value]) => value !== '' && value !== undefined)
@@ -79,7 +83,7 @@ export async function generateCardContent(params: CardContentParams): Promise<st
             body: JSON.stringify({
                 "model": "anthropic/claude-3.5-sonnet",
                 "messages": [
-                    { "role": "system", "content": prompt },
+                    { "role": "system", "content": template.promptContent },
                     { "role": "user", "content": userPrompt },
                 ],
             })
@@ -103,7 +107,7 @@ export async function generateCardContent(params: CardContentParams): Promise<st
         await logApiRequest({
             cardType,
             userInputs: otherParams,
-            promptVersion,
+            promptVersion: version || '',
             responseContent: content,
             tokensUsed: data.usage?.total_tokens || 0,
             duration,
@@ -123,7 +127,7 @@ export async function generateCardContent(params: CardContentParams): Promise<st
         await logApiRequest({
             cardType,
             userInputs: otherParams,
-            promptVersion,
+            promptVersion: version || '',
             responseContent: "",
             tokensUsed: 0,
             duration: Date.now() - startTime,

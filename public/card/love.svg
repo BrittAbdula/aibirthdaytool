@@ -1,0 +1,53 @@
+<svg width="400" height="600" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffe6e6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#ffb3b3;stop-opacity:1" />
+    </linearGradient>
+    <filter id="warmGlow" height="300%" width="300%" x="-75%" y="-75%">
+      <feGaussianBlur stdDeviation="5" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="400" height="600" fill="url(#bgGradient)" />
+  
+  <!-- Title -->
+  <text x="200" y="50" font-family="Brush Script MT, cursive" font-size="32" fill="#8B0000" text-anchor="middle">To my spouse, Lily</text>
+  
+  <!-- Separator -->
+  <line x1="50" y1="70" x2="350" y2="70" stroke="#8B0000" stroke-width="2" />
+  
+  <!-- Acrostic Poem -->
+  <g font-family="Georgia, serif" font-size="18" fill="#8B0000">
+    <text x="50" y="120">💖 Loving heart that fills me with joy</text>
+    <text x="50" y="160">🌟 Illuminating my world with your smile</text>
+    <text x="50" y="200">🌷 Laughter that echoes in my soul</text>
+    <text x="50" y="240">✨ Your presence, a blessing every day</text>
+  </g>
+  
+  <!-- Love Message -->
+  <text x="50" y="300" font-family="Georgia, serif" font-size="16" fill="#8B0000">
+    <tspan x="50" dy="0">My dearest Lily, our love as spouses</tspan>
+    <tspan x="50" dy="24">grows stronger with each passing day.</tspan>
+    <tspan x="50" dy="24">You are the light of my life, and I</tspan>
+    <tspan x="50" dy="24">cherish every moment we share.</tspan>
+  </text>
+  
+  <!-- Signature -->
+  <text x="350" y="550" font-family="Brush Script MT, cursive" font-size="24" fill="#8B0000" text-anchor="end">With all my love, Aurora</text>
+  
+  <!-- Decorative Elements -->
+  <g fill="#8B0000" opacity="0.2" filter="url(#warmGlow)">
+    <path d="M20,20 Q40,0 60,20 T100,20 T140,20 T180,20" />
+    <path d="M380,580 Q360,600 340,580 T300,580 T260,580 T220,580" />
+  </g>
+  <g fill="none" stroke="#8B0000" stroke-width="2" opacity="0.3">
+    <circle cx="30" cy="570" r="15" />
+    <circle cx="370" cy="30" r="15" />
+  </g>
+</svg>
