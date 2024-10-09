@@ -90,5 +90,6 @@ separator
 
     select to_char(timestamp, 'YYYY-MM-DD') as dt,count(1) from "ApiLog" group by 1 order by 1 desc;
     select * from "ApiLog" where id=200 order by timestamp desc limit 1;
+    update "Template" set "previewSvg" = '<svg><!-- Preview SVG Content for Anniversary Card --></svg>' where "id" = 'sorry-v1';
 
     

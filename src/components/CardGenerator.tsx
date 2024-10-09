@@ -47,7 +47,7 @@ const AgeSelector = ({ age, setAge }: { age: number | null, setAge: (age: number
 
   return (
     <div className="space-y-2">
-      <Label htmlFor="age">Age (Optional)</Label>
+      {/* <Label htmlFor="age">Age (Optional)</Label> */}
       <div className="flex items-center space-x-4">
         <Slider
           id="age-slider"
@@ -90,18 +90,28 @@ export default function CardGenerator({ wishCardType, initialTemplate }: { wishC
   const router = useRouter()
   const sampleCard = `/card/${wishCardType}.svg`
 
-  useEffect(() => {
-    setCurrentCardType(wishCardType)
-  }, [wishCardType])
-
   const cardConfig = getCardConfig(currentCardType)
 
-  // useEffect(() => {
-  //   fetch('/card/1.svg')
-  //     .then(response => response.text())
-  //     .then(svgContent => setSvgContent(svgContent))
-  //     .catch(error => console.error('load default svg failed:', error))
-  // }, [])
+  useEffect(() => {
+    setCurrentCardType(wishCardType)
+    // 重置表单数据，并设置默认值
+    if (cardConfig) {
+      const initialFormData: Record<string, any> = {};
+      cardConfig.fields.forEach(field => {
+        if (field.type === 'select' && !field.optional && field.defaultValue) {
+          initialFormData[field.name] = field.defaultValue;
+        }
+      });
+      setFormData(initialFormData);
+    }
+  }, [wishCardType, cardConfig])
+
+  useEffect(() => {
+    fetch(sampleCard)
+      .then(response => response.text())
+      .then(svgContent => setSvgContent(svgContent))
+      .catch(error => console.error('load default svg failed:', error))
+  }, [])
 
   const handleInputChange = (name: string, value: string | number) => {
     setFormData(prev => ({ ...prev, [name]: value }))
@@ -154,56 +164,71 @@ export default function CardGenerator({ wishCardType, initialTemplate }: { wishC
   }
 
   const renderField = (field: CardConfig['fields'][0]) => {
-    switch (field.type) {
-      case 'text':
-      case 'number':
-        return (
-          <Input
-            id={field.name}
-            type={field.type}
-            value={formData[field.name] || ''}
-            onChange={(e) => handleInputChange(field.name, e.target.value)}
-            placeholder={field.placeholder}
-            className="text-base"
-          />
-        )
-      case 'textarea':
-        return (
-          <Textarea
-            id={field.name}
-            value={formData[field.name] || ''}
-            onChange={(e) => handleInputChange(field.name, e.target.value)}
-            placeholder={field.placeholder}
-            rows={2}
-            className="resize-none text-base"
-          />
-        )
-      case 'select':
-        return (
-          <Select
-            value={formData[field.name] || ''}
-            onValueChange={(value) => handleInputChange(field.name, value)}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder={field.placeholder} />
-            </SelectTrigger>
-            <SelectContent>
-              {field.options?.map((option: string) => (
-                <SelectItem key={option} value={option}>{option}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        )
-      case 'age':
-        return (
-          <AgeSelector
-            age={formData[field.name] || null}
-            setAge={(value: number | null) => handleInputChange(field.name, value || '')}
-          />
-        )
-      default:
-        return null
-    }
+    const isRequired = !field.optional;
+    const labelClass = `${isRequired ? 'after:content-["*"] after:ml-0.5 after:text-red-500' : ''}`;
+
+    const inputComponent = (() => {
+      switch (field.type) {
+        case 'text':
+        case 'number':
+          return (
+            <Input
+              id={field.name}
+              type={field.type}
+              value={formData[field.name] || ''}
+              onChange={(e) => handleInputChange(field.name, e.target.value)}
+              placeholder={field.placeholder}
+              className="text-base"
+              required={isRequired}
+            />
+          );
+        case 'textarea':
+          return (
+            <Textarea
+              id={field.name}
+              value={formData[field.name] || ''}
+              onChange={(e) => handleInputChange(field.name, e.target.value)}
+              placeholder={field.placeholder}
+              rows={2}
+              className="resize-none text-base"
+              required={isRequired}
+            />
+          );
+        case 'select':
+          return (
+            <Select
+              value={formData[field.name] || ''}
+              onValueChange={(value) => handleInputChange(field.name, value)}
+              required={isRequired}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder={(field.placeholder || `Select ${field.label}`).replace('(optional)', '')} />
+              </SelectTrigger>
+              <SelectContent>
+                {field.options?.map((option: string) => (
+                  <SelectItem key={option} value={option}>{option}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          );
+        case 'age':
+          return (
+            <AgeSelector
+              age={formData[field.name] || null}
+              setAge={(value: number | null) => handleInputChange(field.name, value || '')}
+            />
+          );
+        default:
+          return null;
+      }
+    })();
+
+    return (
+      <div key={field.name} className="space-y-2">
+        <Label htmlFor={field.name} className={labelClass}>{field.label}</Label>
+        {inputComponent}
+      </div>
+    );
   }
 
   if (!cardConfig) {
@@ -237,20 +262,10 @@ export default function CardGenerator({ wishCardType, initialTemplate }: { wishC
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
-            {cardConfig.fields.map((field) => (
-              <div key={field.name} className="space-y-2">
-                <Label htmlFor={field.name}>{field.label}</Label>
-                {renderField(field)}
-              </div>
-            ))}
+            {cardConfig.fields.map((field) => renderField(field))}
             {showAdvancedOptions && cardConfig.advancedFields && (
               <>
-                {cardConfig.advancedFields.map((field) => (
-                  <div key={field.name} className="space-y-2">
-                    <Label htmlFor={field.name}>{field.label}</Label>
-                    {renderField(field)}
-                  </div>
-                ))}
+                {cardConfig.advancedFields.map((field) => renderField(field))}
               </>
             )}
             {cardConfig.advancedFields && cardConfig.advancedFields.length > 0 && (
