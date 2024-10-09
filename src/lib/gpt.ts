@@ -111,7 +111,7 @@ export async function generateCardContent(params: CardContentParams): Promise<st
             responseContent: content,
             tokensUsed: data.usage?.total_tokens || 0,
             duration,
-            isError: false,
+            isError: svgMatch ? false : true,
         });
 
         if (svgMatch) {

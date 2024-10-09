@@ -12,7 +12,7 @@ export default async function CardGallery({ wishCardType }: { wishCardType: stri
         return (
           <div key={card.id} className="border rounded-lg shadow-lg flex items-center justify-center p-4" style={{ minHeight: '300px' }}>
             <div className="w-full h-full flex items-center justify-center">
-              <ImageViewer svgContent={svgContent} alt={`Card ${card.cardType}`} />
+              <ImageViewer svgContent={svgContent} alt={`Card ${card.cardType} `} />
             </div>
           </div>
         );

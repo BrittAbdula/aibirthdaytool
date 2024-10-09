@@ -86,3 +86,9 @@ separator
     ('sorry-v1', 'sorry', '1.0', 'Sorry Card', 'A sincere apology card', '<svg><!-- Preview SVG Content for Sorry Card --></svg>', 
     'Design a thoughtful SVG apology card (400x600 pixels) based on the user''s input. Use soft, subdued colors to convey sincerity. Include elements that symbolize reconciliation or making amends (e.g., olive branches, mended hearts). Craft a genuine message of apology, incorporating specific details about the situation if provided. Include the recipient''s name sensitively. Ensure the text is legible and properly positioned. Output only the SVG code.', 
     CURRENT_TIMESTAMP);
+
+
+    select to_char(timestamp, 'YYYY-MM-DD') as dt,count(1) from "ApiLog" group by 1 order by 1 desc;
+    select * from "ApiLog" where id=200 order by timestamp desc limit 1;
+
+    
