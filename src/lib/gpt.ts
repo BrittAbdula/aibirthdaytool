@@ -1,6 +1,7 @@
 import { CardType } from './card-config';
 import { prisma } from './prisma';
 import { getTemplateByCardType } from './template-config';
+import { nanoid } from 'nanoid';
 
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
 const YOUR_SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'http://MewTruCard.COM';
@@ -22,6 +23,7 @@ interface CardContentParams {
 }
 
 async function logApiRequest(params: {
+    cardId: string;
     cardType: CardType;
     userInputs: Record<string, any>;
     promptVersion: string;
@@ -34,6 +36,7 @@ async function logApiRequest(params: {
     try {
         await prisma.apiLog.create({
             data: {
+                cardId: params.cardId,
                 cardType: params.cardType,
                 userInputs: params.userInputs,
                 promptVersion: params.promptVersion,
@@ -49,8 +52,9 @@ async function logApiRequest(params: {
     }
 }
 
-export async function generateCardContent(params: CardContentParams): Promise<string> {
+export async function generateCardContent(params: CardContentParams): Promise<{ svgContent: string, cardId: string }> {
     const { cardType, version, templateId, ...otherParams } = params;
+    const cardId = nanoid(10); // 生成10个字符的ID，你可以根据需要调整长度
     console.log("Generating card content for:", cardType, version, templateId, otherParams);
 
     const template = await getTemplateByCardType(cardType);
@@ -66,7 +70,7 @@ export async function generateCardContent(params: CardContentParams): Promise<st
 
     if (userPrompt.length >= 800) {
         console.warn("User prompt too long, returning default SVG");
-        return defaultSVG;
+        return { svgContent: defaultSVG, cardId: nanoid(10) };
     }
 
     const startTime = Date.now();
@@ -104,27 +108,31 @@ export async function generateCardContent(params: CardContentParams): Promise<st
         const svgMatch = content.match(/<svg[\s\S]*?<\/svg>/);
 
         // 记录 API 请求到数据库
-        await logApiRequest({
-            cardType,
-            userInputs: otherParams,
-            promptVersion: version || '',
-            responseContent: content,
-            tokensUsed: data.usage?.total_tokens || 0,
-            duration,
-            isError: svgMatch ? false : true,
+        const apiLog = await prisma.apiLog.create({
+            data: {
+                cardId,
+                cardType,
+                userInputs: otherParams,
+                promptVersion: version || '',
+                responseContent: svgMatch ? svgMatch[0] : content, // 只存储匹配到的 SVG 内容
+                tokensUsed: data.usage?.total_tokens || 0,
+                duration,
+                isError: svgMatch ? false : true,
+            },
         });
 
         if (svgMatch) {
-            return svgMatch[0];
+            return { svgContent: svgMatch[0], cardId };
         } else {
             console.warn("No valid SVG content found, returning default SVG");
-            return defaultSVG;
+            return { svgContent: defaultSVG, cardId };
         }
     } catch (error) {
         console.error("Error calling GPT API:", error);
         
         // 记录错误到数据库
         await logApiRequest({
+            cardId,
             cardType,
             userInputs: otherParams,
             promptVersion: version || '',

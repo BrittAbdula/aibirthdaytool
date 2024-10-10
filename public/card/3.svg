@@ -1,34 +1,39 @@
 <svg width="400" height="600" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <linearGradient id="bg-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#fff0f5;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#f0f8ff;stop-opacity:1" />
+      <stop offset="0%" style="stop-color:#f9e2e2;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#faf0e6;stop-opacity:1" />
     </linearGradient>
   </defs>
 
   <rect width="100%" height="100%" fill="url(#bg-gradient)" />
 
-  <text x="200" y="80" font-family="楷体, KaiTi" font-size="32" fill="#4a4a4a" text-anchor="middle">生日快乐</text>
+  <text x="200" y="80" font-family="Brush Script MT, cursive" font-size="32" fill="#8B4513" text-anchor="middle">Happy Birthday, Ttt</text>
 
-  <line x1="50" y1="100" x2="350" y2="100" stroke="#7a7a7a" stroke-width="1" />
+  <line x1="50" y1="100" x2="350" y2="100" stroke="#D2691E" stroke-width="2" />
 
-  <text x="200" y="150" font-family="宋体, SimSun" font-size="24" fill="#4a4a4a" text-anchor="middle">占婧</text>
-
-  <text x="200" y="200" font-family="宋体, SimSun" font-size="16" fill="#4a4a4a" text-anchor="middle">
-    <tspan x="200" dy="0">占，如占卜未来，洞察先机。</tspan>
-    <tspan x="200" dy="25">婧，似明净之水，澄澈纯粹。</tspan>
+  <text x="200" y="160" font-family="Georgia, serif" font-size="18" fill="#4A4A4A" text-anchor="middle">
+    <tspan x="200" dy="0">In the rhythm of time, a gentle triplet</tspan>
+    <tspan x="200" dy="30">Echoes the cadence of your unique beat</tspan>
+    <tspan x="200" dy="30">May this day compose a symphony</tspan>
+    <tspan x="200" dy="30">Of joy, laughter, and sweet harmony</tspan>
   </text>
 
-  <text x="200" y="300" font-family="楷体, KaiTi" font-size="18" fill="#4a4a4a" text-anchor="middle">
-    <tspan x="200" dy="0">愿你如晨星般明亮，</tspan>
-    <tspan x="200" dy="30">似清泉般纯净。</tspan>
-    <tspan x="200" dy="30">在人生的旅途中，</tspan>
-    <tspan x="200" dy="30">洞察先机，智慧如泉。</tspan>
-    <tspan x="200" dy="30">愿你的未来如你的名字，</tspan>
-    <tspan x="200" dy="30">明净而美好，璀璨而深远。</tspan>
+  <text x="200" y="320" font-family="Georgia, serif" font-size="16" fill="#6B8E23" text-anchor="middle">
+    <tspan x="200" dy="0">Like the soft repetition of waves</tspan>
+    <tspan x="200" dy="25">May blessings flow endlessly your way</tspan>
+    <tspan x="200" dy="25">Celebrating the beautiful soul you are</tspan>
+    <tspan x="200" dy="25">Today and always, near and far</tspan>
   </text>
 
-  <path d="M70,500 Q200,420 330,500" fill="none" stroke="#7a7a7a" stroke-width="1" />
-  <path d="M180,530 Q200,510 220,530 Q200,550 180,530" fill="none" stroke="#7a7a7a" stroke-width="1" />
-  <circle cx="200" cy="530" r="3" fill="#7a7a7a" />
+  <circle cx="100" cy="500" r="40" fill="#FFB6C1" opacity="0.7" />
+  <circle cx="300" cy="520" r="35" fill="#98FB98" opacity="0.7" />
+  <circle cx="200" cy="540" r="45" fill="#87CEFA" opacity="0.7" />
+
+  <path d="M180,460 Q200,420 220,460" stroke="#FF69B4" stroke-width="2" fill="none" />
+  <path d="M170,470 Q200,430 230,470" stroke="#FF69B4" stroke-width="2" fill="none" />
+
+  <rect x="185" y="470" width="30" height="40" fill="#FFD700" />
+  <path d="M185,470 L200,450 L215,470 Z" fill="#FFA500" />
+  <rect x="195" y="510" width="10" height="5" fill="#8B4513" />
 </svg>

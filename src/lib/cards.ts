@@ -1,30 +1,65 @@
 import { prisma } from '@/lib/prisma';
 import { unstable_cache } from 'next/cache';
+import { CardType } from '@/lib/card-config'
 
 export interface Card {
-  id: number;
+  cardId: string;
   cardType: string;
   responseContent: string;
 }
 
-export const getRecentCards = unstable_cache(
-  async (page: number, pageSize: number, wishCardType: string|null): Promise<Card[]> => {
-    const cards = await prisma.apiLog.findMany({
-      orderBy: { timestamp: 'desc' },
-      take: pageSize,
-      skip: (page - 1) * pageSize,
-      select: {
-        id: true,
-        cardType: true,
-        responseContent: true,
-      },
-      where: { 
-        isError: false,
-        ...(wishCardType ? { cardType: wishCardType } : {}),
-      },
-    });
-    return cards;
+// 服务端渲染使用的函数，带有缓存
+export const getRecentCardsServer = unstable_cache(
+  async (page: number, pageSize: number, wishCardType: string|null): Promise<{ cards: Card[], totalPages: number }> => {
+    return fetchRecentCards(page, pageSize, wishCardType);
   },
-  ['recent-cards'],
+  ['recent-cards-server'],
   { revalidate: 300 }
 );
+
+// 客户端使用的函数，不使用缓存
+export async function getRecentCardsClient(page: number, pageSize: number, wishCardType: string|null): Promise<{ cards: Card[], totalPages: number }> {
+  return fetchRecentCards(page, pageSize, wishCardType);
+}
+
+// 实际获取卡片的函数
+async function fetchRecentCards(page: number, pageSize: number, wishCardType: string|null): Promise<{ cards: Card[], totalPages: number }> {
+  const where = {
+    isError: false,
+    ...(wishCardType ? { cardType: wishCardType } : {}),
+  };
+
+  const totalCards = await prisma.apiLog.count({ where });
+  const totalPages = Math.ceil(totalCards / pageSize);
+
+  const cards = await prisma.apiLog.findMany({
+    where,
+    orderBy: { timestamp: 'desc' },
+    take: pageSize,
+    skip: (page - 1) * pageSize,
+    select: {
+      cardId: true,
+      cardType: true,
+      responseContent: true,
+    },
+  });
+
+  return { cards, totalPages };
+}
+
+export async function getDefaultCardByCardType(cardType: CardType): Promise<Card> {
+  const card = await prisma.template.findFirst({
+    where: { cardType: cardType },
+    select: {
+      cardId: true,
+      cardType: true,
+      previewSvg: true,
+    },
+    orderBy: { createdAt: 'desc' },
+  });
+  return {
+    cardId: card?.cardId || '',
+    cardType,
+    responseContent: card?.previewSvg || '',
+  };
+}

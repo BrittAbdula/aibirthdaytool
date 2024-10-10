@@ -1,11 +1,10 @@
 import { notFound } from "next/navigation";
-import dynamic from "next/dynamic";
 import { Suspense } from "react";
 import { Metadata } from "next/types";
 import { CardType, getCardConfig } from "@/lib/card-config";
 import CardTypeBubbles from "@/components/CardTypeBubbles";
 import CardGenerator from "@/components/CardGenerator";
-
+import { getDefaultCardByCardType } from "@/lib/cards";
 interface CardGeneratorPageProps {
     params: {
         cardType: string;
@@ -34,6 +33,7 @@ export default async function CardGeneratorPage({ params }: CardGeneratorPagePro
     const cardType = params.cardType as CardType;
     const cardName = (params.cardType as string).charAt(0).toUpperCase() + (params.cardType as string).slice(1) as CardType;
     const cardConfig = getCardConfig(cardType);
+    const defaultCard = await getDefaultCardByCardType(cardType);
     if (!cardConfig) {
         notFound();
     }
@@ -44,7 +44,7 @@ export default async function CardGeneratorPage({ params }: CardGeneratorPagePro
                 <span className="text-pink-500">{cardName}</span> MewTruCard Generator
             </h1>
             <Suspense fallback={<div className="text-center text-gray-600">Loading card generator...</div>}>
-                <CardGenerator wishCardType={cardType} initialTemplate={null} />
+                <CardGenerator wishCardType={cardType} initialCardId={defaultCard.cardId} initialSVG={defaultCard.responseContent} />
             </Suspense>
             {/* <h2 className="text-2xl font-serif font-semibold text-center mt-12 mb-6 text-gray-700">
             <span className="text-pink-500">{cardName} Card</span> Templates

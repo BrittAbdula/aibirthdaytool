@@ -16,7 +16,7 @@ export default async function Home() {
   return (
     <main className="container mx-auto px-4 py-8">
       <h1 className="text-3xl sm:text-4xl font-serif font-bold text-center mb-8 sm:mb-12 text-[#4A4A4A]">MewTruCard Generator</h1>
-      <CardGenerator wishCardType="birthday" initialTemplate="birthday-v1" />
+      <CardGenerator wishCardType="birthday" initialCardId="1" initialSVG="" />
       <TrendingCards />
       <HowToUse />
       <WhyChooseMewTruCard />

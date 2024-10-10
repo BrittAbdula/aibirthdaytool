@@ -1,22 +1,101 @@
-import { getRecentCards, Card } from '@/lib/cards';
-import ImageViewer from './ImageViewer';
-import { extractSvgFromResponse } from '@/lib/utils';
+'use client'
 
-export default async function CardGallery({ wishCardType }: { wishCardType: string|null }) {
-  const cards: Card[] = await getRecentCards(1, 12, wishCardType);
+import React, { useState, useEffect } from 'react'
+import { ImageViewer } from './ImageViewer'
+import { Card } from '@/lib/cards'
+import { Button } from "@/components/ui/button"
+import { ChevronLeftIcon, ChevronRightIcon } from '@radix-ui/react-icons'
+
+interface CardGalleryProps {
+  initialCardsData: {
+    cards: Card[];
+    totalPages: number;
+  };
+  wishCardType: string | null;
+}
+
+const CARDS_PER_PAGE = 12
+
+export default function CardGallery({ initialCardsData, wishCardType }: CardGalleryProps) {
+  const [cards, setCards] = useState<Card[]>(initialCardsData.cards)
+  const [currentPage, setCurrentPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(initialCardsData.totalPages)
+  const [isLoading, setIsLoading] = useState(false)
+
+  useEffect(() => {
+    if (currentPage > 1) {
+      fetchCards(currentPage)
+    }
+  }, [currentPage, wishCardType])
+
+  const fetchCards = async (page: number) => {
+    setIsLoading(true)
+    try {
+      const response = await fetch(`/api/cards?page=${page}&pageSize=${CARDS_PER_PAGE}&wishCardType=${wishCardType || ''}`)
+      if (!response.ok) {
+        throw new Error('Failed to fetch cards')
+      }
+      const data = await response.json()
+      setCards(data.cards)
+      setTotalPages(data.totalPages)
+    } catch (error) {
+      console.error('Error fetching cards:', error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handlePreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(prev => prev - 1)
+    }
+  }
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(prev => prev + 1)
+    }
+  }
+
+  if (isLoading) {
+    return <div className="text-center py-8">Loading...</div>
+  }
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-      {cards.map((card) => {
-        const svgContent = extractSvgFromResponse(card.responseContent);
-        return (
-          <div key={card.id} className="border rounded-lg shadow-lg flex items-center justify-center p-4" style={{ minHeight: '300px' }}>
-            <div className="w-full h-full flex items-center justify-center">
-              <ImageViewer svgContent={svgContent} alt={`Card ${card.cardType} `} />
-            </div>
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        {cards.map((card) => (
+          <div key={card.cardId} className="bg-white rounded-lg shadow-md overflow-hidden">
+            <ImageViewer
+              svgContent={card.responseContent}
+              alt={`${card.cardType} card`}
+              cardId={card.cardId}
+              cardType={card.cardType}
+            />
           </div>
-        );
-      })}
+        ))}
+      </div>
+      <div className="flex justify-center items-center space-x-4 mt-8">
+        <Button
+          onClick={handlePreviousPage}
+          disabled={currentPage === 1}
+          className="bg-[#FFC0CB] text-[#4A4A4A] hover:bg-[#FFD1DC] transition-colors"
+        >
+          <ChevronLeftIcon className="mr-2 h-4 w-4" />
+          Previous
+        </Button>
+        <span className="text-[#4A4A4A]">
+          Page {currentPage} of {totalPages}
+        </span>
+        <Button
+          onClick={handleNextPage}
+          disabled={currentPage === totalPages}
+          className="bg-[#FFC0CB] text-[#4A4A4A] hover:bg-[#FFD1DC] transition-colors"
+        >
+          Next
+          <ChevronRightIcon className="ml-2 h-4 w-4" />
+        </Button>
+      </div>
     </div>
-  );
+  )
 }

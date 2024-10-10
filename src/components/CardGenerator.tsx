@@ -12,7 +12,7 @@ import confetti from 'canvas-confetti'
 import { Slider } from "@/components/ui/slider"
 import { Textarea } from "@/components/ui/textarea"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import ImageViewer from '@/components/ImageViewer'
+import { ImageViewer } from '@/components/ImageViewer'
 import { extractTextFromSvg } from '@/lib/utils'
 import { CardType, getCardConfig, getAllCardTypes, CardConfig } from '@/lib/card-config'
 // Flickering Grid component
@@ -79,11 +79,11 @@ const AgeSelector = ({ age, setAge }: { age: number | null, setAge: (age: number
   )
 }
 
-export default function CardGenerator({ wishCardType, initialTemplate }: { wishCardType: CardType, initialTemplate: string | null }) {
+export default function CardGenerator({ wishCardType, initialCardId, initialSVG }: { wishCardType: CardType, initialCardId: string, initialSVG: string }) {
   const [currentCardType, setCurrentCardType] = useState<CardType>(wishCardType)
-  const [currentTemplate, setCurrentTemplate] = useState<string>(initialTemplate || '')
   const [formData, setFormData] = useState<Record<string, any>>({})
-  const [svgContent, setSvgContent] = useState<string | null>(null)
+  const [svgContent, setSvgContent] = useState<string | null>(initialSVG)
+  const [cardId, setCardId] = useState<string | null>(initialCardId)
   const [isLoading, setIsLoading] = useState(false)
   const [showAdvancedOptions, setShowAdvancedOptions] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -125,6 +125,7 @@ export default function CardGenerator({ wishCardType, initialTemplate }: { wishC
     e.preventDefault()
     setIsLoading(true)
     setSvgContent(null)
+    setCardId(null)
     setError(null)
     try {
       const response = await fetch('/api/generate-card', {
@@ -134,7 +135,6 @@ export default function CardGenerator({ wishCardType, initialTemplate }: { wishC
         },
         body: JSON.stringify({
           cardType: currentCardType,
-          templateId: currentTemplate,
           ...formData
         }),
       });
@@ -146,6 +146,7 @@ export default function CardGenerator({ wishCardType, initialTemplate }: { wishC
       const data = await response.json();
       if (data.svgContent) {
         setSvgContent(data.svgContent);
+        setCardId(data.cardId); 
         confetti({
           particleCount: 100,
           spread: 70,
@@ -157,6 +158,7 @@ export default function CardGenerator({ wishCardType, initialTemplate }: { wishC
     } catch (error) {
       console.error("Error generating card:", error)
       setSvgContent(null)
+      setCardId(null)
       setError(error instanceof Error ? error.message : 'error')
     } finally {
       setIsLoading(false)
@@ -303,7 +305,7 @@ export default function CardGenerator({ wishCardType, initialTemplate }: { wishC
             ) : (
               <div className="w-full h-full flex items-center justify-center overflow-hidden">
                 {svgContent ? (
-                  <ImageViewer svgContent={svgContent} alt={extractTextFromSvg(svgContent || 'Generated Card')} />
+                  <ImageViewer svgContent={svgContent} alt={extractTextFromSvg(svgContent || 'Generated Card')} cardId={cardId || '1'} cardType={currentCardType} />
                 ) : (
                   <Image
                     src={sampleCard}

@@ -28,8 +28,8 @@ export async function POST(request: Request) {
       ...otherFields
     };
 
-    const svgContent = await generateCardContent(cardData);
-    return NextResponse.json({ svgContent });
+    const { svgContent, cardId } = await generateCardContent(cardData);
+    return NextResponse.json({ svgContent, cardId });
   } catch (error) {
     console.error('Error generating card:', error);
     return NextResponse.json({ error: 'Failed to generate card' }, { status: 500 });

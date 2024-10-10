@@ -14,20 +14,23 @@ datasource db {
 }
 
 model ApiLog {
-  id                Int      @id @default(autoincrement())
+  id                Int          @id @default(autoincrement())
+  cardId            String       @unique // 新增加密后的 cardId 字段
   cardType          String
   userInputs        Json
   promptVersion     String
-  responseContent   String   @db.Text
+  responseContent   String       @db.Text
   tokensUsed        Int
   duration          Int
-  timestamp         DateTime @default(now())
-  isError           Boolean  @default(false)
-  errorMessage      String?  @db.Text
+  timestamp         DateTime     @default(now())
+  isError           Boolean      @default(false)
+  errorMessage      String?      @db.Text
+  userActions       UserAction[]
 }
 
 model Template {
   id             String   @id @default(cuid())
+  cardId         String      @unique
   cardType       String
   promptVersion  String
   name           String
@@ -36,4 +39,14 @@ model Template {
   promptContent  String   @db.Text
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
+}
+
+model UserAction {
+  id        String   @id @default(cuid())
+  cardId    String
+  action    String
+  timestamp DateTime @default(now())
+  apiLog    ApiLog   @relation(fields: [cardId], references: [cardId])
+
+  @@index([cardId])
 }

@@ -16,6 +16,63 @@ export function extractTextFromSvg(svgContent: string): string {
     .join(' ')
 }
 
+export function extractEditableFields(svgContent: string): Record<string, string> {
+  const parser = new DOMParser()
+  const svgDoc = parser.parseFromString(svgContent, 'image/svg+xml')
+  const textElements = svgDoc.querySelectorAll('text')
+  
+  const editableFields: Record<string, string> = {}
+  
+  textElements.forEach((el, index) => {
+    const id = el.id || `text-${index + 1}`
+    let content = ''
+
+    // 处理 tspan 元素
+    const tspans = el.querySelectorAll('tspan')
+    if (tspans.length > 0) {
+      content = Array.from(tspans)
+        .map(tspan => tspan.textContent?.trim())
+        .filter(Boolean)
+        .join('\n')
+    } else {
+      content = el.textContent?.trim() || ''
+    }
+    
+    if (content) {
+      editableFields[id] = content
+    }
+  })
+  
+  return editableFields
+}
+
+export function updateSvgContent(svgContent: string, updatedFields: Record<string, string>): string {
+  const parser = new DOMParser()
+  const svgDoc = parser.parseFromString(svgContent, 'image/svg+xml')
+  
+  Object.entries(updatedFields).forEach(([id, content]) => {
+    const element = svgDoc.getElementById(id) || svgDoc.querySelector(`text:nth-of-type(${parseInt(id.split('-')[1])})`)
+    if (element) {
+      // 清除现有内容
+      while (element.firstChild) {
+        element.removeChild(element.firstChild)
+      }
+
+      // 添加新内容，处理换行
+      const lines = content.split('\n')
+      lines.forEach((line, index) => {
+        const tspan = svgDoc.createElementNS('http://www.w3.org/2000/svg', 'tspan')
+        tspan.textContent = line
+        tspan.setAttribute('x', element.getAttribute('x') || '0')
+        tspan.setAttribute('dy', index === 0 ? '0' : '1.2em')
+        element.appendChild(tspan)
+      })
+    }
+  })
+  
+  return new XMLSerializer().serializeToString(svgDoc)
+}
+
 export function extractSvgFromResponse(responseContent: string): string {
   const svgRegex = /<svg[\s\S]*?<\/svg>/i;
   const match = responseContent.match(svgRegex);
