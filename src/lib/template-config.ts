@@ -4,6 +4,7 @@ import { unstable_cache } from 'next/cache';
 
 export interface Template {
   id: string;
+  cardId: string;
   cardType: string;
   promptVersion: string;
   name: string;

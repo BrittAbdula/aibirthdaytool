@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Template as TemplateType } from '@/lib/template-config';
-import ImageViewer from './ImageViewer';
+import { ImageViewer } from './ImageViewer';
 interface TemplateProps {
   template: TemplateType;
 }
@@ -18,7 +18,7 @@ export function Template({ template }: TemplateProps) {
         <CardDescription className="text-sm text-gray-600 mt-2">{template.description}</CardDescription>
       </CardHeader>
       <CardContent>
-        <ImageViewer svgContent={template.previewSvg} alt={template.name} />
+        <ImageViewer svgContent={template.previewSvg} alt={template.name} cardId={template.cardId} cardType={template.cardType} />
       </CardContent>
       <CardFooter className="mt-auto">
         <Link href={`/${template.cardType}/${template.id}`} passHref className="w-full">
