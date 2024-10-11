@@ -184,7 +184,7 @@ export default function EditCard({ params }: { params: { cardId: string, cardTyp
 
   return (
     <div className="container mx-auto p-4 bg-[#FFF9F0]">
-      <h1 className="text-3xl font-bold mb-6 text-[#4A4A4A]">Edit Your Personalized {cardType} Card</h1>
+      <h1 className="text-3xl font-bold mb-6 text-[#4A4A4A]">Edit Your Personalized {cardType.charAt(0).toUpperCase() + cardType.slice(1)} Card</h1>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         <div className="bg-white p-6 rounded-lg shadow-md">
           <h2 className="text-2xl font-semibold mb-4 text-[#4A4A4A] text-center">Preview</h2>
