@@ -89,6 +89,7 @@ separator
 
 ALTER table "ApiLog" ADD COLUMN "cardId" TEXT NOT NULL;
 update "ApiLog" set "cardId" = "id";
+update "ApiLog" set "cardId" = "id" where "cardId"is null;
 ALTER table "Template" ADD COLUMN "cardId" TEXT ;
 update "Template" set "cardId" = "id";
 CREATE UNIQUE INDEX "ApiLog_cardId_idx" ON "ApiLog"("cardId");

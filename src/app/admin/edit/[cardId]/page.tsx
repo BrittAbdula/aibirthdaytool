@@ -10,7 +10,6 @@ import NextImage from 'next/image'
 import { useToast } from "@/hooks/use-toast"
 
 export default function AdminEditCard({ params }: { params: { cardId: string } }) {
-  const router = useRouter()
   const { cardId } = params
   const [svgContent, setSvgContent] = useState('')
   const [editableFields, setEditableFields] = useState<Record<string, string>>({})

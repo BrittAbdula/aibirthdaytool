@@ -11,8 +11,8 @@ const playfair = Playfair_Display({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL || 'https://mewtrucard.com/'),
-  title: "MewTruCard - AI Birthday Card Generator",
-  description: "Generate personalized birthday cards using AI",
+  title: "MewTruCard - AI Greeting Card Generator",
+  description: "Generate personalized Greeting cards using AI",
 };
 
 export default function RootLayout({

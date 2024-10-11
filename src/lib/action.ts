@@ -2,7 +2,7 @@
 
 import { recordUserAction as dbRecordUserAction } from './db'
 
-export async function recordUserAction(cardId: string, action: 'copy' | 'download'): Promise<void> {
+export async function recordUserAction(cardId: string, action: 'copy' | 'download' | 'send'): Promise<void> {
   try {
     await dbRecordUserAction(cardId, action)
   } catch (error) {

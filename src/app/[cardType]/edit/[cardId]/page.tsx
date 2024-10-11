@@ -1,24 +1,28 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { extractEditableFields, updateSvgContent } from '@/lib/utils'
 import NextImage from 'next/image'
-import { DownloadIcon, CopyIcon } from '@radix-ui/react-icons'
+import { DownloadIcon, CopyIcon, PaperPlaneIcon, TwitterLogoIcon, LinkedInLogoIcon, EnvelopeClosedIcon } from '@radix-ui/react-icons'
 import { useToast } from "@/hooks/use-toast"
 import { recordUserAction } from '@/lib/action'
 import dynamic from 'next/dynamic'
+import { EyeOpenIcon } from '@radix-ui/react-icons'
 
 const IsMobileWrapper = dynamic(() => import('@/components/IsMobileWrapper'), { ssr: false })
 
 export default function EditCard({ params }: { params: { cardId: string, cardType: string } }) {
-  const router = useRouter()
   const { cardId, cardType } = params
   const [svgContent, setSvgContent] = useState('')
+  const [originalContent, setOriginalContent] = useState('')
   const [editableFields, setEditableFields] = useState<Record<string, string>>({})
   const [imageSrc, setImageSrc] = useState<string>('')
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [shareLink, setShareLink] = useState('')
+  const [editedCardId, setEditedCardId] = useState('')
   const { toast } = useToast()
 
   useEffect(() => {
@@ -28,6 +32,7 @@ export default function EditCard({ params }: { params: { cardId: string, cardTyp
         if (response.ok) {
           const data = await response.json()
           setSvgContent(data.responseContent)
+          setOriginalContent(data.responseContent)
           setEditableFields(extractEditableFields(data.responseContent))
           updateImageSrc(data.responseContent)
         } else {
@@ -117,12 +122,72 @@ export default function EditCard({ params }: { params: { cardId: string, cardTyp
     }
   }
 
+  const handleSend = async () => {
+    if (svgContent === originalContent) {
+      setShareLink(editedCardId ? `${window.location.origin}/to/${editedCardId}` : `${window.location.origin}/`)
+      setIsModalOpen(true)
+      return
+    }
+    try {
+      const response = await fetch('/api/edited-cards', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          editedCardId,
+          cardType,
+          originalCardId: cardId,
+          editedContent: svgContent,
+        }),
+      })
+
+      if (response.ok) {
+        const { id } = await response.json()
+        setEditedCardId(id)
+        setShareLink(`${window.location.origin}/to/${id}`)
+        setOriginalContent(svgContent)
+        setIsModalOpen(true)
+        await recordUserAction(cardId, 'send')
+      } else {
+        throw new Error('Failed to save edited card')
+      }
+    } catch (error) {
+      console.error('Error saving edited card:', error)
+      toast({
+        variant: "destructive",
+        description: "Failed to generate share link. Please try again.",
+      })
+    }
+  }
+
+  const handleCopyLink = () => {
+    navigator.clipboard.writeText(shareLink)
+    toast({ description: "Link copied to clipboard" })
+  }
+
+  const handleShare = (platform: string) => {
+    let url = ''
+    switch (platform) {
+      case 'twitter':
+        url = `https://twitter.com/intent/tweet?url=${encodeURIComponent(shareLink)}`
+        break
+      case 'linkedin':
+        url = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareLink)}`
+        break
+      case 'email':
+        url = `mailto:?body=${encodeURIComponent(shareLink)}`
+        break
+    }
+    window.open(url, '_blank')
+  }
+
   return (
     <div className="container mx-auto p-4 bg-[#FFF9F0]">
-      <h1 className="text-3xl font-bold mb-6 text-[#4A4A4A]">Edit {cardType} Card</h1>
+      <h1 className="text-3xl font-bold mb-6 text-[#4A4A4A]">Edit Your Personalized {cardType} Card</h1>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         <div className="bg-white p-6 rounded-lg shadow-md">
-          <h2 className="text-2xl font-semibold mb-4 text-[#4A4A4A]">Preview</h2>
+          <h2 className="text-2xl font-semibold mb-4 text-[#4A4A4A] text-center">Preview</h2>
           <div className="border border-[#FFC0CB] rounded-lg overflow-hidden">
             {imageSrc && (
               <NextImage
@@ -162,9 +227,53 @@ export default function EditCard({ params }: { params: { cardId: string, cardTyp
                 </Button>
               )}
             </IsMobileWrapper>
+            <Button onClick={handleSend} className="bg-[#FFC0CB] text-[#4A4A4A] hover:bg-[#FFD1DC] transition-colors">
+              <PaperPlaneIcon className="mr-2 h-4 w-4" />
+              Send
+            </Button>
           </div>
         </div>
       </div>
+
+      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Share your card</DialogTitle>
+          </DialogHeader>
+          <div className="mt-2">
+            <div className="p-2 bg-gray-100 rounded">
+              <code className="text-sm font-mono break-all">{shareLink}</code>
+            </div>
+            <div className="mt-4 flex justify-between items-center space-x-2">
+              <Button
+                onClick={() => handleShare('twitter')}
+                className="bg-[#FFC0CB] text-[#4A4A4A] hover:bg-[#FFD1DC] transition-colors"
+              >
+                <TwitterLogoIcon className="h-4 w-4" />
+              </Button>
+              <Button
+                onClick={() => handleShare('email')}
+                className="bg-[#FFC0CB] text-[#4A4A4A] hover:bg-[#FFD1DC] transition-colors"
+              >
+                <EnvelopeClosedIcon className="h-4 w-4" />
+              </Button>
+                  <Button
+                    onClick={() => window.open(shareLink, '_blank')}
+                    className="bg-[#FFC0CB] text-[#4A4A4A] hover:bg-[#FFD1DC] transition-colors"
+                  >
+                    <EyeOpenIcon className="h-4 w-4" />
+                  </Button>
+              <Button
+                onClick={handleCopyLink}
+                className="flex-grow bg-[#FFC0CB] text-[#4A4A4A] hover:bg-[#FFD1DC] transition-colors"
+              >
+                <CopyIcon className="mr-2 h-4 w-4" />
+                Copy Link
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

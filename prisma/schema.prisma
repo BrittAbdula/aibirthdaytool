@@ -50,3 +50,12 @@ model UserAction {
 
   @@index([cardId])
 }
+
+model EditedCard {
+  id              String   @id @default(cuid())
+  originalCardId  String
+  cardType        String
+  editedContent   String   @db.Text
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
