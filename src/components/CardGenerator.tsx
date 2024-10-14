@@ -118,7 +118,7 @@ export default function CardGenerator({ wishCardType, initialCardId, initialSVG 
   }
 
   const handleCardTypeChange = (newCardType: CardType) => {
-    router.push(`/${newCardType}`)
+    router.push(`/${newCardType}/`)
   }
 
   const handleSubmit = async (e: React.FormEvent) => {

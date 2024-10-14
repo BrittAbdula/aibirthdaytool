@@ -11,17 +11,17 @@ const trendingCards: TrendingCard[] = [
     {
       image: '/card/love.svg',
       title: 'Love Card',
-      link: '/love'
+      link: '/love/'
     },
     {
       image: '/card/sorry.svg',
       title: 'Sorry Card',
-      link: '/sorry'
+      link: '/sorry/'
     },
     {
       image: '/card/birthday.svg',
       title: 'Birthday Card',
-      link: '/birthday'
+      link: '/birthday/'
     },
 ]
 
