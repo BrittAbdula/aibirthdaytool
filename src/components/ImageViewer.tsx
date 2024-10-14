@@ -154,7 +154,7 @@ export function ImageViewer({ svgContent, alt, cardId, cardType }: ImageViewerPr
         <DialogTrigger asChild>
           <div className="w-full h-full flex items-center justify-center cursor-pointer hover:opacity-90 transition-opacity">
             {isClient && imageSrc && (
-              <NextImage
+              <img
                 src={imageSrc}
                 alt={alt}
                 width={400}
@@ -169,7 +169,7 @@ export function ImageViewer({ svgContent, alt, cardId, cardType }: ImageViewerPr
           <div className="flex flex-col items-center justify-center h-full">
             <div className="w-full h-[calc(100vh-200px)] overflow-auto flex items-center justify-center p-4">
               {isClient && imageSrc && (
-                <NextImage
+                <img
                   src={imageSrc}
                   alt={alt}
                   width={400}
