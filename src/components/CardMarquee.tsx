@@ -26,21 +26,15 @@ const CardItem = ({ card }: { card: Card }) => {
       "dark:border-gray-50/[.1] dark:bg-gray-50/[.10] dark:hover:bg-gray-50/[.15]"
     )}>
       <div className="bg-white rounded-lg shadow-md overflow-hidden">
-        {/* <ImageViewer
-          svgContent={card.responseContent}
-          alt={`${card.cardType} card`}
-          cardId={card.cardId}
-          cardType={card.cardType}
-        /> */}
         <a href={`/${card.cardType}/edit/${card.cardId}/`}>
-        <img
-                  src={`data:image/svg+xml;charset=utf-8,${encodeURIComponent(card.responseContent)}`}
-                  alt={`${card.cardType} card`}
-                  width={400}
-                  height={600}
-                  className="max-w-full max-h-full"
-                />
-          </a>
+          <img
+            src={`data:image/svg+xml;charset=utf-8,${encodeURIComponent(card.responseContent)}`}
+            alt={`${card.cardType} card`}
+            width={400}
+            height={600}
+            className="max-w-full max-h-full"
+          />
+        </a>
       </div>
     </div>
   )
@@ -78,7 +72,7 @@ export default function CardMarquee({ initialCardsData, className }: CardMarquee
         <Link 
           href="/card-gallery/" 
           className={cn(
-            "inline-flex items-center gap-1  font-medium",
+            "inline-flex items-center gap-1 text-sm font-medium",
             "text-gray-600 hover:text-gray-900",
             "dark:text-gray-400 dark:hover:text-gray-100",
             "transition-colors duration-200"
@@ -91,12 +85,6 @@ export default function CardMarquee({ initialCardsData, className }: CardMarquee
             stroke="currentColor" 
             viewBox="0 0 24 24"
           >
-          <path 
-            strokeLinecap="round" 
-            strokeLinejoin="round" 
-            strokeWidth={2} 
-            d="M9 5l7 7-7 7"
-          />
             <path 
               strokeLinecap="round" 
               strokeLinejoin="round" 
