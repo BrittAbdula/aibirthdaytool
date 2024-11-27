@@ -114,6 +114,8 @@ CREATE INDEX "UserAction_cardId_idx" ON "UserAction"("cardId");
     select to_char(timestamp, 'YYYY-MM-DD') as dt,count(1) from "ApiLog" group by 1 order by 1 desc;
     select * from "ApiLog" where id=200 order by timestamp desc limit 1;
     select * from "UserAction" order by timestamp desc limit 11;
+    select action,count(1) from "UserAction" group by action;
+    select to_char(timestamp, 'YYYY-MM-DD') as dt,action,count(1) from "UserAction" group by 1,2 order by 1 desc;
     update "Template" set "previewSvg" = '<svg><!-- Preview SVG Content for Anniversary Card --></svg>' where "id" = 'sorry-v1';
 
     

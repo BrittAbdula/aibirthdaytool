@@ -5,6 +5,9 @@ import { CardType, getCardConfig } from "@/lib/card-config";
 import CardTypeBubbles from "@/components/CardTypeBubbles";
 import CardGenerator from "@/components/CardGenerator";
 import { getDefaultCardByCardType } from "@/lib/cards";
+import CardMarquee from "@/components/CardMarquee";
+import { getRecentCardsServer } from '@/lib/cards';
+
 interface CardGeneratorPageProps {
     params: {
         cardType: string;
@@ -34,6 +37,7 @@ export default async function CardGeneratorPage({ params }: CardGeneratorPagePro
     const cardName = (params.cardType as string).charAt(0).toUpperCase() + (params.cardType as string).slice(1) as CardType;
     const cardConfig = getCardConfig(cardType);
     const defaultCard = await getDefaultCardByCardType(cardType);
+    const initialCardsData = await getRecentCardsServer(1, 10, cardType);
     if (!cardConfig) {
         notFound();
     }
@@ -54,6 +58,13 @@ export default async function CardGeneratorPage({ params }: CardGeneratorPagePro
                     <Template key={template.id} template={template} />
                 ))}
             </div> */}
+
+      <h2 className="text-3xl font-bold mb-12 text-center">
+        Use <span className="text-purple-600">Templates</span>
+      </h2>
+      <Suspense fallback={<div>Loading...</div>}>
+        <CardMarquee wishCardType={cardType} initialCardsData={initialCardsData} />
+      </Suspense>
             <h2 className="text-2xl font-serif font-semibold text-center mt-12 mb-6 text-gray-700">
               Other Card Types
             </h2>
