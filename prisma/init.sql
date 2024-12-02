@@ -120,4 +120,7 @@ CREATE INDEX "UserAction_cardId_idx" ON "UserAction"("cardId");
     select to_char(timestamp, 'YYYY-MM-DD') as dt,action,count(1) from "UserAction" group by 1,2 order by 1 desc;
     update "Template" set "previewSvg" = '<svg><!-- Preview SVG Content for Anniversary Card --></svg>' where "id" = 'sorry-v1';
 
-    
+    select to_char("createdAt", 'YYYY-MM-DD') as dt,count(1) from "EditedCard" group by 1 order by 1 desc;
+    select "cardType",count(1) from "EditedCard" group by 1 order by 2 desc;
+    select to_char("createdAt", 'YYYY-MM-DD') as dt,"cardType",count(1) from "EditedCard" group by 1,2 order by 1 desc;
+    select "originalCardId",count(1) from "EditedCard" group by 1 order by 2 desc;
