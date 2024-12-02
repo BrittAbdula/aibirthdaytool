@@ -1,34 +1,35 @@
-<svg width="400" height="600" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <linearGradient id="bg-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#ffe6e6;stop-opacity:1"></stop>
-      <stop offset="100%" style="stop-color:#ffb3b3;stop-opacity:1"></stop>
-    </linearGradient>
-  </defs>
-  
-  <rect width="100%" height="100%" fill="url(#bg-gradient)"></rect>
-  
-  <text x="200" y="80" font-family="Brush Script MT, cursive" font-size="32" fill="#8B4513" text-anchor="middle">Happy Birthday,</text>
-  <text x="200" y="120" font-family="Brush Script MT, cursive" font-size="40" fill="#8B4513" text-anchor="middle">Isabella</text>
-  
-  <line x1="50" y1="150" x2="350" y2="150" stroke="#D2691E" stroke-width="2"></line>
-  
-  <text x="200" y="200" font-family="Georgia, serif" font-size="18" fill="#4A0E0E" text-anchor="middle">
-    <tspan x="200" dy="0">In the garden of life, a blossom so fair,</tspan>
-    <tspan x="200" dy="25">A promise of beauty beyond compare.</tspan>
-    <tspan x="200" dy="25">Twenty-six petals, each a year's treasure,</tspan>
-    <tspan x="200" dy="25">Unfolding with grace in abundant measure.</tspan>
-    <tspan x="200" dy="25">May love's gentle touch and joy's sweet song,</tspan>
-    <tspan x="200" dy="25">Guide your path as you bloom all year long.</tspan>
-  </text>
-  
-  <text x="200" y="420" font-family="Arial, sans-serif" font-size="16" fill="#8B4513" text-anchor="middle">With all my love,</text>
-  <text x="200" y="450" font-family="Brush Script MT, cursive" font-size="24" fill="#8B4513" text-anchor="middle">Andy</text>
-  
-  <circle cx="50" cy="500" r="30" fill="#FF69B4" opacity="0.7"></circle>
-  <circle cx="350" cy="500" r="30" fill="#FF69B4" opacity="0.7"></circle>
-  
-  <path d="M200,530 Q170,560 200,590 Q230,560 200,530" fill="#FF1493"></path>
-  <circle cx="200" cy="520" r="10" fill="#FFD700"></circle>
-  <rect x="190" y="530" width="20" height="40" fill="#8B4513"></rect>
+
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="600">
+    <!-- Background -->
+    <rect width="400" height="600" fill="#FFF5F5"/>
+    
+    <!-- Decorative border -->
+    <rect x="10" y="10" width="380" height="580" fill="none" stroke="#D4AF37" stroke-width="2"/>
+    
+    <!-- Hearts -->
+    <path d="M200 150 C160 110, 110 110, 110 160 C110 200, 200 240, 200 240 C200 240, 290 200, 290 160 C290 110, 240 110, 200 150" fill="#FFD700" opacity="0.6"/>
+    
+    <!-- Wedding Rings -->
+    <circle cx="180" cy="320" r="25" fill="none" stroke="#D4AF37" stroke-width="4"/>
+    <circle cx="220" cy="320" r="25" fill="none" stroke="#C0C0C0" stroke-width="4"/>
+    
+    <!-- Year Text -->
+    <text x="200" y="100" font-family="Dancing Script, cursive" font-size="24" fill="#D4AF37" text-anchor="middle"><tspan x="200" dy="0">1st Anniversary</tspan></text>
+    
+    <!-- Names -->
+    <text x="200" y="250" font-family="Dancing Script, cursive" font-size="32" fill="#8B0000" text-anchor="middle"><tspan x="200" dy="0">Tarique &amp; Afreen</tspan></text>
+    
+    <!-- Message -->
+    <text x="200" y="400" font-family="Dancing Script, cursive" font-size="24" fill="#8B0000" text-anchor="middle"><tspan x="200" dy="0">Happy Anniversary</tspan></text>
+    
+    <!-- Secondary message -->
+    <text x="200" y="440" font-family="Arial, sans-serif" font-size="16" fill="#666666" text-anchor="middle"><tspan x="200" dy="0">both of you 💝</tspan></text>
+    
+    <!-- From -->
+    <text x="200" y="500" font-family="Arial, sans-serif" font-size="18" fill="#666666" text-anchor="middle"><tspan x="200" dy="0">With love,</tspan></text>
+    <text x="200" y="530" font-family="Dancing Script, cursive" font-size="24" fill="#D4AF37" text-anchor="middle"><tspan x="200" dy="0">Areeba</tspan></text>
+    
+    <!-- Decorative flourishes -->
+    <path d="M50 200 C100 180, 150 180, 200 200" fill="none" stroke="#D4AF37" stroke-width="1"/>
+    <path d="M200 200 C250 180, 300 180, 350 200" fill="none" stroke="#D4AF37" stroke-width="1"/>
 </svg>

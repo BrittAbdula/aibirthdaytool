@@ -72,11 +72,11 @@ export default async function CardGeneratorPage({ params }: CardGeneratorPagePro
                 <header className="text-center mb-8 sm:mb-12">
                     <h1 className="text-4xl sm:text-5xl md:text-6xl font-serif font-bold mb-4 tracking-tight">
                         <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-pink-600">
-                            {cardName} Cards
+                            {cardName} Card Generator
                         </span>
                     </h1>
                     <p className="text-lg sm:text-xl text-gray-600 max-w-2xl mx-auto px-4">
-                        Create beautiful {cardName.toLowerCase()} cards with AI magic ✨
+                        Create beautiful {cardName.toLowerCase()} card with AI magic ✨
                     </p>
                 </header>
 

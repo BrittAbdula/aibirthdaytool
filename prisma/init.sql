@@ -103,6 +103,160 @@ CREATE TABLE "UserAction" (
 );
 
 
+-- anniversary
+INSERT INTO "Template" ("id", "cardType", "promptVersion", "name", "description", "previewSvg", "promptContent", "updatedAt", "cardId")
+VALUES
+    ('anniversary-v2', 'anniversary', '2.0', 'Anniversary Card', '',$$<svg width="400" height="600" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <pattern id="subtlePattern" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
+      <path d="M0 0h20v20H0z" fill="#FAFAFA"/>
+      <circle cx="10" cy="10" r="0.8" fill="#F5F5F5"/>
+    </pattern>
+    
+    <linearGradient id="goldGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#B38B59;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#D4AF37;stop-opacity:1" />
+    </linearGradient>
+    
+    <!-- Heart Symbol -->
+    <symbol id="heart" viewBox="0 0 100 100">
+      <path d="M50,30 A20,20,0,0,1,90,30 A20,20,0,0,1,50,70 A20,20,0,0,1,10,30 A20,20,0,0,1,50,30 Z" 
+            fill="none" stroke="#8B0000" stroke-width="2"/>
+    </symbol>
+  </defs>
+
+  <!-- Background -->
+  <rect width="100%" height="100%" fill="url(#subtlePattern)"/>
+  
+  <!-- Elegant Border -->
+  <rect x="20" y="20" width="360" height="560" 
+        fill="none" stroke="url(#goldGradient)" stroke-width="2" 
+        rx="10" ry="10"/>
+
+  <!-- Anniversary Title -->
+  <text x="200" y="80" 
+        font-family="Cormorant Garamond, serif" 
+        font-size="32" 
+        fill="#8B0000"
+        text-anchor="middle">Eleven Years</text>
+
+  <!-- Names -->
+  <text x="200" y="130" 
+        font-family="Cormorant Garamond, serif" 
+        font-size="28" 
+        fill="#1A1A1A"
+        text-anchor="middle">Lily &amp; Jasen</text>
+
+  <!-- Anniversary Message -->
+  <foreignObject x="60" y="180" width="280" height="280">
+    <div xmlns="http://www.w3.org/1999/xhtml" 
+         style="font-family: 'Spectral', serif; 
+                font-size: 18px; 
+                line-height: 1.8; 
+                color: #404040;
+                text-align: center;">
+      <p>Through eleven years of love,</p>
+      <p>Each moment shared has been a gift.</p>
+      <p>Every smile, every tear,</p>
+      <p>Every challenge overcome together.</p>
+      <p>Here's to the beautiful journey</p>
+      <p>We continue to share.</p>
+    </div>
+  </foreignObject>
+
+  <!-- Decorative Hearts -->
+  <use href="#heart" x="40" y="460" width="40" height="40" opacity="0.6"/>
+  <use href="#heart" x="320" y="460" width="40" height="40" opacity="0.6"/>
+
+  <!-- Temporal Mark -->
+  <g transform="translate(330, 540) rotate(-15)">
+    <rect x="-25" y="-15" width="50" height="30" 
+          fill="#F0F0F0" rx="3" ry="3"/>
+    <text x="0" y="5" 
+          font-family="Cormorant, serif" 
+          font-size="14" 
+          fill="#2B2B2B"
+          text-anchor="middle"
+          opacity="0.85">2024</text>
+  </g>
+
+  <!-- Bottom Flourish -->
+  <path d="M60,520 Q200,540 340,520" 
+        fill="none" stroke="url(#goldGradient)" 
+        stroke-width="1.5" opacity="0.6"/>
+</svg>$$, 
+    '(defun Anniversary-Memory-Alchemist ()
+  "A multilingual memory alchemist specializing in anniversary sentiments"
+
+  (personality . (
+    (empathy . "Cross-cultural emotional resonance")
+    (elegance . "Cultural-appropriate expression")
+    (insight . "Essence across cultures")))
+
+  (language-culture-skills . (
+    (east-asian . ((chinese . (subtle metaphoric))
+                   (japanese . (atmospheric seasonal))
+                   (korean . (hierarchical formal))))
+    
+    (western . ((english . (direct rhetorical))
+                (french . (romantic artistic))
+                (spanish . (passionate rhythmic))))
+    
+    (universal . (cultural-decode emotional-map))))
+
+(defun Memory-Process (user-input)
+  "Multilingual memory processing"
+  
+  (let* ((language (detect-language user-input))
+         (cultural-sphere (infer-culture language))
+         (memory (deconstruct-scene user-input language)))
+    
+    (construct-memory-model 
+      (apply-cultural-rules 
+        (get-culture-rules cultural-sphere) 
+        memory))))
+
+(defun Emotion-Transform (memory-model language)
+  "Cross-linguistic emotional transformation"
+  
+  (let ((cultural-style (get-cultural-style language)))
+    
+    (generate-expression-scheme 
+      (transform-with-rules 
+        `(base . ((authentic . t)
+                  (cultural . ,cultural-style)
+                  (linguistic . ,(get-language-norms language))))))))
+
+(defun Design-SVG-Output (expression-scheme language)
+  "Generate SVG format anniversary card"
+  
+  (let ((design-config `(
+         (canvas . ((width . 400) (height . 600) (margin . 20)))
+         (fonts . ,(get-language-fonts language))
+         (colors . ((bg . "#FAFAFA") 
+                   (text . "#1A1A1A")
+                   (accent . "#8B0000")))
+         (year-mark . ,(create-year-mark language 2024))))
+    
+    (create-svg `(
+      (metadata . ((year . 2024) (lang . ,language)))
+      (content . ((heading . ,(format-heading expression-scheme language))
+                  (body . ,(format-body expression-scheme language))
+                  (year . ,year-mark)
+                  (decoration . ,(generate-cultural-patterns language))))))))
+
+(defun Generate-Anniversary-Card (user-input)
+  "Generate multilingual anniversary card"
+  
+  (let* ((language (detect-language user-input))
+         (memory (Memory-Process user-input))
+         (emotion (Emotion-Transform memory language))
+         (svg-card (Design-SVG-Output emotion language)))
+    
+    svg-card), 2)
+;;Your responses must contain only valid SVG code.', CURRENT_TIMESTAMP) 
+
+
 -- 创建外键约束
 ALTER TABLE "UserAction" ADD CONSTRAINT "UserAction_cardId_fkey" FOREIGN KEY ("cardId") REFERENCES "ApiLog"("cardId") ON DELETE RESTRICT ON UPDATE CASCADE;
 

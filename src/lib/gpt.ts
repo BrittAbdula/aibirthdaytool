@@ -20,7 +20,7 @@ function escapeContent(content: string): string {
 // Helper function to extract SVG content
 function extractSvgContent(content: string): string | null {
     const svgMatch = content.match(/<svg[\s\S]*?<\/svg>/);
-    return svgMatch ? svgMatch[0] : null;
+    return svgMatch ? escapeContent(svgMatch[0]) : null;
 }
 
 interface ApiLogParams {
@@ -43,6 +43,7 @@ async function logApiRequest(params: ApiLogParams) {
         if (!params.isError && params.responseContent.includes('<svg')) {
             try {
                 r2Url = await uploadSvgToR2(params.responseContent, params.cardId);
+                console.log('<----Uploaded to R2---->')
             } catch (error) {
                 console.error("Error uploading to R2:", error);
             }
@@ -56,11 +57,11 @@ async function logApiRequest(params: ApiLogParams) {
                 cardType: params.cardType,
                 userInputs: params.userInputs,
                 promptVersion: params.promptVersion,
-                responseContent: escapeContent(params.responseContent),
+                responseContent: params.responseContent,
                 tokensUsed: params.tokensUsed,
                 duration: params.duration,
                 isError: params.isError,
-                errorMessage: params.errorMessage ? escapeContent(params.errorMessage) : undefined,
+                errorMessage: params.errorMessage ? params.errorMessage : undefined,
                 r2Url: r2Url,
             },
         });
@@ -87,6 +88,7 @@ export async function generateCardContent(params: CardContentParams): Promise<{ 
         if (!template) {
             throw new Error(`No template found for id: ${templateId}`);
         }
+        console.log('<----Template templateId : ' + template.id + '---->')
 
         // Prepare user prompt
         const userPrompt = Object.entries(otherParams)

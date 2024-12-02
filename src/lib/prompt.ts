@@ -183,3 +183,7 @@ export function getPromptForCardType(cardType: CardType, version?: string): Prom
   
   return prompts[0]; // 默认返回第一个（最新的）版本
 }
+
+
+
+

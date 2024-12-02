@@ -109,11 +109,11 @@ const cardConfigs: Record<CardType, CardConfig> = {
     title: "Anniversary Card Generator",
     label: "Anniversary Card",
     fields: [
-      { name: "recipientNames", type: "text", label: "Names of the Couple", optional: false },
+      { name: "recipientNames", type: "text", label: "Names of the Couple( A & B)", optional: false },
       { name: "relationship", type: "select", label: "Relationship", options: relationshipOptions, optional: false, defaultValue: "Friend" },
       { name: "yearsMarried", type: "number", label: "Years Married (optional)", optional: true },
       { name: "message", type: "textarea", label: "Anniversary Wishes (optional)", optional: true },
-      { name: "senderName", type: "text", label: "Your Name (optional)", optional: true },
+      // { name: "senderName", type: "text", label: "Your Name (optional)", optional: true },
     ],
   },
   sorry: {
