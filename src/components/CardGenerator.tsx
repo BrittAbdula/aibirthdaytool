@@ -89,6 +89,7 @@ export default function CardGenerator({ wishCardType, initialCardId, initialSVG 
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
   const sampleCard = `/card/${wishCardType}.svg`
+  const [submited, setSubmited] = useState(false)
 
   const cardConfig = getCardConfig(currentCardType)
 
@@ -122,6 +123,7 @@ export default function CardGenerator({ wishCardType, initialCardId, initialSVG 
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
+    setSubmited(true)
     e.preventDefault()
     setIsLoading(true)
     setSvgContent(null)
@@ -304,7 +306,7 @@ export default function CardGenerator({ wishCardType, initialCardId, initialSVG 
               <FlickeringGrid />
             ) : (
               <div className="w-full h-full flex items-center justify-center overflow-hidden">
-                {svgContent ? (
+                {svgContent && submited ? (
                   <ImageViewer svgContent={svgContent} alt={extractTextFromSvg(svgContent || 'Generated Card')} cardId={cardId || '1'} cardType={currentCardType} />
                 ) : (
                   <div className="w-full h-full relative">
