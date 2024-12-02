@@ -25,6 +25,7 @@ model ApiLog {
   timestamp         DateTime     @default(now())
   isError           Boolean      @default(false)
   errorMessage      String?      @db.Text
+  r2Url             String?
   userActions       UserAction[]
 }
 
