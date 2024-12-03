@@ -1,7 +1,7 @@
 import { Suspense } from 'react'
 import { Metadata } from 'next'
 import { getRecentCardsServer } from '@/lib/cards'
-import CardGalleryContent from '@/components/CardGalleryContent'
+import CardGalleryContent from './CardGalleryContent'
 
 export const metadata: Metadata = {
   title: 'MewtruCard Gallery',
