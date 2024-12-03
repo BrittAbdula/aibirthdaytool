@@ -18,9 +18,15 @@ const r2Client = new S3Client({
     },
 });
 
-export async function uploadSvgToR2(svgContent: string, cardId: string): Promise<string> {
+export async function uploadSvgToR2(svgContent: string, cardId: string, createdAt: Date): Promise<string> {
     try {
-        const key = `cards/${cardId}.svg`;
+        // 使用传入的创建时间
+        const year = createdAt.getFullYear()
+        const month = String(createdAt.getMonth() + 1).padStart(2, '0')
+        const day = String(createdAt.getDate()).padStart(2, '0')
+        
+        // 构建存储路径：cards/年/月/日/cardId.svg
+        const key = `cards/${year}/${month}/${day}/${cardId}.svg`
         
         await r2Client.send(
             new PutObjectCommand({

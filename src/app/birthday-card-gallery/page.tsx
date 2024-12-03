@@ -1,5 +1,5 @@
 import { Suspense } from 'react';
-import CardGallery from '@/components/CardGallery';
+import CardGallery from '@/app/card-gallery/CardGallery';
 import { Metadata } from 'next';
 import { getRecentCardsServer } from '@/lib/cards';
 export const metadata: Metadata = {

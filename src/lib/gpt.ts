@@ -38,19 +38,19 @@ interface ApiLogParams {
 async function logApiRequest(params: ApiLogParams) {
     try {
         let r2Url: string | undefined;
+        const createdAt = new Date();
         
         // Only attempt R2 upload for successful SVG responses
         if (!params.isError && params.responseContent.includes('<svg')) {
             try {
-                r2Url = await uploadSvgToR2(params.responseContent, params.cardId);
+                r2Url = await uploadSvgToR2(params.responseContent, params.cardId, createdAt);
                 console.log('<----Uploaded to R2---->')
             } catch (error) {
                 console.error("Error uploading to R2:", error);
             }
         }
-        console.log('<----Card DB info---->')
-        console.log(params)
 
+        // Create API log entry
         await prisma.apiLog.create({
             data: {
                 cardId: params.cardId,
@@ -63,6 +63,7 @@ async function logApiRequest(params: ApiLogParams) {
                 isError: params.isError,
                 errorMessage: params.errorMessage ? params.errorMessage : undefined,
                 r2Url: r2Url,
+                timestamp: createdAt,
             },
         });
     } catch (error) {
