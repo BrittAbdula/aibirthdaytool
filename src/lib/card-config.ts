@@ -59,12 +59,9 @@ const cardConfigs: Record<CardType, CardConfig> = {
     fields: [
       { name: "recipientName", type: "text", label: "Recipient's Name", optional: false },
       { name: "relationship", type: "select", label: "Relationship", options: [
-        "Partner", "Spouse", "Crush", "Other"
-      ], optional: false, defaultValue: "Partner" },
-      { name: "occasion", type: "select", label: "Occasion (optional)", options: [
-        "Valentine's Day", "Anniversary", "Just Because", "Other"
-      ], optional: true },
-      { name: "message", type: "textarea", label: "Love Message (optional)", optional: true },
+        "Partner", "Spouse", "Crush",
+      ].concat(relationshipOptions), optional: false, defaultValue: "Partner" },
+      { name: "message", type: "textarea", label: "Love story (optional)", optional: true },
       { name: "senderName", type: "text", label: "Your Name (optional)", optional: true },
     ],
   },
@@ -74,9 +71,6 @@ const cardConfigs: Record<CardType, CardConfig> = {
     fields: [
       { name: "recipientName", type: "text", label: "Recipient's Name", optional: false },
       { name: "relationship", type: "select", label: "Relationship", options: relationshipOptions, optional: false, defaultValue: "Friend" },
-      { name: "achievement", type: "select", label: "Achievement (optional)", options: [
-        "Graduation", "New Job", "Promotion", "Wedding", "New Baby", "Other"
-      ], optional: true },
       { name: "message", type: "textarea", label: "Congratulatory Message (optional)", optional: true },
       { name: "senderName", type: "text", label: "Your Name (optional)", optional: true },
     ],
@@ -88,7 +82,6 @@ const cardConfigs: Record<CardType, CardConfig> = {
       { name: "recipientName", type: "text", label: "Recipient's Name", optional: false },
       { name: "relationship", type: "select", label: "Relationship", options: relationshipOptions, optional: false, defaultValue: "Friend" },
       { name: "reason", type: "textarea", label: "Reason for Thanks (optional)", optional: true },
-      { name: "message", type: "textarea", label: "Personal Message (optional)", optional: true },
       { name: "senderName", type: "text", label: "Your Name (optional)", optional: true },
     ],
   },
@@ -123,7 +116,6 @@ const cardConfigs: Record<CardType, CardConfig> = {
       { name: "recipientName", type: "text", label: "Recipient's Name", optional: false },
       { name: "relationship", type: "select", label: "Relationship", options: relationshipOptions, optional: false, defaultValue: "Friend" },
       { name: "reason", type: "textarea", label: "Reason for Apology (optional)", optional: true },
-      { name: "message", type: "textarea", label: "Apology Message (optional)", optional: true },
       { name: "senderName", type: "text", label: "Your Name (optional)", optional: true },
     ],
   },

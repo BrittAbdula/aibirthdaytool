@@ -1,34 +1,66 @@
-<svg width="400" height="600" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <linearGradient id="bg-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#ffe6e6;stop-opacity:1"></stop>
-      <stop offset="100%" style="stop-color:#ffb3b3;stop-opacity:1"></stop>
-    </linearGradient>
-  </defs>
+<svg width="400" height="600" viewBox="0 0 400 600" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    @keyframes flicker {
+      0% { transform: scale(1) translate(0, 0); }
+      25% { transform: scale(1.1) translate(0.5px, -0.5px); }
+      50% { transform: scale(0.9) translate(-0.5px, 0.5px); }
+      75% { transform: scale(1.2) translate(-0.5px, -0.5px); }
+      100% { transform: scale(1) translate(0, 0); }
+    }
+    .flame {
+      animation: flicker 1s ease-in-out infinite;
+      transform-origin: center bottom;
+      transform-box: fill-box;
+    }
+  </style>
+
+  <!-- Background -->
+  <rect width="400" height="600" fill="#FFF5F7"/>
   
-  <rect width="100%" height="100%" fill="url(#bg-gradient)"></rect>
-  
-  <text x="200" y="80" font-family="Brush Script MT, cursive" font-size="32" fill="#8B4513" text-anchor="middle">Happy Birthday,</text>
-  <text x="200" y="120" font-family="Brush Script MT, cursive" font-size="40" fill="#8B4513" text-anchor="middle">Isabella</text>
-  
-  <line x1="50" y1="150" x2="350" y2="150" stroke="#D2691E" stroke-width="2"></line>
-  
-  <text x="200" y="200" font-family="Georgia, serif" font-size="18" fill="#4A0E0E" text-anchor="middle">
-    <tspan x="200" dy="0">In the garden of life, a blossom so fair,</tspan>
-    <tspan x="200" dy="25">A promise of beauty beyond compare.</tspan>
-    <tspan x="200" dy="25">Twenty-six petals, each a year's treasure,</tspan>
-    <tspan x="200" dy="25">Unfolding with grace in abundant measure.</tspan>
-    <tspan x="200" dy="25">May love's gentle touch and joy's sweet song,</tspan>
-    <tspan x="200" dy="25">Guide your path as you bloom all year long.</tspan>
-  </text>
-  
-  <text x="200" y="420" font-family="Arial, sans-serif" font-size="16" fill="#8B4513" text-anchor="middle">With all my love,</text>
-  <text x="200" y="450" font-family="Brush Script MT, cursive" font-size="24" fill="#8B4513" text-anchor="middle">Andy</text>
-  
-  <circle cx="50" cy="500" r="30" fill="#FF69B4" opacity="0.7"></circle>
-  <circle cx="350" cy="500" r="30" fill="#FF69B4" opacity="0.7"></circle>
-  
-  <path d="M200,530 Q170,560 200,590 Q230,560 200,530" fill="#FF1493"></path>
-  <circle cx="200" cy="520" r="10" fill="#FFD700"></circle>
-  <rect x="190" y="530" width="20" height="40" fill="#8B4513"></rect>
+  <!-- Decorative Elements -->
+  <g class="balloons">
+    <path d="M50,200 C50,160 20,160 20,200 C20,230 50,230 50,200" fill="#FF4081"/>
+    <path d="M45,200 L45,300" stroke="#FF4081" stroke-width="2"/>
+    <path d="M100,180 C100,140 70,140 70,180 C70,210 100,210 100,180" fill="#FF80AB"/>
+    <path d="M95,180 L95,280" stroke="#FF80AB" stroke-width="2"/>
+  </g>
+
+  <!-- Stars -->
+  <g class="stars">
+    <path d="M300,100 L305,90 L310,100 L320,102 L310,108 L312,118 L302,112 L292,118 L294,108 L284,102 L294,100 Z" fill="#FFD700"/>
+    <path d="M350,150 L355,140 L360,150 L370,152 L360,158 L362,168 L352,162 L342,168 L344,158 L334,152 L344,150 Z" fill="#FFD700"/>
+  </g>
+
+  <!-- Message Area -->
+  <g transform="translate(200,250)">
+    <circle cx="0" cy="0" r="120" fill="#FFF" stroke="#FF4081" stroke-width="3"/>
+    <text x="0" y="-20" fill="#1A1A1A" font-family="Comic Sans MS" font-size="24" text-anchor="middle">
+      Happy Birthday!
+    </text>
+    <text x="0" y="20" fill="#1A1A1A" font-family="Comic Sans MS" font-size="16" text-anchor="middle">
+      Have a magical day!
+    </text>
+  </g>
+
+  <!-- Confetti -->
+  <g class="confetti">
+    <circle cx="50" cy="50" r="3" fill="#FF80AB"/>
+    <circle cx="350" cy="80" r="3" fill="#FF4081"/>
+    <circle cx="80" cy="500" r="3" fill="#FFD700"/>
+    <circle cx="320" cy="520" r="3" fill="#FF80AB"/>
+    <rect x="150" y="480" width="5" height="5" fill="#FF4081" transform="rotate(45,152.5,482.5)"/>
+    <rect x="250" y="500" width="5" height="5" fill="#FFD700" transform="rotate(30,252.5,502.5)"/>
+  </g>
+
+  <!-- Cake -->
+  <g transform="translate(200,450)">
+    <path d="M-40,0 L40,0 L30,-20 L-30,-20 Z" fill="#FF80AB"/>
+    <path d="M-30,-20 L30,-20 L20,-40 L-20,-40 Z" fill="#FF4081"/>
+    <rect x="-2" y="-60" width="4" height="20" fill="#FFD700"/>
+    <!-- Animated Flame -->
+    <g class="flame">
+      <path d="M0,-65 C2,-68 4,-72 0,-75 C-4,-72 -2,-68 0,-65" fill="#FFD700"/>
+      <path d="M0,-67 C1,-69 2,-71 0,-73 C-2,-71 -1,-69 0,-67" fill="#FFA500"/>
+    </g>
+  </g>
 </svg>

@@ -1,1 +1,44 @@
-<svg width="400" height="600" xmlns="http://www.w3.org/2000/svg"> <rect width="100%" height="100%" fill="#f0f5f9"/> <path d="M200,50 Q300,150 200,250 T200,450" fill="none" stroke="#c9d6df" stroke-width="3"/> <path d="M150,100 Q250,200 150,300 T150,500" fill="none" stroke="#c9d6df" stroke-width="3"/> <g transform="translate(200,300) scale(0.8)"> <path d="M-50,-50 L0,-25 L50,-50 L25,0 L50,50 L0,25 L-50,50 L-25,0 Z" fill="#e8bcb9" stroke="#d68f89" stroke-width="2"/> <path d="M-40,-40 L0,-20 L40,-40 L20,0 L40,40 L0,20 L-40,40 L-20,0 Z" fill="none" stroke="#fff" stroke-width="2"/> </g> <text x="200" y="80" font-family="Arial, sans-serif" font-size="24" fill="#52616b" text-anchor="middle">Dear Andy,</text> <text x="200" y="130" font-family="Arial, sans-serif" font-size="16" fill="#52616b" text-anchor="middle"> <tspan x="200" dy="0">I'm truly sorry for forgetting</tspan> <tspan x="200" dy="25">to plan the room. I know how</tspan> <tspan x="200" dy="25">important this was to you, and I</tspan> <tspan x="200" dy="25">let you down. Please forgive me.</tspan> </text> <text x="200" y="500" font-family="Arial, sans-serif" font-size="18" fill="#52616b" text-anchor="middle"> <tspan x="200" dy="0">I promise to do better.</tspan> <tspan x="200" dy="30">Love, Jason</tspan> </text> <g transform="translate(60,540)"> <path d="M0,0 Q15,-20 30,0 T60,0" fill="none" stroke="#52616b" stroke-width="2"/> <path d="M10,-5 L0,0 L10,5" fill="none" stroke="#52616b" stroke-width="2"/> </g> <g transform="translate(340,540) scale(-1,1)"> <path d="M0,0 Q15,-20 30,0 T60,0" fill="none" stroke="#52616b" stroke-width="2"/> <path d="M10,-5 L0,0 L10,5" fill="none" stroke="#52616b" stroke-width="2"/> </g> </svg>	
+<svg width="400" height="600" xmlns="http://www.w3.org/2000/svg">
+  <!-- Card Background -->
+  <rect x="0" y="0" width="400" height="600" fill="#ffffff" stroke="#2C3E50" stroke-width="2"/>
+  
+  <!-- Decorative Elements -->
+  <path d="M 20,40 C 100,30 300,30 380,40" 
+        fill="none" stroke="#34495E" stroke-width="1" opacity="0.3"/>
+  <path d="M 20,560 C 100,570 300,570 380,560" 
+        fill="none" stroke="#34495E" stroke-width="1" opacity="0.3"/>
+  
+  <!-- Header -->
+  <text x="200" y="80" text-anchor="middle" 
+        font-family="Georgia" font-size="24" fill="#2C3E50">
+    I'm Sorry
+  </text>
+  
+  <!-- Main Message -->
+  <text x="200" y="160" text-anchor="middle" 
+        font-family="Georgia" font-size="16" fill="#2C3E50">
+    <tspan x="200" dy="0">I sincerely apologize for my actions.</tspan>
+    <tspan x="200" dy="30">I understand the impact they had</tspan>
+    <tspan x="200" dy="30">and deeply regret any hurt caused.</tspan>
+  </text>
+  
+  <!-- Commitment Message -->
+  <text x="200" y="300" text-anchor="middle" 
+        font-family="Georgia" font-size="16" fill="#2C3E50">
+    <tspan x="200" dy="0">I am committed to making</tspan>
+    <tspan x="200" dy="30">things right and ensuring this</tspan>
+    <tspan x="200" dy="30">never happens again.</tspan>
+  </text>
+  
+  <!-- Reconciliation Symbol -->
+  <path d="M 180,400 C 160,380 220,380 200,400 C 180,420 220,420 200,400" 
+        fill="none" stroke="#34495E" stroke-width="2"/>
+  
+  <!-- Signature Line -->
+  <line x1="100" y1="500" x2="300" y2="500" 
+        stroke="#2C3E50" stroke-width="1" opacity="0.5"/>
+  <text x="200" y="530" text-anchor="middle" 
+        font-family="Georgia" font-size="14" fill="#2C3E50">
+    With sincere regrets
+  </text>
+</svg>
