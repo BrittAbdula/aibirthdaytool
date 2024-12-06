@@ -78,7 +78,7 @@ export default function CardMarquee({ initialCardsData, className }: CardMarquee
             "transition-colors duration-200"
           )}
         >
-          More MewtruCards
+          More MewtruCard
           <svg 
             className="w-4 h-4" 
             fill="none" 

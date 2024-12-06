@@ -101,12 +101,15 @@ export default async function CardGeneratorPage({ params }: CardGeneratorPagePro
                 </section>
 
                 {/* Templates Section */}
-                <section className="mb-16 sm:mb-24">
-                    <h2 className="text-3xl sm:text-4xl font-bold text-center mb-8 sm:mb-12">
+                <section className="text-center mb-16 sm:mb-24">
+                    <h2 className="text-3xl sm:text-4xl font-bold text-center mb-4">
                         <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-pink-600">
                             Popular Templates
                         </span>
                     </h2>
+                    <p className="text-lg sm:text-xl text-gray-600 max-w-2xl mx-auto px-4 mb-8 sm:mb-12">
+                        Select from our collection of beautiful templates and make your {cardName.toLowerCase()} card ✨
+                    </p>
                     <div className="bg-white/80 backdrop-blur-lg rounded-2xl shadow-xl p-4 sm:p-8">
                         <Suspense 
                             fallback={
@@ -124,7 +127,7 @@ export default async function CardGeneratorPage({ params }: CardGeneratorPagePro
                 {/* Other Card Types Section */}
                 <section className="mb-8 sm:mb-12">
                     <h2 className="text-2xl sm:text-3xl font-serif font-semibold text-center mb-6 text-gray-700">
-                        Explore More Card Types
+                        Explore More MewTruCard Types
                     </h2>
                     <div className="bg-white/80 backdrop-blur-lg rounded-2xl shadow-xl p-4 sm:p-8">
                         <CardTypeBubbles currentType={cardType} />
