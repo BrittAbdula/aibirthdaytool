@@ -1,11 +1,17 @@
 'use client'
 import Link from 'next/link';
 import Image from 'next/image';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { usePathname } from 'next/navigation';
 import SparklesText from '@/components/ui/sparkles-text'
 
 function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const pathname = usePathname();
+
+  useEffect(() => {
+    setIsMenuOpen(false);
+  }, [pathname]);
 
   return (
     <header className="bg-[#FFF9F0] border-b border-[#FFC0CB] py-4">

@@ -24,6 +24,11 @@ const trendingCards: TrendingCard[] = [
       link: '/anniversary/'
     },
     {
+      image: '/card/christmas.svg',
+      title: 'Christmas Card',
+      link: '/christmas/'
+    },
+    {
       image: '/card/birthday.svg',
       title: 'Birthday Card',
       link: '/birthday/'

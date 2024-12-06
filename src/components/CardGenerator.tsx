@@ -338,6 +338,7 @@ export default function CardGenerator({ wishCardType, initialCardId, initialSVG 
                   <ImageViewer svgContent={svgContent} alt={extractTextFromSvg(svgContent || 'Generated Card')} cardId={cardId || '1'} cardType={currentCardType} />
                 ) : (
                   <div className="w-full h-full relative">
+                    <a href='/card-gallery/'>
                     <Image
                       src={sampleCard}
                       alt={`Default ${wishCardType} Card`}
@@ -345,6 +346,7 @@ export default function CardGenerator({ wishCardType, initialCardId, initialSVG 
                       objectFit="contain"
                       priority
                     />
+                    </a>
                   </div>
                 )}
               </div>

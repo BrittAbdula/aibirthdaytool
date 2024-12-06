@@ -1,4 +1,4 @@
-export type CardType = "birthday" | "love" | "congratulations" | "thankyou" | "holiday" | "anniversary" | "sorry";
+export type CardType = "birthday" | "love" | "congratulations" | "thankyou" | "holiday" | "anniversary" | "sorry" | "christmas";
 
 interface Field {
   name: string;
@@ -116,6 +116,16 @@ const cardConfigs: Record<CardType, CardConfig> = {
       { name: "recipientName", type: "text", label: "Recipient's Name", optional: false },
       { name: "relationship", type: "select", label: "Relationship", options: relationshipOptions, optional: false, defaultValue: "Friend" },
       { name: "reason", type: "textarea", label: "Reason for Apology (optional)", optional: true },
+      { name: "senderName", type: "text", label: "Your Name (optional)", optional: true },
+    ],
+  },
+  christmas: {
+    title: "Christmas Card Generator",
+    label: "Christmas Card",
+    fields: [
+      { name: "recipientName", type: "text", label: "Recipient's Name", optional: false },
+      { name: "relationship", type: "select", label: "Relationship", options: relationshipOptions, optional: false, defaultValue: "Friend" },
+      { name: "message", type: "textarea", label: "Christmas Wishes (optional)", optional: true },
       { name: "senderName", type: "text", label: "Your Name (optional)", optional: true },
     ],
   },

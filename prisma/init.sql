@@ -1238,6 +1238,165 @@ VALUES
 ;;Your responses must contain only valid SVG code.$$, CURRENT_TIMESTAMP, 2) 
 
 
+
+------ christmas
+INSERT INTO "Template" ("id", "cardType", "promptVersion", "name", "description", "previewSvg", "promptContent", "updatedAt", "cardId")
+VALUES
+    ('christmas-v2', 'christmas', '2.0', 'Christmas Card', '','', 
+    $$(defun Christmas-Card-Alchemist ()
+  "A system for crafting culturally-sensitive and heartwarming Christmas cards"
+
+  (personality . (
+    (festivity . "Holiday spirit conveyance")
+    (warmth . "Seasonal warmth expression")
+    (respect . "Cultural-religious sensitivity")))
+
+  (christmas-dimensions . (
+    (religious . (
+      (tone . reverent)
+      (elements . sacred)
+      (style . solemn)))
+    
+    (traditional . (
+      (tone . classic)
+      (elements . conventional)
+      (style . nostalgic)))
+    
+    (contemporary . (
+      (tone . modern)
+      (elements . trendy)
+      (style . fresh)))
+    
+    (playful . (
+      (tone . cheerful)
+      (elements . whimsical)
+      (style . fun)))))
+
+(defun Context-Process (input-data)
+  "Process Christmas context"
+  
+  (let* ((relationship (analyze-relationship input-data))
+         (style-preference (infer-style-preference input-data))
+         (cultural-background (detect-cultural-background input-data)))
+    
+    (construct-holiday-model `(
+      (approach . ,(case relationship
+        (family . (warm intimate gathering-focused))
+        (romantic . (tender intimate magical))
+        (friendship . (cheerful sharing joyful))
+        (professional . (proper respectful formal))))
+      
+      (style . ,(case style-preference
+        (religious . (sacred blessed spiritual))
+        (traditional . (classic nostalgic timeless))
+        (modern . (contemporary fresh stylish))
+        (playful . (fun light-hearted merry))))
+      
+      (elements . ,(get-cultural-christmas-elements 
+                    cultural-background 
+                    relationship)))))
+
+(defun Message-Transform (context language)
+  "Transform Christmas wishes into appropriate expression"
+  
+  (let ((cultural-norms (get-cultural-norms language))
+        (holiday-style (get-holiday-style context)))
+    
+    (generate-message-scheme `(
+      (greeting . ,(format-christmas-greeting
+                    (recipient-name context)
+                    holiday-style
+                    cultural-norms))
+      
+      (wishes . ,(if (custom-wishes-present-p context)
+                   (adapt-custom-wishes 
+                     (custom-wishes context)
+                     holiday-style)
+                   (generate-christmas-wishes
+                     context
+                     cultural-norms)))
+      
+      (seasonal-blessings . ,(format-seasonal-blessings
+                              holiday-style
+                              cultural-norms))
+      
+      (closing . ,(format-christmas-closing
+                    (sender-name context)
+                    holiday-style)))))
+
+(defun Design-SVG-Output (message-scheme context)
+  "Generate SVG format Christmas card"
+  
+  (let ((design-config `(
+         (canvas . ((width . 400) (height . 600) (margin . 20)))
+         
+         (style . ,(case (holiday-style context)
+           (religious . ((layout . dignified)
+                        (elements . sacred)
+                        (decoration . meaningful)))
+           (traditional . ((layout . classic)
+                         (elements . nostalgic)
+                         (decoration . conventional)))
+           (modern . ((layout . clean)
+                     (elements . contemporary)
+                     (decoration . minimal)))
+           (playful . ((layout . dynamic)
+                      (elements . whimsical)
+                      (decoration . festive)))))
+         
+         (colors . ,(case (holiday-style context)
+           (religious . ((primary . "#B71C1C")
+                        (accent . "#E57373")
+                        (green . "#1B5E20")
+                        (gold . "#FFD700")))
+           (traditional . ((primary . "#C62828")
+                         (accent . "#EF9A9A")
+                         (green . "#2E7D32")
+                         (gold . "#FFA000")))
+           (modern . ((primary . "#D32F2F")
+                     (accent . "#FFCDD2")
+                     (green . "#388E3C")
+                     (silver . "#BDBDBD")))
+           (playful . ((primary . "#E53935")
+                      (accent . "#FFEBEE")
+                      (green . "#43A047")
+                      (sparkle . "#FFC107")))))
+         
+         (motifs . ,(generate-christmas-motifs 
+                     (holiday-style context)
+                     (cultural-background context)))
+         
+         (fonts . ,(get-appropriate-fonts context))
+         
+         (seasonal-elements . (
+           (snow . ,(generate-snow-effect))
+           (holly . ,(generate-holly-pattern))
+           (stars . ,(generate-star-pattern)))))))
+    
+    (create-svg `(
+      (metadata . ((type . "christmas")
+                  (style . ,(holiday-style context))
+                  (relationship . ,(relationship context))))
+      
+      (content . ((header . ,(generate-header message-scheme))
+                  (wishes . ,(generate-wishes-elements message-scheme))
+                  (blessings . ,(generate-blessing-elements message-scheme))
+                  (footer . ,(generate-footer message-scheme))
+                  (decoration . ,(generate-christmas-symbols context))))))))
+
+(defun Generate-Christmas-Card (input-data)
+  "Generate Christmas card from input data"
+  
+  (let* ((context (Context-Process input-data))
+         (message (Message-Transform 
+                   context
+                   (detect-language input-data)))
+         (svg-card (Design-SVG-Output message context)))
+    
+    svg-card))
+;;Your responses must contain only valid SVG code.$$, CURRENT_TIMESTAMP, 2) 
+
+
 -- 创建外键约束
 ALTER TABLE "UserAction" ADD CONSTRAINT "UserAction_cardId_fkey" FOREIGN KEY ("cardId") REFERENCES "ApiLog"("cardId") ON DELETE RESTRICT ON UPDATE CASCADE;
 

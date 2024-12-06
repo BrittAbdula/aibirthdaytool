@@ -17,6 +17,11 @@ interface TrendingCard {
 
 const trendingCards: TrendingCard[] = [
   {
+    image: '/card/christmas.svg',
+    title: 'Christmas Card',
+    link: '/christmas/'
+  },
+  {
     image: '/card/love.svg',
     title: 'Love Card',
     link: '/love/'

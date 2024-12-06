@@ -75,7 +75,7 @@ export default function CardGallery({ initialCardsData, wishCardType }: CardGall
 
   return (
     <div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {cards.map((card) => (
           <div key={card.cardId} className="relative group">
             <div className="aspect-[2/3] rounded-lg overflow-hidden bg-white shadow-md hover:shadow-lg transition-shadow duration-200">

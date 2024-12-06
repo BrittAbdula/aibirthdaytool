@@ -164,6 +164,12 @@ separator
       prompt: `Design a thoughtful SVG apology card (400x600 pixels) based on the user's input. Use soft, subdued colors to convey sincerity. Include elements that symbolize reconciliation or making amends (e.g., olive branches, mended hearts). Craft a genuine message of apology, incorporating specific details about the situation if provided. Include the recipient's name sensitively. Ensure the text is legible and properly positioned. Output only the SVG code.`,
       version: "1.0"
     }
+  ],
+  christmas: [
+    {
+      prompt: `Celebrate the joy of Christmas with a SVG card (400x600 pixels) based on the user's input. Use warm, festive colors and include elements that symbolize the season (e.g., pine cones, presents, stockings). Craft a message of gratitude and joy, incorporating any specific details about the celebration. Include the recipient's name prominently. Ensure the text is legible and properly positioned. Output only the SVG code.`,
+      version: "1.0"
+    }
   ]
 };
 
