@@ -360,8 +360,7 @@ const faqs = [
   },
 ];
 
-export function FAQ() {
-  return (
+const FAQ: React.FC = () => (
     <Section title="MewTruCard FAQ" subtitle="Everything you need to know about your MewTru Card experience">
       <div className="mx-auto my-12 md:max-w-[800px]">
         <Accordion
@@ -391,4 +390,3 @@ export function FAQ() {
       </h4>
     </Section>
   );
-}
