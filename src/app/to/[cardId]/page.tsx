@@ -81,7 +81,7 @@ export default async function EditedCardPage({ params }: Props) {
 
       <div className="container mx-auto px-4 sm:px-6 relative">
         {/* Card Header */}
-        <header className="text-center mb-8 sm:mb-12">
+        {/* <header className="text-center mb-8 sm:mb-12">
           <h1 className="text-3xl sm:text-4xl md:text-5xl font-serif font-bold mb-4 tracking-tight">
             <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-pink-600">
               {card.cardType.charAt(0).toUpperCase() + card.cardType.slice(1)} Card
@@ -90,11 +90,11 @@ export default async function EditedCardPage({ params }: Props) {
           <p className="text-lg sm:text-xl text-gray-600 max-w-2xl mx-auto font-light">
             A special card made just for you with ✨ AI magic ✨
           </p>
-        </header>
+        </header> */}
 
         {/* Card Display Section */}
         <section className="max-w-4xl mx-auto">
-          <div className="bg-white/80 backdrop-blur-lg rounded-2xl shadow-xl p-4 sm:p-8 hover:shadow-2xl transition-all duration-300">
+          <div className="items-center flex justify-center bg-white/80 backdrop-blur-lg rounded-2xl shadow-xl p-4 sm:p-8 hover:shadow-2xl transition-all duration-300">
             <Suspense 
               fallback={
                 <div className="flex flex-col items-center justify-center h-64 space-y-4">
@@ -116,7 +116,7 @@ export default async function EditedCardPage({ params }: Props) {
               href="/" 
               className="text-purple-600 hover:text-pink-600 transition-colors duration-200 font-medium"
             >
-              MewTruCard
+              MewTruCard.com
             </a>
           </p>
         </footer>
