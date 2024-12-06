@@ -177,8 +177,7 @@ const FeatureCard: React.FC<FeatureCardProps> = ({ title, description, icon, ben
 
 
 // How To Use Section
-export const HowToUse: React.FC = () => {
-  return (
+const HowToUse: React.FC = () => (
     <section className="py-16 bg-gradient-to-r from-purple-50 to-pink-50">
       <div className="max-w-6xl mx-auto px-4">
         <h2 className="text-3xl font-serif font-semibold mb-4 text-center text-[#4A4A4A]">
@@ -232,7 +231,6 @@ export const HowToUse: React.FC = () => {
       </div>
     </section>
   );
-}
 
 const StepCard: React.FC<StepCardProps> = ({ number, title, description, details, icon }) => (
   <Card className="bg-white border border-[#FFC0CB] hover:shadow-lg transition duration-300 relative">
