@@ -11,7 +11,7 @@ const YOUR_SITE_NAME = 'MewTruCard';
 // Helper function to escape content
 function escapeContent(content: string): string {
     return content
-        .replace(/&/g, '&amp;')
+        // .replace(/&/g, '&amp;')
         // .replace(/</g, '&lt;')
         // .replace(/>/g, '&gt;')
         // .replace(/"/g, '&quot;');

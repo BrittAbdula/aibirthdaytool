@@ -20,14 +20,11 @@ function Header() {
             />
             
             <SparklesText
-                text='MewTruCard'
+                text='MewTruCard.com'
                 className="text-xl md:text-2xl font-serif font-bold text-[#4A4A4A]"
                 sparklesCount={20}
                 colors={{ first: "#A07CFE", second: "#FE8FB5" }}
             />
-            {/* <span className="text-xl md:text-2xl font-serif font-bold text-[#4A4A4A]">
-              MewTruCard
-            </span> */}
           </Link>
           <div className="hidden md:flex space-x-6">
             <Link href="/" className="text-[#4A4A4A] hover:text-[#FFC0CB] font-serif">Home</Link>

@@ -15,7 +15,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { ImageViewer } from '@/components/ImageViewer'
 import { extractTextFromSvg } from '@/lib/utils'
 import { CardType, getCardConfig, getAllCardTypes, CardConfig } from '@/lib/card-config'
-// Flickering Grid component
+
 const FlickeringGrid = () => {
   return (
     <div className="w-full h-full grid grid-cols-10 grid-rows-15 gap-1">
@@ -79,6 +79,15 @@ const AgeSelector = ({ age, setAge }: { age: number | null, setAge: (age: number
   )
 }
 
+const ProgressBar = ({ progress }: { progress: number }) => (
+  <div className="w-full bg-gray-300 rounded-full h-2.5">
+    <div
+      className="bg-[#FFC0CB] h-2.5 rounded-full"
+      style={{ width: `${progress}%` }}
+    ></div>
+  </div>
+);
+
 export default function CardGenerator({ wishCardType, initialCardId, initialSVG }: { wishCardType: CardType, initialCardId: string, initialSVG: string }) {
   const [currentCardType, setCurrentCardType] = useState<CardType>(wishCardType)
   const [formData, setFormData] = useState<Record<string, any>>({})
@@ -90,6 +99,7 @@ export default function CardGenerator({ wishCardType, initialCardId, initialSVG 
   const router = useRouter()
   const sampleCard = `/card/${wishCardType}.svg`
   const [submited, setSubmited] = useState(false)
+  const [progress, setProgress] = useState(0);
 
   const cardConfig = getCardConfig(currentCardType)
 
@@ -114,6 +124,22 @@ export default function CardGenerator({ wishCardType, initialCardId, initialSVG 
       .catch(error => console.error('load default svg failed:', error))
   }, [])
 
+  useEffect(() => {
+    if (isLoading) {
+      const interval = setInterval(() => {
+        setProgress((prev) => {
+          if (prev >= 90) {
+            return 90;
+          }
+          return prev + 10;
+        });
+      }, 1000);
+      return () => clearInterval(interval);
+    } else {
+      setProgress(100);
+    }
+  }, [isLoading]);
+
   const handleInputChange = (name: string, value: string | number) => {
     setFormData(prev => ({ ...prev, [name]: value }))
   }
@@ -123,6 +149,7 @@ export default function CardGenerator({ wishCardType, initialCardId, initialSVG 
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
+    setProgress(0)
     setSubmited(true)
     e.preventDefault()
     setIsLoading(true)
@@ -301,6 +328,7 @@ export default function CardGenerator({ wishCardType, initialCardId, initialSVG 
         </div>
 
         <div className="w-full max-w-md">
+        {isLoading && <ProgressBar progress={progress} />}
           <div className="bg-white p-3 sm:p-5 rounded-lg shadow-lg flex items-center justify-center relative border border-[#FFC0CB] aspect-[2/3]">
             {isLoading ? (
               <FlickeringGrid />
