@@ -1,7 +1,6 @@
 'use client'
 
 import React from 'react'
-import { ImageViewer } from './ImageViewer'
 import { Card } from '@/lib/cards'
 import { cn } from '@/lib/utils'
 import Marquee from '@/components/ui/marquee'

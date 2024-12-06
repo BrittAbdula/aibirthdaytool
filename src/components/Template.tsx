@@ -18,7 +18,7 @@ export function Template({ template }: TemplateProps) {
         <CardDescription className="text-sm text-gray-600 mt-2">{template.description}</CardDescription>
       </CardHeader>
       <CardContent>
-        <ImageViewer svgContent={template.previewSvg} alt={template.name} cardId={template.cardId} cardType={template.cardType} />
+        <ImageViewer svgContent={template.previewSvg} alt={template.name} cardId={template.cardId} cardType={template.cardType} isNewCard={false} />
       </CardContent>
       <CardFooter className="mt-auto">
         <Link href={`/${template.cardType}/${template.id}`} passHref className="w-full">

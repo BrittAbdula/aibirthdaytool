@@ -335,7 +335,7 @@ export default function CardGenerator({ wishCardType, initialCardId, initialSVG 
             ) : (
               <div className="w-full h-full flex items-center justify-center overflow-hidden">
                 {svgContent && submited ? (
-                  <ImageViewer svgContent={svgContent} alt={extractTextFromSvg(svgContent || 'Generated Card')} cardId={cardId || '1'} cardType={currentCardType} />
+                  <ImageViewer svgContent={svgContent} alt={extractTextFromSvg(svgContent || 'Generated Card')} cardId={cardId || '1'} cardType={currentCardType} isNewCard={true} />
                 ) : (
                   <div className="w-full h-full relative">
                     <a href='/card-gallery/'>

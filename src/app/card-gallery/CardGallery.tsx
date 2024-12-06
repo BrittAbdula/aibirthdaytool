@@ -84,6 +84,7 @@ export default function CardGallery({ initialCardsData, wishCardType }: CardGall
                 alt={`Card ${card.cardId}`}
                 cardId={card.cardId}
                 cardType={card.cardType}
+                isNewCard={false}
               />
             </div>
           </div>

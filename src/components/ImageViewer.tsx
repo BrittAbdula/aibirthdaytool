@@ -15,9 +15,10 @@ interface ImageViewerProps {
   alt: string
   cardId: string
   cardType: string
+  isNewCard: boolean
 }
 
-export function ImageViewer({ svgContent, alt, cardId, cardType }: ImageViewerProps) {
+export function ImageViewer({ svgContent, alt, cardId, cardType, isNewCard }: ImageViewerProps) {
   const [open, setOpen] = useState(false)
   const { toast } = useToast()
   const [imageSrc, setImageSrc] = useState<string>('')
@@ -179,24 +180,29 @@ export function ImageViewer({ svgContent, alt, cardId, cardType }: ImageViewerPr
               )}
             </div>
             <div className="flex justify-between p-4 bg-white w-full border-t border-[#ada9a9]">
-              <div className="w-full max-w-md mx-auto flex justify-between">
-                <Button onClick={handleCopy} className="bg-[#FFC0CB] text-[#4A4A4A] hover:bg-[#FFD1DC] transition-colors">
+              {isNewCard && (
+                <div className="w-full max-w-md mx-auto flex gap-4 justify-center"><Button onClick={handleCopy} className="bg-[#FFC0CB] text-[#4A4A4A] hover:bg-[#FFD1DC] transition-colors">
                   <CopyIcon className="mr-2 h-4 w-4" />
                   Copy
                 </Button>
-                {/* <Button onClick={handleDownload} className="bg-[#FFC0CB] text-[#4A4A4A] hover:bg-[#FFD1DC] transition-colors">
-                  <DownloadIcon className="mr-2 h-4 w-4" />
-                  {isMobile ? "Save" : "Download"}
-                </Button> */}
-                <Button onClick={handleEdit} className="bg-[#FFC0CB] text-[#4A4A4A] hover:bg-[#FFD1DC] transition-colors">
-                  <Pencil1Icon className="mr-2 h-4 w-4" />
-                  Edit
-                </Button>
-                <Button onClick={handleSend} className="bg-[#FFC0CB] text-[#4A4A4A] hover:bg-[#FFD1DC] transition-colors">
-                  <PaperPlaneIcon className="mr-2 h-4 w-4" />
-                  Send
-                </Button>
-              </div>
+                  <Button onClick={handleEdit} className="bg-[#FFC0CB] text-[#4A4A4A] hover:bg-[#FFD1DC] transition-colors">
+                    <Pencil1Icon className="mr-2 h-4 w-4" />
+                    Edit
+                  </Button>
+                  <Button onClick={handleSend} className="bg-[#FFC0CB] text-[#4A4A4A] hover:bg-[#FFD1DC] transition-colors">
+                    <PaperPlaneIcon className="mr-2 h-4 w-4" />
+                    Send
+                  </Button>
+                </div>
+              )}
+              {!isNewCard && (
+                <div className="w-full max-w-md mx-auto flex gap-4 justify-center">
+                  <Button onClick={handleEdit} className="bg-[#FFC0CB] text-[#4A4A4A] hover:bg-[#FFD1DC] transition-colors">
+                    <Pencil1Icon className="mr-2 h-4 w-4" />
+                    customize this template
+                  </Button>
+                </div>
+              )}
             </div>
           </div>
         </DialogContent>
