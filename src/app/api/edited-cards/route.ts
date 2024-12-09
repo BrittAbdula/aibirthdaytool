@@ -4,13 +4,14 @@ import { prisma } from '@/lib/prisma'
 export async function POST(request: Request) {
   try {
     const { editedCardId, cardType, originalCardId, editedContent, spotifyTrackId } = await request.json()
-    console.log('-------------:', editedCardId, cardType, originalCardId, editedContent)
+    console.log('-------------:', editedCardId, cardType, originalCardId, editedContent, spotifyTrackId)
 
     if (editedCardId) {
       await prisma.editedCard.update({
         where: { id: editedCardId },
         data: {
           editedContent,
+          spotifyTrackId,
         },
       })
       return NextResponse.json({ id: editedCardId }, { status: 200 })
