@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { SpeakerLoudIcon } from '@radix-ui/react-icons'
 import { CardType } from '@/lib/card-config'
+import { on } from 'events'
 
 const debounce = (func: (...args: any[]) => void, delay: number) => {
   let timer: NodeJS.Timeout
@@ -99,6 +100,7 @@ export default function SpotifySearch({ cardType, onSelect }: SpotifySearchProps
     if (defaultSong) {
       setSelectedSong(defaultSong)
       setInputValue(`${defaultSong.name} - ${defaultSong.artist}`)
+      handleSongSelect(defaultSong)
     }
   }, [cardType])
 

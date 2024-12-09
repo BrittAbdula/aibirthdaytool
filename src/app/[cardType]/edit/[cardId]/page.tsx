@@ -230,6 +230,7 @@ export default function EditCard({ params }: { params: { cardId: string, cardTyp
               <SpotifySearch 
                 cardType={cardType}
                 onSelect={async (song) => {
+                  console.log('Selected song:', song)
                   setSelectedMusic(song)
                   // Record the selection
                   try {
