@@ -12,19 +12,21 @@ interface EditedCardData {
 
 export default function CardDisplay({ card }: { card: EditedCardData }) {
   const [showCard, setShowCard] = useState(false)
-  const [imageSrc, setImageSrc] = useState<string>('')
+  const [imageSrc, setImageSrc] = useState<string | null>(null) // 将初始值设为 null
 
   useEffect(() => {
-    const dataUrl = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(card.editedContent)}`
-    setImageSrc(dataUrl)
-    setTimeout(() => {
-      setShowCard(true)
-      triggerConfetti()
-    }, 500)
+    if (card.editedContent) {
+      const dataUrl = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(card.editedContent)}`
+      setImageSrc(dataUrl)
+      setTimeout(() => {
+        setShowCard(true)
+        triggerConfetti()
+      }, 500)
+    }
   }, [card.editedContent])
 
   function triggerConfetti() {
-    const end = Date.now() + 3 * 1000; // 3 seconds
+    const end = Date.now() + 3 * 1000;
     const colors = ["#a786ff", "#fd8bbc", "#eca184", "#f8deb1"];
 
     function frame() {
@@ -53,22 +55,36 @@ export default function CardDisplay({ card }: { card: EditedCardData }) {
     frame();
   }
 
+  if (!imageSrc) {
+    return (
+      <div className="w-full flex items-center justify-center h-[60vh]">
+        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-purple-400"></div>
+      </div>
+    )
+  }
+
   return (
-    <div className="w-full max-w-2xl p-4">
+    <div className="w-full mx-auto">
       <div 
         className={`transition-all duration-1000 ease-out ${
           showCard ? 'scale-100 opacity-100' : 'scale-90 opacity-0'
         }`}
       >
-        <div className="relative aspect-[2/3] rounded-lg overflow-hidden shadow-lg">
-          <Image
-            src={imageSrc}
-            alt={`${card.cardType} card preview`}
-            layout="fill"
-            objectFit="contain"
-            className="transition-transform duration-300 hover:scale-105"
-            onClick={triggerConfetti}
-          />
+        <div className="relative w-full max-w-[400px] mx-auto">
+          <div 
+            className="relative aspect-[2/3] rounded-lg overflow-hidden"
+            style={{ maxHeight: '70vh' }}
+          >
+            <Image
+              src={imageSrc}
+              alt={`${card.cardType} card preview`}
+              layout="fill"
+              objectFit="contain"
+              priority
+              className="transition-transform duration-300 hover:scale-102"
+              onClick={triggerConfetti}
+            />
+          </div>
         </div>
       </div>      
     </div>

@@ -11,10 +11,13 @@ import { useToast } from "@/hooks/use-toast"
 import { recordUserAction } from '@/lib/action'
 import dynamic from 'next/dynamic'
 import { EyeOpenIcon } from '@radix-ui/react-icons'
+import SpotifySearch from '@/components/SpotifySearch'
+import { CardType } from '@/lib/card-config'
+
 
 const IsMobileWrapper = dynamic(() => import('@/components/IsMobileWrapper'), { ssr: false })
 
-export default function EditCard({ params }: { params: { cardId: string, cardType: string } }) {
+export default function EditCard({ params }: { params: { cardId: string, cardType: CardType } }) {
   const { cardId, cardType } = params
   const [svgContent, setSvgContent] = useState('')
   const [originalContent, setOriginalContent] = useState('')
@@ -23,6 +26,7 @@ export default function EditCard({ params }: { params: { cardId: string, cardTyp
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [shareLink, setShareLink] = useState('')
   const [editedCardId, setEditedCardId] = useState('')
+  const [selectedMusic, setSelectedMusic] = useState<{ id: string; name: string; artist: string } | null>(null)
   const { toast } = useToast()
 
   useEffect(() => {
@@ -139,6 +143,7 @@ export default function EditCard({ params }: { params: { cardId: string, cardTyp
           cardType,
           originalCardId: cardId,
           editedContent: svgContent,
+          spotifyTrackId: selectedMusic?.id
         }),
       })
 
@@ -218,6 +223,32 @@ export default function EditCard({ params }: { params: { cardId: string, cardTyp
                 )}
               </div>
             </div>
+            <div className="mt-4">
+              <label className="text-sm font-medium mb-2 block">
+                Music
+              </label>
+              <SpotifySearch 
+                cardType={cardType}
+                onSelect={async (song) => {
+                  setSelectedMusic(song)
+                  // Record the selection
+                  try {
+                    await fetch('/api/spotify/record-selection', {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json',
+                      },
+                      body: JSON.stringify({
+                        cardType,
+                        song
+                      })
+                    })
+                  } catch (error) {
+                    console.error('Failed to record song selection:', error)
+                  }
+                }}
+              />
+            </div>
           </div>
 
           {/* Edit Section */}
@@ -247,6 +278,8 @@ export default function EditCard({ params }: { params: { cardId: string, cardTyp
               ))}
             </div>
 
+            
+
             {/* Action Buttons */}
             <div className="flex flex-col sm:flex-row gap-3 mt-8">
               <Button 
@@ -272,7 +305,7 @@ export default function EditCard({ params }: { params: { cardId: string, cardTyp
                 className="flex-1 bg-gradient-to-r from-pink-600 to-pink-700 text-white hover:opacity-90 shadow-md hover:shadow-lg transition-all duration-300"
               >
                 <PaperPlaneIcon className="mr-2 h-4 w-4" />
-                Share
+                Send
               </Button>
             </div>
           </div>

@@ -1403,6 +1403,7 @@ ALTER TABLE "UserAction" ADD CONSTRAINT "UserAction_cardId_fkey" FOREIGN KEY ("c
 
 -- 创建索引以提高查询性能
 CREATE INDEX "UserAction_cardId_idx" ON "UserAction"("cardId");
+alter table "EditedCard" add column "spotifyTrackId" text;
 
 
     select * from "ApiLog" order by timestamp desc limit 11;

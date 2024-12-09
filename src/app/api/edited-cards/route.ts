@@ -3,7 +3,7 @@ import { prisma } from '@/lib/prisma'
 
 export async function POST(request: Request) {
   try {
-    const { editedCardId, cardType, originalCardId, editedContent } = await request.json()
+    const { editedCardId, cardType, originalCardId, editedContent, spotifyTrackId } = await request.json()
     console.log('-------------:', editedCardId, cardType, originalCardId, editedContent)
 
     if (editedCardId) {
@@ -20,6 +20,7 @@ export async function POST(request: Request) {
           cardType,
           originalCardId,
           editedContent,
+          spotifyTrackId,
         },
       })
       return NextResponse.json({ id: editedCard.id }, { status: 201 })

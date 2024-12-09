@@ -57,6 +57,24 @@ model EditedCard {
   originalCardId  String
   cardType        String
   editedContent   String   @db.Text
+  spotifyTrackId  String?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
+}
+
+model SpotifyMusic {
+  id             String   @id @default(cuid())
+  cardType       String
+  spotifyId      String
+  name           String
+  artist         String
+  previewUrl     String?
+  imageUrl       String?
+  selectCount    Int      @default(0)
+  lastSelected   DateTime @default(now())
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@unique([cardType, spotifyId])
+  @@index([cardType, selectCount])
 }
