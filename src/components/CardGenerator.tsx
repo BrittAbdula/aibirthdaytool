@@ -169,7 +169,7 @@ export default function CardGenerator({ wishCardType, initialCardId, initialSVG 
       });
 
       if (!response.ok) {
-        throw new Error('Failed to generate card');
+        throw new Error('Failed to generate card, Please use the template to coustom your card');
       }
 
       const data = await response.json();
