@@ -267,7 +267,7 @@ export default function CardGenerator({ wishCardType, initialCardId, initialSVG 
   }
 
   return (
-    <main className="container mx-auto px-4 py-8 sm:py-12 bg-[#FFF9F0]">
+    <main className=" mx-auto ">
       {error && (
         <Alert variant="destructive" className="mb-4">
           <AlertDescription>{error}</AlertDescription>
@@ -275,7 +275,7 @@ export default function CardGenerator({ wishCardType, initialCardId, initialSVG 
       )}
       <div className="flex flex-col lg:flex-row justify-center items-center gap-8 lg:gap-16">
         <Card className="p-4 sm:p-6 bg-white border border-[#FFC0CB] shadow-md w-full max-w-md relative">
-          <CardHeader>
+          {/* <CardHeader>
             <CardTitle className="font-serif text-[#4A4A4A]">{cardConfig.title}</CardTitle>
             <CardDescription className="text-[#4A4A4A]">Fill in your custom card details</CardDescription>
             <div className="absolute top-2 right-2">
@@ -291,7 +291,7 @@ export default function CardGenerator({ wishCardType, initialCardId, initialSVG 
                 </SelectContent>
               </Select>
             </div>
-          </CardHeader>
+          </CardHeader> */}
           <CardContent className="space-y-4">
             {cardConfig.fields.map((field) => renderField(field))}
             {showAdvancedOptions && cardConfig.advancedFields && (

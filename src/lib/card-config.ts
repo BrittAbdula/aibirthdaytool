@@ -14,6 +14,8 @@ export interface CardConfig {
   title: string;
   label: string;
   fields: Field[];
+  templateInfo?: string;
+  why?: string[];
   advancedFields?: Field[];
 }
 
@@ -43,12 +45,16 @@ const cardConfigs: Record<CardType, CardConfig> = {
     ],
     advancedFields: [
       { name: "age", type: "age", label: "Age (optional)", optional: true },
-      { name: "tone", type: "select", label: "Message Tone (optional)", options: [
-        "Sincere and Warm", "Playful and Cute", "Romantic and Poetic", "Lighthearted and Joyful", "Inspirational and Encouraging"
-      ], optional: true },
-      { name: "bestWishes", type: "select", label: "Best Wishes (optional)", options: [
-        "Success", "Happiness", "Good Health", "Love and Joy", "Adventures", "Career Advancement"
-      ], optional: true },
+      {
+        name: "tone", type: "select", label: "Message Tone (optional)", options: [
+          "Sincere and Warm", "Playful and Cute", "Romantic and Poetic", "Lighthearted and Joyful", "Inspirational and Encouraging"
+        ], optional: true
+      },
+      {
+        name: "bestWishes", type: "select", label: "Best Wishes (optional)", options: [
+          "Success", "Happiness", "Good Health", "Love and Joy", "Adventures", "Career Advancement"
+        ], optional: true
+      },
       { name: "additionalInfo", type: "textarea", label: "Additional Information (optional)", placeholder: "Anything you want to say or your Story", optional: true },
       { name: "senderName", type: "text", label: "Your Name (optional)", placeholder: "Enter your name", optional: true },
     ],
@@ -58,9 +64,11 @@ const cardConfigs: Record<CardType, CardConfig> = {
     label: "Love Card",
     fields: [
       { name: "recipientName", type: "text", label: "Recipient's Name", optional: false },
-      { name: "relationship", type: "select", label: "Relationship", options: [
-        "Partner", "Spouse", "Crush",
-      ].concat(relationshipOptions), optional: false, defaultValue: "Partner" },
+      {
+        name: "relationship", type: "select", label: "Relationship", options: [
+          "Partner", "Spouse", "Crush",
+        ].concat(relationshipOptions), optional: false, defaultValue: "Partner"
+      },
       { name: "message", type: "textarea", label: "Love story (optional)", optional: true },
       { name: "senderName", type: "text", label: "Your Name (optional)", optional: true },
     ],
@@ -91,9 +99,11 @@ const cardConfigs: Record<CardType, CardConfig> = {
     fields: [
       { name: "recipientName", type: "text", label: "Recipient's Name", optional: false },
       { name: "relationship", type: "select", label: "Relationship", options: relationshipOptions, optional: false, defaultValue: "Friend" },
-      { name: "holiday", type: "select", label: "Holiday (optional)", options: [
-        "Christmas", "New Year", "Easter", "Hanukkah", "Diwali", "Other"
-      ], optional: true },
+      {
+        name: "holiday", type: "select", label: "Holiday (optional)", options: [
+          "Christmas", "New Year", "Easter", "Hanukkah", "Diwali", "Other"
+        ], optional: true
+      },
       { name: "message", type: "textarea", label: "Holiday Wishes (optional)", optional: true },
       { name: "senderName", type: "text", label: "Your Name (optional)", optional: true },
     ],
@@ -104,10 +114,16 @@ const cardConfigs: Record<CardType, CardConfig> = {
     fields: [
       { name: "recipientNames", type: "text", label: "Names of the Couple( A & B)", optional: false },
       { name: "relationship", type: "select", label: "Relationship", options: relationshipOptions, optional: false, defaultValue: "Friend" },
-      { name: "yearsMarried", type: "number", label: "Years Married (optional)", optional: true },
-      { name: "message", type: "textarea", label: "Anniversary Wishes (optional)", optional: true },
-      // { name: "senderName", type: "text", label: "Your Name (optional)", optional: true },
+      { name: "yearsTogether", type: "number", label: "Years Together (optional)", optional: true },
+      { name: "message", type: "textarea", label: "Story or Wishes (optional)", optional: true },
     ],
+    templateInfo: "Send your love and warm wishes on personalized, anniversary cards from MewtruCard collection of free customizable templates ✨",
+    why: [
+      "MewtruCard's AI generator creates truly unique anniversary designs for you - each card is an original masterpiece that tells your story.",
+      "Your heartfelt messages become extraordinary with MewtruCard, as our AI crafts personalized anniversary greetings that reflect your special bond.",
+      "With MewtruCard's anniversary cards, you maintain full creative control - edit and refine your AI-generated designs until they're perfect.",
+      "Share your MewtruCard anniversary moments your way - download as free high-quality images or create musical greeting links that make your celebration unforgettable."
+    ]
   },
   sorry: {
     title: "Sorry Card Generator",

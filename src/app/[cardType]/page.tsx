@@ -48,7 +48,7 @@ export default async function CardGeneratorPage({ params }: CardGeneratorPagePro
     const cardType = params.cardType as CardType;
     const cardName = (params.cardType as string).charAt(0).toUpperCase() + (params.cardType as string).slice(1) as CardType;
     const cardConfig = getCardConfig(cardType);
-    
+
     const [defaultCard, initialCardsData] = await Promise.all([
         getDefaultCardByCardType(cardType),
         getRecentCardsServer(1, 10, cardType)
@@ -69,59 +69,78 @@ export default async function CardGeneratorPage({ params }: CardGeneratorPagePro
 
             <div className="relative container mx-auto px-4 sm:px-6 py-8 sm:py-12">
                 {/* Header Section */}
-                <header className="text-center mb-8 sm:mb-12">
+                <header className="text-center mb-8">
                     <h1 className="text-4xl sm:text-5xl md:text-6xl font-serif font-bold mb-4 tracking-tight">
                         <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-pink-600">
                             {cardName} Card Generator
                         </span>
                     </h1>
                     <p className="text-lg sm:text-xl text-gray-600 max-w-2xl mx-auto px-4">
-                        Create beautiful {cardName.toLowerCase()} card with AI magic ✨
+                        Create a personalized {cardName.toLowerCase()} card with AI magic ✨
                     </p>
                 </header>
 
                 {/* Card Generator Section */}
                 <section className="mb-16 sm:mb-24">
-                    <div className="bg-white/80 backdrop-blur-lg rounded-2xl shadow-xl p-4 sm:p-8">
-                        <Suspense 
-                            fallback={
-                                <div className="flex flex-col items-center justify-center h-64 space-y-4">
-                                    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500"></div>
-                                    <p className="text-gray-500">Creating magic...</p>
-                                </div>
-                            }
-                        >
-                            <CardGenerator 
-                                wishCardType={cardType} 
-                                initialCardId={defaultCard.cardId} 
-                                initialSVG={defaultCard.responseContent} 
-                            />
-                        </Suspense>
-                    </div>
+                    <Suspense
+                        fallback={
+                            <div className="flex flex-col items-center justify-center h-64 space-y-4">
+                                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500"></div>
+                                <p className="text-gray-500">Creating magic...</p>
+                            </div>
+                        }
+                    >
+                        <CardGenerator
+                            wishCardType={cardType}
+                            initialCardId={defaultCard.cardId}
+                            initialSVG={defaultCard.responseContent}
+                        />
+                    </Suspense>
                 </section>
 
-                {/* Templates Section */}
-                <section className="text-center mb-16 sm:mb-24">
-                    <h2 className="text-3xl sm:text-4xl font-bold text-center mb-4">
+
+                {cardConfig.why && (
+                    <section className="text-center mb-16 sm:mb-24">
+                    <h2 className="text-3xl sm:text-4xl font-bold text-center mb-8 sm:mb-12">
                         <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-pink-600">
-                            Popular Templates
+                            Why MewtruCard&apos;s {cardName} card
                         </span>
                     </h2>
-                    <p className="text-lg sm:text-xl text-gray-600 max-w-2xl mx-auto px-4 mb-8 sm:mb-12">
-                        Select from our collection of beautiful templates and make your {cardName.toLowerCase()} card ✨
-                    </p>
-                    <div className="bg-white/80 backdrop-blur-lg rounded-2xl shadow-xl p-4 sm:p-8">
-                        <Suspense 
-                            fallback={
-                                <div className="flex flex-col items-center justify-center h-48 space-y-4">
-                                    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500"></div>
-                                    <p className="text-gray-500">Loading templates...</p>
+                        <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4 text-left max-w-4xl mx-auto">
+                            {cardConfig.why.map((feature, index) => (
+                                <div key={index} className="bg-white p-4 rounded-lg shadow border border-[#FFC0CB]">
+                                    {feature}
                                 </div>
-                            }
-                        >
-                            <CardMarquee wishCardType={cardType} initialCardsData={initialCardsData} />
-                        </Suspense>
-                    </div>
+                            ))}
+                        </div>
+                    </section>
+                )}
+                {/* Templates Section */}
+                <section className="text-center mb-16 sm:mb-24">
+                    <h2 className="text-3xl sm:text-4xl font-bold text-center mb-8 sm:mb-12">
+                        <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-pink-600">
+                            {cardName} card templates
+                        </span>
+                    </h2>
+                    {cardConfig.templateInfo && <p className="text-lg sm:text-xl text-gray-600 max-w-2xl mx-auto px-4 mb-8 sm:mb-12">
+                        {cardConfig.templateInfo}
+                    </p>
+                    }
+                    {!cardConfig.templateInfo && <p className="text-lg sm:text-xl text-gray-600 max-w-2xl mx-auto px-4 mb-8 sm:mb-12">
+                        Send your love and warm wishes on personalized, {cardName.toLowerCase()} cards from MewtruCard collection of free customizable templates ✨
+                    </p>
+                    }
+
+                    <Suspense
+                        fallback={
+                            <div className="flex flex-col items-center justify-center h-48 space-y-4">
+                                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500"></div>
+                                <p className="text-gray-500">Loading templates...</p>
+                            </div>
+                        }
+                    >
+                        <CardMarquee wishCardType={cardType} initialCardsData={initialCardsData} />
+                    </Suspense>
                 </section>
 
                 {/* Other Card Types Section */}
@@ -129,9 +148,7 @@ export default async function CardGeneratorPage({ params }: CardGeneratorPagePro
                     <h2 className="text-2xl sm:text-3xl font-serif font-semibold text-center mb-6 text-gray-700">
                         Explore More MewTruCard Types
                     </h2>
-                    <div className="bg-white/80 backdrop-blur-lg rounded-2xl shadow-xl p-4 sm:p-8">
-                        <CardTypeBubbles currentType={cardType} />
-                    </div>
+                    <CardTypeBubbles currentType={cardType} />
                 </section>
             </div>
         </main>
