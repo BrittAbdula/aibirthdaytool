@@ -83,7 +83,6 @@ export default async function EditedCardPage({ params }: Props) {
       <div className="container mx-auto px-4 py-6 relative z-10">
         <section className="max-w-2xl mx-auto space-y-4"> {/* 减小垂直间距 */}
           {/* Card Display */}
-          <div className="bg-white/40 rounded-lg p-3 sm:p-4"> {/* 降低透明度，简化阴影和内边距 */}
             <Suspense
               fallback={
                 <div className="flex flex-col items-center justify-center h-40 space-y-3">
@@ -94,13 +93,10 @@ export default async function EditedCardPage({ params }: Props) {
             >
               <CardDisplay card={card} />
             </Suspense>
-          </div>
 
           {/* Spotify Player Section */}
           {card.spotifyTrackId && (
-            <div className="p-3 sm:p-4"> {/* 保持与上面卡片一致的样式 */}
               <SpotifyPlayer trackId={card.spotifyTrackId} />
-            </div>
           )}
         </section>
 
