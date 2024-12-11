@@ -2,6 +2,7 @@ import { Suspense } from 'react'
 import { Metadata } from 'next'
 import { getRecentCardsServer } from '@/lib/cards'
 import CardGalleryContent from './CardGalleryContent'
+import { CardType } from '@/lib/card-config'
 
 export const metadata: Metadata = {
   title: 'MewtruCard Gallery',
@@ -13,9 +14,14 @@ export const metadata: Metadata = {
 
 export const revalidate = 300 // 每5分钟重新验证页面
 
+interface PageProps {
+  searchParams: { type?: CardType }
+}
+
 // Server Component
-export default async function CardGalleryPage() {
-  const initialCardsData = await getRecentCardsServer(1, 12, null)
+export default async function CardGalleryPage({ searchParams }: PageProps) {
+  const defaultType = searchParams.type || null
+  const initialCardsData = await getRecentCardsServer(1, 12, defaultType)
   
   return (
     <Suspense 
@@ -26,7 +32,7 @@ export default async function CardGalleryPage() {
         </div>
       }
     >
-      <CardGalleryContent initialCardsData={initialCardsData} />
+      <CardGalleryContent initialCardsData={initialCardsData} defaultType={defaultType} />
     </Suspense>
   )
 }

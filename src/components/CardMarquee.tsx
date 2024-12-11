@@ -39,7 +39,7 @@ const CardItem = ({ card }: { card: Card }) => {
   )
 }
 
-export default function CardMarquee({ initialCardsData, className }: CardMarqueeProps) {
+export default function CardMarquee({ wishCardType, initialCardsData, className }: CardMarqueeProps) {
   const cards = initialCardsData.cards
   const firstRow = cards.slice(0, Math.ceil(cards.length / 2))
   const secondRow = cards.slice(Math.ceil(cards.length / 2))
@@ -69,7 +69,7 @@ export default function CardMarquee({ initialCardsData, className }: CardMarquee
       {/* More link */}
       <div className="flex justify-center">
         <Link 
-          href="/card-gallery/" 
+          href={`/card-gallery/?type=${wishCardType}`} 
           className={cn(
             "inline-flex items-center gap-1 text-sm font-medium",
             "text-gray-600 hover:text-gray-900",

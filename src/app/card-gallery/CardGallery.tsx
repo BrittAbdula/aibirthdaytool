@@ -1,10 +1,8 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { ImageViewer } from '../../components/ImageViewer'
 import { Card } from '@/lib/cards'
-import { Button } from "@/components/ui/button"
-import { ChevronLeftIcon, ChevronRightIcon } from '@radix-ui/react-icons'
 import { CardType } from '@/lib/card-config'
 
 interface CardGalleryProps {
@@ -22,12 +20,24 @@ export default function CardGallery({ initialCardsData, wishCardType }: CardGall
   const [currentPage, setCurrentPage] = useState(1)
   const [totalPages, setTotalPages] = useState(initialCardsData.totalPages)
   const [isLoading, setIsLoading] = useState(false)
+  const [hasMore, setHasMore] = useState(currentPage < totalPages)
+  const observer = useRef<IntersectionObserver | null>(null)
+  const lastCardElementRef = useCallback((node: HTMLDivElement) => {
+    if (isLoading) return
+    if (observer.current) observer.current.disconnect()
+    observer.current = new IntersectionObserver(entries => {
+      if (entries[0].isIntersecting && hasMore) {
+        setCurrentPage(prevPage => prevPage + 1)
+      }
+    }, { threshold: 0.5 })
+    if (node) observer.current.observe(node)
+  }, [isLoading, hasMore])
 
-  // Reset to first page when card type changes
   useEffect(() => {
     setCurrentPage(1)
     setCards(initialCardsData.cards)
     setTotalPages(initialCardsData.totalPages)
+    setHasMore(initialCardsData.totalPages > 1)
   }, [wishCardType, initialCardsData])
 
   useEffect(() => {
@@ -44,8 +54,9 @@ export default function CardGallery({ initialCardsData, wishCardType }: CardGall
         throw new Error('Failed to fetch cards')
       }
       const data = await response.json()
-      setCards(data.cards)
+      setCards(prev => [...prev, ...data.cards])
       setTotalPages(data.totalPages)
+      setHasMore(page < data.totalPages)
     } catch (error) {
       console.error('Error fetching cards:', error)
     } finally {
@@ -53,68 +64,37 @@ export default function CardGallery({ initialCardsData, wishCardType }: CardGall
     }
   }
 
-  const handlePreviousPage = () => {
-    if (currentPage > 1) {
-      setCurrentPage(prev => prev - 1)
-    }
-  }
-
-  const handleNextPage = () => {
-    if (currentPage < totalPages) {
-      setCurrentPage(prev => prev + 1)
-    }
-  }
-
-  if (isLoading) {
-    return (
-      <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500"></div>
-      </div>
-    )
-  }
-
   return (
-    <div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        {cards.map((card) => (
-          <div key={card.cardId} className="relative group">
-            <div className="aspect-[2/3] rounded-lg overflow-hidden bg-white shadow-md hover:shadow-lg transition-shadow duration-200">
-              <ImageViewer
-                svgContent={card.responseContent}
-                alt={`Card ${card.cardId}`}
-                cardId={card.cardId}
-                cardType={card.cardType}
-                isNewCard={false}
-              />
+    <div className="min-h-screen">
+      {/* <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8"> */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {cards.map((card, index) => (
+            <div 
+              key={card.cardId} 
+              ref={index === cards.length - 1 ? lastCardElementRef : undefined}
+              className="group"
+            >
+              {/* <div className="bg-white rounded-xl overflow-hidden transform transition duration-300 hover:scale-[1.02] hover:shadow-lg"> */}
+                <div className="aspect-[2/3] relative">
+                  <ImageViewer
+                    svgContent={card.responseContent}
+                    alt={`Card ${card.cardId}`}
+                    cardId={card.cardId}
+                    cardType={card.cardType}
+                    isNewCard={false}
+                  />
+                </div>
+              {/* </div> */}
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        {/* </div> */}
 
-      {/* Pagination Controls */}
-      {totalPages > 1 && (
-        <div className="flex justify-center items-center space-x-4 mt-8">
-          <Button
-            onClick={handlePreviousPage}
-            disabled={currentPage === 1}
-            variant="outline"
-            size="icon"
-          >
-            <ChevronLeftIcon className="h-4 w-4" />
-          </Button>
-          <span className="text-sm text-gray-600">
-            Page {currentPage} of {totalPages}
-          </span>
-          <Button
-            onClick={handleNextPage}
-            disabled={currentPage === totalPages}
-            variant="outline"
-            size="icon"
-          >
-            <ChevronRightIcon className="h-4 w-4" />
-          </Button>
-        </div>
-      )}
+        {isLoading && (
+          <div className="flex justify-center items-center py-8">
+            <div className="w-6 h-6 border-2 border-gray-300 border-t-indigo-500 rounded-full animate-spin"></div>
+          </div>
+        )}
+      </div>
     </div>
   )
 }
