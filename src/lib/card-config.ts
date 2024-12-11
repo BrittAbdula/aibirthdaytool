@@ -112,10 +112,10 @@ const cardConfigs: Record<CardType, CardConfig> = {
     title: "Anniversary Card Generator",
     label: "Anniversary Card",
     fields: [
-      { name: "recipientNames", type: "text", label: "Names of the Couple( A & B)", optional: false },
-      { name: "relationship", type: "select", label: "Relationship", options: relationshipOptions, optional: false, defaultValue: "Friend" },
-      { name: "yearsTogether", type: "number", label: "Years Together (optional)", optional: true },
-      { name: "message", type: "textarea", label: "Story or Wishes (optional)", optional: true },
+      { name: "celebrantNames", type: "text", label: "Celebrants' Names (e.g., John & Mary Smith)", optional: false },
+      { name: "Sender", type: "select", label: "Sender", options: relationshipOptions.filter(option => option !== "Myself"), optional: false, defaultValue: "Boyfriend" },
+      { name: "yearsTogether", type: "age", label: "Years Together (optional)", optional: true },
+      { name: "StoryOrWishes", type: "textarea", label: "Story or Wishes (optional)", optional: true },
     ],
     templateInfo: "Send your love and warm wishes on personalized, anniversary cards from MewtruCard collection of free customizable templates ✨",
     why: [
