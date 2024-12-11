@@ -7,6 +7,7 @@ import CardGenerator from "@/components/CardGenerator";
 import { getDefaultCardByCardType } from "@/lib/cards";
 import CardMarquee from "@/components/CardMarquee";
 import { getRecentCardsServer } from '@/lib/cards';
+import Breadcrumb from "@/components/Breadcrumb"; 
 
 interface CardGeneratorPageProps {
     params: {
