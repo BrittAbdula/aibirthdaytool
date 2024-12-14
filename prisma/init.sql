@@ -1409,6 +1409,7 @@ alter table "EditedCard" add column "spotifyTrackId" text;
     select * from "ApiLog" order by timestamp desc limit 11;
 
     select to_char(timestamp, 'YYYY-MM-DD') as dt,count(1) from "ApiLog" group by 1 order by 1 desc;
+    select to_char(timestamp, 'YYYY-MM-DD') as dt,"isError",count(1) from "ApiLog" group by 1,2 order by 1 desc;
     select * from "ApiLog" where id=200 order by timestamp desc limit 1;
     select * from "UserAction" order by timestamp desc limit 11;
     select action,count(1) from "UserAction" group by action;
@@ -1419,3 +1420,6 @@ alter table "EditedCard" add column "spotifyTrackId" text;
     select "cardType",count(1) from "EditedCard" group by 1 order by 2 desc;
     select to_char("createdAt", 'YYYY-MM-DD') as dt,"cardType",count(1) from "EditedCard" group by 1,2 order by 1 desc;
     select "originalCardId",count(1) from "EditedCard" group by 1 order by 2 desc;
+
+
+

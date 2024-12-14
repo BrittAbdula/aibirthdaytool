@@ -149,6 +149,7 @@ export async function generateCardContent(params: CardContentParams): Promise<{ 
         const data: OpenRouterResponse = await response.json();
         const duration = Date.now() - startTime;
         const content = data.choices[0].message.content;
+        console.log('<----Response content : ' + content + '---->')
         const svgContent = extractSvgContent(content);
 
         // Log the request

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { generateCardContent } from '@/lib/gpt';
-export const maxDuration = 20; // This function can run for a maximum of 20 seconds
+export const maxDuration = 30; // This function can run for a maximum of 30 seconds
 export const dynamic = 'force-dynamic';
 
 export async function POST(request: Request) {
