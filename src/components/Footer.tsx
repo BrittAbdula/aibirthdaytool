@@ -2,21 +2,21 @@ import Link from 'next/link';
 
 export default function Footer() {
   return (
-    <footer className="bg-[#FFF9F0] border-t border-[#FFC0CB] mt-12">
+    <footer className="bg-gradient-to-t from-white via-purple-50/50 to-white border-t border-purple-100/50 ">
       <div className="container mx-auto px-4 py-6">
         <div className="flex flex-col md:flex-row justify-between items-center">
-          <p className="text-[#4A4A4A] mb-4 md:mb-0">
-            © {new Date().getFullYear()} MewTruCard. All rights reserved.
+          <p className="text-gray-600 mb-4 md:mb-0">
+            {new Date().getFullYear()} MewTruCard. All rights reserved.
           </p>
           <nav>
             <ul className="flex space-x-4">
               <li>
-                <Link href="/privacy-policy" className="text-[#4A4A4A] hover:text-[#FFC0CB]">
+                <Link href="/privacy-policy" className="text-gray-600 hover:text-purple-600 transition-colors">
                   Privacy Policy
                 </Link>
               </li>
               <li>
-                <Link href="/terms-of-service" className="text-[#4A4A4A] hover:text-[#FFC0CB]">
+                <Link href="/terms-of-service" className="text-gray-600 hover:text-purple-600 transition-colors">
                   Terms of Service
                 </Link>
               </li>

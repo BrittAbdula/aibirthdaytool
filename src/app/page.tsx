@@ -298,7 +298,7 @@ const faqs = [
           <li>• Every MewTruCard creation gets a unique sharing link</li>
           <li>• Download your MewTru Card designs in high resolution</li>
           <li>• Share your MewTruCard directly to social platforms</li>
-          <li>• Send your MewTru Card creation via email</li>
+          <li>• Send your MewTruCard creation via email</li>
         </ul>
       </span>
     ),
@@ -359,32 +359,48 @@ const faqs = [
 ];
 
 const FAQ: React.FC = () => (
-    <Section title="MewTruCard FAQ" subtitle="Everything you need to know about your MewTru Card experience">
-      <div className="mx-auto my-12 md:max-w-[800px]">
+    <Section>
+      <div className="text-center mb-12">
+        <h1 className="text-4xl sm:text-5xl md:text-6xl font-serif font-bold mb-4 tracking-tight">
+          <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-pink-600">
+            Frequently Asked Questions
+          </span>
+        </h1>
+        <p className="text-lg sm:text-xl text-gray-600 max-w-2xl mx-auto px-4">
+          Everything you need to know about your MewTru Card experience ✨
+        </p>
+      </div>
+
+      <div className="mx-auto md:max-w-[800px]">
         <Accordion
           type="single"
           collapsible
-          className="flex w-full flex-col items-center justify-center space-y-2"
+          className="flex w-full flex-col items-center justify-center space-y-4"
         >
           {faqs.map((faq, idx) => (
             <AccordionItem
               key={idx}
               value={`question-${idx}`}
-              className="w-full border rounded-lg overflow-hidden"
+              className="w-full border rounded-lg overflow-hidden hover:shadow-md transition-shadow duration-200"
             >
-              <AccordionTrigger className="px-4">
-                {faq.question}
+              <AccordionTrigger className="px-6 py-4 text-left">
+                <span className="font-medium text-gray-800">{faq.question}</span>
               </AccordionTrigger>
-              <AccordionContent className="px-4">{faq.answer}</AccordionContent>
+              <AccordionContent className="px-6 py-4 text-gray-600">
+                {faq.answer}
+              </AccordionContent>
             </AccordionItem>
           ))}
         </Accordion>
       </div>
-      <h4 className="mb-12 text-center text-sm font-medium tracking-tight text-foreground/80">
-        Have questions about your MewTruCard experience? Contact the MewTru Card team at{" "}
-        <a href="mailto:support@mewtrucard.com" className="underline">
-          support@mewtrucard.com
-        </a>
-      </h4>
+
+      <div className="mt-12 text-center">
+        <p className="text-lg text-gray-600">
+          Have questions about your MewTruCard experience?{" "}
+          <a href="mailto:support@mewtrucard.com" className="text-purple-600 hover:text-purple-700 underline font-medium">
+            Contact our support team
+          </a>
+        </p>
+      </div>
     </Section>
   );

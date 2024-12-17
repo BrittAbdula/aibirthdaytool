@@ -60,15 +60,24 @@ const trendingCards: TrendingCard[] = [
 
 export default function GeneratorsPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-white to-purple-50">
-      <div className="container mx-auto px-4 py-12">
+    <div className="min-h-screen  bg-gradient-to-b from-white via-purple-50 to-white">
+      {/* Decorative Elements */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-40 -right-40 w-96 h-96 bg-purple-100 rounded-full mix-blend-multiply filter blur-xl opacity-50 animate-blob"></div>
+        <div className="absolute top-0 -left-20 w-72 h-72 bg-pink-100 rounded-full mix-blend-multiply filter blur-xl opacity-50 animate-blob animation-delay-2000"></div>
+        <div className="absolute bottom-0 right-0 w-72 h-72 bg-yellow-100 rounded-full mix-blend-multiply filter blur-xl opacity-50 animate-blob animation-delay-4000"></div>
+      </div>
+
+      <div className="relative container mx-auto px-4 py-12">
         {/* Header Section */}
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold mb-4">
-            Card <span className="text-purple-600">Generators</span>
+          <h1 className="text-4xl sm:text-5xl md:text-6xl font-serif font-bold mb-4 tracking-tight">
+            <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-pink-600">
+              Card Generators
+            </span>
           </h1>
-          <p className="text-gray-600 max-w-2xl mx-auto">
-            Choose a card type to start creating your personalized message
+          <p className="text-lg sm:text-xl text-gray-600 max-w-2xl mx-auto px-4">
+            Choose a card type to start creating your personalized message ✨
           </p>
         </div>
 
@@ -91,9 +100,9 @@ export default function GeneratorsPage() {
                     />
                   </div>
                 </div>
-                <div className="space-y-2">
-                  <h3 className="text-lg font-medium">{card.title}</h3>
-                  <p className="text-sm text-gray-600">
+                <div className="space-y-2 ">
+                  <h3 className="text-lg font-medium text-center">{card.title}</h3>
+                  <p className="text-sm text-gray-600 text-center">
                     Create personalized {card.title.toLowerCase()}
                   </p>
                   <button className="w-full py-2 text-sm text-purple-600 border border-purple-300 rounded-full hover:bg-purple-200 transition-colors">

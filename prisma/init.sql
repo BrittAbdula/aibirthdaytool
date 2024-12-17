@@ -1414,7 +1414,43 @@ alter table "EditedCard" add column "spotifyTrackId" text;
     select * from "UserAction" order by timestamp desc limit 11;
     select action,count(1) from "UserAction" group by action;
     select to_char(timestamp, 'YYYY-MM-DD') as dt,action,count(1) from "UserAction" group by 1,2 order by 1 desc;
-    update "Template" set "previewSvg" = '<svg><!-- Preview SVG Content for Anniversary Card --></svg>' where "id" = 'sorry-v1';
+
+--- user action: copy, download, send
+select * from "UserAction" order by timestamp desc limit 11;
+
+select 
+    to_char(timestamp, 'YYYY-MM-DD') as dt,
+    count("cardId") as cards,
+    count(distinct "cardId") as unique_cards
+from "UserAction" 
+group by to_char(timestamp, 'YYYY-MM-DD')
+order by dt desc;
+
+--- user edits
+select * from "EditedCard" order by "createdAt" desc limit 11;
+
+select 
+    to_char("createdAt", 'YYYY-MM-DD') as dt,
+    count("id") as cards,
+    count(distinct "originalCardId") as unique_originalCardId
+from "EditedCard" 
+group by to_char("createdAt", 'YYYY-MM-DD')
+order by dt desc;
+
+--- user select
+
+select 
+to_char(a.timestamp, 'YYYY-MM-DD') as dt,
+count(1) as action_cards,
+sum(case when to_char(a.timestamp, 'YYYY-MM-DD') = to_char(b.timestamp, 'YYYY-MM-DD') then 1 else 0 end) as same_day_cards,
+sum(case when to_char(a.timestamp, 'YYYY-MM-DD') != to_char(b.timestamp, 'YYYY-MM-DD') then 1 else 0 end) as different_day_cards,
+count(distinct a."cardId") as unique_cards,
+count(distinct case when to_char(a.timestamp, 'YYYY-MM-DD') = to_char(b.timestamp, 'YYYY-MM-DD') then a."cardId" else null end) as unique_same_day_cards
+from "UserAction"  a
+left join "ApiLog" b on a."cardId"=b."cardId"
+group by 1
+order by 1 desc;
+
 
     select to_char("createdAt", 'YYYY-MM-DD') as dt,count(1) from "EditedCard" group by 1 order by 1 desc;
     select "cardType",count(1) from "EditedCard" group by 1 order by 2 desc;

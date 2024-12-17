@@ -63,16 +63,20 @@ export default function CardGallery({ initialCardsData, wishCardType }: CardGall
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 px-4">
         {cards.map((card) => (
-          <div key={card.cardId} className="bg-white rounded-lg shadow-md overflow-hidden">
-            <ImageViewer
-              svgContent={card.responseContent}
-              alt={`${card.cardType} card`}
-              cardId={card.cardId}
-              cardType={card.cardType}
-              isNewCard={false}
-            />
+          <div key={card.cardId} className="bg-purple-100 rounded-lg p-2 sm:p-4 transition-all duration-300 hover:shadow-lg">
+            <div className="relative w-full pb-[133.33%] mb-2">
+              <div className="absolute inset-0 transition-transform duration-300 ease-in-out hover:scale-105">
+                <ImageViewer
+                  svgContent={card.responseContent}
+                  alt={`${card.cardType} card`}
+                  cardId={card.cardId}
+                  cardType={card.cardType}
+                  isNewCard={false}
+                />
+              </div>
+            </div>
           </div>
         ))}
       </div>

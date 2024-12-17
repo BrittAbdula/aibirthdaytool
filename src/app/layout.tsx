@@ -23,7 +23,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <GoogleTagManager gtmId="GTM-57P7BF4D" />
-      <body className={`${playfair.className} bg-[#FFF9F0] text-[#4A4A4A]`}>
+      <body className={`${playfair.className} text-[#4A4A4A]`}>
         <div className="flex flex-col min-h-screen">
           <Header />
           <main className="flex-grow">{children}</main>
