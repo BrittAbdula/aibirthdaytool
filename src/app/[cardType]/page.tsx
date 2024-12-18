@@ -5,7 +5,7 @@ import { CardType, getCardConfig, getAllCardTypes } from "@/lib/card-config";
 import CardTypeBubbles from "@/components/CardTypeBubbles";
 import CardGenerator from "@/components/CardGenerator";
 import { getDefaultCardByCardType } from "@/lib/cards";
-import CardMarquee from "@/components/CardMarquee";
+import CardGallery from '@/components/CardGallery';
 import { getRecentCardsServer } from '@/lib/cards';
 import Breadcrumb from "@/components/Breadcrumb"; 
 
@@ -50,10 +50,12 @@ export default async function CardGeneratorPage({ params }: CardGeneratorPagePro
     const cardName = (params.cardType as string).charAt(0).toUpperCase() + (params.cardType as string).slice(1) as CardType;
     const cardConfig = getCardConfig(cardType);
 
-    const [defaultCard, initialCardsData] = await Promise.all([
-        getDefaultCardByCardType(cardType),
-        getRecentCardsServer(1, 10, cardType)
-    ]);
+    // Get initial cards data
+    const { cards, totalPages } = await getRecentCardsServer(1, 12, cardType);
+    const initialCardsData = {
+        cards,
+        totalPages
+    };
 
     if (!cardConfig) {
         notFound();
@@ -93,8 +95,8 @@ export default async function CardGeneratorPage({ params }: CardGeneratorPagePro
                     >
                         <CardGenerator
                             wishCardType={cardType}
-                            initialCardId={defaultCard.cardId}
-                            initialSVG={defaultCard.responseContent}
+                            initialCardId={''}
+                            initialSVG={''}
                         />
                     </Suspense>
                 </section>
@@ -134,13 +136,18 @@ export default async function CardGeneratorPage({ params }: CardGeneratorPagePro
 
                     <Suspense
                         fallback={
-                            <div className="flex flex-col items-center justify-center h-48 space-y-4">
-                                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500"></div>
-                                <p className="text-gray-500">Loading templates...</p>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 px-4 py-6">
+                                {[...Array(8)].map((_, i) => (
+                                    <div key={i} className="animate-pulse">
+                                        <div className="aspect-[2/3] bg-gray-200 rounded-lg mb-2"></div>
+                                        <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                                        <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                                    </div>
+                                ))}
                             </div>
                         }
                     >
-                        <CardMarquee wishCardType={cardType} initialCardsData={initialCardsData} />
+                        <CardGallery wishCardType={cardType} initialCardsData={initialCardsData} />
                     </Suspense>
                 </section>
 
