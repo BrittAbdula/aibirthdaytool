@@ -165,7 +165,7 @@ export function ImageViewer({ svgContent, alt, cardId, cardType, isNewCard }: Im
             )}
           </div>
         </DialogTrigger>
-        <DialogContent className="sm:max-w-[90vw] md:max-w-[80vw] lg:max-w-[70vw] xl:max-w-[60vw] bg-[#FFF9F0] border border-[#FFC0CB] p-0">
+        <DialogContent className="sm:max-w-[90vw] md:max-w-[80vw] lg:max-w-[70vw] xl:max-w-[60vw]  p-0">
           <DialogTitle className="sr-only">Image Viewer</DialogTitle>
           <div className="flex flex-col items-center justify-center h-full">
             <div className="w-full h-[calc(100vh-200px)] overflow-auto flex items-center justify-center p-4">

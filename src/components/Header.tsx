@@ -36,7 +36,7 @@ function Header() {
           <div className="hidden md:flex space-x-6">
             <Link href="/" className="text-[#4A4A4A] hover:text-[#FFC0CB] font-serif">Home</Link>
             <Link href="/cards" className="text-[#4A4A4A] hover:text-[#FFC0CB] font-serif">Card Generators</Link>
-            <Link href="/card-gallery" className="text-[#4A4A4A] hover:text-[#FFC0CB] font-serif">Gallery</Link>
+            <Link href="/card-gallery" className="text-[#4A4A4A] hover:text-[#FFC0CB] font-serif">Templates</Link>
           </div>
           {/* <Link href="/" className="hidden md:inline-block bg-[#FFC0CB] text-[#4A4A4A] px-4 py-2 rounded-md hover:bg-[#FFD1DC] font-serif">
             Login
@@ -56,7 +56,7 @@ function Header() {
           <div className="mt-4 md:hidden">
             <Link href="/" className="block py-2 px-4 w-full text-right text-[#4A4A4A] hover:text-[#FFC0CB] hover:bg-gray-50 font-serif">Home</Link>
             <Link href="/cards" className="block py-2 px-4 w-full text-right text-[#4A4A4A] hover:text-[#FFC0CB] hover:bg-gray-50 font-serif">Card Generators</Link>
-            <Link href="/card-gallery" className="block py-2 px-4 w-full text-right text-[#4A4A4A] hover:text-[#FFC0CB] hover:bg-gray-50 font-serif">Gallery</Link>
+            <Link href="/card-gallery" className="block py-2 px-4 w-full text-right text-[#4A4A4A] hover:text-[#FFC0CB] hover:bg-gray-50 font-serif">Templates</Link>
             {/* <Link href="/" className="block py-2 px-4 w-full text-right text-[#4A4A4A] hover:text-[#FFC0CB] hover:bg-gray-50 font-serif">Login</Link> */}
           </div>
         )}

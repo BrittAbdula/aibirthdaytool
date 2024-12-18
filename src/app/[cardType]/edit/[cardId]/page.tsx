@@ -13,7 +13,7 @@ import dynamic from 'next/dynamic'
 import { EyeOpenIcon } from '@radix-ui/react-icons'
 import SpotifySearch from '@/components/SpotifySearch'
 import { CardType } from '@/lib/card-config'
-
+import { Switch } from '@/components/ui/switch'
 
 const IsMobileWrapper = dynamic(() => import('@/components/IsMobileWrapper'), { ssr: false })
 
@@ -27,6 +27,7 @@ export default function EditCard({ params }: { params: { cardId: string, cardTyp
   const [shareLink, setShareLink] = useState('')
   const [editedCardId, setEditedCardId] = useState('')
   const [selectedMusic, setSelectedMusic] = useState<{ id: string; name: string; artist: string } | null>(null)
+  const [enableMusic, setEnableMusic] = useState(false)
   const { toast } = useToast()
 
   useEffect(() => {
@@ -132,6 +133,7 @@ export default function EditCard({ params }: { params: { cardId: string, cardTyp
       setIsModalOpen(true)
       return
     }
+
     try {
       const response = await fetch('/api/edited-cards', {
         method: 'POST',
@@ -143,7 +145,7 @@ export default function EditCard({ params }: { params: { cardId: string, cardTyp
           cardType,
           originalCardId: cardId,
           editedContent: svgContent,
-          spotifyTrackId: selectedMusic?.id
+          spotifyTrackId: enableMusic ? selectedMusic?.id : null,
         }),
       })
 
@@ -160,8 +162,9 @@ export default function EditCard({ params }: { params: { cardId: string, cardTyp
     } catch (error) {
       console.error('Error saving edited card:', error)
       toast({
+        title: "Error",
+        description: "Failed to save edited card",
         variant: "destructive",
-        description: "Failed to generate share link. Please try again.",
       })
     }
   }
@@ -224,31 +227,40 @@ export default function EditCard({ params }: { params: { cardId: string, cardTyp
               </div>
             </div>
             <div className="mt-4">
-              <label className="text-sm font-medium mb-2 block">
-                Music
-              </label>
-              <SpotifySearch 
-                cardType={cardType}
-                onSelect={async (song) => {
-                  console.log('Selected song:', song)
-                  setSelectedMusic(song)
-                  // Record the selection
-                  try {
-                    await fetch('/api/spotify/record-selection', {
-                      method: 'POST',
-                      headers: {
-                        'Content-Type': 'application/json',
-                      },
-                      body: JSON.stringify({
-                        cardType,
-                        song
+              <div className="flex items-center justify-between mb-2">
+                <label className="text-sm font-medium">Music</label>
+                <div className="flex items-center space-x-2">
+                  <label className="text-sm text-muted-foreground">Enable music</label>
+                  <Switch
+                    checked={enableMusic}
+                    onCheckedChange={setEnableMusic}
+                  />
+                </div>
+              </div>
+              {enableMusic && (
+                <SpotifySearch 
+                  cardType={cardType}
+                  onSelect={async (song) => {
+                    console.log('Selected song:', song)
+                    setSelectedMusic(song)
+                    // Record the selection
+                    try {
+                      await fetch('/api/spotify/record-selection', {
+                        method: 'POST',
+                        headers: {
+                          'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                          cardType,
+                          song
+                        })
                       })
-                    })
-                  } catch (error) {
-                    console.error('Failed to record song selection:', error)
-                  }
-                }}
-              />
+                    } catch (error) {
+                      console.error('Failed to record song selection:', error)
+                    }
+                  }}
+                />
+              )}
             </div>
           </div>
 
