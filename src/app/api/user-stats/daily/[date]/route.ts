@@ -11,7 +11,7 @@ export async function GET(
     const endDate = new Date(date);
     endDate.setDate(endDate.getDate() + 1);
 
-    const details = await prisma.apiLog.findMany({
+    const logs = await prisma.apiLog.findMany({
       where: {
         timestamp: {
           gte: startDate,
@@ -34,15 +34,24 @@ export async function GET(
         isError: true,
         errorMessage: true,
         r2Url: true,
+        _count: {
+          select: {
+            editedCards: true
+          }
+        }
       },
     });
 
-    return NextResponse.json(details);
+    // 转换数据格式
+    const formattedLogs = logs.map(log => ({
+      ...log,
+      usageCount: log._count.editedCards,
+      _count: undefined
+    }));
+
+    return NextResponse.json(formattedLogs);
   } catch (error) {
     console.error('Error fetching daily details:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch daily details' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to fetch daily details' }, { status: 500 });
   }
 }

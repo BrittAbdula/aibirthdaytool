@@ -27,6 +27,7 @@ model ApiLog {
   errorMessage      String?      @db.Text
   r2Url             String?
   userActions       UserAction[]
+  editedCards       EditedCard[] @relation("OriginalCard")
 }
 
 model Template {
@@ -60,6 +61,9 @@ model EditedCard {
   spotifyTrackId  String?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
+  originalCard    ApiLog   @relation("OriginalCard", fields: [originalCardId], references: [cardId])
+
+  @@index([originalCardId])
 }
 
 model SpotifyMusic {

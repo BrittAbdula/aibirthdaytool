@@ -39,6 +39,8 @@ export default function StatsPage() {
     from: addDays(new Date(), -29),
     to: new Date(),
   });
+  const [chartStats, setChartStats] = useState<Array<DailyStat & { usage_rate: string }>>([]);
+  const [chartErrorStats, setChartErrorStats] = useState<ErrorStat[]>([]);
 
   const fetchStats = async () => {
     if (!date?.from || !date?.to) return;
@@ -78,6 +80,27 @@ export default function StatsPage() {
     fetchStats();
   }, [date]);
 
+  useEffect(() => {
+    if (stats && errorStats) {
+      // 合并数据并计算使用率
+      const mergedStats = stats.map((stat) => {
+        const errorStat = errorStats.find(e => e.dt === stat.dt);
+        const successCount = errorStat?.success_count || 0;
+        const usageRate = successCount > 0 
+          ? ((stat.unique_cards / successCount) * 100).toFixed(1) 
+          : '0.0';
+        
+        return {
+          ...stat,
+          usage_rate: usageRate
+        };
+      });
+      
+      setChartStats(mergedStats);
+      setChartErrorStats(errorStats);
+    }
+  }, [stats, errorStats]);
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -93,10 +116,6 @@ export default function StatsPage() {
       </div>
     );
   }
-
-  // 为图表准备按时间升序排序的数据
-  const chartStats = [...stats].reverse();
-  const chartErrorStats = [...errorStats];
 
   return (
     <div className="container mx-auto py-8">
@@ -117,11 +136,34 @@ export default function StatsPage() {
                 <LineChart data={chartStats}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="dt" />
-                  <YAxis />
-                  <Tooltip />
+                  <YAxis yAxisId="left" />
+                  <YAxis yAxisId="right" orientation="right" unit="%" />
+                  <Tooltip formatter={(value, name) => {
+                    if (name === "Usage Rate") return `${value}%`;
+                    return value;
+                  }} />
                   <Legend />
-                  <Line type="monotone" dataKey="action_cards" stroke="#8884d8" name="Total Actions" />
-                  <Line type="monotone" dataKey="unique_cards" stroke="#82ca9d" name="Unique Cards" />
+                  <Line 
+                    yAxisId="left"
+                    type="monotone" 
+                    dataKey="action_cards" 
+                    stroke="#8884d8" 
+                    name="Total Actions" 
+                  />
+                  <Line 
+                    yAxisId="left"
+                    type="monotone" 
+                    dataKey="unique_cards" 
+                    stroke="#82ca9d" 
+                    name="Unique Cards" 
+                  />
+                  <Line 
+                    yAxisId="right"
+                    type="monotone" 
+                    dataKey="usage_rate" 
+                    stroke="#ffc658" 
+                    name="Usage Rate" 
+                  />
                 </LineChart>
               </ResponsiveContainer>
             </div>

@@ -35,7 +35,7 @@ function Header() {
           </Link>
           <div className="hidden md:flex space-x-6">
             <Link href="/" className="text-[#4A4A4A] hover:text-[#FFC0CB] font-serif">Home</Link>
-            <Link href="/cards" className="text-[#4A4A4A] hover:text-[#FFC0CB] font-serif">Card Genertors</Link>
+            <Link href="/cards" className="text-[#4A4A4A] hover:text-[#FFC0CB] font-serif">Card Generators</Link>
             <Link href="/card-gallery" className="text-[#4A4A4A] hover:text-[#FFC0CB] font-serif">Gallery</Link>
           </div>
           {/* <Link href="/" className="hidden md:inline-block bg-[#FFC0CB] text-[#4A4A4A] px-4 py-2 rounded-md hover:bg-[#FFD1DC] font-serif">
