@@ -20,10 +20,10 @@ const r2Client = new S3Client({
 
 export async function uploadSvgToR2(svgContent: string, cardId: string, createdAt: Date): Promise<string> {
     try {
-        // 使用传入的创建时间
-        const year = createdAt.getFullYear()
-        const month = String(createdAt.getMonth() + 1).padStart(2, '0')
-        const day = String(createdAt.getDate()).padStart(2, '0')
+        // 使用 UTC 时间来保持一致性
+        const year = createdAt.getUTCFullYear()
+        const month = String(createdAt.getUTCMonth() + 1).padStart(2, '0')
+        const day = String(createdAt.getUTCDate()).padStart(2, '0')
         
         // 构建存储路径：cards/年/月/日/cardId.svg
         const key = `cards/${year}/${month}/${day}/${cardId}.svg`
@@ -37,7 +37,7 @@ export async function uploadSvgToR2(svgContent: string, cardId: string, createdA
             })
         );
 
-        return `https://${R2_BUCKET_NAME}.${R2_ACCOUNT_ID}.r2.cloudflarestorage.com/${key}`;
+        return `https://store.celeprime.com/${key}`;
     } catch (error) {
         console.error('R2 upload error details:', {
             error,

@@ -16,9 +16,10 @@ interface ImageViewerProps {
   cardId: string
   cardType: string
   isNewCard: boolean
+  imgUrl?: string|null
 }
 
-export function ImageViewer({ svgContent, alt, cardId, cardType, isNewCard }: ImageViewerProps) {
+export function ImageViewer({ svgContent, alt, cardId, cardType, isNewCard, imgUrl }: ImageViewerProps) {
   const [open, setOpen] = useState(false)
   const { toast } = useToast()
   const [imageSrc, setImageSrc] = useState<string>('')
@@ -29,9 +30,13 @@ export function ImageViewer({ svgContent, alt, cardId, cardType, isNewCard }: Im
 
   useEffect(() => {
     setIsClient(true)
-    const dataUrl = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svgContent)}`
-    setImageSrc(dataUrl)
-  }, [svgContent])
+    if (imgUrl) {
+      setImageSrc(imgUrl)
+    } else {
+      const dataUrl = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svgContent)}`
+      setImageSrc(dataUrl)
+    }
+  }, [svgContent, imgUrl])
 
   const convertSvgToPng = (): Promise<string> => {
     return new Promise((resolve, reject) => {

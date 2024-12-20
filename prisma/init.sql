@@ -1459,6 +1459,39 @@ order by 1 desc;
 
 
 
+---- r2Url edit
+select * from "ApiLog" order by timestamp desc limit 11
+
+UPDATE "ApiLog"
+SET "r2Url" = CONCAT(
+    'https://store.celeprime.com/cards/',
+        EXTRACT(YEAR FROM "timestamp" AT TIME ZONE 'UTC'),
+    '/',
+    LPAD(EXTRACT(MONTH FROM "timestamp" AT TIME ZONE 'UTC')::text, 2, '0'),
+    '/',
+    LPAD(EXTRACT(DAY FROM "timestamp" AT TIME ZONE 'UTC')::text, 2, '0'),
+    '/',
+    "cardId",
+    '.svg'
+)
+WHERE "r2Url" is not null
+
+
+select * from "EditedCard" order by "createdAt" desc limit 11
+UPDATE "EditedCard"
+SET "r2Url" = CONCAT(
+    'https://store.celeprime.com/cards/',
+        EXTRACT(YEAR FROM "createdAt" AT TIME ZONE 'UTC'),
+    '/',
+    LPAD(EXTRACT(MONTH FROM "createdAt" AT TIME ZONE 'UTC')::text, 2, '0'),
+    '/',
+    LPAD(EXTRACT(DAY FROM "createdAt" AT TIME ZONE 'UTC')::text, 2, '0'),
+    '/',
+    "id",
+    '.svg'
+)
+WHERE "r2Url" is not null
+
 
 
 

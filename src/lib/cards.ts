@@ -6,6 +6,7 @@ export interface Card {
   cardId: string;
   cardType: string;
   responseContent: string;
+  r2Url: string | null;
 }
 
 // 服务端渲染使用的函数，带有缓存
@@ -41,6 +42,7 @@ async function fetchRecentCards(page: number, pageSize: number, wishCardType: st
       cardId: true,
       cardType: true,
       responseContent: true,
+      r2Url: true,
     },
   });
 
@@ -54,6 +56,7 @@ export async function getDefaultCardByCardType(cardType: CardType): Promise<Card
       cardId: true,
       cardType: true,
       previewSvg: true,
+      r2Url: true
     },
     orderBy: { createdAt: 'desc' },
   });
@@ -61,5 +64,6 @@ export async function getDefaultCardByCardType(cardType: CardType): Promise<Card
     cardId: card?.cardId || '',
     cardType,
     responseContent: card?.previewSvg || '',
+    r2Url: card?.r2Url || null
   };
 }

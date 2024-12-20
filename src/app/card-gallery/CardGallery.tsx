@@ -82,6 +82,7 @@ export default function CardGallery({ initialCardsData, wishCardType }: CardGall
                     cardId={card.cardId}
                     cardType={card.cardType}
                     isNewCard={false}
+                    imgUrl={card.r2Url}
                   />
                 </div>
               {/* </div> */}

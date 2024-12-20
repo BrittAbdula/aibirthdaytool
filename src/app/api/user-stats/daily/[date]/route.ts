@@ -11,45 +11,50 @@ export async function GET(
     const endDate = new Date(date);
     endDate.setDate(endDate.getDate() + 1);
 
-    const logs = await prisma.apiLog.findMany({
+    const logs = await prisma.editedCard.findMany({
       where: {
-        timestamp: {
+        createdAt: {
           gte: startDate,
           lt: endDate,
         },
       },
       orderBy: {
-        timestamp: 'desc',
+        createdAt: 'desc',
       },
-      select: {
-        id: true,
-        cardId: true,
-        cardType: true,
-        userInputs: true,
-        promptVersion: true,
-        responseContent: true,
-        tokensUsed: true,
-        duration: true,
-        timestamp: true,
-        isError: true,
-        errorMessage: true,
-        r2Url: true,
-        _count: {
+      include: {
+        originalCard: {
           select: {
-            editedCards: true
+            id: true,
+            cardType: true,
+            userInputs: true,
+            promptVersion: true,
+            responseContent: true,
+            tokensUsed: true,
+            duration: true,
+            timestamp: true,
+            isError: true,
+            errorMessage: true,
+            r2Url: true,
           }
         }
-      },
+      }
     });
 
-    // 转换数据格式
-    const formattedLogs = logs.map(log => ({
-      ...log,
-      usageCount: log._count.editedCards,
-      _count: undefined
-    }));
-
-    return NextResponse.json(formattedLogs);
+    return NextResponse.json(logs.map(card => ({
+      id: card.originalCard.id,
+      cardId: card.originalCardId,
+      cardType: card.cardType,
+      userInputs: card.originalCard.userInputs,
+      promptVersion: card.originalCard.promptVersion,
+      responseContent: card.originalCard.responseContent,
+      tokensUsed: card.originalCard.tokensUsed,
+      duration: card.originalCard.duration,
+      timestamp: card.originalCard.timestamp,
+      isError: card.originalCard.isError,
+      errorMessage: card.originalCard.errorMessage,
+      r2Url: card.r2Url,
+      createdAt: card.createdAt
+    })));
   } catch (error) {
     console.error('Error fetching daily details:', error);
     return NextResponse.json({ error: 'Failed to fetch daily details' }, { status: 500 });

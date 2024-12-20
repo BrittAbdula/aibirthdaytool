@@ -73,6 +73,52 @@ export function updateSvgContent(svgContent: string, updatedFields: Record<strin
   return new XMLSerializer().serializeToString(svgDoc)
 }
 
+// 缓存已加载的SVG内容
+const svgCache = new Map<string, string>()
+
+export async function fetchSvgContent(r2Url: string | null, fallbackContent: string): Promise<string> {
+  if (!r2Url) {
+    return fallbackContent
+  }
+
+  // 检查缓存
+  const cachedContent = svgCache.get(r2Url)
+  if (cachedContent) {
+    return cachedContent
+  }
+
+  try {
+    // 设置超时时间
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 5000) // 5秒超时
+
+    const response = await fetch(r2Url, {
+      signal: controller.signal,
+      headers: {
+        'Cache-Control': 'public, max-age=31536000', // 1年缓存
+      },
+    })
+    
+    clearTimeout(timeoutId)
+
+    if (!response.ok) {
+      console.error('Failed to fetch SVG from R2:', response.statusText)
+      return fallbackContent
+    }
+    
+    const svgContent = await response.text()
+    if (svgContent.includes('<svg')) {
+      // 存入缓存
+      svgCache.set(r2Url, svgContent)
+      return svgContent
+    }
+    return fallbackContent
+  } catch (error) {
+    console.error('Error fetching SVG from R2:', error)
+    return fallbackContent
+  }
+}
+
 export function extractSvgFromResponse(responseContent: string): string {
   const svgRegex = /<svg[\s\S]*?<\/svg>/i;
   const match = responseContent.match(svgRegex);

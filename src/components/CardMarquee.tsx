@@ -27,7 +27,7 @@ const CardItem = ({ card }: { card: Card }) => {
       <div className="bg-white rounded-lg shadow-md overflow-hidden">
         <a href={`/${card.cardType}/edit/${card.cardId}/`}>
           <img
-            src={`data:image/svg+xml;charset=utf-8,${encodeURIComponent(card.responseContent)}`}
+            src={card.r2Url || '/card/christmas.svg'}
             alt={`${card.cardType} card`}
             width={400}
             height={600}

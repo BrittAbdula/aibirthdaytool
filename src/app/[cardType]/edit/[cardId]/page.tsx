@@ -1,10 +1,10 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { extractEditableFields, updateSvgContent } from '@/lib/utils'
+import { extractEditableFields, updateSvgContent, cn, fetchSvgContent } from '@/lib/utils'
 import NextImage from 'next/image'
 import { DownloadIcon, CopyIcon, PaperPlaneIcon, TwitterLogoIcon, LinkedInLogoIcon, EnvelopeClosedIcon } from '@radix-ui/react-icons'
 import { useToast } from "@/hooks/use-toast"
@@ -14,6 +14,7 @@ import { EyeOpenIcon } from '@radix-ui/react-icons'
 import SpotifySearch from '@/components/SpotifySearch'
 import { CardType } from '@/lib/card-config'
 import { Switch } from '@/components/ui/switch'
+import { Skeleton } from "@/components/ui/skeleton"
 
 const IsMobileWrapper = dynamic(() => import('@/components/IsMobileWrapper'), { ssr: false })
 
@@ -28,33 +29,40 @@ export default function EditCard({ params }: { params: { cardId: string, cardTyp
   const [editedCardId, setEditedCardId] = useState('')
   const [selectedMusic, setSelectedMusic] = useState<{ id: string; name: string; artist: string } | null>(null)
   const [enableMusic, setEnableMusic] = useState(false)
+  const [isSending, setIsSending] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
   const { toast } = useToast()
 
   useEffect(() => {
     const fetchCardData = async () => {
+      setIsLoading(true)
       try {
         const response = await fetch(`/api/cards/${cardId}`)
         if (response.ok) {
           const data = await response.json()
-          setSvgContent(data.responseContent)
-          setOriginalContent(data.responseContent)
-          setEditableFields(extractEditableFields(data.responseContent))
-          updateImageSrc(data.responseContent)
+          const content = await fetchSvgContent(data.r2Url, data.responseContent)
+          setSvgContent(content)
+          setOriginalContent(content)
+          setEditableFields(extractEditableFields(content))
+          updateImageSrc(content)
         } else {
           console.error('Failed to fetch card data')
         }
       } catch (error) {
         console.error('Error fetching card data:', error)
+      } finally {
+        setIsLoading(false)
       }
     }
 
     fetchCardData()
   }, [cardId])
 
-  const updateImageSrc = (content: string) => {
+  const updateImageSrc = useCallback((content: string) => {
+    if (typeof window === 'undefined') return
     const dataUrl = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(content)}`
     setImageSrc(dataUrl)
-  }
+  }, [])
 
   const handleFieldChange = (fieldName: string, value: string) => {
     const updatedFields = { ...editableFields, [fieldName]: value }
@@ -128,13 +136,14 @@ export default function EditCard({ params }: { params: { cardId: string, cardTyp
   }
 
   const handleSend = async () => {
-    if (svgContent === originalContent) {
-      setShareLink(editedCardId ? `${window.location.origin}/to/${editedCardId}` : `${window.location.origin}/`)
-      setIsModalOpen(true)
-      return
-    }
-
+    setIsSending(true)
     try {
+      if (svgContent === originalContent) {
+        setShareLink(editedCardId ? `${window.location.origin}/to/${editedCardId}` : `${window.location.origin}/`)
+        setIsModalOpen(true)
+        return
+      }
+
       const response = await fetch('/api/edited-cards', {
         method: 'POST',
         headers: {
@@ -160,12 +169,13 @@ export default function EditCard({ params }: { params: { cardId: string, cardTyp
         throw new Error('Failed to save edited card')
       }
     } catch (error) {
-      console.error('Error saving edited card:', error)
+      console.error('Error sending card:', error)
       toast({
-        title: "Error",
-        description: "Failed to save edited card",
         variant: "destructive",
+        description: "Failed to send card. Please try again.",
       })
+    } finally {
+      setIsSending(false)
     }
   }
 
@@ -214,15 +224,23 @@ export default function EditCard({ params }: { params: { cardId: string, cardTyp
             <div className="relative group rounded-xl overflow-hidden">
               <div className="absolute -inset-1 bg-gradient-to-r from-pink-200 via-purple-200 to-pink-200 rounded-xl blur opacity-30 group-hover:opacity-50 transition duration-300"></div>
               <div className="relative border-2 border-pink-100 rounded-xl overflow-hidden">
-                {imageSrc && (
-                  <NextImage
-                    src={imageSrc}
-                    alt={`${cardType} card preview`}
-                    width={400}
-                    height={600}
-                    className="w-full h-auto transform transition-transform duration-300 group-hover:scale-[1.02]"
-                    priority
-                  />
+                {isLoading ? (
+                  <Skeleton className="w-full aspect-[2/3] rounded-lg" />
+                ) : (
+                  <div className="relative aspect-[2/3]">
+                    {imageSrc && (
+                      <NextImage
+                        src={imageSrc}
+                        alt={`${cardType} card preview`}
+                        width={400}
+                        height={600}
+                        className="w-full h-auto transform transition-transform duration-300 group-hover:scale-[1.02]"
+                        priority
+                        loading="eager"
+                        onLoadingComplete={() => setIsLoading(false)}
+                      />
+                    )}
+                  </div>
                 )}
               </div>
             </div>
@@ -315,10 +333,19 @@ export default function EditCard({ params }: { params: { cardId: string, cardTyp
               </IsMobileWrapper>
               <Button 
                 onClick={handleSend}
-                className="flex-1 bg-gradient-to-r from-pink-600 to-pink-700 text-white hover:opacity-90 shadow-md hover:shadow-lg transition-all duration-300"
+                disabled={isSending}
+                className={cn(
+                  "flex-1 text-white shadow-md hover:shadow-lg transition-all duration-300",
+                  isSending 
+                    ? "bg-pink-800 cursor-wait" 
+                    : "bg-gradient-to-r from-pink-600 to-pink-700 hover:opacity-90"
+                )}
               >
-                <PaperPlaneIcon className="mr-2 h-4 w-4" />
-                Send
+                <PaperPlaneIcon className={cn(
+                  "mr-2 h-4 w-4",
+                  isSending && "animate-spin"
+                )} />
+                {isSending ? "Sending..." : "Send"}
               </Button>
             </div>
           </div>

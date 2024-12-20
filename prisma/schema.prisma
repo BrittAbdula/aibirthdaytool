@@ -39,6 +39,7 @@ model Template {
   description    String
   previewSvg     String   @db.Text
   promptContent  String   @db.Text
+  r2Url             String?
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 }
@@ -59,6 +60,7 @@ model EditedCard {
   cardType        String
   editedContent   String   @db.Text
   spotifyTrackId  String?
+  r2Url           String?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
   originalCard    ApiLog   @relation("OriginalCard", fields: [originalCardId], references: [cardId])
