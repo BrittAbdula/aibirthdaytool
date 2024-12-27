@@ -7,6 +7,12 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum PlanType {
+  FREE
+  BASIC
+  PREMIUM
+}
+
 model ApiLog {
   id              Int          @id @default(autoincrement())
   cardId          String       @unique
@@ -35,7 +41,7 @@ model Template {
   description    String
   previewSvg     String   @db.Text
   promptContent  String   @db.Text
-  r2Url             String?
+  r2Url          String?
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 }
@@ -111,16 +117,16 @@ model User {
   id            String         @id @default(cuid())
   name          String?
   email         String?        @unique
-  emailVerified DateTime?      // 添加 NextAuth.js 所需的字段
-  image         String?        // 添加 NextAuth.js 所需的字段
+  emailVerified DateTime?
+  image         String?
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
-  accounts      Account[]      // 添加 NextAuth.js 关系
-  sessions      Session[]      // 添加 NextAuth.js 关系
+  accounts      Account[]
+  sessions      Session[]
   apiUsages     ApiUsage[]
   subscription  Subscription?
-  cards         ApiLog[]       // 添加卡片关系
-  plan          PlanType  @default(FREE)
+  cards         ApiLog[]
+  plan          PlanType       @default(FREE)
 }
 
 model ApiUsage {
@@ -144,10 +150,4 @@ model Subscription {
   createdAt DateTime  @default(now()) @db.Timestamp(6)
   updatedAt DateTime  @default(now()) @db.Timestamp(6)
   User      User      @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-}
-
-enum PlanType {
-  FREE
-  BASIC
-  PREMIUM
 }
