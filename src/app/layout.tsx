@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import { Playfair_Display } from "next/font/google";
 import "./globals.css";
-import Header from "@/components/Header";
+import { Header } from "@/components/Header";
 import Footer from "@/components/Footer";
 import '@/styles/globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import { GoogleAnalytics, GoogleTagManager } from '@next/third-parties/google'
+import { SessionProvider } from "next-auth/react"
 
 const playfair = Playfair_Display({ subsets: ["latin"] });
 
@@ -24,12 +25,14 @@ export default function RootLayout({
     <html lang="en">
       <GoogleTagManager gtmId="GTM-57P7BF4D" />
       <body className={`${playfair.className} text-[#4A4A4A]`}>
-        <div className="flex flex-col min-h-screen">
-          <Header />
-          <main className="flex-grow">{children}</main>
-          <Footer />
-          <Toaster />
-        </div>
+        <SessionProvider>
+          <div className="flex flex-col min-h-screen">
+            <Header />
+            <main className="flex-grow">{children}</main>
+            <Footer />
+            <Toaster />
+          </div>
+        </SessionProvider>
         <GoogleAnalytics gaId="G-TR8BTB7YVW" />
       </body>
     </html>

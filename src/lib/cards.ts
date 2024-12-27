@@ -43,6 +43,15 @@ async function fetchRecentCards(page: number, pageSize: number, wishCardType: st
       cardType: true,
       responseContent: true,
       r2Url: true,
+      userActions: {
+        select: {
+          action: true,
+          timestamp: true
+        },
+        orderBy: {
+          timestamp: 'desc'
+        }
+      }
     },
   });
 

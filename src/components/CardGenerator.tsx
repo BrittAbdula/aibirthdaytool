@@ -275,23 +275,6 @@ export default function CardGenerator({ wishCardType, initialCardId, initialSVG 
       )}
       <div className="flex flex-col lg:flex-row justify-center items-center gap-8 lg:gap-16">
         <Card className="p-4 sm:p-6 bg-white border border-[#FFC0CB] shadow-md w-full max-w-md relative">
-          {/* <CardHeader>
-            <CardTitle className="font-serif text-[#4A4A4A]">{cardConfig.title}</CardTitle>
-            <CardDescription className="text-[#4A4A4A]">Fill in your custom card details</CardDescription>
-            <div className="absolute top-2 right-2">
-              <Select value={currentCardType} onValueChange={handleCardTypeChange}>
-                <SelectTrigger className="w-[140px] h-8 text-sm bg-transparent border-none focus:ring-0 focus:ring-offset-0">
-                  <SelectValue />
-                  <ChevronDownIcon className="h-4 w-4 opacity-50" />
-                </SelectTrigger>
-                <SelectContent>
-                  {getAllCardTypes().map((cardType) => (
-                    <SelectItem key={cardType.type} value={cardType.type}>{cardType.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </CardHeader> */}
           <CardContent className="space-y-4">
             {cardConfig.fields.map((field) => renderField(field))}
             {showAdvancedOptions && cardConfig.advancedFields && (

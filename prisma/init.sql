@@ -1415,6 +1415,13 @@ alter table "EditedCard" add column "spotifyTrackId" text;
     select action,count(1) from "UserAction" group by action;
     select to_char(timestamp, 'YYYY-MM-DD') as dt,action,count(1) from "UserAction" group by 1,2 order by 1 desc;
 
+--- api
+select to_char(timestamp, 'YYYY-MM-DD') as dt,"cardType",count(1) 
+from "ApiLog" group by 1,2 order by 1 desc;
+
+select to_char(timestamp, 'YYYY-MM-DD') as dt,count(1) 
+from "ApiLog" group by 1 order by 1 desc;
+
 --- user action: copy, download, send
 select * from "UserAction" order by timestamp desc limit 11;
 

@@ -1,0 +1,126 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model ApiLog {
+  id                Int          @id @default(autoincrement())
+  cardId            String       @unique // 新增加密后的 cardId 字段
+  cardType          String
+  userInputs        Json
+  promptVersion     String
+  responseContent   String       @db.Text
+  tokensUsed        Int
+  duration          Int
+  timestamp         DateTime     @default(now())
+  isError           Boolean      @default(false)
+  errorMessage      String?      @db.Text
+  r2Url             String?
+  userId            String?      // 添加用户ID字段
+  user              User?        @relation(fields: [userId], references: [id]) // 关联到用户
+  userActions       UserAction[]
+  editedCards       EditedCard[] @relation("OriginalCard")
+}
+
+model Template {
+  id             String   @id @default(cuid())
+  cardId         String      @unique
+  cardType       String
+  promptVersion  String
+  name           String
+  description    String
+  previewSvg     String   @db.Text
+  promptContent  String   @db.Text
+  r2Url             String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model UserAction {
+  id        String   @id @default(cuid())
+  cardId    String
+  action    String
+  timestamp DateTime @default(now())
+  apiLog    ApiLog   @relation(fields: [cardId], references: [cardId])
+
+  @@index([cardId])
+}
+
+model EditedCard {
+  id              String   @id @default(cuid())
+  originalCardId  String
+  cardType        String
+  editedContent   String   @db.Text
+  spotifyTrackId  String?
+  r2Url           String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  originalCard    ApiLog   @relation("OriginalCard", fields: [originalCardId], references: [cardId])
+
+  @@index([originalCardId])
+}
+
+model SpotifyMusic {
+  id             String   @id @default(cuid())
+  cardType       String
+  spotifyId      String
+  name           String
+  artist         String
+  previewUrl     String?
+  imageUrl       String?
+  selectCount    Int      @default(0)
+  lastSelected   DateTime @default(now())
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@unique([cardType, spotifyId])
+  @@index([cardType, selectCount])
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  accounts      Account[]
+  sessions      Session[]
+  cards         ApiLog[]  // 关联用户创建的卡片
+}
