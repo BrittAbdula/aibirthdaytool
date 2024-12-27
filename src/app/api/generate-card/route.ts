@@ -1,19 +1,9 @@
 import { NextResponse } from 'next/server';
 import { generateCardContent } from '@/lib/gpt';
-import { getServerSession } from "next-auth/next"
-import { authOptions } from "../auth/[...nextauth]/route"
 export const maxDuration = 30; // This function can run for a maximum of 30 seconds
 export const dynamic = 'force-dynamic';
 
 export async function POST(request: Request) {
-  const session = await getServerSession(authOptions)
-  
-  if (!session) {
-    return new Response(JSON.stringify({ error: "Unauthorized" }), {
-      status: 401,
-      headers: { 'Content-Type': 'application/json' },
-    })
-  }
 
   try {
     const {
