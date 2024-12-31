@@ -1439,7 +1439,10 @@ select * from "EditedCard" order by "createdAt" desc limit 11;
 select 
     to_char("createdAt", 'YYYY-MM-DD') as dt,
     count("id") as cards,
-    count(distinct "originalCardId") as unique_originalCardId
+    count(distinct "originalCardId") as unique_originalCardId,
+    sum(case when "spotifyTrackId" is not null then 1 else 0 end) as spotify_tracks,
+    count(distinct "spotifyTrackId") as unique_spotifyTrackId,
+    round(100.0 * sum(case when "spotifyTrackId" is not null then 1 else 0 end)/count(1), 0)::text || '%' as spotify_tracks_ratio
 from "EditedCard" 
 group by to_char("createdAt", 'YYYY-MM-DD')
 order by dt desc;

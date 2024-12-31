@@ -51,9 +51,12 @@ model UserAction {
   cardId    String
   action    String
   timestamp DateTime @default(now())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id])
   apiLog    ApiLog   @relation(fields: [cardId], references: [cardId], onDelete: NoAction, onUpdate: NoAction)
 
   @@index([cardId])
+  @@index([userId])
 }
 
 model EditedCard {
@@ -126,6 +129,7 @@ model User {
   apiUsages     ApiUsage[]
   subscription  Subscription?
   cards         ApiLog[]
+  userActions   UserAction[]
   plan          PlanType       @default(FREE)
 }
 

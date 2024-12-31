@@ -68,3 +68,7 @@ CREATE TABLE "SpotifyMusic" (
 );
 CREATE UNIQUE INDEX IF NOT EXISTS "SpotifyMusic_cardType_spotifyId_key" ON "SpotifyMusic"("cardType", "spotifyId");
 CREATE INDEX IF NOT EXISTS "SpotifyMusic_cardType_selectCount_idx" ON "SpotifyMusic"("cardType", "selectCount");
+
+
+-- 创建 PlanType 枚举类型
+CREATE TYPE "PlanType" AS ENUM ('FREE', 'BASIC', 'PREMIUM');

@@ -78,6 +78,7 @@ function Header() {
           <Link href="/" className="text-[#4A4A4A] hover:text-[#FFC0CB] font-serif">Home</Link>
           <Link href="/cards/" className="text-[#4A4A4A] hover:text-[#FFC0CB] font-serif">Card Generators</Link>
             <Link href="/card-gallery/" className="text-[#4A4A4A] hover:text-[#FFC0CB] font-serif">Templates</Link>
+            <Link href="/my-cards/" className="text-[#4A4A4A] hover:text-[#FFC0CB] font-serif">My Cards</Link>
             {status === 'authenticated' && session ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -154,6 +155,7 @@ function Header() {
             <Link href="/" className="block py-2 px-4 w-full text-right text-[#4A4A4A] hover:text-[#FFC0CB] hover:bg-gray-50 font-serif">Home</Link>
             <Link href="/cards/" className="block py-2 px-4 w-full text-right text-[#4A4A4A] hover:text-[#FFC0CB] hover:bg-gray-50 font-serif">Card Generators</Link>
             <Link href="/card-gallery/" className="block py-2 px-4 w-full text-right text-[#4A4A4A] hover:text-[#FFC0CB] hover:bg-gray-50 font-serif">Templates</Link>
+            <Link href="/my-cards/" className="block py-2 px-4 w-full text-right text-[#4A4A4A] hover:text-[#FFC0CB] hover:bg-gray-50 font-serif">My Cards</Link>
             {status === 'authenticated' && session ? (
               <div className="p-4 border-t">
                 <div className="flex items-center justify-end space-x-2 mb-2">

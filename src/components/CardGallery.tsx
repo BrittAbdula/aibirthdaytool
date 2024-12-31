@@ -63,7 +63,7 @@ export default function CardGallery({ initialCardsData, wishCardType }: CardGall
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 px-4">
+      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-4">
         {cards.map((card) => (
           <div key={card.cardId} className="bg-purple-100 rounded-lg p-2 sm:p-4 transition-all duration-300 hover:shadow-lg">
             <div className="relative w-full pb-[133.33%] mb-2">
