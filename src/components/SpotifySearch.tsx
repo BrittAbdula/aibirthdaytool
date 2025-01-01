@@ -30,64 +30,64 @@ interface SpotifySearchProps {
 // 默认歌曲映射表
 const defaultSongs: Record<CardType, Song> = {
   birthday: {
-    id: "2pW5kNCx133MWWirxegvng",
+    id: "5cF0dROlMOK5uNZtivgu50",  // Happy Birthday Song
     name: "Happy Birthday Song",
     artist: "Traditional",
     previewUrl: null,
     imageUrl: null,
   },
   love: {
-    id: "2pW5kNCx133MWWirxegvng",
+    id: "4eHbdreAnSOrDDsFfc4Fpm",  // I Will Always Love You
     name: "I Will Always Love You",
     artist: "Whitney Houston",
     previewUrl: null,
     imageUrl: null,
   },
   congratulations: {
-    id: "2pW5kNCx133MWWirxegvng",
+    id: "6ceLJHWkvMM3oc0Ftodrdm",  // We Are The Champions
     name: "We Are the Champions",
     artist: "Queen",
     previewUrl: null,
     imageUrl: null,
   },
   thankyou: {
-    id: "2pW5kNCx133MWWirxegvng",
+    id: "751gBcu62kORDelX7FV0mM",  // Thank You
     name: "Thank You",
     artist: "Dido",
     previewUrl: null,
     imageUrl: null,
   },
   holiday: {
-    id: "2pW5kNCx133MWWirxegvng",
+    id: "3KkXRkHbMCARz0aVfEt68P",  // Sunflower
     name: "Sunflower",
     artist: "Post Malone, Swae Lee",
     previewUrl: null,
     imageUrl: null,
   },
   anniversary: {
-    id: "2pW5kNCx133MWWirxegvng",
+    id: "34gCuhDGsG4bRPIf9bb02f",  // Thinking Out Loud
     name: "Thinking Out Loud",
     artist: "Ed Sheeran",
     previewUrl: null,
     imageUrl: null,
   },
   sorry: {
-    id: "2pW5kNCx133MWWirxegvng",
+    id: "09CtPGIpYB4BrO8qb1RGsF",  // Sorry
     name: "Sorry",
     artist: "Justin Bieber",
     previewUrl: null,
     imageUrl: null,
   },
   christmas: {
-    id: "2pW5kNCx133MWWirxegvng",
+    id: "0bYg9bo50gSsH3LtXe2SQn",  // All I Want for Christmas Is You
     name: "All I Want for Christmas Is You",
     artist: "Mariah Carey",
     previewUrl: null,
     imageUrl: null,
   },
   newyear: {
-    id: "2pW5kNCx133MWWirxegvng",
-    name: "Happy New Year",
+    id: "6PzItyP53mqT5H0xsr50RK",  // Auld Lang Syne
+    name: "Auld Lang Syne",
     artist: "Various Artists",
     previewUrl: null,
     imageUrl: null,
