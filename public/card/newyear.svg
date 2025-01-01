@@ -1,67 +1,53 @@
 
-<svg width="800" height="600" viewBox="0 0 800 600" xmlns="http://www.w3.org/2000/svg">
-    <!-- Background with soft gradient -->
-    <defs>
-        <linearGradient id="bg-gradient" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" style="stop-color:#ffe6e6;stop-opacity:1" />
-            <stop offset="100%" style="stop-color:#fff0f0;stop-opacity:1" />
-        </linearGradient>
-        
-        <!-- Coffee cup path -->
-        <path id="coffee-path" d="M30,10 C30,10 0,10 0,40 L0,80 C0,110 30,110 30,110 L70,110 C70,110 100,110 100,80 L100,40 C100,10 70,10 70,10 Z" />
-        
-        <!-- Steam path -->
-        <path id="steam" d="M0,0 C5,-10 10,-5 10,-15 C10,-25 0,-20 0,-30" />
-    </defs>
+<svg width="400" height="600" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background with soft gradient -->
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#fff5eb;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#fce8d5;stop-opacity:1" />
+    </linearGradient>
+    <!-- Coffee steam path -->
+    <path id="steam" d="M0,0 Q5,-10 0,-20 Q-5,-10 0,0" fill="none" stroke="#8b7355" stroke-width="2" opacity="0.6">
+      <animate attributeName="d" dur="3s" repeatCount="indefinite"
+        values="M0,0 Q5,-10 0,-20 Q-5,-10 0,0;
+                M0,0 Q8,-12 0,-20 Q-8,-12 0,0;
+                M0,0 Q5,-10 0,-20 Q-5,-10 0,0"/>
+    </path>
+  </defs>
 
-    <!-- Background -->
-    <rect width="100%" height="100%" fill="url(#bg-gradient)" />
+  <!-- Main background -->
+  <rect width="400" height="600" fill="url(#bgGradient)" />
+  
+  <!-- Coffee cup -->
+  <g transform="translate(200,280)">
+    <ellipse cx="0" cy="0" rx="45" ry="15" fill="#8b7355" />
+    <path d="M-45,0 Q-45,-60 0,-60 Q45,-60 45,0" fill="none" stroke="#8b7355" stroke-width="4"/>
+    <!-- Handle -->
+    <path d="M35,-30 Q55,-30 55,-15 Q55,0 35,0" fill="none" stroke="#8b7355" stroke-width="4"/>
+    <!-- Steam effects -->
+    <use href="#steam" transform="translate(-20,-58)" />
+    <use href="#steam" transform="translate(0,-62)" />
+    <use href="#steam" transform="translate(20,-58)" />
+  </g>
 
-    <!-- Decorative elements -->
-    <g transform="translate(350,180) scale(0.8)">
-        <!-- Coffee cup -->
-        <g transform="translate(0,0)">
-            <use href="#coffee-path" fill="#fff" stroke="#d4a373" stroke-width="4"/>
-            <!-- Handle -->
-            <path d="M100,50 C120,50 120,80 100,80" fill="none" stroke="#d4a373" stroke-width="4"/>
-            <!-- Steam -->
-            <g transform="translate(30,5)">
-                <use href="#steam" stroke="#d4a373" stroke-width="2" fill="none">
-                    <animateTransform attributeName="transform" type="translate" values="0 0; 0 -5; 0 0" dur="3s" repeatCount="indefinite"/>
-                </use>
-                <use href="#steam" transform="translate(20,0)" stroke="#d4a373" stroke-width="2" fill="none">
-                    <animateTransform attributeName="transform" type="translate" values="0 0; 0 -7; 0 0" dur="4s" repeatCount="indefinite"/>
-                </use>
-                <use href="#steam" transform="translate(40,0)" stroke="#d4a373" stroke-width="2" fill="none">
-                    <animateTransform attributeName="transform" type="translate" values="0 0; 0 -4; 0 0" dur="3.5s" repeatCount="indefinite"/>
-                </use>
-            </g>
-        </g>
-    </g>
+  <!-- Text elements -->
+  <text x="200" y="120" text-anchor="middle" font-family="Brush Script MT, cursive" font-size="40" fill="#8b7355">
+    Dear Judy
+  </text>
+  
+  <text x="200" y="380" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" fill="#6d5744" width="300">
+    <tspan x="200" dy="0">Every morning starts better</tspan>
+    <tspan x="200" dy="25">with you and a cup of coffee.</tspan>
+  </text>
 
-    <!-- Text elements -->
-    <text x="400" y="100" text-anchor="middle" font-family="Brush Script MT, cursive" font-size="48" fill="#d4a373">
-        Dear Judy
-    </text>
-    
-    <text x="400" y="350" text-anchor="middle" font-family="Arial, sans-serif" font-size="24" fill="#6b705c" style="max-width: 500px">
-        <tspan x="400" dy="0">Every morning starts better</tspan>
-        <tspan x="400" dy="35">with you and a cup of coffee.</tspan>
-    </text>
+  <!-- Signature -->
+  <text x="200" y="480" text-anchor="middle" font-family="Brush Script MT, cursive" font-size="32" fill="#8b7355">
+    Love, leaf
+  </text>
 
-    <text x="400" y="500" text-anchor="middle" font-family="Brush Script MT, cursive" font-size="36" fill="#d4a373">
-        Love, leaf
-    </text>
-
-    <!-- Hearts decoration -->
-    <g transform="translate(300,440)">
-        <path d="M10,30 A20,20,0,0,1,50,30 A20,20,0,0,1,90,30 Q90,60,50,90 Q10,60,10,30 Z" fill="#ffb5a7" opacity="0.6">
-            <animate attributeName="opacity" values="0.6;0.3;0.6" dur="2s" repeatCount="indefinite"/>
-        </path>
-    </g>
-    <g transform="translate(450,440)">
-        <path d="M10,30 A20,20,0,0,1,50,30 A20,20,0,0,1,90,30 Q90,60,50,90 Q10,60,10,30 Z" fill="#ffb5a7" opacity="0.6">
-            <animate attributeName="opacity" values="0.3;0.6;0.3" dur="2s" repeatCount="indefinite"/>
-        </path>
-    </g>
+  <!-- Decorative hearts -->
+  <g fill="#d4a788" opacity="0.6">
+    <path d="M150,440 q-7.5-15-15,0t15,15t15-15t-15,0" />
+    <path d="M250,440 q-7.5-15-15,0t15,15t15-15t-15,0" />
+  </g>
 </svg>
