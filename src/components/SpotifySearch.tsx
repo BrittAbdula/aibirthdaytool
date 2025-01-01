@@ -85,6 +85,13 @@ const defaultSongs: Record<CardType, Song> = {
     previewUrl: null,
     imageUrl: null,
   },
+  newyear: {
+    id: "2pW5kNCx133MWWirxegvng",
+    name: "Happy New Year",
+    artist: "Various Artists",
+    previewUrl: null,
+    imageUrl: null,
+  },
 }
 
 export default function SpotifySearch({ cardType, onSelect }: SpotifySearchProps) {
