@@ -1,9 +1,15 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { uploadSvgToR2 } from '@/lib/r2'
+import { auth } from '@/auth'
 
 export async function POST(request: Request) {
   try {
+    const session = await auth()
+    if (!session?.user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
     const { editedCardId, cardType, originalCardId, editedContent, spotifyTrackId } = await request.json()
     console.log('-------------:', editedCardId, cardType, originalCardId, editedContent, spotifyTrackId)
 
@@ -19,6 +25,7 @@ export async function POST(request: Request) {
           editedContent,
           spotifyTrackId,
           r2Url,
+          userId: session.user.id,
         },
       })
       return NextResponse.json({ id: editedCardId }, { status: 200 })
@@ -37,6 +44,7 @@ export async function POST(request: Request) {
           editedContent,
           spotifyTrackId,
           r2Url,
+          userId: session.user.id,
           createdAt,
         },
       })
@@ -45,5 +53,44 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error('Error saving edited card:', error)
     return NextResponse.json({ error: 'Failed to save edited card' }, { status: 500 })
+  }
+}
+
+export async function GET(request: Request) {
+  try {
+    const session = await auth()
+    if (!session?.user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const { searchParams } = new URL(request.url)
+    const page = parseInt(searchParams.get('page') || '1')
+    const pageSize = parseInt(searchParams.get('pageSize') || '12')
+    const skip = (page - 1) * pageSize
+
+    const cards = await prisma.editedCard.findMany({
+      where: {
+        userId: session.user.id
+      },
+      orderBy: {
+        createdAt: 'desc'
+      },
+      skip,
+      take: pageSize,
+    })
+
+    const total = await prisma.editedCard.count({
+      where: {
+        userId: session.user.id
+      }
+    })
+
+    return NextResponse.json({
+      cards,
+      totalPages: Math.ceil(total / pageSize)
+    })
+  } catch (error) {
+    console.error('Error fetching edited cards:', error)
+    return NextResponse.json({ error: 'Failed to fetch edited cards' }, { status: 500 })
   }
 }

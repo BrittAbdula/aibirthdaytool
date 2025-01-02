@@ -66,11 +66,14 @@ model EditedCard {
   editedContent  String
   spotifyTrackId String?
   r2Url          String?
+  userId         String?
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
   originalCard   ApiLog   @relation("OriginalCard", fields: [originalCardId], references: [cardId], onDelete: NoAction, onUpdate: NoAction)
+  user           User?    @relation(fields: [userId], references: [id])
 
   @@index([originalCardId])
+  @@index([userId])
 }
 
 model SpotifyMusic {
@@ -130,6 +133,7 @@ model User {
   subscription  Subscription?
   cards         ApiLog[]
   userActions   UserAction[]
+  editedCards   EditedCard[]
   plan          PlanType       @default(FREE)
 }
 

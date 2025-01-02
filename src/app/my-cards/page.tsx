@@ -1,9 +1,10 @@
 import { auth } from '@/auth'
 import { redirect } from 'next/navigation'
-import {prisma} from '@/lib/prisma'
-import CardGallery from '@/app/card-gallery/CardGallery'
+import { prisma } from '@/lib/prisma'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
+import Image from 'next/image'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 export default async function MyCardsPage() {
   const session = await auth()
@@ -28,49 +29,104 @@ export default async function MyCardsPage() {
     )
   }
 
-  const [cards, totalPages] = await Promise.all([
+  const [generatedCards, sentCards] = await Promise.all([
     prisma.apiLog.findMany({
       where: {
-        userActions: {
-          some: {
-            action: 'send',
-            userId: session.user.id
-          }
-        }
+        userId: session.user.id
       },
       orderBy: {
         timestamp: 'desc'
       },
       take: 12,
     }),
-    prisma.apiLog.count({
+    prisma.editedCard.findMany({
       where: {
-        userActions: {
-          some: {
-            action: 'send',
-            userId: session.user.id
-          }
-        }
-      }
-    }).then(total => Math.ceil(total / 12))
+        userId: session.user.id,
+      },
+      orderBy: {
+        createdAt: 'desc'
+      },
+      take: 12,
+    })
   ])
 
   return (
-    <div className="min-h-screen py-8">
+    <div className="min-h-screen bg-gradient-to-b from-white via-purple-50 to-white py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-2xl font-bold">My Sent Cards</h1>
-          <span className="text-sm text-gray-500">
-            Total: {cards.length} cards
-          </span>
-        </div>
-        <CardGallery 
-          initialCardsData={{
-            cards,
-            totalPages
-          }}
-          wishCardType={null}
-        />
+        <h1 className="text-2xl font-bold text-gray-900 mb-6">My Cards</h1>
+        
+        <Tabs defaultValue="sent" className="w-full">
+          <TabsList className="grid w-full max-w-md grid-cols-2 mb-8">
+            <TabsTrigger value="sent" className="text-sm sm:text-base">
+              Sent Cards ({sentCards.length})
+            </TabsTrigger>
+            <TabsTrigger value="generated" className="text-sm sm:text-base">
+              Generated Cards ({generatedCards.length})
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="sent">
+            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+              {sentCards.map((card) => (
+                <Link
+                  key={card.id}
+                  href={`/to/${card.id}`}
+                  className="group relative aspect-[3/4] rounded-2xl overflow-hidden bg-white shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
+                >
+                  {card.r2Url && (
+                    <Image
+                      src={card.r2Url}
+                      alt="Card"
+                      fill
+                      className="object-cover transition-transform duration-300 group-hover:scale-105"
+                      sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, 25vw"
+                    />
+                  )}
+                  <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-opacity duration-300" />
+                </Link>
+              ))}
+            </div>
+            {sentCards.length === 0 && (
+              <div className="text-center py-12">
+                <p className="text-gray-500">No sent cards yet. Create and send your first card!</p>
+                <Button asChild className="mt-4 bg-purple-600 hover:bg-purple-700">
+                  <Link href="/cards/">Create New Card</Link>
+                </Button>
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="generated">
+            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+              {generatedCards.map((card) => (
+                <Link
+                  key={card.id}
+                  href={`/${card.cardType}/edit/${card.cardId}`}
+                  className="group relative aspect-[3/4] rounded-2xl overflow-hidden bg-white shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
+                >
+                  {card.r2Url && (
+                    <Image
+                      src={card.r2Url}
+                      alt="Card"
+                      fill
+                      className="object-cover transition-transform duration-300 group-hover:scale-105"
+                      sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, 25vw"
+                    />
+                  )}
+                  <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-opacity duration-300" />
+                </Link>
+              ))}
+            </div>
+            {generatedCards.length === 0 && (
+              <div className="text-center py-12">
+                <p className="text-gray-500">No generated cards yet. Start creating!</p>
+                <Button asChild className="mt-4 bg-purple-600 hover:bg-purple-700">
+                  <Link href="/cards/">Create New Card</Link>
+                </Button>
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   )

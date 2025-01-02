@@ -69,6 +69,7 @@ export async function POST(request: Request) {
 
     // Combine all fields into a single object
     const cardData = {
+      userId,
       cardType,
       recipientName,
       relationship,

@@ -24,6 +24,7 @@ function extractSvgContent(content: string): string | null {
 }
 
 interface ApiLogParams {
+    userId: string;
     cardId: string;
     cardType: CardType;
     userInputs: Record<string, any>;
@@ -53,6 +54,7 @@ async function logApiRequest(params: ApiLogParams) {
         // Create API log entry
         await prisma.apiLog.create({
             data: {
+                userId: params.userId,
                 cardId: params.cardId,
                 cardType: params.cardType,
                 userInputs: params.userInputs,
@@ -79,7 +81,7 @@ interface CardContentParams {
 }
 
 export async function generateCardContent(params: CardContentParams): Promise<{ svgContent: string, cardId: string }> {
-    const { cardType, version, templateId, ...otherParams } = params;
+    const { userId,cardType, version, templateId, ...otherParams } = params;
     const cardId = nanoid(10);
     const startTime = Date.now();
 
@@ -100,6 +102,7 @@ export async function generateCardContent(params: CardContentParams): Promise<{ 
         // Check prompt length
         if (userPrompt.length >= 800) {
             await logApiRequest({
+                userId,
                 cardId,
                 cardType,
                 userInputs: otherParams,
@@ -154,6 +157,7 @@ export async function generateCardContent(params: CardContentParams): Promise<{ 
 
         // Log the request
         await logApiRequest({
+            userId,
             cardId,
             cardType,
             userInputs: otherParams,
@@ -173,6 +177,7 @@ export async function generateCardContent(params: CardContentParams): Promise<{ 
     } catch (error) {
         // Log error
         await logApiRequest({
+            userId,
             cardId,
             cardType,
             userInputs: otherParams,
