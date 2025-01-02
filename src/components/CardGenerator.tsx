@@ -15,6 +15,9 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { ImageViewer } from '@/components/ImageViewer'
 import { extractTextFromSvg } from '@/lib/utils'
 import { CardType, getCardConfig, getAllCardTypes, CardConfig } from '@/lib/card-config'
+import { useSession, signIn } from "next-auth/react"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Loader2 } from 'lucide-react'
 
 const FlickeringGrid = () => {
   return (
@@ -89,11 +92,16 @@ const ProgressBar = ({ progress }: { progress: number }) => (
 );
 
 export default function CardGenerator({ wishCardType, initialCardId, initialSVG }: { wishCardType: CardType, initialCardId: string, initialSVG: string }) {
+  const { data: session, status } = useSession()
+  const [usageCount, setUsageCount] = useState<number>(0)
+  const [showAuthDialog, setShowAuthDialog] = useState(false)
+  const [showLimitDialog, setShowLimitDialog] = useState(false)
   const [currentCardType, setCurrentCardType] = useState<CardType>(wishCardType)
   const [formData, setFormData] = useState<Record<string, any>>({})
   const [svgContent, setSvgContent] = useState<string | null>(initialSVG)
   const [cardId, setCardId] = useState<string | null>(initialCardId)
   const [isLoading, setIsLoading] = useState(false)
+  const [isAuthLoading, setIsAuthLoading] = useState(false)
   const [showAdvancedOptions, setShowAdvancedOptions] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
@@ -148,49 +156,58 @@ export default function CardGenerator({ wishCardType, initialCardId, initialSVG 
     router.push(`/${newCardType}/`)
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    setProgress(0)
-    setSubmited(true)
-    e.preventDefault()
-    setIsLoading(true)
-    setSvgContent(null)
-    setCardId(null)
-    setError(null)
+  const handleGenerateCard = async () => {
+    if (!session) {
+      setShowAuthDialog(true)
+      return
+    }
+
     try {
+      setIsLoading(true)
+      setProgress(0)
+      setError(null)
+
       const response = await fetch('/api/generate-card', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           cardType: currentCardType,
           ...formData
         }),
-      });
+      })
+
+      const data = await response.json()
 
       if (!response.ok) {
-        throw new Error('Failed to generate card, Please use the template to coustom your card');
+        if (response.status === 429) {
+          setShowLimitDialog(true)
+          return
+        }
+        throw new Error('Failed to generate card, Please use the template to custom your card')
       }
 
-      const data = await response.json();
-      if (data.svgContent) {
-        setSvgContent(data.svgContent);
-        setCardId(data.cardId); 
-        confetti({
-          particleCount: 100,
-          spread: 70,
-          origin: { y: 0.6 }
-        });
-      } else {
-        throw new Error('No SVG content received');
-      }
-    } catch (error) {
-      console.error("Error generating card:", error)
-      setSvgContent(null)
-      setCardId(null)
-      setError(error instanceof Error ? error.message : 'error')
+      setSvgContent(data.svgContent)
+      setCardId(data.cardId)
+      setSubmited(true)
+      confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.6 }
+      })
+    } catch (err) {
+      setError('Failed to generate card. Please try again.')
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  const handleLogin = async () => {
+    try {
+      setIsAuthLoading(true)
+      await signIn('google', { callbackUrl: window.location.href })
+    } catch (error) {
+      console.error('Login failed:', error)
+      setIsAuthLoading(false)
     }
   }
 
@@ -267,76 +284,143 @@ export default function CardGenerator({ wishCardType, initialCardId, initialSVG 
   }
 
   return (
-    <main className=" mx-auto ">
-      {error && (
-        <Alert variant="destructive" className="mb-4">
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      )}
-      <div className="flex flex-col lg:flex-row justify-center items-center gap-8 lg:gap-16">
-        <Card className="p-4 sm:p-6 bg-white border border-[#FFC0CB] shadow-md w-full max-w-md relative">
-          <CardContent className="space-y-4">
-            {cardConfig.fields.map((field) => renderField(field))}
-            {showAdvancedOptions && cardConfig.advancedFields && (
-              <>
-                {cardConfig.advancedFields.map((field) => renderField(field))}
-              </>
-            )}
-            {cardConfig.advancedFields && cardConfig.advancedFields.length > 0 && (
-              <div className="flex justify-end">
-                <button
-                  className="text-[#FFC0CB] hover:text-[#FFD1DC] focus:outline-none"
-                  onClick={() => setShowAdvancedOptions(!showAdvancedOptions)}
-                >
-                  {showAdvancedOptions ? (
-                    <ChevronUpIcon className="w-6 h-6" />
+    <>
+      <main className=" mx-auto ">
+        {error && (
+          <Alert variant="destructive" className="mb-4">
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
+        <div className="flex flex-col lg:flex-row justify-center items-center gap-8 lg:gap-16">
+          <Card className="p-4 sm:p-6 bg-white border border-[#FFC0CB] shadow-md w-full max-w-md relative">
+            <CardContent className="space-y-4">
+              {cardConfig.fields.map((field) => renderField(field))}
+              {showAdvancedOptions && cardConfig.advancedFields && (
+                <>
+                  {cardConfig.advancedFields.map((field) => renderField(field))}
+                </>
+              )}
+              {cardConfig.advancedFields && cardConfig.advancedFields.length > 0 && (
+                <div className="flex justify-end">
+                  <button
+                    className="text-[#FFC0CB] hover:text-[#FFD1DC] focus:outline-none"
+                    onClick={() => setShowAdvancedOptions(!showAdvancedOptions)}
+                  >
+                    {showAdvancedOptions ? (
+                      <ChevronUpIcon className="w-6 h-6" />
+                    ) : (
+                      <ChevronDownIcon className="w-6 h-6" />
+                    )}
+                  </button>
+                </div>
+              )}
+            </CardContent>
+            <CardFooter>
+              <Button className="w-full bg-[#FFC0CB] text-[#4A4A4A] hover:bg-[#FFD1DC]" onClick={handleGenerateCard} disabled={isLoading}>
+                {isLoading ? 'Generating...' : 'Generate Card'}
+              </Button>
+            </CardFooter>
+          </Card>
+
+          <div className="flex flex-col lg:flex-row items-center justify-center my-4 lg:my-0">
+            <svg className="w-12 h-12 lg:w-16 lg:h-16 text-[#b19bff] transform rotate-90 lg:rotate-0" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M4 12H20M20 12L14 6M20 12L14 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </div>
+
+          <div className="w-full max-w-md">
+          {isLoading && <ProgressBar progress={progress} />}
+            <div className="bg-white p-3 sm:p-5 rounded-lg shadow-lg flex items-center justify-center relative border border-[#FFC0CB] aspect-[2/3]">
+              {isLoading ? (
+                <FlickeringGrid />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center overflow-hidden">
+                  {svgContent && submited ? (
+                    <ImageViewer svgContent={svgContent} alt={extractTextFromSvg(svgContent || 'Generated Card')} cardId={cardId || '1'} cardType={currentCardType} isNewCard={true} />
                   ) : (
-                    <ChevronDownIcon className="w-6 h-6" />
+                    <div className="w-full h-full relative">
+                      <a href='/card-gallery/'>
+                      <Image
+                        src={sampleCard}
+                        alt={`Default ${wishCardType} Card`}
+                        layout="fill"
+                        objectFit="contain"
+                        priority
+                      />
+                      </a>
+                    </div>
                   )}
-                </button>
-              </div>
-            )}
-          </CardContent>
-          <CardFooter>
-            <Button className="w-full bg-[#FFC0CB] text-[#4A4A4A] hover:bg-[#FFD1DC]" onClick={handleSubmit} disabled={isLoading}>
-              {isLoading ? 'Generating...' : 'Generate Card'}
-            </Button>
-          </CardFooter>
-        </Card>
-
-        <div className="flex flex-col lg:flex-row items-center justify-center my-4 lg:my-0">
-          <svg className="w-12 h-12 lg:w-16 lg:h-16 text-[#b19bff] transform rotate-90 lg:rotate-0" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M4 12H20M20 12L14 6M20 12L14 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        </div>
-
-        <div className="w-full max-w-md">
-        {isLoading && <ProgressBar progress={progress} />}
-          <div className="bg-white p-3 sm:p-5 rounded-lg shadow-lg flex items-center justify-center relative border border-[#FFC0CB] aspect-[2/3]">
-            {isLoading ? (
-              <FlickeringGrid />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center overflow-hidden">
-                {svgContent && submited ? (
-                  <ImageViewer svgContent={svgContent} alt={extractTextFromSvg(svgContent || 'Generated Card')} cardId={cardId || '1'} cardType={currentCardType} isNewCard={true} />
-                ) : (
-                  <div className="w-full h-full relative">
-                    <a href='/card-gallery/'>
-                    <Image
-                      src={sampleCard}
-                      alt={`Default ${wishCardType} Card`}
-                      layout="fill"
-                      objectFit="contain"
-                      priority
-                    />
-                    </a>
-                  </div>
-                )}
-              </div>
-            )}
+                </div>
+              )}
+            </div>
           </div>
         </div>
-      </div>
-    </main>
+      </main>
+
+      <Dialog open={showAuthDialog} onOpenChange={setShowAuthDialog}>
+        <DialogContent className="border border-[#FFC0CB] shadow-lg">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-semibold text-[#4A4A4A]">Sign in Required</DialogTitle>
+            <DialogDescription className="text-gray-600 mt-2">
+              Please sign in with Google to generate your card. 
+              Alternatively, you can browse our <a href="/card-gallery/" className="text-[#FFC0CB] hover:text-[#FFD1DC] hover:underline transition-colors">Card Templates</a> to use existing templates.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end space-x-4 mt-6">
+            <Button 
+              variant="outline" 
+              onClick={() => router.push('/card-gallery/')}
+              className="border-[#FFC0CB] text-[#4A4A4A] hover:bg-[#FFF5F6] hover:text-[#4A4A4A]"
+            >
+              View Templates
+            </Button>
+            <Button 
+              onClick={handleLogin}
+              disabled={isAuthLoading}
+              className="bg-[#FFC0CB] text-[#4A4A4A] hover:bg-[#FFD1DC] transition-colors relative"
+            >
+              {isAuthLoading ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  Signing in...
+                </>
+              ) : (
+                'Sign in with Google'
+              )}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showLimitDialog} onOpenChange={setShowLimitDialog}>
+        <DialogContent className="border border-[#FFC0CB] shadow-lg max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-semibold text-[#4A4A4A]">Daily Limit Reached</DialogTitle>
+            <DialogDescription className="text-gray-600 mt-2 space-y-4">
+              <p>You&apos;ve reached your daily limit for card generation. Free users can generate up to 3 cards per day.</p>
+              <div className="bg-[#FFF5F6] p-4 rounded-lg border border-[#FFC0CB]">
+                <p className="text-[#4A4A4A] font-medium">Don&apos;t worry! You can still create beautiful cards by:</p>
+                <ul className="list-disc list-inside mt-2 space-y-1 text-[#4A4A4A]">
+                  <li>Using our pre-made templates</li>
+                  <li>Customizing existing designs</li>
+                  <li>Saving your favorites for later</li>
+                </ul>
+              </div>
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end space-x-4 mt-6">
+            <Button 
+              onClick={() => {
+                setShowLimitDialog(false)
+                router.push('/card-gallery/')
+              }}
+              className="bg-[#FFC0CB] text-[#4A4A4A] hover:bg-[#FFD1DC] transition-colors w-full"
+            >
+              Browse Card Templates
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   )
 }
