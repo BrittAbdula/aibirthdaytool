@@ -7,6 +7,7 @@ import '@/styles/globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import { GoogleAnalytics, GoogleTagManager } from '@next/third-parties/google'
 import { SessionProvider } from "next-auth/react"
+import GoogleAdsense from "@/components/GoogleAdsense";
 
 const playfair = Playfair_Display({ subsets: ["latin"] });
 
@@ -23,6 +24,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+      <GoogleAdsense />
+      </head>
       <GoogleTagManager gtmId="GTM-57P7BF4D" />
       <body className={`${playfair.className} text-[#4A4A4A]`}>
         <SessionProvider>
