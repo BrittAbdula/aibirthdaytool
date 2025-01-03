@@ -6,9 +6,7 @@ import { auth } from '@/auth'
 export async function POST(request: Request) {
   try {
     const session = await auth()
-    if (!session?.user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    const userId = session?.user?.id || null
 
     const { editedCardId, cardType, originalCardId, editedContent, spotifyTrackId } = await request.json()
     console.log('-------------:', editedCardId, cardType, originalCardId, editedContent, spotifyTrackId)
@@ -25,7 +23,7 @@ export async function POST(request: Request) {
           editedContent,
           spotifyTrackId,
           r2Url,
-          userId: session.user.id,
+          userId,
         },
       })
       return NextResponse.json({ id: editedCardId }, { status: 200 })
@@ -44,7 +42,7 @@ export async function POST(request: Request) {
           editedContent,
           spotifyTrackId,
           r2Url,
-          userId: session.user.id,
+          userId,
           createdAt,
         },
       })
@@ -60,7 +58,7 @@ export async function GET(request: Request) {
   try {
     const session = await auth()
     if (!session?.user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return NextResponse.json({ cards: [], totalPages: 0 }, { status: 200 })
     }
 
     const { searchParams } = new URL(request.url)
