@@ -56,6 +56,16 @@ const trendingCards: TrendingCard[] = [
       title: 'Holiday Card',
       link: '/holiday/'
     },
+    {
+      image: '/card/teacher.svg',
+      title: 'Teacher Card',
+      link: '/teacher/'
+    },
+    {
+      image: '/card/graduation.svg',
+      title: 'Graduation Card',
+      link: '/graduation/'
+    },
 ]
 
 export const TrendingCards = () => {

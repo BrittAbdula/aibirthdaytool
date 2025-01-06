@@ -1,4 +1,4 @@
-export type CardType = "birthday" | "love" | "congratulations" | "thankyou" | "holiday" | "anniversary" | "sorry" | "christmas" | "newyear" ;
+export type CardType = "birthday" | "love" | "congratulations" | "thankyou" | "holiday" | "anniversary" | "sorry" | "christmas" | "newyear" | "teacher" | "graduation";
 
 interface Field {
   name: string;
@@ -32,6 +32,9 @@ const relationshipOptions = [
   "Sister",
   "Daughter",
   "Grandparent",
+  "Student",
+  "Classmate",
+  "Son",
   "Other"
 ];
 
@@ -155,6 +158,27 @@ const cardConfigs: Record<CardType, CardConfig> = {
       { name: "senderName", type: "text", label: "Your Name (optional)", optional: true },
     ],
   },
+  teacher: {
+    title: "Teacher Card Generator",
+    label: "Teacher Card",
+    fields: [
+      { name: "recipientName", type: "text", label: "Recipient's Name", optional: false },
+      { name: "relationship", type: "select", label: "Relationship", options: relationshipOptions, optional: false, defaultValue: "Student" },
+      { name: "message", type: "textarea", label: "Wishes (optional)", optional: true },
+      { name: "senderName", type: "text", label: "Your Name (optional)", optional: true },
+    ],
+  },
+  graduation: {
+    title: "Graduation Card Generator",
+    label: "Graduation Card",
+    fields: [
+      { name: "recipientName", type: "text", label: "Recipient's Name", optional: false },
+      { name: "relationship", type: "select", label: "Relationship", options: relationshipOptions, optional: false, defaultValue: "Classmate" },
+      { name: "message", type: "textarea", label: "Graduation Wishes (optional)", optional: true },
+      { name: "senderName", type: "text", label: "Your Name (optional)", optional: true },
+    ],
+  },
+  
 };
 
 export function getCardConfig(cardType: CardType): CardConfig | undefined {

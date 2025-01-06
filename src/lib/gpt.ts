@@ -7,6 +7,7 @@ import { uploadSvgToR2 } from './r2';
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
 const YOUR_SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'http://MewTruCard.COM';
 const YOUR_SITE_NAME = 'MewTruCard';
+const defaultPrompt = ``
 
 // Helper function to escape content
 function escapeContent(content: string): string {
@@ -85,20 +86,30 @@ export async function generateCardContent(params: CardContentParams): Promise<{ 
     const { userId, cardType, version, templateId, ...otherParams } = params;
     const cardId = nanoid(10);
     const startTime = Date.now();
+    const formattedTime = new Date(startTime).toLocaleString('zh-CN', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false
+    }).replace(/\//g, '-');
 
     try {
         // Validate template
         const template = await getTemplateByCardType(cardType);
+        // console.log('<----template : ' + template + '---->')
         if (!template) {
             throw new Error(`No template found for id: ${templateId}`);
         }
         console.log('<----Template templateId : ' + template.id + '---->')
 
         // Prepare user prompt
-        const userPrompt = Object.entries(otherParams)
+        const userPrompt = Object.entries({...otherParams, currentTime: formattedTime})
             .filter(([_, value]) => value !== '' && value !== undefined)
             .map(([key, value]) => `${key}: ${value}`)
             .join('\n');
+        // console.log('<----User prompt : ' + userPrompt + '---->')
 
         // Check prompt length
         if (userPrompt.length >= 800) {
