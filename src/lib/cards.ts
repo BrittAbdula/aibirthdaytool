@@ -11,23 +11,39 @@ export interface Card {
 
 // 服务端渲染使用的函数，带有缓存
 export const getRecentCardsServer = unstable_cache(
-  async (page: number, pageSize: number, wishCardType: string|null): Promise<{ cards: Card[], totalPages: number }> => {
-    return fetchRecentCards(page, pageSize, wishCardType);
+  async (page: number, pageSize: number, wishCardType: string|null, relationship: string|null = null) => {
+    return fetchRecentCards(page, pageSize, wishCardType, relationship);
   },
   ['recent-cards-server'],
   { revalidate: 300 }
 );
 
 // 客户端使用的函数，不使用缓存
-export async function getRecentCardsClient(page: number, pageSize: number, wishCardType: string|null): Promise<{ cards: Card[], totalPages: number }> {
-  return fetchRecentCards(page, pageSize, wishCardType);
+export async function getRecentCardsClient(
+  page: number, 
+  pageSize: number, 
+  wishCardType: string|null,
+  relationship: string|null = null
+): Promise<{ cards: Card[], totalPages: number }> {
+  return fetchRecentCards(page, pageSize, wishCardType, relationship);
 }
 
 // 实际获取卡片的函数
-async function fetchRecentCards(page: number, pageSize: number, wishCardType: string|null): Promise<{ cards: Card[], totalPages: number }> {
+async function fetchRecentCards(
+  page: number, 
+  pageSize: number, 
+  wishCardType: string|null,
+  relationship: string|null = null
+): Promise<{ cards: Card[], totalPages: number }> {
   const where = {
     isError: false,
     ...(wishCardType ? { cardType: wishCardType } : {}),
+    ...(relationship ? {
+      userInputs: {
+        path: ['relationship'],
+        equals: relationship
+      }
+    } : {})
   };
 
   const totalCards = await prisma.apiLog.count({ where });

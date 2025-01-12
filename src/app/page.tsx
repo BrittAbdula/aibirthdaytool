@@ -95,6 +95,11 @@ export default async function Home() {
 
             <HowToUse />
 
+            <div className="mb-8 items-center flex justify-center">
+            <button className="bg-[#FFC0CB] text-white px-8 py-3 rounded-full hover:bg-pink-400 transition">
+              <a href="/cards">Create Your MewtruCard</a>
+            </button>
+          </div>
             <FAQ />
           </div>
         </div>

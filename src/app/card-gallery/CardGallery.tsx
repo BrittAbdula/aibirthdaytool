@@ -21,17 +21,6 @@ export default function CardGallery({ initialCardsData, wishCardType }: CardGall
   const [totalPages, setTotalPages] = useState(initialCardsData.totalPages)
   const [isLoading, setIsLoading] = useState(false)
   const [hasMore, setHasMore] = useState(currentPage < totalPages)
-  const observer = useRef<IntersectionObserver | null>(null)
-  const lastCardElementRef = useCallback((node: HTMLDivElement) => {
-    if (isLoading) return
-    if (observer.current) observer.current.disconnect()
-    observer.current = new IntersectionObserver(entries => {
-      if (entries[0].isIntersecting && hasMore) {
-        setCurrentPage(prevPage => prevPage + 1)
-      }
-    }, { threshold: 0.5 })
-    if (node) observer.current.observe(node)
-  }, [isLoading, hasMore])
 
   useEffect(() => {
     setCurrentPage(1)
@@ -39,6 +28,10 @@ export default function CardGallery({ initialCardsData, wishCardType }: CardGall
     setTotalPages(initialCardsData.totalPages)
     setHasMore(initialCardsData.totalPages > 1)
   }, [wishCardType, initialCardsData])
+
+  const handleLoadMore = () => {
+    setCurrentPage(prev => prev + 1)
+  }
 
   useEffect(() => {
     if (currentPage > 1) {
@@ -66,36 +59,44 @@ export default function CardGallery({ initialCardsData, wishCardType }: CardGall
 
   return (
     <div className="min-h-screen">
-      {/* <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8"> */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-4 xl:grid-cols-6 gap-4">
-          {cards.map((card, index) => (
-            <div 
-              key={card.cardId} 
-              ref={index === cards.length - 1 ? lastCardElementRef : undefined}
-              className="group"
-            >
-              {/* <div className="bg-white rounded-xl overflow-hidden transform transition duration-300 hover:scale-[1.02] hover:shadow-lg"> */}
-                <div className="aspect-[2/3] relative">
-                  <ImageViewer
-                    svgContent={card.responseContent}
-                    alt={`Card ${card.cardId}`}
-                    cardId={card.cardId}
-                    cardType={card.cardType}
-                    isNewCard={false}
-                    imgUrl={card.r2Url}
-                  />
-                </div>
-              {/* </div> */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-4 xl:grid-cols-6 gap-4">
+        {cards.map((card) => (
+          <div 
+            key={card.cardId} 
+            className="group"
+          >
+            <div className="aspect-[2/3] relative">
+              <ImageViewer
+                svgContent={card.responseContent}
+                alt={`Card ${card.cardId}`}
+                cardId={card.cardId}
+                cardType={card.cardType}
+                isNewCard={false}
+                imgUrl={card.r2Url}
+              />
             </div>
-          ))}
-        {/* </div> */}
-
-        {isLoading && (
-          <div className="flex justify-center items-center py-8">
-            <div className="w-6 h-6 border-2 border-gray-300 border-t-indigo-500 rounded-full animate-spin"></div>
           </div>
-        )}
+        ))}
       </div>
+
+      {hasMore && (
+        <div className="flex justify-center my-8">
+          <button
+            onClick={handleLoadMore}
+            disabled={isLoading}
+            className="bg-[#FFC0CB] text-white px-8 py-3 rounded-full hover:bg-pink-400 transition"
+          >
+            {isLoading ? (
+              <div className="flex items-center">
+                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                loading...
+              </div>
+            ) : (
+              'More'
+            )}
+          </button>
+        </div>
+      )}
     </div>
   )
 }

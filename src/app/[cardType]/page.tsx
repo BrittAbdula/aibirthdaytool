@@ -84,7 +84,7 @@ export default async function CardGeneratorPage({ params }: CardGeneratorPagePro
                 </header>
 
                 {/* Card Generator Section */}
-                <section className="mb-16 sm:mb-24">
+                <section >
                     <Suspense
                         fallback={
                             <div className="flex flex-col items-center justify-center h-64 space-y-4">

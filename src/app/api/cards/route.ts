@@ -6,9 +6,10 @@ export async function GET(request: Request) {
   const page = parseInt(searchParams.get('page') || '1', 10)
   const pageSize = parseInt(searchParams.get('pageSize') || '12', 10)
   const wishCardType = searchParams.get('wishCardType')
+  const relationship = searchParams.get('relationship')
 
   try {
-    const cardsData = await getRecentCardsServer(page, pageSize, wishCardType)
+    const cardsData = await getRecentCardsServer(page, pageSize, wishCardType, relationship)
     return NextResponse.json(cardsData)
   } catch (error) {
     console.error('Error fetching cards:', error)

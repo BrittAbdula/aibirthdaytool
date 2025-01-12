@@ -1579,6 +1579,10 @@ from "ApiLog" group by 1,2 order by 1 desc;
 select to_char(timestamp, 'YYYY-MM-DD') as dt,count(1) 
 from "ApiLog" group by 1 order by 1 desc;
 
+SELECT "userInputs" ->>'relationship',count(1)
+FROM "ApiLog" 
+group by 1 order by 2 desc 
+
 --- user action: copy, download, send
 select * from "UserAction" order by timestamp desc limit 11;
 
@@ -1659,6 +1663,10 @@ SET "r2Url" = CONCAT(
 )
 WHERE "r2Url" is not null
 
+--- user
+
+select * from "User" order by "createdAt" desc limit 11
+select to_char("createdAt", 'YYYY-MM-DD') as dt,count(1) from "User" group by 1 order by 1 desc;
 
 
 
