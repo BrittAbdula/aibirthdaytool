@@ -46,6 +46,51 @@ function sitemap(): MetadataRoute.Sitemap {
       lastModified: new Date(),
       priority: 0.6,
     },
+    {
+      url: `${baseUrl}congratulations/`,
+      lastModified: new Date(),
+      priority: 0.6,
+    },
+    {
+      url: `${baseUrl}holiday/`,
+      lastModified: new Date(),
+      priority: 0.6,
+    },
+    {
+      url: `${baseUrl}teacher/`,
+      lastModified: new Date(),
+      priority: 0.6,
+    },
+    {
+      url: `${baseUrl}graduation/`,
+      lastModified: new Date(),
+      priority: 0.6,
+    },
+    {
+      url: `${baseUrl}baby/`,
+      lastModified: new Date(),
+      priority: 0.6,
+    },
+    {
+      url: `${baseUrl}wedding/`,
+      lastModified: new Date(),
+      priority: 0.6,
+    },
+    {
+      url: `${baseUrl}good-luck/`,
+      lastModified: new Date(),
+      priority: 0.6,
+    },
+    {
+      url: `${baseUrl}newyear/`,
+      lastModified: new Date(),
+      priority: 0.6,
+    },
+    {
+      url: `${baseUrl}christmas/`,
+      lastModified: new Date(),
+      priority: 0.6,
+    },
   ]
 }
 
