@@ -3,6 +3,7 @@
 import { Metadata } from "next";
 import Image from 'next/image'
 import Link from 'next/link'
+import { getAllCardPreviews } from '@/lib/card-config'
 
 export const metadata: Metadata = {
   title: "Card Generators | MewTruCard",
@@ -69,7 +70,9 @@ const trendingCards: TrendingCard[] = [
   },
 ]
 
-export default function GeneratorsPage() {
+export default async function GeneratorsPage() {
+  const cardGenerators = await getAllCardPreviews();
+  
   return (
     <div className="min-h-screen  bg-gradient-to-b from-white via-purple-50 to-white">
       {/* Decorative Elements */}
@@ -94,7 +97,7 @@ export default function GeneratorsPage() {
 
         {/* Cards Grid */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {trendingCards.map((card, index) => (
+          {cardGenerators.map((card, index) => (
             <Link 
               href={card.link} 
               key={index} 

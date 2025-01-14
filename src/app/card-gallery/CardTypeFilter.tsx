@@ -37,7 +37,125 @@ export default function CardTypeFilter({
   selectedRelationship,
   onChange 
 }: CardTypeFilterProps) {
-  const cardTypes = getAllCardTypes()
+  // const cardTypes = ["birthday", "anniversary", "love", "friendship", "thank-you", "congratulations", "get-well", "sympathy", "thinking-of-you", "wedding", "baby", "graduation", "good-luck", "sorry", "miss-you", "encouragement", "christmas", "easter", "halloween", "thanksgiving", "valentines-day", "mothers-day", "fathers-day", "teachers-day", "boss-day", "nurses-day", "secretaries-day", "administrative-professionals-day", "fathers-day", "mothers-day", "valentines-day", "christmas", "easter", "halloween", "thanksgiving", "new-year", "wedding", "anniversary", "birthday", "graduation", "baby", "sympathy", "get-well", "congratulations", "thank-you", "love", "friendship", "thinking-of-you", "good-luck", "sorry", "miss-you", "encouragement", "christmas", "easter", "halloween", "thanksgiving", "valentines-day", "mothers-day", "fathers-day", "teachers-day", "boss-day", "nurses-day", "secretaries-day", "administrative-professionals-day", "fathers-day", "mothers-day", "valentines-day", "christmas", "easter", "halloween", "thanksgiving", "new-year", "wedding", "anniversary", "birthday", "graduation", "baby", "sympathy", "get-well", "congratulations", "thank-you", "love", "friendship", "thinking-of-you", "good-luck", "sorry", "miss-you", "encouragement", "christmas", "easter", "halloween", "thanksgiving", "valentines-day", "mothers-day", "fathers-day", "teachers-day", "boss-day", "nurses-day", "secretaries-day", "administrative-professionals-day", "fathers-day", "mothers-day", "valentines-day", "christmas", "easter", "halloween", "thanksgiving", "new-year", "wedding", "anniversary", "birthday", "graduation", "baby"]
+  const cardTypes: { type: string, label: string }[] = [
+    {
+      type: "birthday",
+      label: "Birthday"
+    },
+    {
+      type: "anniversary",
+      label: "Anniversary"
+    },
+    {
+      type: "love",
+      label: "Love"
+    },
+    {
+      type: "newyear",
+      label: "New Year"
+    },
+    // {
+    //   type: "friendship",
+    //   label: "Friendship"
+    // },
+    {
+      type: "thankyou",
+      label: "Thank You"
+    },
+    {
+      type: "congratulations",
+      label: "Congratulations"
+    },
+    // {
+    //   type: "get-well",
+    //   label: "Get Well"
+    // },
+    // {
+    //   type: "sympathy",
+    //   label: "Sympathy"
+    // },
+    // {
+    //   type: "thinking-of-you",
+    //   label: "Thinking of You"
+    // },
+    {
+      type: "wedding",
+      label: "Wedding"
+    },
+    {
+      type: "baby",
+      label: "Baby"
+    },
+    {
+      type: "graduation",
+      label: "Graduation"
+    },
+    {
+      type: "good-luck",
+      label: "Good Luck"
+    },
+    {
+      type: "sorry",
+      label: "Sorry"
+    },
+    // {
+    //   type: "miss-you",
+    //   label: "Miss You"
+    // },
+    // {
+    //   type: "encouragement",
+    //   label: "Encouragement"
+    // },
+    {
+      type: "christmas",
+      label: "Christmas"
+    },
+    // {
+    //   type: "easter",
+    //   label: "Easter"
+    // },
+    // {
+    //   type: "halloween",
+    //   label: "Halloween"
+    // },
+    // {
+    //   type: "thanksgiving",
+    //   label: "Thanksgiving"
+    // },
+    // {
+    //   type: "valentines-day",
+    //   label: "Valentine's Day"
+    // },
+    // {
+    //   type: "mothers-day",
+    //   label: "Mother's Day"
+    // },
+    // {
+    //   type: "fathers-day",
+    //   label: "Father's Day"
+    // },
+    // {
+    //   type: "teachers-day",
+    //   label: "Teacher's Day"
+    // },
+    // {
+    //   type: "boss-day",
+    //   label: "Boss's Day"
+    // },
+    // {
+    //   type: "nurses-day",
+    //   label: "Nurse's Day"
+    // },
+    // {
+    //   type: "secretaries-day",
+    //   label: "Secretary's Day"
+    // },
+    // {
+    //   type: "administrative-professionals-day",
+    //   label: "Administrative Professional's Day"
+    // }
+  ]
   const scrollContainerRef = useRef<HTMLDivElement>(null)
 
   const scroll = (direction: 'left' | 'right') => {

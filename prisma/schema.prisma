@@ -134,6 +134,7 @@ model User {
   cards         ApiLog[]
   userActions   UserAction[]
   editedCards   EditedCard[]
+  cardGenerators CardGenerator[]
   plan          PlanType       @default(FREE)
 }
 
@@ -162,3 +163,28 @@ model Subscription {
   updatedAt DateTime @updatedAt
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
+
+model CardGenerator {
+  id          String   @id @default(cuid())
+  name        String   // 生成器名称
+  slug        String   @unique // URL friendly name
+  description String?  // 描述
+  isSystem    Boolean  @default(false) // 是否系统默认生成器
+  isPublic    Boolean  @default(false) // 是否公开
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  userId      String?  // 创建者ID,系统生成器为null
+  user        User?    @relation(fields: [userId], references: [id])
+  
+  // 配置信息
+  title       String   // 页面标题
+  label       String   // 显示标签
+  fields      Json     // 输入字段配置
+  advancedFields Json? // 高级字段配置
+  templateInfo String? // 模板信息
+  why         Json?    // 为什么选择这个生成器
+  promptContent String // AI 提示词模板
+
+  // 关联的卡片
+}
+

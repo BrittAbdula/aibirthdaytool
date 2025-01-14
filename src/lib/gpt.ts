@@ -3,11 +3,11 @@ import { prisma } from './prisma';
 import { getTemplateByCardType } from './template-config';
 import { nanoid } from 'nanoid';
 import { uploadSvgToR2 } from './r2';
+import { defaultPrompt } from './prompt';
 
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
 const YOUR_SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'http://MewTruCard.COM';
 const YOUR_SITE_NAME = 'MewTruCard';
-const defaultPrompt = ``
 
 // Helper function to escape content
 function escapeContent(content: string): string {
@@ -99,10 +99,10 @@ export async function generateCardContent(params: CardContentParams): Promise<{ 
         // Validate template
         const template = await getTemplateByCardType(cardType);
         // console.log('<----template : ' + template + '---->')
-        if (!template) {
-            throw new Error(`No template found for id: ${templateId}`);
-        }
-        console.log('<----Template templateId : ' + template.id + '---->')
+        // if (!template) {
+        //     throw new Error(`No template found for id: ${templateId}`);
+        // }
+        // console.log('<----Template templateId : ' + template.id + '---->')
 
         // Prepare user prompt
         const userPrompt = Object.entries({...otherParams, currentTime: formattedTime})
@@ -140,7 +140,7 @@ export async function generateCardContent(params: CardContentParams): Promise<{ 
             body: JSON.stringify({
                 "model": "anthropic/claude-3.5-sonnet",
                 "messages": [
-                    { "role": "system", "content": template.promptContent },
+                    { "role": "system", "content": template?.promptContent || defaultPrompt },
                     { "role": "user", "content": userPrompt },
                 ],
             })

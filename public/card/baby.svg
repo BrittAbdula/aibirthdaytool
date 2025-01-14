@@ -1,0 +1,194 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 760">
+    <defs>
+        <!-- Vibrant gradient background -->
+        <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:#FFB3FF;stop-opacity:1" />
+            <stop offset="50%" style="stop-color:#B3E6FF;stop-opacity:1" />
+            <stop offset="100%" style="stop-color:#B3FFB3;stop-opacity:1" />
+        </linearGradient>
+        
+        <!-- Confetti pattern -->
+        <pattern id="confettiPattern" x="0" y="0" width="50" height="50" patternUnits="userSpaceOnUse">
+            <circle cx="10" cy="10" r="3" fill="#FF6B6B" opacity="0.4"/>
+            <circle cx="40" cy="40" r="3" fill="#4ECDC4" opacity="0.4"/>
+            <rect x="35" y="5" width="6" height="6" fill="#FFE66D" opacity="0.4" transform="rotate(45 38 8)"/>
+            <rect x="5" y="35" width="6" height="6" fill="#FF69B4" opacity="0.4" transform="rotate(45 8 38)"/>
+        </pattern>
+
+        <!-- Rainbow filter -->
+        <linearGradient id="rainbowGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" style="stop-color:#FF69B4"/>
+            <stop offset="33%" style="stop-color:#4ECDC4"/>
+            <stop offset="66%" style="stop-color:#FFE66D"/>
+            <stop offset="100%" style="stop-color:#FF6B6B"/>
+        </linearGradient>
+    </defs>
+
+    <!-- Background layers -->
+    <rect width="100%" height="100%" fill="url(#bgGradient)"/>
+    <rect width="100%" height="100%" fill="url(#confettiPattern)"/>
+
+    <!-- Colorful arcs -->
+    <g transform="translate(240, 380)">
+        <path d="M-200,-100 A200,200 0 0,1 200,-100" 
+              fill="none" 
+              stroke="#FF69B4" 
+              stroke-width="8"
+              opacity="0.7">
+            <animate attributeName="stroke-opacity" 
+                     values="0.7;0.9;0.7" 
+                     dur="3s" 
+                     repeatCount="indefinite"/>
+        </path>
+        <path d="M-180,-80 A180,180 0 0,1 180,-80" 
+              fill="none" 
+              stroke="#4ECDC4" 
+              stroke-width="8"
+              opacity="0.7">
+            <animate attributeName="stroke-opacity" 
+                     values="0.9;0.7;0.9" 
+                     dur="3s" 
+                     repeatCount="indefinite"/>
+        </path>
+        <path d="M-160,-60 A160,160 0 0,1 160,-60" 
+              fill="none" 
+              stroke="#FFE66D" 
+              stroke-width="8"
+              opacity="0.7">
+            <animate attributeName="stroke-opacity" 
+                     values="0.7;0.9;0.7" 
+                     dur="3s" 
+                     repeatCount="indefinite"/>
+        </path>
+    </g>
+
+    <!-- Baby elements group -->
+    <g transform="translate(240, 400)">
+        <!-- Colorful cradle -->
+        <path d="M-100,-30 Q-75,-60 -50,-30 Q-25,0 0,-30 Q25,0 50,-30 Q75,-60 100,-30"
+              fill="none"
+              stroke="url(#rainbowGradient)"
+              stroke-width="6"
+              stroke-linecap="round">
+            <animate
+                attributeName="d"
+                values="M-100,-30 Q-75,-60 -50,-30 Q-25,0 0,-30 Q25,0 50,-30 Q75,-60 100,-30;
+                        M-100,-20 Q-75,-50 -50,-20 Q-25,10 0,-20 Q25,10 50,-20 Q75,-50 100,-20;
+                        M-100,-30 Q-75,-60 -50,-30 Q-25,0 0,-30 Q25,0 50,-30 Q75,-60 100,-30"
+                dur="2s"
+                repeatCount="indefinite"
+            />
+        </path>
+
+        <!-- Colorful blanket -->
+        <path d="M-90,-30 L90,-30 L60,40 L-60,40 Z"
+              fill="white"
+              stroke="#FF69B4"
+              stroke-width="3"/>
+    </g>
+
+    <!-- Floating elements -->
+    <g>
+        <!-- Stars -->
+        <path d="M120,200 L128,220 L150,228 L128,236 L120,256 L112,236 L90,228 L112,220 Z" 
+              fill="#FFE66D">
+            <animate
+                attributeName="opacity"
+                values="1;0.5;1"
+                dur="1.5s"
+                repeatCount="indefinite"
+            />
+        </path>
+        <path d="M360,200 L368,220 L390,228 L368,236 L360,256 L352,236 L330,228 L352,220 Z" 
+              fill="#FFE66D">
+            <animate
+                attributeName="opacity"
+                values="0.5;1;0.5"
+                dur="1.5s"
+                repeatCount="indefinite"
+            />
+        </path>
+    </g>
+
+    <!-- Text elements -->
+    <g>
+        <text x="240" y="180" 
+              text-anchor="middle" 
+              font-family="'Playfair Display', serif" 
+              font-size="48" 
+              fill="#FF69B4">
+            Welcome
+            <animate
+                attributeName="opacity"
+                values="0;1"
+                dur="1s"
+                fill="freeze"
+            />
+        </text>
+        
+        <text x="240" y="240" 
+              text-anchor="middle" 
+              font-family="'Playfair Display', serif" 
+              font-size="36" 
+              fill="#4ECDC4">
+            Sweet Baby
+            <animate
+                attributeName="opacity"
+                values="0;1"
+                dur="1s"
+                begin="0.5s"
+                fill="freeze"
+            />
+        </text>
+
+        <text x="240" y="560" 
+              text-anchor="middle" 
+              font-family="'Noto Sans', sans-serif" 
+              font-size="24" 
+              fill="#FF6B6B">
+            Wishing You a Lifetime of
+            <animate
+                attributeName="opacity"
+                values="0;1"
+                dur="1s"
+                begin="1s"
+                fill="freeze"
+            />
+        </text>
+
+        <text x="240" y="600" 
+              text-anchor="middle" 
+              font-family="'Playfair Display', serif" 
+              font-size="32" 
+              fill="#4ECDC4">
+            Health and Happiness
+            <animate
+                attributeName="opacity"
+                values="0;1"
+                dur="1s"
+                begin="1.5s"
+                fill="freeze"
+            />
+        </text>
+    </g>
+
+    <!-- Decorative circles -->
+    <g>
+        <circle cx="80" cy="500" r="10" fill="#FF69B4">
+            <animate
+                attributeName="cy"
+                values="500;490;500"
+                dur="2s"
+                repeatCount="indefinite"
+            />
+        </circle>
+        <circle cx="400" cy="500" r="10" fill="#4ECDC4">
+            <animate
+                attributeName="cy"
+                values="490;500;490"
+                dur="2s"
+                repeatCount="indefinite"
+            />
+        </circle>
+    </g>
+</svg>

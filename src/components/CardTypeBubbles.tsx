@@ -2,14 +2,23 @@ import React from 'react'
 import Link from 'next/link'
 import { CardType, getAllCardTypes } from '@/lib/card-config'
 
-export default function CardTypeBubbles({ currentType }: { currentType: CardType }) {
-  const allCardTypes = getAllCardTypes()
-  const otherCardTypes = allCardTypes.filter(card => card.type !== currentType)
-  const shuffled = otherCardTypes.sort(() => 0.5 - Math.random())
-  const selected = shuffled.slice(0, 10)
+interface CardTypeBubblesProps {
+  currentType: CardType;
+}
+
+async function CardTypeBubbles({ currentType }: CardTypeBubblesProps) {
+  // 获取所有卡片类型
+  const allCardTypes = await getAllCardTypes();
+  
+  // 过滤掉当前类型
+  const otherCardTypes = allCardTypes.filter(card => card.type !== currentType);
+  
+  // 随机排序并选择10个
+  const shuffled = otherCardTypes.sort(() => 0.5 - Math.random());
+  const selected = shuffled.slice(0, 10);
 
   return (
-    <div className="w-full py-2 sm:py-4 ">
+    <div className="w-full py-2 sm:py-4">
       <div className="flex flex-wrap justify-center items-center px-2 sm:px-4">
         {selected.map((card) => (
           <Link 
@@ -24,3 +33,5 @@ export default function CardTypeBubbles({ currentType }: { currentType: CardType
     </div>
   )
 }
+
+export default CardTypeBubbles;

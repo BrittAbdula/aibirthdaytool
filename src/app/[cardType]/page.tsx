@@ -17,7 +17,7 @@ interface CardGeneratorPageProps {
 
 // Generate static params for all card types at build time
 export async function generateStaticParams() {
-    const cardTypes = getAllCardTypes();
+    const cardTypes = await getAllCardTypes();
     return cardTypes.map((cardType) => ({
         cardType: cardType.type,
     }));
@@ -28,14 +28,15 @@ export const dynamic = 'force-static';
 export const revalidate = 3600; // Revalidate every hour
 
 export async function generateMetadata({ params }: CardGeneratorPageProps): Promise<Metadata> {
-    const cardType = params.cardType as CardType;
-    const cardName = cardType.charAt(0).toUpperCase() + cardType.slice(1);
-    const cardConfig = getCardConfig(cardType);
+    const cardType = params.cardType;
+    const cardConfig = await getCardConfig(cardType);
+    // console.log(cardConfig)
 
     if (!cardConfig) {
         return notFound();
     }
 
+    const cardName = cardConfig.label;
     return {
         title: `${cardName} Card Generator - MewTruCard`,
         description: `Create personalized ${cardType} cards with MewTruCard's AI-powered generator. Easy to use with beautiful ${cardType} card templates.`,
@@ -46,20 +47,20 @@ export async function generateMetadata({ params }: CardGeneratorPageProps): Prom
 }
 
 export default async function CardGeneratorPage({ params }: CardGeneratorPageProps) {
-    const cardType = params.cardType as CardType;
-    const cardName = (params.cardType as string).charAt(0).toUpperCase() + (params.cardType as string).slice(1) as CardType;
-    const cardConfig = getCardConfig(cardType);
+    const cardType = params.cardType;
+    const cardConfig = await getCardConfig(cardType);
 
+    if (!cardConfig) {
+        notFound();
+    }
+
+    const cardName = cardConfig.label;
     // Get initial cards data
     const { cards, totalPages } = await getRecentCardsServer(1, 12, cardType);
     const initialCardsData = {
         cards,
         totalPages
     };
-
-    if (!cardConfig) {
-        notFound();
-    }
 
     return (
         <main className="min-h-screen bg-gradient-to-b from-white via-purple-50 to-white">
@@ -97,13 +98,14 @@ export default async function CardGeneratorPage({ params }: CardGeneratorPagePro
                             wishCardType={cardType}
                             initialCardId={''}
                             initialSVG={''}
+                            cardConfig={cardConfig}
                         />
                     </Suspense>
                 </section>
 
 
                 {cardConfig.why && (
-                    <section className="text-center mb-16 sm:mb-24">
+                    <section className="text-center my-16 sm:mb-24">
                     <h2 className="text-3xl sm:text-4xl font-bold text-center mb-8 sm:mb-12">
                         <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-pink-600">
                             Why MewtruCard&apos;s {cardName} card

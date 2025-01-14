@@ -91,7 +91,17 @@ const ProgressBar = ({ progress }: { progress: number }) => (
   </div>
 );
 
-export default function CardGenerator({ wishCardType, initialCardId, initialSVG }: { wishCardType: CardType, initialCardId: string, initialSVG: string }) {
+export default function CardGenerator({ 
+  wishCardType, 
+  initialCardId, 
+  initialSVG,
+  cardConfig
+}: { 
+  wishCardType: CardType, 
+  initialCardId: string, 
+  initialSVG: string,
+  cardConfig: CardConfig
+}) {
   const { data: session, status } = useSession()
   const [usageCount, setUsageCount] = useState<number>(0)
   const [showAuthDialog, setShowAuthDialog] = useState(false)
@@ -109,20 +119,16 @@ export default function CardGenerator({ wishCardType, initialCardId, initialSVG 
   const [submited, setSubmited] = useState(false)
   const [progress, setProgress] = useState(0);
 
-  const cardConfig = getCardConfig(currentCardType)
-
   useEffect(() => {
     setCurrentCardType(wishCardType)
     // 重置表单数据，并设置默认值
-    if (cardConfig) {
-      const initialFormData: Record<string, any> = {};
-      cardConfig.fields.forEach(field => {
-        if (field.type === 'select' && !field.optional && field.defaultValue) {
-          initialFormData[field.name] = field.defaultValue;
-        }
-      });
-      setFormData(initialFormData);
-    }
+    const initialFormData: Record<string, any> = {};
+    cardConfig.fields.forEach(field => {
+      if (field.type === 'select' && !field.optional && field.defaultValue) {
+        initialFormData[field.name] = field.defaultValue;
+      }
+    });
+    setFormData(initialFormData);
   }, [wishCardType, cardConfig])
 
   useEffect(() => {
@@ -157,10 +163,10 @@ export default function CardGenerator({ wishCardType, initialCardId, initialSVG 
   }
 
   const handleGenerateCard = async () => {
-    if (!session) {
-      setShowAuthDialog(true)
-      return
-    }
+    // if (!session) {
+    //   setShowAuthDialog(true)
+    //   return
+    // }
 
     try {
       setIsLoading(true)
