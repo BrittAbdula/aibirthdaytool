@@ -72,7 +72,7 @@ export const getCardConfig = unstable_cache(
     };
   },
   ['card-config'],
-  { revalidate: 1 } // 1小时后重新验证
+  { revalidate: 3600 } // 1小时后重新验证
 );
 
 // 获取所有公开的卡片类型
@@ -97,7 +97,7 @@ export const getAllCardTypes = unstable_cache(
     }));
   },
   ['all-card-types'],
-  { revalidate: 1 }
+  { revalidate: 3600 }
 );
 
 // 获取所有卡片生成器的预览信息
@@ -123,5 +123,5 @@ export const getAllCardPreviews = unstable_cache(
     }));
   },
   ['card-previews'],
-  { revalidate: 1 }
+  { revalidate: 3600 }
 );
