@@ -76,7 +76,7 @@ function Header() {
           {/* Desktop Menu */}
           <div className="hidden md:flex items-center space-x-6">
           <Link href="/" className="text-[#4A4A4A] hover:text-[#FFC0CB] font-serif">Home</Link>
-          <Link href="/cards/" className="text-[#4A4A4A] hover:text-[#FFC0CB] font-serif">Card Generators</Link>
+          <Link href="/cards/" className="text-[#4A4A4A] hover:text-[#FFC0CB] font-serif">Generators</Link>
             <Link href="/card-gallery/" className="text-[#4A4A4A] hover:text-[#FFC0CB] font-serif">Templates</Link>
             <Link href="/my-cards/" className="text-[#4A4A4A] hover:text-[#FFC0CB] font-serif">My Cards</Link>
             {status === 'authenticated' && session ? (
