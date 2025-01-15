@@ -14,7 +14,7 @@ export async function POST(request: Request) {
     //   return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     // }
 
-    const userId = session?.user?.id || '0';
+    const userId = session?.user?.id || 'anonymous';
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
@@ -48,11 +48,11 @@ export async function POST(request: Request) {
     const planType = user?.plan || 'FREE';
     const dailyLimit = planType === 'FREE' ? 4 : Infinity;
     
-    if (usage.count >= dailyLimit) {
-      return NextResponse.json({ 
-        error: "You've reached your daily limit. Please try again tomorrow or visit our Card Gallery." 
-      }, { status: 429 });
-    }
+    // if (usage.count >= dailyLimit) {
+    //   return NextResponse.json({ 
+    //     error: "You've reached your daily limit. Please try again tomorrow or visit our Card Gallery." 
+    //   }, { status: 429 });
+    // }
 
     const {
       cardType,
@@ -81,19 +81,19 @@ export async function POST(request: Request) {
     const { svgContent, cardId } = await generateCardContent(cardData);
 
     // Increment usage count
-    await prisma.apiUsage.update({
-      where: {
-        userId_date: {
-          userId,
-          date: today,
-        },
-      },
-      data: {
-        count: {
-          increment: 1,
-        },
-      },
-    });
+    // await prisma.apiUsage.update({
+    //   where: {
+    //     userId_date: {
+    //       userId,
+    //       date: today,
+    //     },
+    //   },
+    //   data: {
+    //     count: {
+    //       increment: 1,
+    //     },
+    //   },
+    // });
 
     return NextResponse.json({ svgContent, cardId });
   } catch (error) {
