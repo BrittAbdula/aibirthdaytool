@@ -19,34 +19,34 @@ export async function POST(request: Request) {
     today.setHours(0, 0, 0, 0);
 
     // Get or create today's usage record
-    let usage = await prisma.apiUsage.findUnique({
-      where: {
-        userId_date: {
-          userId,
-          date: today,
-        },
-      },
-    });
+    // let usage = await prisma.apiUsage.findUnique({
+    //   where: {
+    //     userId_date: {
+    //       userId,
+    //       date: today,
+    //     },
+    //   },
+    // });
 
-    if (!usage) {
-      usage = await prisma.apiUsage.create({
-        data: {
-          userId,
-          date: today,
-          count: 0,
-        },
-      });
-    }
+    // if (!usage) {
+    //   usage = await prisma.apiUsage.create({
+    //     data: {
+    //       userId,
+    //       date: today,
+    //       count: 0,
+    //     },
+    //   });
+    // }
 
-    // Get user's plan type
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: { plan: true },
-    });
+    // // Get user's plan type
+    // const user = await prisma.user.findUnique({
+    //   where: { id: userId },
+    //   select: { plan: true },
+    // });
 
-    // Check usage limits
-    const planType = user?.plan || 'FREE';
-    const dailyLimit = planType === 'FREE' ? 4 : Infinity;
+    // // Check usage limits
+    // const planType = user?.plan || 'FREE';
+    // const dailyLimit = planType === 'FREE' ? 4 : Infinity;
     
     // if (usage.count >= dailyLimit) {
     //   return NextResponse.json({ 
