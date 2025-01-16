@@ -97,7 +97,7 @@ export async function generateCardContent(params: CardContentParams): Promise<{ 
 
     try {
         // Validate template
-        const template = await getTemplateByCardType(cardType);
+        // const template = await getTemplateByCardType(cardType);
         // console.log('<----template : ' + template + '---->')
         // if (!template) {
         //     throw new Error(`No template found for id: ${templateId}`);
@@ -109,7 +109,7 @@ export async function generateCardContent(params: CardContentParams): Promise<{ 
             .filter(([_, value]) => value !== '' && value !== undefined)
             .map(([key, value]) => `${key}: ${value}`)
             .join('\n');
-        // console.log('<----User prompt : ' + userPrompt + '---->')
+        console.log('<----User prompt : ' + userPrompt + '---->')
 
         // Check prompt length
         if (userPrompt.length >= 800) {
@@ -140,7 +140,7 @@ export async function generateCardContent(params: CardContentParams): Promise<{ 
             body: JSON.stringify({
                 "model": "anthropic/claude-3.5-sonnet",
                 "messages": [
-                    { "role": "system", "content": template?.promptContent || defaultPrompt },
+                    { "role": "system", "content": defaultPrompt },
                     { "role": "user", "content": userPrompt },
                 ],
             })

@@ -64,9 +64,13 @@ export default async function Home() {
             Express your feelings with MewTruCard&apos;s elegant and personalized e-cards
           </p>
 
-          <div className="mb-16 items-center flex justify-center">
+          <div className="mb-16 items-center flex justify-center space-x-4">
             <button className="bg-[#FFC0CB] text-white px-8 py-3 rounded-full hover:bg-pink-400 transition">
               <a href="/cards">Create Your Card</a>
+            </button>
+
+            <button className="bg-[#FFC0CB] text-white px-8 py-3 rounded-full hover:bg-pink-400 transition">
+              <a href="/create-generator">Create Your Generator</a>
             </button>
           </div>
 
