@@ -133,7 +133,12 @@ export default function CardGenerator({
 
   useEffect(() => {
     fetch(sampleCard)
-      .then(response => response.text())
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Failed to fetch SVG content');
+        }
+        return response.text();
+      })
       .then(svgContent => setSvgContent(svgContent))
       .catch(error => console.error('load default svg failed:', error))
   }, [])
@@ -346,13 +351,10 @@ export default function CardGenerator({
                   ) : (
                     <div className="w-full h-full relative">
                       <a href='/card-gallery/'>
-                      <Image
-                        src={sampleCard}
-                        alt={`Default ${wishCardType} Card`}
-                        layout="fill"
-                        objectFit="contain"
-                        priority
-                      />
+                      <div
+  className="svg-container w-full h-full flex items-center justify-center overflow-hidden"
+  dangerouslySetInnerHTML={{ __html: svgContent || '<img src="/card/mewtrucard.svg" alt="Default Card" />' }}
+/>
                       </a>
                     </div>
                   )}

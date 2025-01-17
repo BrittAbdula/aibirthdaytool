@@ -1,0 +1,82 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 760">
+  <defs>
+    <linearGradient id="bg-gradient" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#f9d1d1"/>
+      <stop offset="100%" stop-color="#ffeaea"/> 
+    </linearGradient>
+    
+    <filter id="paper-texture">
+      <feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="3" result="noise"/>
+      <feColorMatrix type="saturate" values="0.1" in="noise" result="muted"/>
+      <feBlend in="SourceGraphic" in2="muted" mode="overlay"/>
+    </filter>
+    
+    <path id="heart-path" d="M20,35 A20,20,0,0,1,50,35 A20,20,0,0,1,80,35 Q80,60,50,80 Q20,60,20,35 Z"/>
+    
+    <clipPath id="card-shape">
+      <rect x="0" y="0" width="480" height="760" rx="20"/>
+    </clipPath>
+  </defs>
+
+  <g clip-path="url(#card-shape)">
+    <!-- Background -->
+    <rect x="0" y="0" width="480" height="760" fill="url(#bg-gradient)" filter="url(#paper-texture)"/>
+    
+    <!-- Decorative Elements -->
+    <g transform="translate(240,380) scale(0.8)">
+      <use href="#heart-path" fill="none" stroke="#e88a8a" stroke-width="2">
+        <animate attributeName="stroke-dasharray" 
+                 from="0,1000" to="1000,0"
+                 dur="2s" fill="freeze"/>
+      </use>
+      
+      <use href="#heart-path" fill="#ffd6d6" fill-opacity="0.3">
+        <animate attributeName="transform" 
+                 type="scale"
+                 values="1;1.1;1"
+                 dur="4s"
+                 repeatCount="indefinite"/>
+      </use>
+    </g>
+    
+    <!-- Text Elements -->
+    <text x="240" y="280" 
+          text-anchor="middle" 
+          font-family="Playfair Display, serif"
+          font-size="48"
+          fill="#d35f5f">
+      MewTruCard
+      <animate attributeName="opacity"
+               values="0;1"
+               dur="1s"
+               fill="freeze"/>
+    </text>
+    
+    <text x="240" y="520"
+          text-anchor="middle"
+          font-family="Noto Sans, sans-serif"
+          font-size="24"
+          fill="#8f4040">
+      Love • Peace • Trust
+      <animate attributeName="opacity"
+               values="0;1"
+               dur="1s"
+               begin="0.5s"
+               fill="freeze"/>
+    </text>
+  </g>
+  
+  <!-- Flourishes -->
+  <g stroke="#e88a8a" stroke-width="1" fill="none">
+    <path d="M40,40 Q240,100 440,40" opacity="0.5">
+      <animate attributeName="stroke-dasharray"
+               from="0,1000" to="1000,0"
+               dur="3s" fill="freeze"/>
+    </path>
+    <path d="M40,720 Q240,660 440,720" opacity="0.5">
+      <animate attributeName="stroke-dasharray"
+               from="0,1000" to="1000,0"
+               dur="3s" fill="freeze"/>
+    </path>
+  </g>
+</svg>

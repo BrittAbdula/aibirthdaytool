@@ -87,13 +87,15 @@ export const getAllCardTypes = unstable_cache(
       },
       select: {
         slug: true,
-        label: true
+        label: true,
+        description: true
       }
     });
 
     return generators.map(generator => ({
       type: generator.slug,
-      label: generator.label
+      label: generator.label,
+      description: generator.description
     }));
   },
   ['all-card-types'],
@@ -112,14 +114,18 @@ export const getAllCardPreviews = unstable_cache(
       },
       select: {
         slug: true,
-        label: true
+        label: true,
+        description: true,
+        isSystem: true
       }
     });
 
     return generators.map(generator => ({
-      image: `/card/${generator.slug}.svg`,
+      image: generator.isSystem ? `/card/${generator.slug}.svg` : `/card/mewtrucard.svg`,
       title: generator.label,
-      link: `/${generator.slug}/`
+      link: `/${generator.slug}/`,
+      isSystem: generator.isSystem,
+      description: generator.description
     }));
   },
   ['card-previews'],

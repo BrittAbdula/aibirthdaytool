@@ -9,6 +9,7 @@ import NextImage from 'next/image'
 import { isMobile } from 'react-device-detect'
 import { recordUserAction } from '@/lib/action'
 import { useRouter } from 'next/navigation'
+import CardDisplay from './CardDisplay'
 
 interface ImageViewerProps {
   svgContent: string
@@ -27,6 +28,7 @@ export function ImageViewer({ svgContent, alt, cardId, cardType, isNewCard, imgU
   const router = useRouter()
   const [isShareModalOpen, setIsShareModalOpen] = useState(false)
   const [shareLink, setShareLink] = useState('')
+  const [showPreview, setShowPreview] = useState(false)
 
   useEffect(() => {
     setIsClient(true)
@@ -173,23 +175,32 @@ export function ImageViewer({ svgContent, alt, cardId, cardType, isNewCard, imgU
         <DialogContent className="sm:max-w-[90vw] md:max-w-[80vw] lg:max-w-[70vw] xl:max-w-[60vw]  p-0">
           <DialogTitle className="sr-only">Image Viewer</DialogTitle>
           <div className="flex flex-col items-center justify-center h-full">
-            <div className="w-full h-[calc(100vh-200px)] overflow-auto flex items-center justify-center p-4">
-              {isClient && imageSrc && (
-                <img
-                  src={imageSrc}
-                  alt={alt}
-                  width={400}
-                  height={600}
-                  className="max-w-full max-h-full"
+            {!showPreview ? (
+              <div className="w-full h-[calc(100vh-200px)] overflow-auto flex items-center justify-center p-4">
+                {isClient && imageSrc && (
+                  <img
+                    src={imageSrc}
+                    alt={alt}
+                    width={400}
+                    height={600}
+                    className="max-w-full max-h-full"
+                  />
+                )}
+              </div>
+            ) : (
+              <div className="w-full h-[calc(100vh-200px)] overflow-auto">
+                <CardDisplay 
+                  card={{
+                    id: cardId,
+                    cardType: cardType,
+                    editedContent: svgContent
+                  }}
                 />
-              )}
-            </div>
+              </div>
+            )}
             <div className="flex justify-between p-4 bg-white w-full border-t border-[#ada9a9]">
-              {isNewCard && (
-                <div className="w-full max-w-md mx-auto flex gap-4 justify-center"><Button onClick={handleCopy} className="bg-[#FFC0CB] text-[#4A4A4A] hover:bg-[#FFD1DC] transition-colors">
-                  <CopyIcon className="mr-2 h-4 w-4" />
-                  Copy
-                </Button>
+              {isNewCard ? (
+                <div className="w-full max-w-md mx-auto flex gap-4 justify-center">
                   <Button onClick={handleEdit} className="bg-[#FFC0CB] text-[#4A4A4A] hover:bg-[#FFD1DC] transition-colors">
                     <Pencil1Icon className="mr-2 h-4 w-4" />
                     Edit
@@ -198,13 +209,30 @@ export function ImageViewer({ svgContent, alt, cardId, cardType, isNewCard, imgU
                     <PaperPlaneIcon className="mr-2 h-4 w-4" />
                     Send
                   </Button>
+                  <Button 
+                    onClick={() => setShowPreview(!showPreview)} 
+                    className="bg-[#FFC0CB] text-[#4A4A4A] hover:bg-[#FFD1DC] transition-colors"
+                  >
+                  <>
+                    <EyeOpenIcon className="mr-2 h-4 w-4" />
+                    Preview
+                  </>
+                  </Button>
                 </div>
-              )}
-              {!isNewCard && (
+              ) : (
                 <div className="w-full max-w-md mx-auto flex gap-4 justify-center">
                   <Button onClick={handleEdit} className="bg-[#FFC0CB] text-[#4A4A4A] hover:bg-[#FFD1DC] transition-colors">
                     <Pencil1Icon className="mr-2 h-4 w-4" />
                     customize this template
+                  </Button>
+                  <Button 
+                    onClick={() => setShowPreview(!showPreview)} 
+                    className="bg-[#FFC0CB] text-[#4A4A4A] hover:bg-[#FFD1DC] transition-colors"
+                  >
+                  <>
+                    <EyeOpenIcon className="mr-2 h-4 w-4" />
+                    Preview
+                  </>
                   </Button>
                 </div>
               )}
