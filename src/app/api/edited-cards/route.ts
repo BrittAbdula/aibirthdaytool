@@ -8,7 +8,7 @@ export async function POST(request: Request) {
     const session = await auth()
     const userId = session?.user?.id || null
 
-    const { editedCardId, cardType, originalCardId, editedContent, spotifyTrackId } = await request.json()
+    const { editedCardId, cardType, originalCardId, editedContent, spotifyTrackId, customUrl } = await request.json()
     console.log('-------------:', editedCardId, cardType, originalCardId, editedContent, spotifyTrackId)
 
     const createdAt = new Date()
@@ -24,9 +24,10 @@ export async function POST(request: Request) {
           spotifyTrackId,
           r2Url,
           userId,
+          customUrl,
         },
       })
-      return NextResponse.json({ id: editedCardId }, { status: 200 })
+      return NextResponse.json({ id: editedCardId, customUrl: customUrl }, { status: 200 })
     } else {
       // Generate a new ID for the edited card
       const newCardId = crypto.randomUUID()
@@ -44,9 +45,10 @@ export async function POST(request: Request) {
           r2Url,
           userId,
           createdAt,
+          customUrl,
         },
       })
-      return NextResponse.json({ id: editedCard.id }, { status: 201 })
+      return NextResponse.json({ id: editedCard.id, customUrl: customUrl }, { status: 201 })
     }
   } catch (error) {
     console.error('Error saving edited card:', error)

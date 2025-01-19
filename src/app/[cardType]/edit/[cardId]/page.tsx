@@ -15,6 +15,8 @@ import SpotifySearch from '@/components/SpotifySearch'
 import { CardType } from '@/lib/card-config'
 import { Switch } from '@/components/ui/switch'
 import { Skeleton } from "@/components/ui/skeleton"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 
 const IsMobileWrapper = dynamic(() => import('@/components/IsMobileWrapper'), { ssr: false })
 
@@ -32,6 +34,8 @@ export default function EditCard({ params }: { params: { cardId: string, cardTyp
   const [isSending, setIsSending] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const { toast } = useToast()
+  const [enableCustomUrl, setEnableCustomUrl] = useState(false)
+  const [customUrl, setCustomUrl] = useState('')
 
   useEffect(() => {
     const fetchCardData = async () => {
@@ -139,7 +143,10 @@ export default function EditCard({ params }: { params: { cardId: string, cardTyp
     setIsSending(true)
     try {
       if (svgContent === originalContent) {
-        setShareLink(editedCardId ? `${window.location.origin}/to/${editedCardId}` : `${window.location.origin}/`)
+        const shareUrl = editedCardId ? 
+          `${window.location.origin}/to/${customUrl || editedCardId}` : 
+          `${window.location.origin}/`
+        setShareLink(shareUrl)
         setIsModalOpen(true)
         return
       }
@@ -155,16 +162,24 @@ export default function EditCard({ params }: { params: { cardId: string, cardTyp
           originalCardId: cardId,
           editedContent: svgContent,
           spotifyTrackId: enableMusic ? selectedMusic?.id : null,
+          customUrl: enableCustomUrl ? customUrl : null,
         }),
       })
 
       if (response.ok) {
-        const { id } = await response.json()
+        const { id, customUrl: responseCustomUrl } = await response.json()
         setEditedCardId(id)
-        setShareLink(`${window.location.origin}/to/${id}`)
+        const shareUrl = `${window.location.origin}/to/${responseCustomUrl || id}`
+        setShareLink(shareUrl)
         setOriginalContent(svgContent)
         setIsModalOpen(true)
         await recordUserAction(cardId, 'send')
+
+        toast({
+          description: responseCustomUrl ? 
+            `Card created with custom URL: ${responseCustomUrl}` : 
+            "Card created successfully",
+        })
       } else {
         throw new Error('Failed to save edited card')
       }
@@ -307,6 +322,43 @@ export default function EditCard({ params }: { params: { cardId: string, cardTyp
                   />
                 </div>
               ))}
+
+              {/* Custom URL Section */}
+              <div className="mt-8 pt-4 border-t border-pink-100">
+                <div className="flex items-center justify-between mb-2">
+                  <Label className="text-sm font-medium text-[#4A4A4A]">
+                    Custom URL
+                  </Label>
+                  <div className="flex items-center space-x-2">
+                    <Label className="text-sm text-muted-foreground">
+                      Enable custom URL
+                    </Label>
+                    <Switch
+                      checked={enableCustomUrl}
+                      onCheckedChange={setEnableCustomUrl}
+                    />
+                  </div>
+                </div>
+                
+                {enableCustomUrl && (
+                  <div className="mt-2 space-y-2">
+                    <div className="flex items-center space-x-2">
+                      <span className="text-sm text-gray-500">
+                        {window.location.origin}/to/
+                      </span>
+                      <Input
+                        value={customUrl}
+                        onChange={(e) => setCustomUrl(e.target.value)}
+                        placeholder="your-custom-url"
+                        className="flex-1 bg-white/50 border-2 border-pink-100 rounded-xl focus:ring-pink-200 focus:border-pink-300"
+                      />
+                    </div>
+                    <p className="text-xs text-gray-500 italic">
+                      Only letters, numbers, and hyphens are allowed
+                    </p>
+                  </div>
+                )}
+              </div>
             </div>
 
             

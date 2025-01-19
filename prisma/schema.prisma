@@ -67,6 +67,7 @@ model EditedCard {
   spotifyTrackId String?
   r2Url          String?
   userId         String?
+  customUrl      String?
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
   originalCard   ApiLog   @relation("OriginalCard", fields: [originalCardId], references: [cardId], onDelete: NoAction, onUpdate: NoAction)
@@ -74,6 +75,7 @@ model EditedCard {
 
   @@index([originalCardId])
   @@index([userId])
+  @@index([customUrl])
 }
 
 model SpotifyMusic {
