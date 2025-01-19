@@ -94,6 +94,13 @@ export default function GeneratorBuilder() {
         return
       }
 
+      // Validate slug
+      const slugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/; // Slug must be lowercase, alphanumeric, and can include dashes
+      if (!slugPattern.test(formData.slug)) {
+        setError('Slug must be lowercase, alphanumeric, and can include dashes only')
+        return
+      }
+
       if (!formData.fields.length) {
         setError('At least one input field is required')
         return
