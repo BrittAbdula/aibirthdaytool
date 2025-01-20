@@ -102,6 +102,13 @@ export const getAllCardTypes = unstable_cache(
   { revalidate: 3600 }
 );
 
+// Utility function to validate slug
+function isValidSlug(slug: string): boolean {
+  const slugRegex = /^[a-z0-9-]+$/; // Only allows lowercase letters, numbers, and dashes
+  console.log(slug, slugRegex.test(slug))
+  return slugRegex.test(slug);
+}
+
 // 获取所有卡片生成器的预览信息
 export const getAllCardPreviews = unstable_cache(
   async () => {
@@ -120,13 +127,15 @@ export const getAllCardPreviews = unstable_cache(
       }
     });
 
-    return generators.map(generator => ({
-      image: generator.isSystem ? `/card/${generator.slug}.svg` : `/card/mewtrucard.svg`,
-      title: generator.label,
-      link: `/${generator.slug}/`,
-      isSystem: generator.isSystem,
-      description: generator.description
-    }));
+    return generators
+      .filter(generator => isValidSlug(generator.slug)) // Filter out invalid slugs
+      .map(generator => ({
+        image: generator.isSystem ? `/card/${generator.slug}.svg` : `/card/mewtrucard.svg`,
+        title: generator.label,
+        link: `/${generator.slug}/`,
+        isSystem: generator.isSystem,
+        description: generator.description
+      }));
   },
   ['card-previews'],
   { revalidate: 3600 }
