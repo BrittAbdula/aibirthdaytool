@@ -43,6 +43,15 @@ export default function Footer() {
                   Terms of Service
                 </Link>
               </li>
+              <li>
+                <a 
+                  href="https://posegen.com" 
+                  target="_blank" 
+                  className="text-sm text-gray-600 hover:text-purple-600 transition-colors"
+                >
+                  Pose Generator
+                </a>
+              </li>
             </ul>
           </nav>
         </div>
