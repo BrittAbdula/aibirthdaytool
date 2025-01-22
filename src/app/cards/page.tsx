@@ -66,13 +66,6 @@ export default async function GeneratorsPage() {
           <p className="text-lg sm:text-xl text-gray-600 max-w-2xl mx-auto px-4 mb-6">
             Choose a card type to start creating your personalized message ✨
           </p>
-          <Link 
-            href="/create-generator" 
-            className="inline-flex items-center px-4 py-2 bg-[#FFC0CB] text-[#4A4A4A] rounded-full hover:bg-[#FFD1DC] transition-colors"
-          >
-            <PlusIcon className="mr-2 h-4 w-4" />
-            Create Your Own Generator
-          </Link>
         </div>
 
         {/* Official Generators Section */}

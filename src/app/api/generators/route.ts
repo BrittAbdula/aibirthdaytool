@@ -49,7 +49,7 @@ export async function POST(req: Request) {
         advancedFields: data.advancedFields ? JSON.parse(JSON.stringify(data.advancedFields)) : undefined,
         why: data.why ? JSON.parse(JSON.stringify(data.why)) : undefined,
         userId: session?.user?.id,
-        isPublic: true
+        isPublic: false
       }
     })
 
