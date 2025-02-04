@@ -91,6 +91,11 @@ function sitemap(): MetadataRoute.Sitemap {
       lastModified: new Date(),
       priority: 0.6,
     },
+    {
+      url: `${baseUrl}valentine/`,
+      lastModified: new Date(),
+      priority: 0.7,
+    },
   ]
 }
 

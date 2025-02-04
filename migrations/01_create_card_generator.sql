@@ -252,3 +252,19 @@ INSERT INTO "CardGenerator" (
     '["MewtruCard''s AI creates unique good luck cards that express genuine wishes for success","Our AI transforms your good luck message into extraordinary messages of encouragement","Customize your cards until they perfectly express your support","Share your good luck wishes with high-quality downloadable images or musical greeting links"]',
     ''
 );
+
+
+-- valentine
+INSERT INTO "CardGenerator" (
+  id, name, slug, description, "isSystem", "isPublic",
+  "createdAt", "updatedAt", "userId",
+  title, label, fields, "templateInfo", why, "promptContent"
+) VALUES (
+  'clg1valentine', 'Valentine Card Generator', 'valentine', 'Create Valentine''s Day cards', true, true,
+  CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, NULL,
+  'Valentine Card Generator', 'Valentine Card',
+  '[{"name":"recipientName","type":"text","label":"Recipient''s Name","optional":false},{"name":"relationship","type":"select","label":"Relationship","options":["Myself","Friend","Father","Mother","Wife","Husband","Boyfriend","Girlfriend","Brother","Sister","Daughter","Grandparent","Student","Classmate","Son","Other"],"optional":false,"defaultValue":"Friend"},{"name":"message","type":"textarea","label":"Valentine''s Day Message (optional)","optional":true},{"name":"senderName","type":"text","label":"Your Name (optional)","optional":true}]',
+  'Celebrate love with personalized Valentine''s Day cards from MewtruCard''s collection of free customizable templates ✨',
+  '["MewtruCard''s AI creates unique Valentine''s Day cards that express genuine love","Our AI transforms your Valentine''s Day wishes into extraordinary messages of love","Customize your cards until they perfectly express your love and best wishes","Share your love with high-quality downloadable images or musical greeting links"]',
+  ''
+);  

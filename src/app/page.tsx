@@ -68,10 +68,6 @@ export default async function Home() {
             <button className="bg-[#FFC0CB] text-white px-8 py-3 rounded-full hover:bg-pink-400 transition">
               <a href="/cards">Create Your Card</a>
             </button>
-
-            <button className="bg-[#FFC0CB] text-white px-8 py-3 rounded-full hover:bg-pink-400 transition">
-              <a href="/create-generator">Create Your Generator</a>
-            </button>
           </div>
 
           <div className="mb-16 items-center flex justify-center">

@@ -123,10 +123,10 @@ export default function CardTypeFilter({
     //   type: "thanksgiving",
     //   label: "Thanksgiving"
     // },
-    // {
-    //   type: "valentines-day",
-    //   label: "Valentine's Day"
-    // },
+    {
+      type: "valentines-day",
+      label: "Valentine's Day"
+    },
     // {
     //   type: "mothers-day",
     //   label: "Mother's Day"
