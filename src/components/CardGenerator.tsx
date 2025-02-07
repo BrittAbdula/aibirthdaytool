@@ -121,13 +121,15 @@ export default function CardGenerator({
 
   useEffect(() => {
     setCurrentCardType(wishCardType)
-    // 重置表单数据，并设置默认值
+    // Reset form data and set default values
     const initialFormData: Record<string, any> = {};
     cardConfig.fields.forEach(field => {
       if (field.type === 'select' && !field.optional && field.defaultValue) {
         initialFormData[field.name] = field.defaultValue;
       }
     });
+    // Set default card style to 'classic'
+    initialFormData["style"] = "classic";
     setFormData(initialFormData);
   }, [wishCardType, cardConfig])
 
@@ -306,6 +308,25 @@ export default function CardGenerator({
           <Card className="p-4 sm:p-6 bg-white border border-[#FFC0CB] shadow-md w-full max-w-md relative">
             <CardContent className="space-y-4">
               {cardConfig.fields.map((field) => renderField(field))}
+              {/* New field: Card Style Selection */}
+              <div key="card-style" className="space-y-2">
+                <Label htmlFor="card-style">Card Style</Label>
+                <Select
+                  value={formData["style"] || ''}
+                  onValueChange={(value) => handleInputChange("style", value)}
+                  required={true}
+                >
+                  <SelectTrigger id="card-style">
+                    <SelectValue placeholder="Select Card Style" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="classic">Classic</SelectItem>
+                    <SelectItem value="modern">Modern</SelectItem>
+                    <SelectItem value="minimal">Minimal</SelectItem>
+                    <SelectItem value="vintage">Vintage</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
               {showAdvancedOptions && cardConfig.advancedFields && (
                 <>
                   {cardConfig.advancedFields.map((field) => renderField(field))}

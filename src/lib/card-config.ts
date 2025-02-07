@@ -82,7 +82,6 @@ export const getAllCardTypes = unstable_cache(
       where: {
         OR: [
           { isSystem: true },
-          { isPublic: true }
         ]
       },
       select: {
