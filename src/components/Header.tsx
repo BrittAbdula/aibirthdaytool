@@ -75,9 +75,24 @@ function Header() {
 
           {/* Desktop Menu */}
           <div className="hidden md:flex items-center space-x-6">
-          <Link href="/" className="text-[#4A4A4A] hover:text-[#FFC0CB] font-serif">Home</Link>
-          <Link href="/cards/" className="text-[#4A4A4A] hover:text-[#FFC0CB] font-serif">Generators</Link>
-            <Link href="/card-gallery/" className="text-[#4A4A4A] hover:text-[#FFC0CB] font-serif">Templates</Link>
+            <Link href="/" className="text-[#4A4A4A] hover:text-[#FFC0CB] font-serif">Home</Link>
+            <Link href="/cards/" className="text-[#4A4A4A] hover:text-[#FFC0CB] font-serif">Generators</Link>
+            <DropdownMenu>
+              <DropdownMenuTrigger className="text-[#4A4A4A] hover:text-[#FFC0CB] font-serif flex items-center">
+                Gallery <ChevronDown className="ml-1 h-4 w-4" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuItem asChild>
+                  <Link href="/card-gallery/" className="w-full">Featured Gallery</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/type/birthday/" className="w-full">Card Categories</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/relationship/friend/" className="w-full">For Someone Special</Link>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
             <Link href="/my-cards/" className="text-[#4A4A4A] hover:text-[#FFC0CB] font-serif">My Cards</Link>
             {status === 'authenticated' && session ? (
               <DropdownMenu>
@@ -152,10 +167,35 @@ function Header() {
         {/* Mobile Menu */}
         {isMenuOpen && (
           <div className="mt-4 md:hidden">
-            <Link href="/" className="block py-2 px-4 w-full text-right text-[#4A4A4A] hover:text-[#FFC0CB] hover:bg-gray-50 font-serif">Home</Link>
-            <Link href="/cards/" className="block py-2 px-4 w-full text-right text-[#4A4A4A] hover:text-[#FFC0CB] hover:bg-gray-50 font-serif">Card Generators</Link>
-            <Link href="/card-gallery/" className="block py-2 px-4 w-full text-right text-[#4A4A4A] hover:text-[#FFC0CB] hover:bg-gray-50 font-serif">Templates</Link>
-            <Link href="/my-cards/" className="block py-2 px-4 w-full text-right text-[#4A4A4A] hover:text-[#FFC0CB] hover:bg-gray-50 font-serif">My Cards</Link>
+            <Link href="/" className="block py-2.5 px-4 w-full text-right text-[#4A4A4A] hover:text-[#FFC0CB] hover:bg-gray-50 font-serif">Home</Link>
+            <Link href="/cards/" className="block py-2.5 px-4 w-full text-right text-[#4A4A4A] hover:text-[#FFC0CB] hover:bg-gray-50 font-serif">Card Generators</Link>
+            
+            {/* Gallery Section - Mobile */}
+            <div className="border-y border-purple-100/50 my-2 bg-purple-50/30">
+              <Link 
+                href="/card-gallery/" 
+                className="block py-2.5 px-4 w-full text-right text-[#4A4A4A] hover:text-[#FFC0CB] hover:bg-gray-50 font-serif"
+              >
+                Featured Gallery
+                <div className="text-xs text-[#4A4A4A]/60 mt-0.5">Our curated collection</div>
+              </Link>
+              <Link 
+                href="/type/birthday/" 
+                className="block py-2.5 px-4 w-full text-right text-[#4A4A4A] hover:text-[#FFC0CB] hover:bg-gray-50 font-serif"
+              >
+                Card Categories
+                <div className="text-xs text-[#4A4A4A]/60 mt-0.5">Birthday, Anniversary, Love...</div>
+              </Link>
+              <Link 
+                href="/relationship/friend/" 
+                className="block py-2.5 px-4 w-full text-right text-[#4A4A4A] hover:text-[#FFC0CB] hover:bg-gray-50 font-serif"
+              >
+                For Someone Special
+                <div className="text-xs text-[#4A4A4A]/60 mt-0.5">Friend, Family, Partner...</div>
+              </Link>
+            </div>
+
+            <Link href="/my-cards/" className="block py-2.5 px-4 w-full text-right text-[#4A4A4A] hover:text-[#FFC0CB] hover:bg-gray-50 font-serif">My Cards</Link>
             {status === 'authenticated' && session ? (
               <div className="p-4 border-t">
                 <div className="flex items-center justify-end space-x-2 mb-2">

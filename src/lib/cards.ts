@@ -7,6 +7,10 @@ export interface Card {
   cardType: string;
   responseContent: string;
   r2Url: string | null;
+  userActions?: {
+    action: string;
+    timestamp: Date;
+  }[];
 }
 
 // 服务端渲染使用的函数，带有缓存
@@ -43,7 +47,10 @@ async function fetchRecentCards(
         path: ['relationship'],
         equals: relationship
       }
-    } : {})
+    } : {}),
+    userActions: {
+      some: {} // Only cards with user actions
+    }
   };
 
   const totalCards = await prisma.apiLog.count({ where });

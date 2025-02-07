@@ -12,16 +12,26 @@ const YOUR_SITE_NAME = 'MewTruCard';
 // Helper function to escape content
 function escapeContent(content: string): string {
     return content
-        // .replace(/&/g, '&amp;')
-        // .replace(/</g, '&lt;')
-        // .replace(/>/g, '&gt;')
-        // .replace(/"/g, '&quot;');
+        .replace(/&(?!(amp|lt|gt|quot|apos);)/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&apos;');
 }
 
 // Helper function to extract SVG content
 function extractSvgContent(content: string): string | null {
     const svgMatch = content.match(/<svg[\s\S]*?<\/svg>/);
-    return svgMatch ? escapeContent(svgMatch[0]) : null;
+    if (!svgMatch) return null;
+    
+    // Clean and escape the SVG content
+    let svgContent = svgMatch[0]
+        // Remove any invalid XML characters
+        .replace(/[^\x09\x0A\x0D\x20-\uD7FF\uE000-\uFFFD\u10000-\u10FFFF]/g, '')
+        // Ensure proper entity escaping
+        .replace(/&(?!(amp|lt|gt|quot|apos);)/g, '&amp;');
+    
+    return svgContent;
 }
 
 interface ApiLogParams {

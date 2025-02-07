@@ -132,7 +132,7 @@ export default async function EditedCardPage({ params }: Props) {
 
         <footer className="mt-8 text-center opacity-0 animate-fade-up animation-delay-1000">
           <p className="text-xs sm:text-sm text-gray-500">
-            Created with{' '}
+          ✨{' '}Created with{' '}
             <span className="inline-block animate-bounce">❤️</span>{' '}
             using{' '}
             <a

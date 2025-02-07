@@ -75,6 +75,16 @@ const config = {
   					height: '0'
   				}
   			},
+        'ping-slow': {
+          '0%': {
+            transform: 'scale(1)',
+            opacity: '0.5'
+          },
+          '75%, 100%': {
+            transform: 'scale(2)',
+            opacity: '0'
+          }
+        },
   			marquee: {
   				from: {
   					transform: 'translateX(0)'
@@ -147,6 +157,7 @@ const config = {
   		animation: {
   			'accordion-down': 'accordion-down 0.2s ease-out',
   			'accordion-up': 'accordion-up 0.2s ease-out',
+        'ping-slow': 'ping-slow 2s cubic-bezier(0, 0, 0.2, 1) infinite',
   			marquee: 'marquee var(--duration) infinite linear',
   			'marquee-vertical': 'marquee-vertical var(--duration) linear infinite',
   			'background-position-spin': 'background-position-spin 3000ms infinite alternate',

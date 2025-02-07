@@ -160,31 +160,51 @@ export function ImageViewer({ svgContent, alt, cardId, cardType, isNewCard, imgU
     <>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>
-          <div className="w-full h-full flex items-center justify-center cursor-pointer hover:opacity-90 transition-opacity">
+          <div className="relative w-full h-full flex items-center justify-center cursor-pointer group">
             {isClient && imageSrc && (
-              <img
-                src={imageSrc}
-                alt={alt}
-                width={400}
-                height={600}
-                className="max-w-full max-h-full"
-              />
+              <>
+                <img
+                  src={imageSrc}
+                  alt={alt}
+                  width={400}
+                  height={600}
+                  className="max-w-full max-h-full"
+                />
+                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/10 via-black/5 to-transparent md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300">
+                  <div className="p-2 sm:p-3">
+                    <div className="flex items-center justify-center">
+                      <span className="px-2 py-0.5 sm:px-3 sm:py-1 rounded-full text-[10px] sm:text-xs font-medium tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-600">
+                        {cardType.charAt(0).toUpperCase() + cardType.slice(1)} Card
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </>
             )}
           </div>
         </DialogTrigger>
-        <DialogContent className="sm:max-w-[90vw] md:max-w-[80vw] lg:max-w-[70vw] xl:max-w-[60vw]  p-0">
+        <DialogContent className="sm:max-w-[90vw] md:max-w-[80vw] lg:max-w-[70vw] xl:max-w-[60vw] p-0">
           <DialogTitle className="sr-only">Image Viewer</DialogTitle>
           <div className="flex flex-col items-center justify-center h-full">
             {!showPreview ? (
-                <div className="w-full h-[calc(100vh-200px)] overflow-auto flex items-center justify-center p-4">
+              <div className="relative w-full h-[calc(100vh-200px)] overflow-auto flex items-center justify-center p-4">
                 {isClient && imageSrc && (
-                  <img
-                    src={imageSrc}
-                    alt={alt}
-                    width={400}
-                    height={600}
-                    className="max-w-full max-h-full"
-                  />
+                  <>
+                    <img
+                      src={imageSrc}
+                      alt={alt}
+                      width={400}
+                      height={600}
+                      className="max-w-full max-h-full"
+                    />
+                    <div className="absolute bottom-4 sm:bottom-6 left-0 right-0">
+                      <div className="flex items-center justify-center">
+                        <span className="px-2 py-1 sm:px-3 sm:py-1.5 rounded-full text-xs sm:text-sm font-medium tracking-wide bg-white/90 shadow-sm text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-600 backdrop-blur-sm">
+                          {cardType.charAt(0).toUpperCase() + cardType.slice(1)} Card
+                        </span>
+                      </div>
+                    </div>
+                  </>
                 )}
               </div>
             ) : (

@@ -13,19 +13,20 @@ interface CardGalleryContentProps {
     totalPages: number;
   };
   defaultType: CardType | null;
+  defaultRelationship?: string | null;
 }
 
-export default function CardGalleryContent({ initialCardsData, defaultType }: CardGalleryContentProps) {
+export default function CardGalleryContent({ initialCardsData, defaultType, defaultRelationship}: CardGalleryContentProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [selectedType, setSelectedType] = useState<CardType | null>(defaultType)
-  const [selectedRelationship, setSelectedRelationship] = useState<string | null>(null)
+  const [selectedRelationship, setSelectedRelationship] = useState<string | null>(defaultRelationship || null)
   const [cardsData, setCardsData] = useState(initialCardsData)
   const [isLoading, setIsLoading] = useState(false)
 
   const handleFilterChange = ({ cardType, relationship }: { cardType: CardType | null, relationship: string | null }) => {
     setSelectedType(cardType)
-    setSelectedRelationship(relationship)
+    setSelectedRelationship(relationship ? relationship.charAt(0).toUpperCase() + relationship.slice(1) : null)
     
     const params = new URLSearchParams(searchParams.toString())
     if (cardType) {
@@ -66,19 +67,8 @@ export default function CardGalleryContent({ initialCardsData, defaultType }: Ca
   }, [selectedType, selectedRelationship])
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-white via-purple-50 to-white">
+    <main className="min-h-screen">
       <div className="relative container mx-auto px-4 sm:px-6 py-8 sm:py-12">
-        <header className="text-center mb-4">
-          <h1 className="text-4xl sm:text-5xl md:text-6xl font-serif font-bold mb-4 tracking-tight">
-            <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-pink-600">
-              Card Templates
-            </span>
-          </h1>
-          <p className="text-lg sm:text-xl text-gray-600 max-w-2xl mx-auto px-4">
-          Create your own mewtru card with our collection of ai generated cards ✨
-          </p>
-        </header>
-
         <section className="mb-8">
           <CardTypeFilter 
             selectedType={selectedType}

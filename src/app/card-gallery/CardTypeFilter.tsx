@@ -1,6 +1,7 @@
 'use client'
 
-import { CardType, getAllCardTypes } from '@/lib/card-config'
+import { CardType } from '@/lib/card-config'
+import { CARD_TYPES, RELATIONSHIPS } from '@/lib/card-constants'
 import { useRef } from 'react'
 import { cn } from '@/lib/utils'
 import { ChevronLeftIcon, ChevronRightIcon } from '@radix-ui/react-icons'
@@ -11,151 +12,11 @@ interface CardTypeFilterProps {
   onChange: (type: { cardType: CardType | null, relationship: string | null }) => void
 }
 
-const RELATIONSHIPS = [
-  { value: 'Friend', label: 'Friend' },           // 3362
-  { value: 'Sister', label: 'Sister' },           // 946
-  { value: 'Girlfriend', label: 'Girlfriend' },   // 690
-  { value: 'Husband', label: 'Husband' },         // 687
-  { value: 'Wife', label: 'Wife' },               // 658
-  { value: 'Brother', label: 'Brother' },         // 545
-  { value: 'Partner', label: 'Partner' },         // 520
-  { value: 'Boyfriend', label: 'Boyfriend' },     // 419
-  { value: 'Mother', label: 'Mother' },           // 333
-  { value: 'Father', label: 'Father' },           // 304
-  { value: 'Daughter', label: 'Daughter' },       // 262
-  { value: 'Myself', label: 'Myself' },           // 216
-  { value: 'Crush', label: 'Crush' },             // 74
-  { value: 'Spouse', label: 'Spouse' },           // 46
-  { value: 'Grandparent', label: 'Grandparent' }, // 36
-  { value: 'Student', label: 'Student' },         // 7
-  { value: 'Classmate', label: 'Classmate' },     // 3
-  { value: 'Son', label: 'Son' },                 // 1
-  { value: 'Other', label: 'Other' },             // 622
-]
 export default function CardTypeFilter({ 
   selectedType, 
   selectedRelationship,
   onChange 
 }: CardTypeFilterProps) {
-  // const cardTypes = ["birthday", "anniversary", "love", "friendship", "thank-you", "congratulations", "get-well", "sympathy", "thinking-of-you", "wedding", "baby", "graduation", "good-luck", "sorry", "miss-you", "encouragement", "christmas", "easter", "halloween", "thanksgiving", "valentines-day", "mothers-day", "fathers-day", "teachers-day", "boss-day", "nurses-day", "secretaries-day", "administrative-professionals-day", "fathers-day", "mothers-day", "valentines-day", "christmas", "easter", "halloween", "thanksgiving", "new-year", "wedding", "anniversary", "birthday", "graduation", "baby", "sympathy", "get-well", "congratulations", "thank-you", "love", "friendship", "thinking-of-you", "good-luck", "sorry", "miss-you", "encouragement", "christmas", "easter", "halloween", "thanksgiving", "valentines-day", "mothers-day", "fathers-day", "teachers-day", "boss-day", "nurses-day", "secretaries-day", "administrative-professionals-day", "fathers-day", "mothers-day", "valentines-day", "christmas", "easter", "halloween", "thanksgiving", "new-year", "wedding", "anniversary", "birthday", "graduation", "baby", "sympathy", "get-well", "congratulations", "thank-you", "love", "friendship", "thinking-of-you", "good-luck", "sorry", "miss-you", "encouragement", "christmas", "easter", "halloween", "thanksgiving", "valentines-day", "mothers-day", "fathers-day", "teachers-day", "boss-day", "nurses-day", "secretaries-day", "administrative-professionals-day", "fathers-day", "mothers-day", "valentines-day", "christmas", "easter", "halloween", "thanksgiving", "new-year", "wedding", "anniversary", "birthday", "graduation", "baby"]
-  const cardTypes: { type: string, label: string }[] = [
-    {
-      type: "birthday",
-      label: "Birthday"
-    },
-    {
-      type: "anniversary",
-      label: "Anniversary"
-    },
-    {
-      type: "love",
-      label: "Love"
-    },
-    {
-      type: "newyear",
-      label: "New Year"
-    },
-    // {
-    //   type: "friendship",
-    //   label: "Friendship"
-    // },
-    {
-      type: "thankyou",
-      label: "Thank You"
-    },
-    {
-      type: "congratulations",
-      label: "Congratulations"
-    },
-    // {
-    //   type: "get-well",
-    //   label: "Get Well"
-    // },
-    // {
-    //   type: "sympathy",
-    //   label: "Sympathy"
-    // },
-    // {
-    //   type: "thinking-of-you",
-    //   label: "Thinking of You"
-    // },
-    {
-      type: "wedding",
-      label: "Wedding"
-    },
-    {
-      type: "baby",
-      label: "Baby"
-    },
-    {
-      type: "graduation",
-      label: "Graduation"
-    },
-    {
-      type: "good-luck",
-      label: "Good Luck"
-    },
-    {
-      type: "sorry",
-      label: "Sorry"
-    },
-    // {
-    //   type: "miss-you",
-    //   label: "Miss You"
-    // },
-    // {
-    //   type: "encouragement",
-    //   label: "Encouragement"
-    // },
-    {
-      type: "christmas",
-      label: "Christmas"
-    },
-    // {
-    //   type: "easter",
-    //   label: "Easter"
-    // },
-    // {
-    //   type: "halloween",
-    //   label: "Halloween"
-    // },
-    // {
-    //   type: "thanksgiving",
-    //   label: "Thanksgiving"
-    // },
-    {
-      type: "valentines-day",
-      label: "Valentine's Day"
-    },
-    // {
-    //   type: "mothers-day",
-    //   label: "Mother's Day"
-    // },
-    // {
-    //   type: "fathers-day",
-    //   label: "Father's Day"
-    // },
-    // {
-    //   type: "teachers-day",
-    //   label: "Teacher's Day"
-    // },
-    // {
-    //   type: "boss-day",
-    //   label: "Boss's Day"
-    // },
-    // {
-    //   type: "nurses-day",
-    //   label: "Nurse's Day"
-    // },
-    // {
-    //   type: "secretaries-day",
-    //   label: "Secretary's Day"
-    // },
-    // {
-    //   type: "administrative-professionals-day",
-    //   label: "Administrative Professional's Day"
-    // }
-  ]
   const scrollContainerRef = useRef<HTMLDivElement>(null)
 
   const scroll = (direction: 'left' | 'right') => {
@@ -212,7 +73,7 @@ export default function CardTypeFilter({
             >
               All Types
             </button>
-            {cardTypes.map(({ type, label }) => (
+            {CARD_TYPES.map(({ type, label }) => (
               <button
                 key={type}
                 onClick={() => onChange({ cardType: type, relationship: selectedRelationship })}
