@@ -98,15 +98,75 @@ const config = {
   				'100%': {
   					backgroundPosition: 'bottom center'
   				}
-  			}
+  			},
+  			fadeUp: {
+  				'0%': { 
+  					opacity: '0',
+  					transform: 'translateY(20px)'
+  				},
+  				'100%': { 
+  					opacity: '1',
+  					transform: 'translateY(0)'
+  				},
+  			},
+  			blob: {
+  				'0%': {
+  					transform: 'translate(0px, 0px) scale(1)',
+  				},
+  				'33%': {
+  					transform: 'translate(30px, -50px) scale(1.1)',
+  				},
+  				'66%': {
+  					transform: 'translate(-20px, 20px) scale(0.9)',
+  				},
+  				'100%': {
+  					transform: 'translate(0px, 0px) scale(1)',
+  				},
+  			},
+  			twinkle: {
+  				'0%, 100%': {
+  					opacity: '0.2',
+  					transform: 'scale(1)',
+  				},
+  				'50%': {
+  					opacity: '1',
+  					transform: 'scale(1.2)',
+  				},
+  			},
+  			sparkle: {
+  				'0%, 100%': {
+  					opacity: '0',
+  					transform: 'scale(0) rotate(0deg)',
+  				},
+  				'50%': {
+  					opacity: '1',
+  					transform: 'scale(1) rotate(180deg)',
+  				},
+  			},
   		},
   		animation: {
   			'accordion-down': 'accordion-down 0.2s ease-out',
   			'accordion-up': 'accordion-up 0.2s ease-out',
   			marquee: 'marquee var(--duration) infinite linear',
   			'marquee-vertical': 'marquee-vertical var(--duration) linear infinite',
-  			'background-position-spin': 'background-position-spin 3000ms infinite alternate'
-  		}
+  			'background-position-spin': 'background-position-spin 3000ms infinite alternate',
+  			'fade-up': 'fadeUp 0.8s ease-out forwards',
+  			'blob': 'blob 7s infinite',
+  			'twinkle': 'twinkle 3s ease-in-out infinite',
+  			'sparkle': 'sparkle 2s ease-in-out infinite',
+  		},
+  		transformStyle: {
+  			'3d': 'preserve-3d',
+  		},
+  		perspective: {
+  			'envelope': '1000px',
+  		},
+  		rotateX: {
+  			'180': '180deg',
+  		},
+  		backfaceVisibility: {
+  			'hidden': 'hidden',
+  		},
   	}
   },
   plugins: [require("tailwindcss-animate")],

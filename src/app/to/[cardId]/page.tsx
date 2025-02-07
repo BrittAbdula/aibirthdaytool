@@ -93,34 +93,54 @@ export default async function EditedCardPage({ params }: Props) {
         <div className="absolute -top-20 -right-20 w-[300px] h-[300px] bg-purple-100/60 rounded-full mix-blend-multiply filter blur-3xl opacity-60 animate-blob"></div>
         <div className="absolute top-1/2 -left-10 w-[250px] h-[250px] bg-pink-100/60 rounded-full mix-blend-multiply filter blur-3xl opacity-60 animate-blob animation-delay-2000"></div>
         <div className="absolute -bottom-20 right-10 w-[350px] h-[350px] bg-yellow-100/60 rounded-full mix-blend-multiply filter blur-3xl opacity-60 animate-blob animation-delay-4000"></div>
+        <div className="absolute inset-0 opacity-30">
+          {[...Array(20)].map((_, i) => (
+            <div
+              key={i}
+              className="absolute w-1 h-1 bg-white rounded-full animate-twinkle"
+              style={{
+                top: `${Math.random() * 100}%`,
+                left: `${Math.random() * 100}%`,
+                animationDelay: `${Math.random() * 5}s`,
+              }}
+            />
+          ))}
+        </div>
       </div>
 
       <div className="container mx-auto px-4 py-6 relative z-10">
         <section className="max-w-2xl mx-auto space-y-4">
-          <Suspense
-            fallback={
-              <div className="flex flex-col items-center justify-center h-40 space-y-3">
-                <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-purple-400"></div>
-                <p className="text-gray-500 text-sm">Loading your special card...</p>
-              </div>
-            }
-          >
-            <CardDisplay card={card} />
-          </Suspense>
+          <div className="opacity-0 animate-fade-up">
+            <Suspense
+              fallback={
+                <div className="flex flex-col items-center justify-center h-40 space-y-3">
+                  <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-purple-400"></div>
+                  <p className="text-gray-500 text-sm">Loading your special card...</p>
+                </div>
+              }
+            >
+              <CardDisplay card={card} />
+            </Suspense>
 
-          {card.spotifyTrackId && (
-            <SpotifyPlayer trackId={card.spotifyTrackId} />
-          )}
+            {card.spotifyTrackId && (
+              <div className="mt-6 opacity-0 animate-fade-up animation-delay-500">
+                <SpotifyPlayer trackId={card.spotifyTrackId} />
+              </div>
+            )}
+          </div>
         </section>
 
-        <footer className="mt-8 text-center">
+        <footer className="mt-8 text-center opacity-0 animate-fade-up animation-delay-1000">
           <p className="text-xs sm:text-sm text-gray-500">
-            Created with ❤️ using{' '}
+            Created with{' '}
+            <span className="inline-block animate-bounce">❤️</span>{' '}
+            using{' '}
             <a
               href="/"
-              className="text-purple-600 hover:text-pink-600 transition-colors duration-200 font-medium"
+              className="text-purple-600 hover:text-pink-600 transition-colors duration-200 font-medium group"
             >
-              MewTruCard.com  ✨
+              MewTruCard.com{' '}
+              <span className="inline-block transition-transform group-hover:rotate-12">✨</span>
             </a>
           </p>
         </footer>
