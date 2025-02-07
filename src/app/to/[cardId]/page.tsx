@@ -120,7 +120,7 @@ export default async function EditedCardPage({ params }: Props) {
               href="/"
               className="text-purple-600 hover:text-pink-600 transition-colors duration-200 font-medium"
             >
-              MewTruCard.com
+              MewTruCard.com  ✨
             </a>
           </p>
         </footer>

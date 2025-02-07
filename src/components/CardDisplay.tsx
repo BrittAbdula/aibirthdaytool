@@ -78,11 +78,11 @@ export default function CardDisplay({ card }: { card: EditedCardData }) {
             <Image
               src={imageSrc}
               alt={`${card.cardType} card preview`}
-              layout="fill"
-              objectFit="contain"
+              fill
               priority
               className="transition-transform duration-300 hover:scale-102"
               onClick={triggerConfetti}
+              unoptimized
             />
           </div>
         </div>
