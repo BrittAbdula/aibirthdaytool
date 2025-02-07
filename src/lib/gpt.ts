@@ -138,15 +138,30 @@ export async function generateCardContent(params: CardContentParams): Promise<{ 
                 "Content-Type": "application/json"
             },
             body: JSON.stringify({
-                "model": "anthropic/claude-3.5-sonnet",
+                "model": "google/gemini-2.0-pro-exp-02-05:free",
                 "messages": [
-                    { "role": "system", "content": defaultPrompt },
-                    { "role": "user", "content": userPrompt },
+                    { 
+                        "role": "system", 
+                        "content": defaultPrompt 
+                    },
+                    { 
+                        "role": "user", 
+                        "content": [
+                            {
+                                "type": "text",
+                                "text": userPrompt
+                            }
+                        ]
+                    }
                 ],
+                "temperature": 0.7,
+                "max_tokens": 4096
             })
         });
 
         if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            console.error('API Error:', errorData);
             throw new Error(`HTTP error! status: ${response.status}`);
         }
 
