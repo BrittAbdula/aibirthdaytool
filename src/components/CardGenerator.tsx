@@ -13,7 +13,7 @@ import { Slider } from "@/components/ui/slider"
 import { Textarea } from "@/components/ui/textarea"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { ImageViewer } from '@/components/ImageViewer'
-import { extractTextFromSvg, cn } from '@/lib/utils'
+import { cn } from '@/lib/utils'
 import { CardType, getCardConfig, getAllCardTypes, CardConfig } from '@/lib/card-config'
 import { useSession, signIn } from "next-auth/react"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
@@ -458,7 +458,7 @@ export default function CardGenerator({
               ) : (
                 <div className="w-full h-full flex items-center justify-center overflow-hidden">
                   {svgContent && submited ? (
-                    <ImageViewer svgContent={svgContent} alt={extractTextFromSvg(svgContent || 'Generated Card')} cardId={cardId || '1'} cardType={currentCardType} isNewCard={true} />
+                    <ImageViewer svgContent={svgContent} alt={currentCardType} cardId={cardId || '1'} cardType={currentCardType} isNewCard={true} />
                   ) : (
                     <div className="w-full h-full relative">
                       <a href='/card-gallery/'>

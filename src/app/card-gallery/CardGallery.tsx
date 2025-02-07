@@ -4,7 +4,6 @@ import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { ImageViewer } from '../../components/ImageViewer'
 import { Card } from '@/lib/cards'
 import { CardType } from '@/lib/card-config'
-import { extractTextFromSvg, cn } from '@/lib/utils'
 
 interface CardGalleryProps {
   initialCardsData: {
@@ -89,7 +88,7 @@ export default function CardGallery({ initialCardsData, wishCardType }: CardGall
             <div className="aspect-[2/3] relative">
               <ImageViewer
                 svgContent={card.responseContent}
-                alt={extractTextFromSvg(card.responseContent || 'Generated Card')}
+                alt={card.cardType}
                 cardId={card.cardId}
                 cardType={card.cardType}
                 isNewCard={false}
