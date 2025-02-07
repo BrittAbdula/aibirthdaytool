@@ -176,7 +176,7 @@ export function ImageViewer({ svgContent, alt, cardId, cardType, isNewCard, imgU
           <DialogTitle className="sr-only">Image Viewer</DialogTitle>
           <div className="flex flex-col items-center justify-center h-full">
             {!showPreview ? (
-              <div className="w-full h-[calc(100vh-200px)] overflow-auto flex items-center justify-center p-4">
+                <div className="w-full h-[calc(100vh-200px)] overflow-auto flex items-center justify-center p-4">
                 {isClient && imageSrc && (
                   <img
                     src={imageSrc}
@@ -188,7 +188,7 @@ export function ImageViewer({ svgContent, alt, cardId, cardType, isNewCard, imgU
                 )}
               </div>
             ) : (
-              <div className="w-full h-[calc(100vh-200px)] overflow-auto">
+              <div className="w-full h-[calc(100vh-200px)] overflow-auto flex items-center justify-center">
                 <CardDisplay 
                   card={{
                     id: cardId,

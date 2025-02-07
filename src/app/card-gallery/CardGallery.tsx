@@ -21,6 +21,30 @@ export default function CardGallery({ initialCardsData, wishCardType }: CardGall
   const [totalPages, setTotalPages] = useState(initialCardsData.totalPages)
   const [isLoading, setIsLoading] = useState(false)
   const [hasMore, setHasMore] = useState(currentPage < totalPages)
+  const observerTarget = useRef<HTMLDivElement>(null)
+
+  const loadMore = useCallback(() => {
+    if (!isLoading && hasMore) {
+      setCurrentPage(prev => prev + 1)
+    }
+  }, [isLoading, hasMore])
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      entries => {
+        if (entries[0].isIntersecting) {
+          loadMore()
+        }
+      },
+      { threshold: 0.1 }
+    )
+
+    if (observerTarget.current) {
+      observer.observe(observerTarget.current)
+    }
+
+    return () => observer.disconnect()
+  }, [loadMore])
 
   useEffect(() => {
     setCurrentPage(1)
@@ -28,10 +52,6 @@ export default function CardGallery({ initialCardsData, wishCardType }: CardGall
     setTotalPages(initialCardsData.totalPages)
     setHasMore(initialCardsData.totalPages > 1)
   }, [wishCardType, initialCardsData])
-
-  const handleLoadMore = () => {
-    setCurrentPage(prev => prev + 1)
-  }
 
   useEffect(() => {
     if (currentPage > 1) {
@@ -80,21 +100,8 @@ export default function CardGallery({ initialCardsData, wishCardType }: CardGall
       </div>
 
       {hasMore && (
-        <div className="flex justify-center my-8">
-          <button
-            onClick={handleLoadMore}
-            disabled={isLoading}
-            className="bg-[#FFC0CB] text-white px-8 py-3 rounded-full hover:bg-pink-400 transition"
-          >
-            {isLoading ? (
-              <div className="flex items-center">
-                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
-                loading...
-              </div>
-            ) : (
-              'More'
-            )}
-          </button>
+        <div ref={observerTarget} className="flex justify-center py-8">
+          <div className="w-6 h-6 border-2 border-pink-300 border-t-transparent rounded-full animate-spin" />
         </div>
       )}
     </div>

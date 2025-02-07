@@ -1,5 +1,5 @@
 'use client'
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { Button } from "@/components/ui/button"
@@ -13,7 +13,7 @@ import { Slider } from "@/components/ui/slider"
 import { Textarea } from "@/components/ui/textarea"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { ImageViewer } from '@/components/ImageViewer'
-import { extractTextFromSvg } from '@/lib/utils'
+import { extractTextFromSvg, cn } from '@/lib/utils'
 import { CardType, getCardConfig, getAllCardTypes, CardConfig } from '@/lib/card-config'
 import { useSession, signIn } from "next-auth/react"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
@@ -91,6 +91,100 @@ const ProgressBar = ({ progress }: { progress: number }) => (
   </div>
 );
 
+const CustomSelect = ({ 
+  value, 
+  onValueChange, 
+  placeholder, 
+  options, 
+  customValue, 
+  onCustomValueChange,
+  required,
+  label
+}: { 
+  value: string, 
+  onValueChange: (value: string) => void, 
+  placeholder: string, 
+  options: string[], 
+  customValue: string,
+  onCustomValueChange: (value: string) => void,
+  required?: boolean,
+  label: string
+}) => {
+  const [isCustom, setIsCustom] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (isCustom && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [isCustom]);
+
+  const handleCustomValueChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    onCustomValueChange(e.target.value);
+    onValueChange(e.target.value);
+  };
+
+  return (
+    <div className="relative">
+      <div className={cn(
+        "transition-all duration-300",
+        isCustom ? "hidden" : "block"
+      )}>
+        <Select
+          value={isCustom ? "" : value}
+          onValueChange={(val) => {
+            if (val === "custom") {
+              setIsCustom(true);
+            } else {
+              onValueChange(val);
+            }
+          }}
+          required={required && !isCustom}
+        >
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder={placeholder} />
+          </SelectTrigger>
+          <SelectContent>
+            {options.map((option) => (
+              <SelectItem key={option} value={option}>{option}</SelectItem>
+            ))}
+            <SelectItem value="custom">✨ Custom {label}</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      
+      <div className={cn(
+        "transition-all duration-300",
+        !isCustom ? "hidden" : "block"
+      )}>
+        <div className="relative">
+          <Input
+            ref={inputRef}
+            value={customValue}
+            onChange={handleCustomValueChange}
+            placeholder={`Enter custom ${label.toLowerCase()}`}
+            className="pr-10"
+            required={required && isCustom}
+          />
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="absolute right-1.5 top-1/2 -translate-y-1/2 h-7 w-7 p-0 hover:bg-gray-100 rounded-full"
+            onClick={() => {
+              setIsCustom(false);
+              onCustomValueChange("");
+              onValueChange("");
+            }}
+          >
+            ×
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export default function CardGenerator({ 
   wishCardType, 
   initialCardId, 
@@ -118,6 +212,7 @@ export default function CardGenerator({
   const sampleCard = `/card/${wishCardType}.svg`
   const [submited, setSubmited] = useState(false)
   const [progress, setProgress] = useState(0);
+  const [customValues, setCustomValues] = useState<Record<string, string>>({});
 
   useEffect(() => {
     setCurrentCardType(wishCardType)
@@ -257,20 +352,18 @@ export default function CardGenerator({
           );
         case 'select':
           return (
-            <Select
+            <CustomSelect
               value={formData[field.name] || ''}
               onValueChange={(value) => handleInputChange(field.name, value)}
+              customValue={customValues[field.name] || ''}
+              onCustomValueChange={(value) => {
+                setCustomValues(prev => ({ ...prev, [field.name]: value }));
+              }}
+              placeholder={(field.placeholder || `Select ${field.label}`).replace('(optional)', '')}
+              options={field.options || []}
               required={isRequired}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder={(field.placeholder || `Select ${field.label}`).replace('(optional)', '')} />
-              </SelectTrigger>
-              <SelectContent>
-                {field.options?.map((option: string) => (
-                  <SelectItem key={option} value={option}>{option}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              label={field.label}
+            />
           );
         case 'age':
           return (
@@ -311,21 +404,18 @@ export default function CardGenerator({
               {/* New field: Card Style Selection */}
               <div key="card-style" className="space-y-2">
                 <Label htmlFor="card-style">Card Style</Label>
-                <Select
+                <CustomSelect
                   value={formData["style"] || ''}
                   onValueChange={(value) => handleInputChange("style", value)}
+                  customValue={customValues["style"] || ''}
+                  onCustomValueChange={(value) => {
+                    setCustomValues(prev => ({ ...prev, style: value }));
+                  }}
+                  placeholder="Select Card Style"
+                  options={["classic", "modern", "minimal", "vintage"]}
                   required={true}
-                >
-                  <SelectTrigger id="card-style">
-                    <SelectValue placeholder="Select Card Style" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="classic">Classic</SelectItem>
-                    <SelectItem value="modern">Modern</SelectItem>
-                    <SelectItem value="minimal">Minimal</SelectItem>
-                    <SelectItem value="vintage">Vintage</SelectItem>
-                  </SelectContent>
-                </Select>
+                  label="Style"
+                />
               </div>
               {showAdvancedOptions && cardConfig.advancedFields && (
                 <>
