@@ -19,9 +19,23 @@ import { CARD_TYPES, RELATIONSHIPS } from '@/lib/card-constants'
 function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
   const pathname = usePathname()
   const { data: session, status } = useSession()
   const [isRelationshipMenuOpen, setIsRelationshipMenuOpen] = useState(false)
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768)
+      if (window.innerWidth >= 768) {
+        setIsMenuOpen(false)
+      }
+    }
+
+    handleResize()
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
 
   useEffect(() => {
     setIsMenuOpen(false)
@@ -81,18 +95,18 @@ function Header() {
             <Link href="/cards/" className="text-[#4A4A4A] hover:text-[#FFC0CB] font-serif">Generators</Link>
             
             {/* Card Types Dropdown */}
-            <DropdownMenu open={isMenuOpen}>
+            <DropdownMenu>
               <DropdownMenuTrigger 
                 className="text-[#4A4A4A] hover:text-[#FFC0CB] font-serif flex items-center"
-                onMouseEnter={() => setIsMenuOpen(true)}
-                onMouseLeave={() => setIsMenuOpen(false)}
+                onMouseEnter={() => !isMobile && setIsMenuOpen(true)}
+                onMouseLeave={() => !isMobile && setIsMenuOpen(false)}
               >
                 Card Types <ChevronDown className="ml-1 h-4 w-4" />
               </DropdownMenuTrigger>
               <DropdownMenuContent 
                 className="w-[280px] p-2"
-                onMouseEnter={() => setIsMenuOpen(true)}
-                onMouseLeave={() => setIsMenuOpen(false)}
+                onMouseEnter={() => !isMobile && setIsMenuOpen(true)}
+                onMouseLeave={() => !isMobile && setIsMenuOpen(false)}
               >
                 <div className="grid grid-cols-2 gap-1">
                   <DropdownMenuItem asChild className="col-span-2">
@@ -112,18 +126,18 @@ function Header() {
             </DropdownMenu>
 
             {/* Relationships Dropdown */}
-            <DropdownMenu open={isRelationshipMenuOpen}>
+            <DropdownMenu>
               <DropdownMenuTrigger 
                 className="text-[#4A4A4A] hover:text-[#FFC0CB] font-serif flex items-center"
-                onMouseEnter={() => setIsRelationshipMenuOpen(true)}
-                onMouseLeave={() => setIsRelationshipMenuOpen(false)}
+                onMouseEnter={() => !isMobile && setIsRelationshipMenuOpen(true)}
+                onMouseLeave={() => !isMobile && setIsRelationshipMenuOpen(false)}
               >
                 For Someone Special <ChevronDown className="ml-1 h-4 w-4" />
               </DropdownMenuTrigger>
               <DropdownMenuContent 
                 className="w-[280px] p-2"
-                onMouseEnter={() => setIsRelationshipMenuOpen(true)}
-                onMouseLeave={() => setIsRelationshipMenuOpen(false)}
+                onMouseEnter={() => !isMobile && setIsRelationshipMenuOpen(true)}
+                onMouseLeave={() => !isMobile && setIsRelationshipMenuOpen(false)}
               >
                 <div className="grid grid-cols-2 gap-1">
                   {RELATIONSHIPS.map((relation) => (
