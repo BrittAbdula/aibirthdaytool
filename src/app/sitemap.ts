@@ -1,102 +1,61 @@
 import { MetadataRoute } from 'next'
+import { CARD_TYPES, RELATIONSHIPS } from '@/lib/card-constants'
 
 function sitemap(): MetadataRoute.Sitemap {
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://mewtrucard.com/'
+  const currentDate = new Date()
 
-  return [
+  // Base routes
+  const baseRoutes = [
     {
       url: baseUrl,
-      lastModified: new Date(),
+      lastModified: currentDate,
       priority: 1,
     },
     {
       url: `${baseUrl}card-gallery/`,
-      lastModified: new Date(),
-      changeFrequency: 'daily',
+      lastModified: currentDate,
+      changeFrequency: 'daily' as const,
+      priority: 0.9,
+    },
+    {
+      url: `${baseUrl}cards/`,
+      lastModified: currentDate,
+      changeFrequency: 'weekly' as const,
       priority: 0.8,
-    },
-    {
-      url: `${baseUrl}birthday-card-gallery/`,
-      lastModified: new Date(),
-      changeFrequency: 'daily',
-      priority: 0.8,
-    },
-    {
-      url: `${baseUrl}love/`,
-      lastModified: new Date(),
-      priority: 0.6,
-    },
-    {
-      url: `${baseUrl}sorry/`,
-      lastModified: new Date(),
-      priority: 0.6,
-    },
-    {
-      url: `${baseUrl}anniversary/`,
-      lastModified: new Date(),
-      priority: 0.6,
-    },
-    {
-      url: `${baseUrl}birthday/`,
-      lastModified: new Date(),
-      priority: 0.6,
-    },
-    {
-      url: `${baseUrl}thankyou/`,
-      lastModified: new Date(),
-      priority: 0.6,
-    },
-    {
-      url: `${baseUrl}congratulations/`,
-      lastModified: new Date(),
-      priority: 0.6,
-    },
-    {
-      url: `${baseUrl}holiday/`,
-      lastModified: new Date(),
-      priority: 0.6,
-    },
-    {
-      url: `${baseUrl}teacher/`,
-      lastModified: new Date(),
-      priority: 0.6,
-    },
-    {
-      url: `${baseUrl}graduation/`,
-      lastModified: new Date(),
-      priority: 0.6,
-    },
-    {
-      url: `${baseUrl}baby/`,
-      lastModified: new Date(),
-      priority: 0.6,
-    },
-    {
-      url: `${baseUrl}wedding/`,
-      lastModified: new Date(),
-      priority: 0.6,
-    },
-    {
-      url: `${baseUrl}good-luck/`,
-      lastModified: new Date(),
-      priority: 0.6,
-    },
-    {
-      url: `${baseUrl}newyear/`,
-      lastModified: new Date(),
-      priority: 0.6,
-    },
-    {
-      url: `${baseUrl}christmas/`,
-      lastModified: new Date(),
-      priority: 0.6,
-    },
-    {
-      url: `${baseUrl}valentine/`,
-      lastModified: new Date(),
-      priority: 0.7,
     },
   ]
+
+  // Card type pages
+  const cardTypeRoutes = CARD_TYPES.map(cardType => ({
+    url: `${baseUrl}type/${cardType.type}/`,
+    lastModified: currentDate,
+    changeFrequency: 'daily' as const,
+    priority: 0.8,
+  }))
+
+  // Relationship pages
+  const relationshipRoutes = RELATIONSHIPS.map(relation => ({
+    url: `${baseUrl}relationship/${relation.value}/`,
+    lastModified: currentDate,
+    changeFrequency: 'daily' as const,
+    priority: 0.8,
+  }))
+
+  // Generator pages
+  const generatorRoutes = CARD_TYPES.map(cardType => ({
+    url: `${baseUrl}${cardType.type}/`,
+    lastModified: currentDate,
+    changeFrequency: 'weekly' as const,
+    priority: 0.7,
+  }))
+
+  return [
+    ...baseRoutes,
+    ...cardTypeRoutes,
+    ...relationshipRoutes,
+    ...generatorRoutes,
+  ] satisfies MetadataRoute.Sitemap
 }
 
 export default sitemap

@@ -14,12 +14,14 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { CARD_TYPES, RELATIONSHIPS } from '@/lib/card-constants'
 
 function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const pathname = usePathname()
   const { data: session, status } = useSession()
+  const [isRelationshipMenuOpen, setIsRelationshipMenuOpen] = useState(false)
 
   useEffect(() => {
     setIsMenuOpen(false)
@@ -77,22 +79,64 @@ function Header() {
           <div className="hidden md:flex items-center space-x-6">
             <Link href="/" className="text-[#4A4A4A] hover:text-[#FFC0CB] font-serif">Home</Link>
             <Link href="/cards/" className="text-[#4A4A4A] hover:text-[#FFC0CB] font-serif">Generators</Link>
-            <DropdownMenu>
-              <DropdownMenuTrigger className="text-[#4A4A4A] hover:text-[#FFC0CB] font-serif flex items-center">
-                Gallery <ChevronDown className="ml-1 h-4 w-4" />
+            
+            {/* Card Types Dropdown */}
+            <DropdownMenu open={isMenuOpen}>
+              <DropdownMenuTrigger 
+                className="text-[#4A4A4A] hover:text-[#FFC0CB] font-serif flex items-center"
+                onMouseEnter={() => setIsMenuOpen(true)}
+                onMouseLeave={() => setIsMenuOpen(false)}
+              >
+                Card Types <ChevronDown className="ml-1 h-4 w-4" />
               </DropdownMenuTrigger>
-              <DropdownMenuContent>
-                <DropdownMenuItem asChild>
-                  <Link href="/card-gallery/" className="w-full">Featured Gallery</Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/type/birthday/" className="w-full">Card Categories</Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/relationship/friend/" className="w-full">For Someone Special</Link>
-                </DropdownMenuItem>
+              <DropdownMenuContent 
+                className="w-[280px] p-2"
+                onMouseEnter={() => setIsMenuOpen(true)}
+                onMouseLeave={() => setIsMenuOpen(false)}
+              >
+                <div className="grid grid-cols-2 gap-1">
+                  <DropdownMenuItem asChild className="col-span-2">
+                    <Link href="/card-gallery/" className="w-full font-medium text-[#4A4A4A]">
+                      All Cards
+                    </Link>
+                  </DropdownMenuItem>
+                  {CARD_TYPES.map((cardType) => (
+                    <DropdownMenuItem key={cardType.type} asChild>
+                      <Link href={`/type/${cardType.type}/`} className="w-full">
+                        {cardType.label}
+                      </Link>
+                    </DropdownMenuItem>
+                  ))}
+                </div>
               </DropdownMenuContent>
             </DropdownMenu>
+
+            {/* Relationships Dropdown */}
+            <DropdownMenu open={isRelationshipMenuOpen}>
+              <DropdownMenuTrigger 
+                className="text-[#4A4A4A] hover:text-[#FFC0CB] font-serif flex items-center"
+                onMouseEnter={() => setIsRelationshipMenuOpen(true)}
+                onMouseLeave={() => setIsRelationshipMenuOpen(false)}
+              >
+                For Someone Special <ChevronDown className="ml-1 h-4 w-4" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent 
+                className="w-[280px] p-2"
+                onMouseEnter={() => setIsRelationshipMenuOpen(true)}
+                onMouseLeave={() => setIsRelationshipMenuOpen(false)}
+              >
+                <div className="grid grid-cols-2 gap-1">
+                  {RELATIONSHIPS.map((relation) => (
+                    <DropdownMenuItem key={relation.value} asChild>
+                      <Link href={`/relationship/${relation.value}/`} className="w-full">
+                        {relation.label}
+                      </Link>
+                    </DropdownMenuItem>
+                  ))}
+                </div>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
             <Link href="/my-cards/" className="text-[#4A4A4A] hover:text-[#FFC0CB] font-serif">My Cards</Link>
             {status === 'authenticated' && session ? (
               <DropdownMenu>
@@ -170,29 +214,44 @@ function Header() {
             <Link href="/" className="block py-2.5 px-4 w-full text-right text-[#4A4A4A] hover:text-[#FFC0CB] hover:bg-gray-50 font-serif">Home</Link>
             <Link href="/cards/" className="block py-2.5 px-4 w-full text-right text-[#4A4A4A] hover:text-[#FFC0CB] hover:bg-gray-50 font-serif">Card Generators</Link>
             
-            {/* Gallery Section - Mobile */}
+            {/* Card Types Section - Mobile */}
             <div className="border-y border-purple-100/50 my-2 bg-purple-50/30">
-              <Link 
-                href="/card-gallery/" 
-                className="block py-2.5 px-4 w-full text-right text-[#4A4A4A] hover:text-[#FFC0CB] hover:bg-gray-50 font-serif"
-              >
-                Featured Gallery
-                <div className="text-xs text-[#4A4A4A]/60 mt-0.5">Our curated collection</div>
-              </Link>
-              <Link 
-                href="/type/birthday/" 
-                className="block py-2.5 px-4 w-full text-right text-[#4A4A4A] hover:text-[#FFC0CB] hover:bg-gray-50 font-serif"
-              >
-                Card Categories
-                <div className="text-xs text-[#4A4A4A]/60 mt-0.5">Birthday, Anniversary, Love...</div>
-              </Link>
-              <Link 
-                href="/relationship/friend/" 
-                className="block py-2.5 px-4 w-full text-right text-[#4A4A4A] hover:text-[#FFC0CB] hover:bg-gray-50 font-serif"
-              >
-                For Someone Special
-                <div className="text-xs text-[#4A4A4A]/60 mt-0.5">Friend, Family, Partner...</div>
-              </Link>
+              <div className="py-2 px-4">
+                <div className="text-right font-serif text-[#4A4A4A] mb-2">Card Types</div>
+                <div className="grid grid-cols-2 gap-2">
+                  <Link href="/card-gallery/" 
+                    className="block py-1.5 px-3 text-right text-[#4A4A4A]/80 hover:text-[#FFC0CB] hover:bg-white/50 rounded-md text-sm col-span-2 font-medium">
+                    All Cards
+                  </Link>
+                  {CARD_TYPES.map((cardType) => (
+                    <Link
+                      key={cardType.type}
+                      href={`/type/${cardType.type}/`}
+                      className="block py-1.5 px-3 text-right text-[#4A4A4A]/80 hover:text-[#FFC0CB] hover:bg-white/50 rounded-md text-sm"
+                    >
+                      {cardType.label}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Relationships Section - Mobile */}
+            <div className="border-b border-purple-100/50 mb-2 bg-purple-50/30">
+              <div className="py-2 px-4">
+                <div className="text-right font-serif text-[#4A4A4A] mb-2">For Someone Special</div>
+                <div className="grid grid-cols-2 gap-2">
+                  {RELATIONSHIPS.map((relation) => (
+                    <Link
+                      key={relation.value}
+                      href={`/relationship/${relation.value}/`}
+                      className="block py-1.5 px-3 text-right text-[#4A4A4A]/80 hover:text-[#FFC0CB] hover:bg-white/50 rounded-md text-sm"
+                    >
+                      {relation.label}
+                    </Link>
+                  ))}
+                </div>
+              </div>
             </div>
 
             <Link href="/my-cards/" className="block py-2.5 px-4 w-full text-right text-[#4A4A4A] hover:text-[#FFC0CB] hover:bg-gray-50 font-serif">My Cards</Link>
