@@ -115,7 +115,7 @@ export async function generateCardContent(params: CardContentParams): Promise<{ 
         // console.log('<----Template templateId : ' + template.id + '---->')
 
         // Prepare user prompt
-        const userPrompt = Object.entries({...otherParams, cardType: cardType, currentTime: formattedTime})
+        const userPrompt = Object.entries({...otherParams, cardType: cardType + ' card', currentTime: formattedTime})
             .filter(([_, value]) => value !== '' && value !== undefined)
             .map(([key, value]) => `${key}: ${value}`)
             .join('\n');

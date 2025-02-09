@@ -66,15 +66,15 @@ async function fetchRecentCards(
       cardType: true,
       responseContent: true,
       r2Url: true,
-      userActions: {
-        select: {
-          action: true,
-          timestamp: true
-        },
-        orderBy: {
-          timestamp: 'desc'
-        }
-      }
+      // userActions: {
+      //   select: {
+      //     action: true,
+      //     timestamp: true
+      //   },
+      //   orderBy: {
+      //     timestamp: 'desc'
+      //   }
+      // }
     },
   });
 
