@@ -10,21 +10,31 @@ import { CARD_TYPES } from '@/lib/card-constants'
 
 interface Props {
   params: { relationship: string }
+  initialCardsData: {
+    cards: any[]
+    totalPages: number
+  }
+  defaultType: CardType | null
 }
 
-export default function RelationshipGalleryContent({ params }: Props) {
+export default function RelationshipGalleryContent({ params, initialCardsData, defaultType }: Props) {
   const searchParams = useSearchParams()
   const relationship = decodeURIComponent(params.relationship)
     .charAt(0).toUpperCase() + decodeURIComponent(params.relationship).slice(1)
   
   const [selectedType, setSelectedType] = useState<CardType | null>(
-    searchParams.get('type') as CardType | null
+    defaultType || (searchParams.get('type') as CardType | null)
   )
-  const [cardsData, setCardsData] = useState<any>(null)
-  const [isLoading, setIsLoading] = useState(true)
+  const [cardsData, setCardsData] = useState(initialCardsData)
+  const [isLoading, setIsLoading] = useState(false)
 
   useEffect(() => {
     const fetchCards = async () => {
+      if (!selectedType) {
+        setCardsData(initialCardsData)
+        return
+      }
+
       setIsLoading(true)
       try {
         const params = new URLSearchParams({
@@ -45,7 +55,7 @@ export default function RelationshipGalleryContent({ params }: Props) {
     }
 
     fetchCards()
-  }, [relationship, selectedType])
+  }, [relationship, selectedType, initialCardsData])
 
   if (!cardsData && !isLoading) {
     notFound()

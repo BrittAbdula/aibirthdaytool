@@ -3,28 +3,21 @@
 import Script from 'next/script'
 import { usePathname } from 'next/navigation'
 
-// 允许显示广告的页面路径
-const ALLOWED_PATHS = [
-  '/birthday',
-  '/love',
-  '/congratulations',
-  '/thankyou',
-  '/holiday',
-  '/anniversary',
-  '/sorry',
-  '/christmas',
-  '/newyear'
+// 不允许显示广告的页面路径
+const DISALLOW_PATHS = [
+  '/',
+  '/to',
 ]
 
 export default function GoogleAdsense() {
   const pathname = usePathname()
   
-  // 检查当前页面是否允许显示广告
-  // const shouldShowAds = ALLOWED_PATHS.some(path => pathname.startsWith(path))
+  //检查当前页面是否允许显示广告
+  const disallowShowAds = DISALLOW_PATHS.some(path => pathname.startsWith(path))
   
-  // if (!shouldShowAds) {
-  //   return null
-  // }
+  if (disallowShowAds) {
+    return null
+  }
 
   return (
     <Script
