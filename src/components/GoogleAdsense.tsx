@@ -6,14 +6,25 @@ import { usePathname } from 'next/navigation'
 // 不允许显示广告的页面路径
 const DISALLOW_PATHS = [
   '/',
-  '/to',
+  '/to/*',
 ]
+
+// Function to check if the current path matches any disallowed path
+function isPathDisallowed(pathname: string, disallowPaths: string[]): boolean {
+  return disallowPaths.some((path) => {
+    if (path.includes('*')) {
+      const basePath = path.replace('*', '');
+      return pathname.startsWith(basePath);
+    }
+    return pathname === path;
+  });
+}
 
 export default function GoogleAdsense() {
   const pathname = usePathname()
   
-  //检查当前页面是否允许显示广告
-  const disallowShowAds = DISALLOW_PATHS.some(path => pathname.startsWith(path))
+  // Check if the current page is allowed to show ads
+  const disallowShowAds = isPathDisallowed(pathname, DISALLOW_PATHS)
   
   if (disallowShowAds) {
     return null
