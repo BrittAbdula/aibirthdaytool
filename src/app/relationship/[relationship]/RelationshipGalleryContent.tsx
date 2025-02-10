@@ -65,23 +65,6 @@ export default function RelationshipGalleryContent({ params, initialCardsData, d
 
   return (
     <article className="min-h-screen ">
-      <div className="container mx-auto px-4 py-8">
-        <header className="text-center mb-12">
-          <h1 className="text-4xl sm:text-5xl md:text-6xl font-serif font-bold mb-4 tracking-tight">
-            <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-pink-600">
-              {relationship} Cards
-            </span>
-          </h1>
-          <p className="text-lg sm:text-xl text-gray-600 max-w-2xl mx-auto px-4 mb-6">
-            Create your perfect {relationship.toLowerCase()} card with our AI-powered collection ✨
-          </p>
-            <div className="flex flex-wrap justify-center gap-4 text-sm">
-              <span className="px-3 py-1 bg-purple-50 rounded-full">💝 Personalized Messages</span>
-              <span className="px-3 py-1 bg-purple-50 rounded-full">🎨 Unique Designs</span>
-              <span className="px-3 py-1 bg-purple-50 rounded-full">✨ AI-Powered</span>
-              <span className="px-3 py-1 bg-purple-50 rounded-full">❤️ From the Heart</span>
-            </div>
-        </header>
 
         <SimpleFilter
           options={typeOptions}
@@ -100,7 +83,6 @@ export default function RelationshipGalleryContent({ params, initialCardsData, d
             cardsData && <CardGallery initialCardsData={cardsData} wishCardType={selectedType} />
           )}
         </section>
-      </div>
     </article>
   )
 } 
