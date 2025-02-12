@@ -265,10 +265,10 @@ export default function CardGenerator({
   }
 
   const handleGenerateCard = async () => {
-    // if (!session) {
-    //   setShowAuthDialog(true)
-    //   return
-    // }
+    if (!session) {
+      setShowAuthDialog(true)
+      return
+    }
 
     try {
       setIsLoading(true)
@@ -291,7 +291,11 @@ export default function CardGenerator({
           setShowLimitDialog(true)
           return
         }
-        throw new Error('Failed to generate card, Please use the template to custom your card')
+        if (response.status === 401) {
+          setShowAuthDialog(true)
+          return
+        }
+        throw new Error(data.error || 'Failed to generate card')
       }
 
       setSvgContent(data.svgContent)
@@ -302,8 +306,8 @@ export default function CardGenerator({
         spread: 70,
         origin: { y: 0.6 }
       })
-    } catch (err) {
-      setError('Failed to generate card. Please try again.')
+    } catch (err: any) {
+      setError(err.message || 'Failed to generate card. Please try again.')
     } finally {
       setIsLoading(false)
     }
