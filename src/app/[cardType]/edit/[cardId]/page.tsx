@@ -142,7 +142,7 @@ export default function EditCard({ params }: { params: { cardId: string, cardTyp
   const handleSend = async () => {
     setIsSending(true)
     try {
-      if (svgContent === originalContent) {
+      if (svgContent === originalContent && editedCardId && !customUrl) {
         const shareUrl = editedCardId ? 
           `${window.location.origin}/to/${customUrl || editedCardId}` : 
           `${window.location.origin}/`
