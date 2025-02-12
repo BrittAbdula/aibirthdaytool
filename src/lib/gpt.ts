@@ -169,8 +169,7 @@ export async function generateCardContent(params: CardContentParams): Promise<{ 
                     }
                 ],
                 "temperature": 0.7,
-                "max_tokens": 4096,
-                "provider": ["Anthropic", "OpenAI"]
+                "max_tokens": 4096
             })
         });
 
