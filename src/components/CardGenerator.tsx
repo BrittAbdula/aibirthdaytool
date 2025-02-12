@@ -18,6 +18,7 @@ import { CardType, getCardConfig, getAllCardTypes, CardConfig } from '@/lib/card
 import { useSession, signIn } from "next-auth/react"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Loader2 } from 'lucide-react'
+import { CARD_SIZES } from '@/lib/card-config'
 
 const FlickeringGrid = () => {
   return (
@@ -211,8 +212,9 @@ export default function CardGenerator({
   const router = useRouter()
   const sampleCard = `/card/${wishCardType}.svg`
   const [submited, setSubmited] = useState(false)
-  const [progress, setProgress] = useState(0);
-  const [customValues, setCustomValues] = useState<Record<string, string>>({});
+  const [progress, setProgress] = useState(0)
+  const [customValues, setCustomValues] = useState<Record<string, string>>({})
+  const [selectedSize, setSelectedSize] = useState(cardConfig.defaultSize || 'portrait')
 
   useEffect(() => {
     setCurrentCardType(wishCardType)
@@ -280,6 +282,7 @@ export default function CardGenerator({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           cardType: currentCardType,
+          size: selectedSize,
           ...formData
         }),
       })
@@ -405,7 +408,30 @@ export default function CardGenerator({
           <Card className="p-4 sm:p-6 bg-white border border-[#FFC0CB] shadow-md w-full max-w-md relative">
             <CardContent className="space-y-4">
               {cardConfig.fields.map((field) => renderField(field))}
-              {/* New field: Card Style Selection */}
+              {/* Size Selection */}
+              <div className="space-y-2">
+                <Label>Card Size</Label>
+                <Select
+                  value={selectedSize}
+                  onValueChange={setSelectedSize}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select card size" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Object.entries(CARD_SIZES).map(([id, size]) => (
+                      <SelectItem key={id} value={id}>
+                        {size.name} ({size.width}x{size.height})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-gray-500">
+                  {CARD_SIZES[selectedSize].orientation} orientation
+                </p>
+              </div>
+
+              {/* Style Selection */}
               <div key="card-style" className="space-y-2">
                 <Label htmlFor="card-style">Card Style</Label>
                 <CustomSelect
@@ -421,6 +447,7 @@ export default function CardGenerator({
                   label="Style"
                 />
               </div>
+
               {showAdvancedOptions && cardConfig.advancedFields && (
                 <>
                   {cardConfig.advancedFields.map((field) => renderField(field))}

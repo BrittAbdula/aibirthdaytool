@@ -13,6 +13,59 @@ export interface Field {
   defaultValue?: string;
 }
 
+export interface CardSize {
+  id: string;
+  name: string;
+  width: number;
+  height: number;
+  aspectRatio: string;
+  orientation: 'portrait' | 'landscape' | 'square';
+}
+
+export const CARD_SIZES: Record<string, CardSize> = {
+  portrait: {
+    id: 'portrait',
+    name: 'Portrait',
+    width: 480,
+    height: 760,
+    aspectRatio: '0.63',
+    orientation: 'portrait'
+  },
+  landscape: {
+    id: 'landscape',
+    name: 'Landscape',
+    width: 760,
+    height: 480,
+    aspectRatio: '1.58',
+    orientation: 'landscape'
+  },
+  square: {
+    id: 'square',
+    name: 'Square',
+    width: 600,
+    height: 600,
+    aspectRatio: '1',
+    orientation: 'square'
+  },
+  instagram: {
+    id: 'instagram',
+    name: 'Instagram',
+    width: 1080,
+    height: 1080,
+    aspectRatio: '1',
+    orientation: 'square'
+  },
+  story: {
+    id: 'story',
+    name: 'Story',
+    width: 1080,
+    height: 1920,
+    aspectRatio: '0.56',
+    orientation: 'portrait'
+  }
+};
+
+
 export interface CardConfig {
   title: string;
   label: string;
@@ -21,6 +74,7 @@ export interface CardConfig {
   why?: string[];
   advancedFields?: Field[];
   promptContent: string;
+  defaultSize?: string;
 }
 
 // 类型守卫函数

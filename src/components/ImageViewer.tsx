@@ -170,7 +170,7 @@ export function ImageViewer({ svgContent, alt, cardId, cardType, isNewCard, imgU
                   height={600}
                   className="max-w-full max-h-full"
                 />
-                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/10 via-black/5 to-transparent md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300">
+                {/* <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/10 via-black/5 to-transparent md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300">
                   <div className="p-2 sm:p-3">
                     <div className="flex items-center justify-center">
                       <span className="px-2 py-0.5 sm:px-3 sm:py-1 rounded-full text-[10px] sm:text-xs font-medium tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-600">
@@ -178,7 +178,7 @@ export function ImageViewer({ svgContent, alt, cardId, cardType, isNewCard, imgU
                       </span>
                     </div>
                   </div>
-                </div>
+                </div> */}
               </>
             )}
           </div>
@@ -193,8 +193,6 @@ export function ImageViewer({ svgContent, alt, cardId, cardType, isNewCard, imgU
                     <img
                       src={imageSrc}
                       alt={alt}
-                      width={400}
-                      height={600}
                       className="max-w-full max-h-full"
                     />
                     <div className="absolute bottom-4 sm:bottom-6 left-0 right-0">

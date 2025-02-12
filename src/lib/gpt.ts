@@ -3,7 +3,8 @@ import { prisma } from './prisma';
 import { getTemplateByCardType } from './template-config';
 import { nanoid } from 'nanoid';
 import { uploadSvgToR2 } from './r2';
-import { defaultPrompt } from './prompt';
+import { defaultPrompt, generatePrompt } from './prompt';
+import { CARD_SIZES, CardSize } from './card-config';
 
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
 const YOUR_SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'http://MewTruCard.COM';
@@ -89,14 +90,16 @@ interface CardContentParams {
     cardType: CardType;
     version: string;
     templateId: string;
+    size?: string;
+    style?: string;
     [key: string]: any;
 }
 
 export async function generateCardContent(params: CardContentParams): Promise<{ svgContent: string, cardId: string }> {
-    const { userId, cardType, version, templateId, ...otherParams } = params;
+    const { userId, cardType, version, templateId, size, ...otherParams } = params;
     const cardId = nanoid(10);
     const startTime = Date.now();
-    const formattedTime = new Date(startTime).toLocaleString('zh-CN', {
+    const formattedTime = new Date(startTime).toLocaleString(undefined, {
         year: 'numeric',
         month: '2-digit',
         day: '2-digit',
@@ -106,16 +109,17 @@ export async function generateCardContent(params: CardContentParams): Promise<{ 
     }).replace(/\//g, '-');
 
     try {
-        // Validate template
-        // const template = await getTemplateByCardType(cardType);
-        // console.log('<----template : ' + template + '---->')
-        // if (!template) {
-        //     throw new Error(`No template found for id: ${templateId}`);
-        // }
-        // console.log('<----Template templateId : ' + template.id + '---->')
+        // Get card size
+        const cardSize = CARD_SIZES[size || 'portrait'];
+
+        // Generate dynamic prompt
+        const systemPrompt = generatePrompt(cardType, cardSize);
 
         // Prepare user prompt
-        const userPrompt = Object.entries({...otherParams, cardType: cardType + ' card', currentTime: formattedTime})
+        const userPrompt = Object.entries({
+            ...otherParams,
+            currentTime: formattedTime
+        })
             .filter(([_, value]) => value !== '' && value !== undefined)
             .map(([key, value]) => `${key}: ${value}`)
             .join('\n');
@@ -152,7 +156,7 @@ export async function generateCardContent(params: CardContentParams): Promise<{ 
                 "messages": [
                     { 
                         "role": "system", 
-                        "content": defaultPrompt 
+                        "content": systemPrompt 
                     },
                     { 
                         "role": "user", 
