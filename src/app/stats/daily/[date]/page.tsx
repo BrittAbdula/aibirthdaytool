@@ -8,40 +8,33 @@ import { CollapsibleJson } from "@/components/ui/collapsible-json";
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { X } from "lucide-react";
-import { ArrowLeft } from "lucide-react";
+import { X, ArrowLeft, CheckCircle2, XCircle } from "lucide-react";
 
-interface DailyDetail {
+interface ApiCallDetail {
   id: number;
   cardId: string;
   cardType: string;
   userInputs: any;
   promptVersion: string;
-  responseContent: string;
   tokensUsed: number;
   duration: number;
   timestamp: string;
   isError: boolean;
   errorMessage?: string;
   r2Url?: string;
-  usageCount: number;
+  user: {
+    name: string;
+    email: string;
+  } | null;
+  responseSizeKB: number;
 }
-
-const getCardImageUrl = (timestamp: string, cardId: string) => {
-  const date = new Date(timestamp);
-  // 使用 UTC 时间来保持与 R2 存储路径一致
-  const year = date.getUTCFullYear();
-  const month = String(date.getUTCMonth() + 1).padStart(2, '0');
-  const day = String(date.getUTCDate()).padStart(2, '0');
-  return `https://store.celeprime.com/cards/${year}/${month}/${day}/${cardId}.svg`;
-};
 
 export default function DailyDetailPage({ params }: { params: { date: string } }) {
   const router = useRouter();
-  const [details, setDetails] = useState<DailyDetail[]>([]);
+  const [details, setDetails] = useState<ApiCallDetail[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
-  const [usageFilter, setUsageFilter] = useState<'all' | 'used' | 'unused'>('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'success' | 'error'>('all');
 
   useEffect(() => {
     const fetchDetails = async () => {
@@ -63,15 +56,33 @@ export default function DailyDetailPage({ params }: { params: { date: string } }
   }, [params.date]);
 
   const filteredDetails = details.filter(detail => {
-    switch (usageFilter) {
-      case 'used':
-        return detail.usageCount > 0;
-      case 'unused':
-        return detail.usageCount === 0;
+    switch (statusFilter) {
+      case 'success':
+        return !detail.isError;
+      case 'error':
+        return detail.isError;
       default:
         return true;
     }
   });
+
+  // Calculate summary statistics
+  const summary = {
+    totalCalls: details.length,
+    successfulCalls: details.filter(d => !d.isError).length,
+    failedCalls: details.filter(d => d.isError).length,
+    averageTokens: Math.round(details.reduce((acc, d) => acc + d.tokensUsed, 0) / details.length) || 0,
+    averageDuration: Math.round(details.reduce((acc, d) => acc + d.duration, 0) / details.length) || 0,
+    totalTokens: details.reduce((acc, d) => acc + d.tokensUsed, 0),
+  };
+
+  const getCardImageUrl = (timestamp: string, cardId: string) => {
+    const date = new Date(timestamp);
+    const year = date.getUTCFullYear();
+    const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+    const day = String(date.getUTCDate()).padStart(2, '0');
+    return `https://store.celeprime.com/cards/${year}/${month}/${day}/${cardId}.svg`;
+  };
 
   return (
     <div className="container mx-auto py-10 space-y-4">
@@ -86,31 +97,65 @@ export default function DailyDetailPage({ params }: { params: { date: string } }
         </Button>
       </div>
 
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">API Calls</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{summary.totalCalls}</div>
+            <div className="text-xs text-muted-foreground mt-1">
+              Success: {summary.successfulCalls} | Failed: {summary.failedCalls}
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">Average Response Time</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{summary.averageDuration}ms</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">Total Tokens Used</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{summary.totalTokens}</div>
+            <div className="text-xs text-muted-foreground mt-1">
+              Average: {summary.averageTokens} per call
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle>Conversation History</CardTitle>
+            <CardTitle>API Call History</CardTitle>
             <div className="flex items-center gap-2">
               <Button
-                variant={usageFilter === 'all' ? 'default' : 'outline'}
+                variant={statusFilter === 'all' ? 'default' : 'outline'}
                 size="sm"
-                onClick={() => setUsageFilter('all')}
+                onClick={() => setStatusFilter('all')}
               >
                 All
               </Button>
               <Button
-                variant={usageFilter === 'used' ? 'default' : 'outline'}
+                variant={statusFilter === 'success' ? 'default' : 'outline'}
                 size="sm"
-                onClick={() => setUsageFilter('used')}
+                onClick={() => setStatusFilter('success')}
               >
-                Used
+                Success
               </Button>
               <Button
-                variant={usageFilter === 'unused' ? 'default' : 'outline'}
+                variant={statusFilter === 'error' ? 'default' : 'outline'}
                 size="sm"
-                onClick={() => setUsageFilter('unused')}
+                onClick={() => setStatusFilter('error')}
               >
-                Unused
+                Error
               </Button>
             </div>
           </div>
@@ -124,46 +169,60 @@ export default function DailyDetailPage({ params }: { params: { date: string } }
                 <TableHeader>
                   <TableRow>
                     <TableHead>Time</TableHead>
-                    <TableHead>Card Type</TableHead>
-                    <TableHead>User Inputs</TableHead>
                     <TableHead>Status</TableHead>
-                    <TableHead className="space-x-2">
-                      Usage
-                    </TableHead>
+                    <TableHead>Card Type</TableHead>
+                    <TableHead>User</TableHead>
+                    <TableHead>Inputs</TableHead>
+                    <TableHead>Tokens</TableHead>
+                    <TableHead>Duration</TableHead>
+                    <TableHead>Size</TableHead>
                     <TableHead>Preview</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredDetails.map((detail) => (
-                    <TableRow key={detail.id}>
+                    <TableRow key={detail.id} className={detail.isError ? 'bg-red-50/50' : ''}>
                       <TableCell>{new Date(detail.timestamp).toLocaleTimeString()}</TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          {detail.isError ? (
+                            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700">
+                              <XCircle className="w-3 h-3" />
+                              Error
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
+                              <CheckCircle2 className="w-3 h-3" />
+                              Success
+                            </span>
+                          )}
+                        </div>
+                      </TableCell>
                       <TableCell>{detail.cardType}</TableCell>
                       <TableCell>
+                        {detail.user ? (
+                          <div className="flex flex-col">
+                            <span className="text-sm font-medium">{detail.user.name}</span>
+                            <span className="text-xs text-muted-foreground">{detail.user.email}</span>
+                          </div>
+                        ) : (
+                          <span className="text-muted-foreground">Anonymous</span>
+                        )}
+                      </TableCell>
+                      <TableCell className="max-w-md">
                         <CollapsibleJson 
                           data={typeof detail.userInputs === 'string' 
                             ? JSON.parse(detail.userInputs)
                             : detail.userInputs
                           } 
+                          defaultExpanded={false}
                         />
                       </TableCell>
+                      <TableCell>{detail.tokensUsed}</TableCell>
+                      <TableCell>{detail.duration}ms</TableCell>
+                      <TableCell>{detail.responseSizeKB}KB</TableCell>
                       <TableCell>
-                        <div className="flex items-center gap-2">
-                          <span className={detail.isError ? "text-red-500" : "text-green-500"}>
-                            {detail.isError ? "Error" : "Success"}
-                          </span>
-                          <span className="text-sm text-muted-foreground">
-                            ({detail.tokensUsed} tokens, {detail.duration}ms)
-                          </span>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-1">
-                          <span className="font-medium">{detail.usageCount}</span>
-                          <span className="text-sm text-muted-foreground">times</span>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        {!detail.isError && (
+                        {!detail.isError && detail.r2Url && (
                           <button
                             onClick={() => setSelectedImage(getCardImageUrl(detail.timestamp, detail.cardId))}
                             className="block relative w-20 h-20 rounded-lg overflow-hidden border border-gray-200 hover:border-purple-400 transition-colors duration-200 cursor-pointer group"
@@ -194,7 +253,7 @@ export default function DailyDetailPage({ params }: { params: { date: string } }
 
       <Dialog open={!!selectedImage} onOpenChange={() => setSelectedImage(null)}>
         <DialogContent className="max-w-2xl w-full p-0 overflow-hidden">
-          <div className="relative aspect-square  bg-white p-20">
+          <div className="relative aspect-square bg-white p-20">
             {selectedImage && (
               <Image
                 src={selectedImage}
@@ -204,12 +263,6 @@ export default function DailyDetailPage({ params }: { params: { date: string } }
                 sizes="(max-width: 768px) 100vw, 800px"
               />
             )}
-            {/* <button
-              onClick={() => setSelectedImage(null)}
-              className="absolute top-2 right-2 p-2 rounded-full bg-white/80 hover:bg-white shadow-md transition-colors"
-            >
-              <X className="w-5 h-5" />
-            </button> */}
           </div>
         </DialogContent>
       </Dialog>

@@ -7,6 +7,7 @@ export interface Card {
   cardType: string;
   responseContent: string;
   r2Url: string | null;
+  usageCount: number;
   userActions?: {
     action: string;
     timestamp: Date;
@@ -56,7 +57,7 @@ async function fetchRecentCards(
   const totalCards = await prisma.apiLog.count({ where });
   const totalPages = Math.ceil(totalCards / pageSize);
 
-  const cards = await prisma.apiLog.findMany({
+  const cardsWithActions = await prisma.apiLog.findMany({
     where,
     orderBy: { timestamp: 'desc' },
     take: pageSize,
@@ -66,17 +67,18 @@ async function fetchRecentCards(
       cardType: true,
       responseContent: true,
       r2Url: true,
-      // userActions: {
-      //   select: {
-      //     action: true,
-      //     timestamp: true
-      //   },
-      //   orderBy: {
-      //     timestamp: 'desc'
-      //   }
-      // }
+      _count: {
+        select: {
+          userActions: true
+        }
+      }
     },
   });
+
+  const cards = cardsWithActions.map(card => ({
+    ...card,
+    usageCount: card._count.userActions,
+  }));
 
   return { cards, totalPages };
 }
@@ -88,7 +90,7 @@ export async function getDefaultCardByCardType(cardType: CardType): Promise<Card
       cardId: true,
       cardType: true,
       previewSvg: true,
-      r2Url: true
+      r2Url: true,
     },
     orderBy: { createdAt: 'desc' },
   });
@@ -96,6 +98,7 @@ export async function getDefaultCardByCardType(cardType: CardType): Promise<Card
     cardId: card?.cardId || '',
     cardType,
     responseContent: card?.previewSvg || '',
-    r2Url: card?.r2Url || null
+    r2Url: card?.r2Url || null,
+    usageCount: 0  // Default template cards have 0 usage count
   };
 }

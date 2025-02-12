@@ -33,7 +33,9 @@ export function SimpleFilter({ options, currentValue, type, onFilterChange }: Si
                 "rounded-full hover:bg-[#a786ff]/10",
                 currentValue === option && "bg-[#a786ff]/20"
               )}
-              onClick={() => onFilterChange(option.charAt(0).toUpperCase() + option.slice(1))}
+              onClick={() => onFilterChange(
+                type === 'relationship' ? option.charAt(0).toUpperCase() + option.slice(1) : option.charAt(0).toLowerCase() + option.slice(1)
+              )}
             >
               {option}
             </Button>

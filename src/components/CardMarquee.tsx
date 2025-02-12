@@ -18,7 +18,7 @@ interface CardMarqueeProps {
 const CardItem = ({ card }: { card: Card }) => {
   return (
     <div className={cn(
-      "relative w-72 mx-4 cursor-pointer overflow-hidden rounded-xl",
+      "relative w-48 mx-2 cursor-pointer overflow-hidden rounded-xl",
       // light styles
       "border-gray-950/[.1] bg-gray-950/[.01] hover:bg-gray-950/[.05]",
       // dark styles
@@ -29,20 +29,25 @@ const CardItem = ({ card }: { card: Card }) => {
           <img
             src={card.r2Url || '/card/christmas.svg'}
             alt={`${card.cardType} card`}
-            width={400}
-            height={600}
+            width={240}
+            height={360}
             className="max-w-full max-h-full"
           />
         </a>
+        {card.usageCount > 0 && (
+          <div className="absolute top-2 right-2 bg-pink-500 text-white text-xs px-2 py-1 rounded-full">
+            {card.usageCount}x
+          </div>
+        )}
       </div>
     </div>
   )
 }
 
 export default function CardMarquee({ wishCardType, initialCardsData, className }: CardMarqueeProps) {
-  const cards = initialCardsData.cards
-  const firstRow = cards.slice(0, Math.ceil(cards.length / 2))
-  const secondRow = cards.slice(Math.ceil(cards.length / 2))
+  const sortedCards = [...initialCardsData.cards].sort((a, b) => (b.usageCount || 0) - (a.usageCount || 0))
+  const firstRow = sortedCards.slice(0, Math.ceil(sortedCards.length / 2))
+  const secondRow = sortedCards.slice(Math.ceil(sortedCards.length / 2))
 
   return (
     <div className="space-y-4">
@@ -50,12 +55,12 @@ export default function CardMarquee({ wishCardType, initialCardsData, className 
         "relative flex h-full w-full flex-col items-center justify-center overflow-hidden rounded-lg bg-background",
         className
       )}>
-        <Marquee pauseOnHover className="[--duration:30s]">
+        <Marquee pauseOnHover className="[--duration:40s]">
           {firstRow.map((card) => (
             <CardItem key={card.cardId} card={card} />
           ))}
         </Marquee>
-        <Marquee reverse pauseOnHover className="[--duration:30s]">
+        <Marquee reverse pauseOnHover className="[--duration:40s]">
           {secondRow.map((card) => (
             <CardItem key={card.cardId} card={card} />
           ))}

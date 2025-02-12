@@ -7,7 +7,7 @@ interface CollapsibleJsonProps {
 }
 
 export function CollapsibleJson({ data }: CollapsibleJsonProps) {
-  const [isExpanded, setIsExpanded] = useState(true);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   if (typeof data !== 'object' || data === null) {
     return <span className="text-sm">{String(data)}</span>;

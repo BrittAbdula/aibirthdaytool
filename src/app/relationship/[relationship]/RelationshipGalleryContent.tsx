@@ -61,7 +61,7 @@ export default function RelationshipGalleryContent({ params, initialCardsData, d
     notFound()
   }
 
-  const typeOptions = CARD_TYPES.map(t => t.type)
+  const typeOptions = CARD_TYPES.map(t => t.label)
 
   return (
     <article className="min-h-screen ">

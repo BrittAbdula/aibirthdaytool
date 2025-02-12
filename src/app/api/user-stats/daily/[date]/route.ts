@@ -11,52 +11,61 @@ export async function GET(
     const endDate = new Date(date);
     endDate.setDate(endDate.getDate() + 1);
 
-    const logs = await prisma.editedCard.findMany({
+    // Query API logs directly instead of edited cards
+    const logs = await prisma.apiLog.findMany({
       where: {
-        createdAt: {
+        timestamp: {
           gte: startDate,
           lt: endDate,
         },
       },
       orderBy: {
-        createdAt: 'desc',
+        timestamp: 'desc',
       },
-      include: {
-        originalCard: {
+      select: {
+        id: true,
+        cardId: true,
+        cardType: true,
+        userInputs: true,
+        promptVersion: true,
+        responseContent: true,
+        tokensUsed: true,
+        duration: true,
+        timestamp: true,
+        isError: true,
+        errorMessage: true,
+        r2Url: true,
+        user: {
           select: {
-            id: true,
-            cardType: true,
-            userInputs: true,
-            promptVersion: true,
-            responseContent: true,
-            tokensUsed: true,
-            duration: true,
-            timestamp: true,
-            isError: true,
-            errorMessage: true,
-            r2Url: true,
+            name: true,
+            email: true,
           }
         }
       }
     });
 
-    return NextResponse.json(logs.map(card => ({
-      id: card.originalCard.id,
-      cardId: card.originalCardId,
-      cardType: card.cardType,
-      userInputs: card.originalCard.userInputs,
-      promptVersion: card.originalCard.promptVersion,
-      responseContent: card.originalCard.responseContent,
-      tokensUsed: card.originalCard.tokensUsed,
-      duration: card.originalCard.duration,
-      timestamp: card.originalCard.timestamp,
-      isError: card.originalCard.isError,
-      errorMessage: card.originalCard.errorMessage,
-      r2Url: card.r2Url,
-      createdAt: card.createdAt
+    // Transform the data to include user information
+    return NextResponse.json(logs.map(log => ({
+      id: log.id,
+      cardId: log.cardId,
+      cardType: log.cardType,
+      userInputs: log.userInputs,
+      promptVersion: log.promptVersion,
+      tokensUsed: log.tokensUsed,
+      duration: log.duration,
+      timestamp: log.timestamp,
+      isError: log.isError,
+      errorMessage: log.errorMessage,
+      r2Url: log.r2Url,
+      user: log.user ? {
+        name: log.user.name,
+        email: log.user.email,
+      } : null,
+      // Calculate response size
+      responseSizeKB: Math.round((log.responseContent?.length || 0) / 1024),
     })));
   } catch (error) {
-    console.error('Error fetching daily details:', error);
-    return NextResponse.json({ error: 'Failed to fetch daily details' }, { status: 500 });
+    console.error('Error fetching daily API details:', error);
+    return NextResponse.json({ error: 'Failed to fetch daily API details' }, { status: 500 });
   }
 }

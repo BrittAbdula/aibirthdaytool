@@ -195,13 +195,13 @@ export function ImageViewer({ svgContent, alt, cardId, cardType, isNewCard, imgU
                       alt={alt}
                       className="max-w-full max-h-full"
                     />
-                    <div className="absolute bottom-4 sm:bottom-6 left-0 right-0">
+                    {/* <div className="absolute bottom-4 sm:bottom-6 left-0 right-0">
                       <div className="flex items-center justify-center">
                         <span className="px-2 py-1 sm:px-3 sm:py-1.5 rounded-full text-xs sm:text-sm font-medium tracking-wide bg-white/90 shadow-sm text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-600 backdrop-blur-sm">
                           {cardType.charAt(0).toUpperCase() + cardType.slice(1)} Card
                         </span>
                       </div>
-                    </div>
+                    </div> */}
                   </>
                 )}
               </div>
