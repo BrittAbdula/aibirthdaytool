@@ -4,10 +4,11 @@ import { Button } from './button';
 
 interface CollapsibleJsonProps {
   data: any;
+  defaultExpanded?: boolean;
 }
 
-export function CollapsibleJson({ data }: CollapsibleJsonProps) {
-  const [isExpanded, setIsExpanded] = useState(false);
+export function CollapsibleJson({ data, defaultExpanded = false }: CollapsibleJsonProps) {
+  const [isExpanded, setIsExpanded] = useState(defaultExpanded);
 
   if (typeof data !== 'object' || data === null) {
     return <span className="text-sm">{String(data)}</span>;
@@ -37,7 +38,7 @@ export function CollapsibleJson({ data }: CollapsibleJsonProps) {
             <div key={key} className="flex">
               <span className="text-blue-500 mr-2">{key}:</span>
               {typeof value === 'object' && value !== null ? (
-                <CollapsibleJson data={value} />
+                <CollapsibleJson data={value} defaultExpanded={defaultExpanded} />
               ) : (
                 <span className="text-green-500">{String(value)}</span>
               )}
