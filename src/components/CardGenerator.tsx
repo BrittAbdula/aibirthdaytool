@@ -145,10 +145,10 @@ const CustomSelect = ({
             <SelectValue placeholder={placeholder} />
           </SelectTrigger>
           <SelectContent>
+          <SelectItem value="custom" className="text-[#b19bff]">✨ Custom {label} (Any keywords)</SelectItem>
             {options.map((option) => (
               <SelectItem key={option} value={option}>{option}</SelectItem>
             ))}
-            <SelectItem value="custom">✨ Custom {label}</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -163,7 +163,7 @@ const CustomSelect = ({
             value={customValue}
             onChange={handleCustomValueChange}
             placeholder={`Enter custom ${label.toLowerCase()}`}
-            className="pr-10"
+            className="pr-10 border-[#b19bff]"
             required={required && isCustom}
           />
           <Button
