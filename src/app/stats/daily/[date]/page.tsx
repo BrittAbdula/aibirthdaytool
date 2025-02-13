@@ -169,13 +169,12 @@ export default function DailyDetailPage({ params }: { params: { date: string } }
                 <TableHeader>
                   <TableRow>
                     <TableHead>Time</TableHead>
-                    <TableHead>Status</TableHead>
                     <TableHead>Card Type</TableHead>
                     <TableHead>User</TableHead>
                     <TableHead>Inputs</TableHead>
                     <TableHead>Tokens</TableHead>
                     <TableHead>Duration</TableHead>
-                    <TableHead>Size</TableHead>
+                    <TableHead>Prompt Version</TableHead>
                     <TableHead>Preview</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -183,21 +182,6 @@ export default function DailyDetailPage({ params }: { params: { date: string } }
                   {filteredDetails.map((detail) => (
                     <TableRow key={detail.id} className={detail.isError ? 'bg-red-50/50' : ''}>
                       <TableCell>{new Date(detail.timestamp).toLocaleTimeString()}</TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          {detail.isError ? (
-                            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700">
-                              <XCircle className="w-3 h-3" />
-                              Error
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
-                              <CheckCircle2 className="w-3 h-3" />
-                              Success
-                            </span>
-                          )}
-                        </div>
-                      </TableCell>
                       <TableCell>{detail.cardType}</TableCell>
                       <TableCell>
                         {detail.user ? (
@@ -220,7 +204,7 @@ export default function DailyDetailPage({ params }: { params: { date: string } }
                       </TableCell>
                       <TableCell>{detail.tokensUsed}</TableCell>
                       <TableCell>{detail.duration}ms</TableCell>
-                      <TableCell>{detail.responseSizeKB}KB</TableCell>
+                      <TableCell>{detail.promptVersion}</TableCell>
                       <TableCell>
                         {!detail.isError && detail.r2Url && (
                           <button
