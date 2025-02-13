@@ -36,6 +36,7 @@ export default function EditCard({ params }: { params: { cardId: string, cardTyp
   const { toast } = useToast()
   const [enableCustomUrl, setEnableCustomUrl] = useState(false)
   const [customUrl, setCustomUrl] = useState('')
+  const [isCopied, setIsCopied] = useState(false)
 
   useEffect(() => {
     const fetchCardData = async () => {
@@ -197,6 +198,8 @@ export default function EditCard({ params }: { params: { cardId: string, cardTyp
   const handleCopyLink = () => {
     navigator.clipboard.writeText(shareLink)
     toast({ description: "Link copied to clipboard" })
+    setIsCopied(true)
+    setTimeout(() => setIsCopied(false), 2000)
   }
 
   const handleShare = (platform: string) => {
@@ -442,7 +445,14 @@ export default function EditCard({ params }: { params: { cardId: string, cardTyp
                   className="w-full bg-gradient-to-r from-pink-600 to-pink-700 text-white hover:opacity-90 transition-all duration-300"
                 >
                   <CopyIcon className="mr-2 h-4 w-4" />
-                  Copy Link
+                  <span
+                    className={cn(
+                      "transition-opacity duration-500",
+                      isCopied ? "opacity-100" : "opacity-100"
+                    )}
+                  >
+                    {isCopied ? "Copy Success!" : "Copy Link"}
+                  </span>
                 </Button>
               </div>
             </div>
