@@ -95,10 +95,18 @@ interface CardContentParams {
     [key: string]: any;
 }
 
+function getRandomModel(): string {
+    const models = ["anthropic/claude-3.5-haiku", "anthropic/claude-3.5-sonnet"];
+    return models[Math.floor(Math.random() * models.length)];
+}
+
 export async function generateCardContent(params: CardContentParams): Promise<{ svgContent: string, cardId: string }> {
     const { userId, cardType, version, templateId, size, ...otherParams } = params;
     const cardId = nanoid(10);
     const startTime = Date.now();
+
+    const model = getRandomModel();
+    console.log('<----Using model : ' + model + '---->')
     const formattedTime = new Date(startTime).toLocaleString(undefined, {
         year: 'numeric',
         month: '2-digit',
@@ -132,7 +140,7 @@ export async function generateCardContent(params: CardContentParams): Promise<{ 
                 cardId,
                 cardType,
                 userInputs: otherParams,
-                promptVersion: version || '',
+                promptVersion: model || '',
                 responseContent: defaultSVG,
                 tokensUsed: 0,
                 duration: Date.now() - startTime,
@@ -152,7 +160,7 @@ export async function generateCardContent(params: CardContentParams): Promise<{ 
                 "Content-Type": "application/json"
             },
             body: JSON.stringify({
-                "model": "anthropic/claude-3.5-haiku",
+                "model":  model,
                 "messages": [
                     { 
                         "role": "system", 
@@ -169,7 +177,13 @@ export async function generateCardContent(params: CardContentParams): Promise<{ 
                     }
                 ],
                 "temperature": 0.7,
-                "max_tokens": 4096
+                "max_tokens": 4096,
+                'provider': {
+                  'order': [
+                    'OpenAI',
+                    'Together'
+                  ]
+                }
             })
         });
 
@@ -202,7 +216,7 @@ export async function generateCardContent(params: CardContentParams): Promise<{ 
             cardId,
             cardType,
             userInputs: otherParams,
-            promptVersion: version || '',
+            promptVersion: model || '',
             responseContent: svgContent || content,
             tokensUsed: data.usage?.total_tokens || 0,
             duration,
@@ -222,7 +236,7 @@ export async function generateCardContent(params: CardContentParams): Promise<{ 
             cardId,
             cardType,
             userInputs: otherParams,
-            promptVersion: version || '',
+            promptVersion: model || '',
             responseContent: "",
             tokensUsed: 0,
             duration: Date.now() - startTime,
