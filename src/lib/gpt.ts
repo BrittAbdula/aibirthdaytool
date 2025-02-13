@@ -96,8 +96,23 @@ interface CardContentParams {
 }
 
 function getRandomModel(): string {
-    const models = ["anthropic/claude-3.5-haiku", "anthropic/claude-3.5-sonnet"];
-    return models[Math.floor(Math.random() * models.length)];
+    const models = [
+        { name: "anthropic/claude-3.5-haiku", weight: 2 },
+        { name: "anthropic/claude-3.5-sonnet", weight: 1 }
+    ];
+
+    const totalWeight = models.reduce((sum, model) => sum + model.weight, 0);
+    const random = Math.random() * totalWeight;
+
+    let cumulativeWeight = 0;
+    for (const model of models) {
+        cumulativeWeight += model.weight;
+        if (random < cumulativeWeight) {
+            return model.name;
+        }
+    }
+
+    return models[0].name; // Fallback, should not reach here
 }
 
 export async function generateCardContent(params: CardContentParams): Promise<{ svgContent: string, cardId: string }> {
