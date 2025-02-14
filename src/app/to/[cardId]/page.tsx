@@ -134,7 +134,7 @@ export default async function EditedCardPage({ params }: Props) {
           <p className="text-xs sm:text-sm text-gray-500">
           ✨{' '}Created with{' '}
             <span className="inline-block animate-bounce">❤️</span>{' '}
-            using{' '}
+            on {' '}
             <a
               href="/"
               className="text-purple-600 hover:text-pink-600 transition-colors duration-200 font-medium group"

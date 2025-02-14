@@ -91,20 +91,20 @@ const ProgressBar = ({ progress }: { progress: number }) => (
   </div>
 );
 
-const CustomSelect = ({ 
-  value, 
-  onValueChange, 
-  placeholder, 
-  options, 
-  customValue, 
+const CustomSelect = ({
+  value,
+  onValueChange,
+  placeholder,
+  options,
+  customValue,
   onCustomValueChange,
   required,
   label
-}: { 
-  value: string, 
-  onValueChange: (value: string) => void, 
-  placeholder: string, 
-  options: string[], 
+}: {
+  value: string,
+  onValueChange: (value: string) => void,
+  placeholder: string,
+  options: string[],
   customValue: string,
   onCustomValueChange: (value: string) => void,
   required?: boolean,
@@ -145,14 +145,14 @@ const CustomSelect = ({
             <SelectValue placeholder={placeholder} />
           </SelectTrigger>
           <SelectContent>
-          <SelectItem value="custom" className="text-[#b19bff]">✨ Custom {label} (Any keywords)</SelectItem>
+            <SelectItem value="custom" className="text-[#b19bff]">✨ Custom {label} (Any keywords)</SelectItem>
             {options.map((option) => (
               <SelectItem key={option} value={option}>{option}</SelectItem>
             ))}
           </SelectContent>
         </Select>
       </div>
-      
+
       <div className={cn(
         "transition-all duration-300",
         !isCustom ? "hidden" : "block"
@@ -185,14 +185,14 @@ const CustomSelect = ({
   );
 };
 
-export default function CardGenerator({ 
-  wishCardType, 
-  initialCardId, 
+export default function CardGenerator({
+  wishCardType,
+  initialCardId,
   initialImgUrl,
   cardConfig
-}: { 
-  wishCardType: CardType, 
-  initialCardId: string, 
+}: {
+  wishCardType: CardType,
+  initialCardId: string,
   initialImgUrl: string,
   cardConfig: CardConfig
 }) {
@@ -403,6 +403,24 @@ export default function CardGenerator({
           <Card className="p-4 sm:p-6 bg-white border border-[#FFC0CB] shadow-md w-full max-w-md relative">
             <CardContent className="space-y-4">
               {cardConfig.fields.map((field) => renderField(field))}
+
+              {/* Style Selection */}
+              <div key="card-style" className="space-y-2">
+                <Label htmlFor="card-style">Style (Color, Animation, any keywords)</Label>
+                <CustomSelect
+                  value={formData["style"] || ''}
+                  onValueChange={(value) => handleInputChange("style", value)}
+                  customValue={customValues["style"] || ''}
+                  onCustomValueChange={(value) => {
+                    setCustomValues(prev => ({ ...prev, style: value }));
+                  }}
+                  placeholder="Select Card Style"
+                  options={["classic", "modern", "minimal", "vintage"]}
+                  required={true}
+                  label="Style"
+                />
+              </div>
+
               {/* Size Selection */}
               <div className="space-y-2">
                 <Label>Card Size</Label>
@@ -424,23 +442,6 @@ export default function CardGenerator({
                 <p className="text-xs text-gray-500">
                   {CARD_SIZES[selectedSize].orientation} orientation
                 </p>
-              </div>
-
-              {/* Style Selection */}
-              <div key="card-style" className="space-y-2">
-                <Label htmlFor="card-style">Card Style</Label>
-                <CustomSelect
-                  value={formData["style"] || ''}
-                  onValueChange={(value) => handleInputChange("style", value)}
-                  customValue={customValues["style"] || ''}
-                  onCustomValueChange={(value) => {
-                    setCustomValues(prev => ({ ...prev, style: value }));
-                  }}
-                  placeholder="Select Card Style"
-                  options={["classic", "modern", "minimal", "vintage"]}
-                  required={true}
-                  label="Style"
-                />
               </div>
 
               {showAdvancedOptions && cardConfig.advancedFields && (
@@ -477,13 +478,13 @@ export default function CardGenerator({
           </div>
 
           <div className="w-full max-w-md">
-          {isLoading && <ProgressBar progress={progress} />}
+            {isLoading && <ProgressBar progress={progress} />}
             <div className="bg-white p-3 sm:p-5 rounded-lg shadow-lg flex items-center justify-center relative border border-[#FFC0CB] aspect-[2/3]">
               {isLoading ? (
                 <FlickeringGrid />
               ) : (
                 <div className="w-full h-full flex items-center justify-center overflow-hidden">
-                  <ImageViewer  alt={currentCardType} cardId={cardId || '1'} cardType={currentCardType} imgUrl={imgUrl} isNewCard={true} />
+                  <ImageViewer alt={currentCardType} cardId={cardId || '1'} cardType={currentCardType} imgUrl={imgUrl} isNewCard={true} />
                 </div>
               )}
             </div>
@@ -496,19 +497,19 @@ export default function CardGenerator({
           <DialogHeader>
             <DialogTitle className="text-2xl font-semibold text-[#4A4A4A]">Sign in Required</DialogTitle>
             <DialogDescription className="text-gray-600 mt-2">
-              Please sign in with Google to generate your card. 
+              Please sign in with Google to generate your card.
               Alternatively, you can browse our <a href="/card-gallery/" className="text-[#FFC0CB] hover:text-[#FFD1DC] hover:underline transition-colors">Card Templates</a> to use existing templates.
             </DialogDescription>
           </DialogHeader>
           <div className="flex justify-end space-x-4 mt-6">
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={() => router.push('/card-gallery/')}
               className="border-[#FFC0CB] text-[#4A4A4A] hover:bg-[#FFF5F6] hover:text-[#4A4A4A]"
             >
               View Templates
             </Button>
-            <Button 
+            <Button
               onClick={handleLogin}
               disabled={isAuthLoading}
               className="bg-[#FFC0CB] text-[#4A4A4A] hover:bg-[#FFD1DC] transition-colors relative"
@@ -543,7 +544,7 @@ export default function CardGenerator({
             </DialogDescription>
           </DialogHeader>
           <div className="flex justify-end space-x-4 mt-6">
-            <Button 
+            <Button
               onClick={() => {
                 setShowLimitDialog(false)
                 router.push('/card-gallery/')
