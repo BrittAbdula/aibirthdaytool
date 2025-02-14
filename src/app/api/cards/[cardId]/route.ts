@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import {prisma} from '@/lib/prisma';
+import {fetchSvgContent} from '@/lib/utils';
 
 export async function GET(
   request: Request,
@@ -13,6 +14,7 @@ export async function GET(
     if (!card) {
       return NextResponse.json({ error: 'Card not found' }, { status: 404 })
     }
+    card.responseContent = await fetchSvgContent(card.r2Url)
 
     return NextResponse.json(card)
   } catch (error) {
