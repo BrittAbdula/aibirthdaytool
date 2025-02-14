@@ -10,17 +10,8 @@ export default function CardDisplay({ card }: { card: any }) {
   const [stage, setStage] = useState<'initial' | 'opening' | 'revealing' | 'final'>('initial')
   const [showEnvelope, setShowEnvelope] = useState(true)
   const [showCard, setShowCard] = useState(false)
-  const [imageSrc, setImageSrc] = useState<string | null>(null)
-
-  useEffect(() => {
-    if (card.r2Url) {
-      setImageSrc(card.r2Url)
-    } else if (card.editedContent) {
-      const dataUrl = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(card.editedContent)}`
-      setImageSrc(dataUrl)
-    }
-  }, [card.svgContent])
-
+  const [imageSrc, setImageSrc] = useState<string | null>(card.r2Url)
+ 
   // Original confetti effect
   function triggerConfetti() {
     const end = Date.now() + 3 * 1000;
