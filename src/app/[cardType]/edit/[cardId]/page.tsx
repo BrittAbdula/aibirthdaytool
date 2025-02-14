@@ -61,7 +61,7 @@ export default function EditCard({ params }: { params: { cardId: string, cardTyp
     }
 
     fetchCardData()
-  }, [cardId])
+  }, [])
 
   const updateImageSrc = useCallback((content: string) => {
     if (typeof window === 'undefined') return
