@@ -5,15 +5,148 @@
 | 功能特权           | 免费用户 | 高级会员 | 专业会员 |
 |------------------|---------|---------|---------|
 | 模板使用          | 是      | 是      | 是      |
-| 生成次数          | 3次/每日  | 1000次/每月    | 3000次/每日    |
+| 生成新模板          | 3次/每日| 1000次/每月| 3000次/每月    |
 | 批量生成          | 否       | 是      | 是     |
 | 广告展示           | 有      | 无      | 无      |
 | 模型质量           | 基础    | 高级     | 高级    |
-| 多轮编辑次数        | 否     | 3次     | 5次     |
+| 多轮生成           | 否     | 3次     | 5次     |
 | 隐私模式           | 否      | 是      | 是      |
 | 优先生成队列        | 否      | 是      | 是      |
-| 定价（月）          | 免费    | $9.99  | $19.99  |
-| 定价（年）          | 免费    | $99.99  | $199.99    |
+| 定价（月）          | 免费    | $6.99  | $16.99  |
+| 定价（年）          | 免费    | $69.99  | $169.99  |
+｜一次性额外赠送不限时次数 ｜ 0次 ｜ 100次 ｜ 1000次 ｜
+
+## 系统实现方案
+
+### 1. 数据模型设计
+
+#### 1.1 核心模型
+
+1. **用户表 (User)**
+   - 基本用户信息
+   - 当前计划类型 (FREE/BASIC/PREMIUM)
+   - 关联订阅信息
+
+2. **订阅表 (Subscription)**
+   - 用户订阅状态
+   - 计费周期（月付/年付）
+   - 订阅开始和结束时间
+   - 下次计费时间
+   - 取消状态管理
+
+3. **功能特权表 (PlanFeature)**
+   - 功能名称和描述
+   - 功能唯一标识符
+   - 关联的使用限制
+
+4. **使用限制表 (PlanLimit)**
+   - 每个计划的具体限制值
+   - 限制类型（每日/每月/布尔值）
+   - 关联到具体功能
+
+5. **额外奖励表 (BonusCredit)**
+   - 用户额外获得的使用次数
+   - 奖励来源和过期时间
+   - 使用状态跟踪
+
+6. **使用记录表 (ApiUsage)**
+   - 每日使用统计
+   - 用户ID关联
+   - 使用时间戳
+
+### 2. 功能特权管理
+
+#### 2.1 特权类型
+- daily_generations: 每日生成限制
+- monthly_generations: 每月生成限制
+- batch_generation: 批量生成能力
+- priority_queue: 优先生成队列
+- advanced_editing: 高级编辑功能
+- api_access: API访问权限
+
+#### 2.2 限制类型
+- daily: 每日限制（如生成次数）
+- monthly: 每月限制（如总生成次数）
+- boolean: 功能开关（如优先队列）
+
+### 3. API接口设计
+
+#### 3.1 用户计划查询接口 (/api/user-plan)
+返回数据包括：
+- 当前计划信息
+- 订阅状态详情
+- 使用限制和剩余次数
+- 可用功能列表
+
+#### 3.2 功能检查接口 (/api/check-feature)
+- 检查用户是否可以使用特定功能
+- 返回剩余使用次数和限制信息
+- 处理不同类型的限制逻辑
+
+### 4. 实用工具函数
+
+#### 4.1 计划特权检查
+```typescript
+async function checkPlanFeature(userId: string, featureKey: string): Promise<PlanFeatureCheck>
+```
+- 检查用户权限
+- 计算剩余使用次数
+- 返回详细的限制信息
+
+#### 4.2 计划功能获取
+```typescript
+async function getPlanFeatures(planType: PlanType): Promise<PlanFeature[]>
+```
+- 获取特定计划的所有功能
+- 包含限制和描述信息
+
+### 5. 定价常量
+```typescript
+const PLAN_PRICES = {
+  FREE: { monthly: 0, yearly: 0 },
+  BASIC: { monthly: 6.99, yearly: 69.99 },
+  PREMIUM: { monthly: 16.99, yearly: 169.99 }
+}
+```
+
+### 6. 实现注意事项
+
+1. **性能优化**
+   - 使用缓存减少数据库查询
+   - 批量更新使用记录
+   - 异步处理非关键操作
+
+2. **安全考虑**
+   - 严格的权限检查
+   - 防止绕过限制
+   - 异常处理和日志记录
+
+3. **用户体验**
+   - 清晰的限制提示
+   - 优雅的升级引导
+   - 实时的使用统计
+
+4. **扩展性**
+   - 支持新功能添加
+   - 灵活的限制配置
+   - 可定制的计划类型
+
+### 7. 后续计划
+
+1. **功能增强**
+   - 更多的计划类型
+   - 自定义限制规则
+   - 团队版本支持
+
+2. **运营工具**
+   - 使用统计分析
+   - 转化率跟踪
+   - 用户行为分析
+
+3. **营销功能**
+   - 推荐奖励系统
+   - 限时促销支持
+   - 用户等级体系
 
 ## 详细功能说明
 
@@ -50,58 +183,7 @@
 
 ### 1. 数据库设计
 ```typescript
-interface UserTier {
-  id: string;
-  name: 'FREE' | 'PREMIUM' | 'PRO';
-  dailyGenerationLimit: number;
-  batchGenerationLimit: number;
-  editAttemptsPerCard: number;
-  hasAds: boolean;
-  modelQuality: 'basic' | 'premium' | 'ultimate';
-  priorityQueue: boolean;
-  advancedEditing: boolean;
-  apiAccess: boolean;
-}
 
-interface UserSubscription {
-  userId: string;
-  tierId: string;
-  startDate: Date;
-  endDate: Date;
-  isActive: boolean;
-  paymentStatus: 'active' | 'cancelled' | 'expired';
-  generationsToday: number;
-  lastGenerationDate: Date;
-}
-
-interface CardEditHistory {
-  cardId: string;
-  userId: string;
-  editCount: number;
-  lastEditDate: Date;
-  remainingEdits: number;
-}
-```
-
-### 2. 功能限制实现
-```typescript
-interface GenerationLimits {
-  checkUserLimits: (userId: string) => Promise<{
-    canGenerate: boolean;
-    remainingGenerations: number;
-    batchSize: number;
-    modelQuality: string;
-  }>;
-  
-  incrementUserGeneration: (userId: string) => Promise<void>;
-  
-  resetDailyCounter: (userId: string) => Promise<void>;
-  
-  checkEditLimit: (userId: string, cardId: string) => Promise<{
-    canEdit: boolean;
-    remainingEdits: number;
-  }>;
-}
 ```
 
 ### 3. 性能优化

@@ -298,7 +298,7 @@ export function generatePrompt(cardType: CardType, size: CardSize) {
      - Keyboard navigation
   
   4. Performance:
-     - SVG size < 100KB
+     - Elegant layout and structure
      - Smooth animations
      - Efficient paths
      - Optimized gradients

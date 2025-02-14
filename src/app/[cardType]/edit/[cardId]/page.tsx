@@ -270,6 +270,7 @@ export default function EditCard({ params }: { params: { cardId: string, cardTyp
                   <Switch
                     checked={enableMusic}
                     onCheckedChange={setEnableMusic}
+                    className="data-[state=checked]:bg-pink-400"
                   />
                 </div>
               </div>
@@ -339,6 +340,7 @@ export default function EditCard({ params }: { params: { cardId: string, cardTyp
                     <Switch
                       checked={enableCustomUrl}
                       onCheckedChange={setEnableCustomUrl}
+                      className="data-[state=checked]:bg-pink-400"
                     />
                   </div>
                 </div>
@@ -357,7 +359,7 @@ export default function EditCard({ params }: { params: { cardId: string, cardTyp
                       />
                     </div>
                     <p className="text-xs text-gray-500 italic">
-                      Only letters, numbers, and hyphens are allowed
+                      Only letters, numbers, and hyphens are allowed. Custom URLs are not permanently reserved and may be overwritten if used by others.
                     </p>
                   </div>
                 )}

@@ -50,7 +50,6 @@ const AgeSelector = ({ age, setAge }: { age: number | null, setAge: (age: number
 
   return (
     <div className="space-y-2">
-      {/* <Label htmlFor="age">Age (Optional)</Label> */}
       <div className="flex items-center space-x-4">
         <Slider
           id="age-slider"
@@ -59,7 +58,7 @@ const AgeSelector = ({ age, setAge }: { age: number | null, setAge: (age: number
           step={1}
           value={[age || 0]}
           onValueChange={handleSliderChange}
-          className="flex-grow custom-slider text-base"
+          className="flex-grow custom-slider text-base [&_[role=slider]]:bg-[#FFC0CB] [&_[role=slider]]:border-[#FFC0CB] [&_[role=slider]]:hover:bg-[#FFD1DC] [&_[role=track]]:bg-[#FFC0CB]"
         />
         <Input
           id="age-input"
@@ -68,7 +67,7 @@ const AgeSelector = ({ age, setAge }: { age: number | null, setAge: (age: number
           max={120}
           value={age === null ? '' : age}
           onChange={handleInputChange}
-          className="w-16 text-center"
+          className="w-16 text-center focus-visible:ring-[#FFC0CB] focus-visible:border-[#FFC0CB]"
         />
       </div>
       <div className="flex justify-between text-xs text-gray-500">

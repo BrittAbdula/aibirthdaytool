@@ -68,7 +68,7 @@ export default function CardGalleryContent({ initialCardsData, defaultType, defa
 
   return (
     <main className="min-h-screen">
-      <div className="relative container mx-auto px-4 sm:px-6 py-8 sm:py-12">
+      <div className="relative  py-8 sm:py-12">
         <section className="mb-8">
           <CardTypeFilter 
             selectedType={selectedType}
