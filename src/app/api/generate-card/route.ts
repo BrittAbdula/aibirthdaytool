@@ -14,8 +14,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // const userId = session.user.id;
-    const userId = 'cm56ic66y000110jijyw2ir8r';
+    const userId = session.user.id;
+    // const userId = 'cm56ic66y000110jijyw2ir8r';
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
