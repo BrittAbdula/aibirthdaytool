@@ -268,3 +268,34 @@ INSERT INTO "CardGenerator" (
   '["MewtruCard''s AI creates unique Valentine''s Day cards that express genuine love","Our AI transforms your Valentine''s Day wishes into extraordinary messages of love","Customize your cards until they perfectly express your love and best wishes","Share your love with high-quality downloadable images or musical greeting links"]',
   ''
 );  
+
+-- good morning
+INSERT INTO "CardGenerator" (
+  id, name, slug, description, "isSystem", "isPublic",
+  "createdAt", "updatedAt", "userId",
+  title, label, fields, "templateInfo", why, "promptContent"
+) VALUES (
+  'clg1goodmorning', 'Good Morning Card Generator', 'goodmorning', 'Create good morning cards', true, true,
+  CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, NULL,
+  'Good Morning Card Generator', 'Good Morning Card',
+  '[{"name":"recipientName","type":"text","label":"Recipient''s Name","optional":false},{"name":"relationship","type":"select","label":"Relationship","options":["Myself","Friend","Father","Mother","Wife","Husband","Boyfriend","Girlfriend","Brother","Sister","Daughter","Grandparent","Student","Classmate","Son","Other"],"optional":false,"defaultValue":"Friend"},{"name":"message","type":"textarea","label":"Good Morning Message (optional)","optional":true},{"name":"senderName","type":"text","label":"Your Name (optional)","optional":true}]',
+  'Wish someone a good morning with personalized cards from MewtruCard''s collection of free customizable templates ✨',
+  '["MewtruCard''s AI creates unique good morning cards that express genuine wishes for a great day","Our AI transforms your good morning message into extraordinary messages of encouragement","Customize your cards until they perfectly express your support","Share your good morning wishes with high-quality downloadable images or musical greeting links"]',
+  ''
+);  
+
+-- good night
+INSERT INTO "CardGenerator" (
+  id, name, slug, description, "isSystem", "isPublic",
+  "createdAt", "updatedAt", "userId", 
+  title, label, fields, "templateInfo", why, "promptContent"
+) VALUES (
+  'clg1goodnight', 'Good Night Card Generator', 'goodnight', 'Create good night cards', true, true,
+  CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, NULL,
+  'Good Night Card Generator', 'Good Night Card',
+  '[{"name":"recipientName","type":"text","label":"Recipient''s Name","optional":false},{"name":"relationship","type":"select","label":"Relationship","options":["Myself","Friend","Father","Mother","Wife","Husband","Boyfriend","Girlfriend","Brother","Sister","Daughter","Grandparent","Student","Classmate","Son","Other"],"optional":false,"defaultValue":"Friend"},{"name":"message","type":"textarea","label":"Good Night Message (optional)","optional":true},{"name":"senderName","type":"text","label":"Your Name (optional)","optional":true}]',
+  'Wish someone a good night with personalized cards from MewtruCard''s collection of free customizable templates ✨',
+  '["MewtruCard''s AI creates unique good night cards that express genuine wishes for a restful night","Our AI transforms your good night message into extraordinary messages of encouragement","Customize your cards until they perfectly express your support","Share your good night wishes with high-quality downloadable images or musical greeting links"]',
+  ''
+);    
+

@@ -20,10 +20,13 @@ export const CARD_TYPES: CardTypeOption[] = [
   { type: "wedding", label: "Wedding" },
   { type: "baby", label: "Baby" },
   { type: "graduation", label: "Graduation" },
-  { type: "good-luck", label: "Good Luck" },
+  { type: "goodluck", label: "Good Luck" },
   { type: "sorry", label: "Sorry" },
   { type: "christmas", label: "Christmas" },
   { type: "valentine", label: "Valentine" },
+  { type: "goodmorning", label: "Good Morning" },
+  { type: "goodnight", label: "Good Night" },
+  { type: "teacher", label: "Teacher" },
 ]
 
 export const RELATIONSHIPS: RelationshipOption[] = [

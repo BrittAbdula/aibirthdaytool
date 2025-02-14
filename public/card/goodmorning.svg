@@ -1,0 +1,120 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 480 760" width="480" height="760">
+  <defs>
+    <linearGradient id="skyGradient" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0%" stop-color="#87CEEB"/>
+      <stop offset="100%" stop-color="#E6F3FF"/>
+    </linearGradient>
+
+    <linearGradient id="sunGradient" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0%" stop-color="#FFD700"/>
+      <stop offset="100%" stop-color="#FFA500"/>
+    </linearGradient>
+
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 1   0 1 0 0 1   0 0 1 0 1  0 0 0 10 -5" result="glow"/>
+      <feComposite in="SourceGraphic" in2="glow" operator="over"/>
+    </filter>
+
+    <pattern id="grassPattern" x="0" y="0" width="20" height="10" patternUnits="userSpaceOnUse">
+      <path d="M0,10 Q5,0 10,10 Q15,0 20,10" stroke="#2E7D32" fill="none" stroke-width="1"/>
+    </pattern>
+  </defs>
+
+  <!-- 天空背景 -->
+  <rect width="480" height="760" fill="url(#skyGradient)"/>
+
+  <!-- 太阳 -->
+  <g transform="translate(240,200)">
+    <circle r="50" fill="url(#sunGradient)" filter="url(#glow)">
+      <animate attributeName="r" values="50;52;50" dur="3s" repeatCount="indefinite"/>
+    </circle>
+  </g>
+
+  <!-- 光芒 -->
+  <g transform="translate(240,200)">
+    <g>
+      <line x1="0" y1="-70" x2="0" y2="-90" stroke="#FFD700" stroke-width="2">
+        <animate attributeName="y2" values="-90;-100;-90" dur="2s" repeatCount="indefinite"/>
+      </line>
+    </g>
+    <g transform="rotate(45)">
+      <line x1="0" y1="-70" x2="0" y2="-90" stroke="#FFD700" stroke-width="2">
+        <animate attributeName="y2" values="-90;-100;-90" dur="2s" repeatCount="indefinite"/>
+      </line>
+    </g>
+    <g transform="rotate(90)">
+      <line x1="0" y1="-70" x2="0" y2="-90" stroke="#FFD700" stroke-width="2">
+        <animate attributeName="y2" values="-90;-100;-90" dur="2s" repeatCount="indefinite"/>
+      </line>
+    </g>
+    <g transform="rotate(135)">
+      <line x1="0" y1="-70" x2="0" y2="-90" stroke="#FFD700" stroke-width="2">
+        <animate attributeName="y2" values="-90;-100;-90" dur="2s" repeatCount="indefinite"/>
+      </line>
+    </g>
+    <animateTransform attributeName="transform" type="rotate" from="0" to="360" dur="60s" repeatCount="indefinite" additive="sum"/>
+  </g>
+
+  <!-- 飞鸟 -->
+  <g>
+    <path d="M0,0 Q10,-10 20,0 Q10,10 0,0" fill="#333">
+      <animateMotion path="M100,150 Q240,100 380,150" dur="6s" repeatCount="indefinite"/>
+    </path>
+    <path d="M0,0 Q10,-10 20,0 Q10,10 0,0" fill="#333">
+      <animateMotion path="M150,180 Q240,130 330,180" dur="7s" repeatCount="indefinite"/>
+    </path>
+    <path d="M0,0 Q10,-10 20,0 Q10,10 0,0" fill="#333">
+      <animateMotion path="M200,160 Q240,110 280,160" dur="5s" repeatCount="indefinite"/>
+    </path>
+  </g>
+
+  <!-- 绿草地 -->
+  <g transform="translate(0,500)">
+    <rect width="480" height="260" fill="#4CAF50"/>
+    <rect width="480" height="260" fill="url(#grassPattern)" opacity="0.5">
+      <animate attributeName="opacity" values="0.5;0.7;0.5" dur="3s" repeatCount="indefinite"/>
+    </rect>
+  </g>
+
+  <!-- 花朵 -->
+  <g>
+    <g transform="translate(120,520)">
+      <circle r="5" fill="#FF69B4"/>
+      <circle r="2" fill="#FFD700"/>
+    </g>
+    <g transform="translate(350,540)">
+      <circle r="5" fill="#FF69B4"/>
+      <circle r="2" fill="#FFD700"/>
+    </g>
+    <g transform="translate(220,560)">
+      <circle r="5" fill="#FF69B4"/>
+      <circle r="2" fill="#FFD700"/>
+    </g>
+  </g>
+
+  <!-- 文字 -->
+  <g transform="translate(240,650)">
+    <text text-anchor="middle" font-family="微软雅黑" font-size="28" fill="#333">
+      <tspan x="0" y="60">Good Morning</tspan>
+    </text>
+  </g>
+
+  <!-- 云朵 -->
+  <g fill="white" opacity="0.8">
+    <path d="M80,100 Q100,80 120,100 Q140,80 160,100 Q140,120 120,110 Q100,120 80,100">
+      <animate attributeName="d" 
+        values="M80,100 Q100,80 120,100 Q140,80 160,100 Q140,120 120,110 Q100,120 80,100;
+                M85,100 Q105,80 125,100 Q145,80 165,100 Q145,120 125,110 Q105,120 85,100;
+                M80,100 Q100,80 120,100 Q140,80 160,100 Q140,120 120,110 Q100,120 80,100"
+        dur="10s" repeatCount="indefinite"/>
+    </path>
+    <path d="M280,150 Q300,130 320,150 Q340,130 360,150 Q340,170 320,160 Q300,170 280,150">
+      <animate attributeName="d" 
+        values="M280,150 Q300,130 320,150 Q340,130 360,150 Q340,170 320,160 Q300,170 280,150;
+                M285,150 Q305,130 325,150 Q345,130 365,150 Q345,170 325,160 Q305,170 285,150;
+                M280,150 Q300,130 320,150 Q340,130 360,150 Q340,170 320,160 Q300,170 280,150"
+        dur="12s" repeatCount="indefinite"/>
+    </path>
+  </g>
+</svg>

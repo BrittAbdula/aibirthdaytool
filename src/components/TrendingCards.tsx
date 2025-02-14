@@ -66,6 +66,21 @@ const trendingCards: TrendingCard[] = [
       title: 'Graduation Card',
       link: '/graduation/'
     },
+    {
+      image: '/card/goodluck.svg',
+      title: 'Good Luck Card',
+      link: '/goodluck/'
+    },
+    {
+      image: '/card/goodmorning.svg',
+      title: 'Good Morning Card',
+      link: '/goodmorning/'
+    },
+    {
+      image: '/card/goodnight.svg',
+      title: 'Good Night Card',
+      link: '/goodnight/'
+    }
 ]
 
 export const TrendingCards = () => {

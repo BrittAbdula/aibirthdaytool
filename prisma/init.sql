@@ -1397,7 +1397,45 @@ VALUES
 ;;Your responses must contain only valid SVG code.$$, CURRENT_TIMESTAMP, 2) 
 
 
+insert into "Template" ("id", "cardType", "promptVersion", "name", "description",  "promptContent", "previewSvg", "updatedAt", "cardId") 
+values
+('goodmorning-v2', 'goodmorning', '2.0','Good Morning Card', '', '', '', CURRENT_TIMESTAMP, 2)
 
+insert into "Template" ("id", "cardType", "promptVersion", "name", "description",  "promptContent", "previewSvg", "updatedAt", "cardId") 
+values
+('goodnight-v2', 'goodnight', '2.0','Good Night Card', '', '', '', CURRENT_TIMESTAMP, 2)
+
+
+insert into "Template" ("id", "cardType", "promptVersion", "name", "description",  "promptContent", "previewSvg", "updatedAt", "cardId") 
+values
+('wedding-v2', 'wedding', '2.0','Wedding Card', '', '', '', CURRENT_TIMESTAMP, 2)
+
+insert into "Template" ("id", "cardType", "promptVersion", "name", "description",  "promptContent", "previewSvg", "updatedAt", "cardId") 
+values
+('baby-v2', 'baby', '2.0','Baby Card', '', '', '', CURRENT_TIMESTAMP, 2)
+
+insert into "Template" ("id", "cardType", "promptVersion", "name", "description",  "promptContent", "previewSvg", "updatedAt", "cardId") 
+values
+('goodluck-v2', 'goodluck', '2.0','Good Luck Card', '', '', '', CURRENT_TIMESTAMP, 2)
+
+insert into "Template" ("id", "cardType", "promptVersion", "name", "description",  "promptContent", "previewSvg", "updatedAt", "cardId") 
+values
+('valentine-v2', 'valentine', '2.0','Valentine Card', '', '', '', CURRENT_TIMESTAMP, 2)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ 
 ------ happy new year
 
 INSERT INTO "Template" ("id", "cardType", "promptVersion", "name", "description", "previewSvg", "promptContent", "updatedAt", "cardId")
@@ -1456,9 +1494,6 @@ VALUES
     画境))
 ;;Your responses must contain only valid SVG code.$$, CURRENT_TIMESTAMP, 2) 
 
-
-
------- teacher & graduation
 
 INSERT INTO "Template" ("id", "cardType", "promptVersion", "name", "description", "previewSvg", "promptContent", "updatedAt", "cardId")
 VALUES

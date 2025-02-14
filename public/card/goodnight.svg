@@ -1,0 +1,94 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 480 760" width="480" height="760">
+  <defs>
+    <linearGradient id="skyGradient" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0%" stop-color="#141E30">
+        <animate attributeName="stop-color" values="#FF8F73;#141E30;#141E30" dur="10s" repeatCount="indefinite"/>
+      </stop>
+      <stop offset="100%" stop-color="#243B55">
+        <animate attributeName="stop-color" values="#FFF4E4;#243B55;#243B55" dur="10s" repeatCount="indefinite"/>
+      </stop>
+    </linearGradient>
+
+    <filter id="moonGlow">
+      <feGaussianBlur stdDeviation="2" result="blur"/>
+      <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 1   0 1 0 0 1   0 0 1 0 1  0 0 0 15 -6" result="glow"/>
+      <feComposite in="SourceGraphic" in2="glow" operator="over"/>
+    </filter>
+
+    <radialGradient id="sunGradient">
+      <stop offset="0%" stop-color="#FFD700"/>
+      <stop offset="100%" stop-color="#FFA500"/>
+      <animate attributeName="opacity" values="1;0;0" dur="10s" repeatCount="indefinite"/>
+    </radialGradient>
+
+    <radialGradient id="moonGradient">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="100%" stop-color="#F4F4F4"/>
+      <animate attributeName="opacity" values="0;1;1" dur="10s" repeatCount="indefinite"/>
+    </radialGradient>
+  </defs>
+
+  <!-- 背景 -->
+  <rect width="480" height="760" fill="url(#skyGradient)"/>
+
+  <!-- 远山 -->
+  <path d="M0,500 Q120,450 240,500 Q360,450 480,500 L480,760 L0,760 Z" fill="#1a1a1a" opacity="0.8"/>
+  <path d="M0,550 Q120,500 240,550 Q360,500 480,550 L480,760 L0,760 Z" fill="#0a0a0a" opacity="0.9"/>
+
+  <!-- 太阳 -->
+  <g transform="translate(240,200)">
+    <circle r="40" fill="url(#sunGradient)">
+      <animate attributeName="cy" values="0;-200" dur="10s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="1;0" dur="10s" repeatCount="indefinite"/>
+    </circle>
+  </g>
+
+  <!-- 月亮 -->
+  <g transform="translate(240,200)">
+    <circle r="35" fill="url(#moonGradient)" filter="url(#moonGlow)">
+      <animate attributeName="cy" values="200;0" dur="10s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0;1" dur="10s" repeatCount="indefinite"/>
+    </circle>
+    <path d="M-15,-15 a40,40 0 0,0 0,60 a35,35 0 0,1 0,-60" fill="#141E30" opacity="0.1">
+      <animate attributeName="cy" values="200;0" dur="10s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0;0.1" dur="10s" repeatCount="indefinite"/>
+    </path>
+  </g>
+
+  <!-- 星星 -->
+  <g>
+    <g transform="translate(120,100)">
+      <circle r="1" fill="white">
+        <animate attributeName="opacity" values="0;0.8" dur="10s" repeatCount="indefinite"/>
+      </circle>
+    </g>
+    <g transform="translate(360,150)">
+      <circle r="1" fill="white">
+        <animate attributeName="opacity" values="0;0.8" dur="10s" repeatCount="indefinite"/>
+      </circle>
+    </g>
+    <g transform="translate(180,180)">
+      <circle r="1" fill="white">
+        <animate attributeName="opacity" values="0;0.8" dur="10s" repeatCount="indefinite"/>
+      </circle>
+    </g>
+  </g>
+
+  <!-- 文字 -->
+  <g transform="translate(240,650)">
+    <text text-anchor="middle" font-family="微软雅黑" font-size="24" fill="#fff" opacity="0.9">
+      <tspan x="0" y="0">Good Night</tspan>
+    </text>
+  </g>
+
+  <!-- 云彩 -->
+  <g fill="#243B55" opacity="0.6">
+    <path d="M100,280 Q150,260 200,280 Q250,260 300,280 Q280,300 240,300 Q200,300 180,290 Q160,300 120,300 Q80,300 100,280">
+      <animate attributeName="d" 
+        values="M100,280 Q150,260 200,280 Q250,260 300,280 Q280,300 240,300 Q200,300 180,290 Q160,300 120,300 Q80,300 100,280;
+                M110,280 Q160,260 210,280 Q260,260 310,280 Q290,300 250,300 Q210,300 190,290 Q170,300 130,300 Q90,300 110,280;
+                M100,280 Q150,260 200,280 Q250,260 300,280 Q280,300 240,300 Q200,300 180,290 Q160,300 120,300 Q80,300 100,280"
+        dur="20s" repeatCount="indefinite"/>
+    </path>
+  </g>
+</svg>

@@ -68,6 +68,58 @@ export function generatePrompt(cardType: CardType, size: CardSize) {
           "Success wishes"
         ]
       },
+      goodmorning: {
+        role: "Good Morning Illustrator",
+        essence: "Crafting a warm and uplifting greeting for the day ahead",
+        focus: [
+          "Morning energy",
+          "Sunrise symbols",
+          "Positive vibes",
+          "Morning messages",
+          "New day energy"
+        ]
+      },
+      goodnight: {
+        role: "Good Night Illustrator",
+        essence: "Crafting a soothing and comforting greeting for the evening",
+        focus: [
+          "Evening serenity",
+          "Moonlit symbols",
+          "Calm messages",
+          "Sleep symbols"
+        ]
+      },
+      newyear: {
+        role: "New Year Celebration Artist",
+        essence: "Celebrating the start of a new year with hope and renewal",
+        focus: [
+          "New year symbols",
+          "Future pathways",
+          "Hope elements",
+          "Celebration patterns"
+        ]
+      },
+      love: {
+        role: "Love Story Illustrator",
+        essence: "Visualizing the beautiful journey of lasting love and shared memories",
+        focus: [
+          "Journey timelines",
+          "Shared memory symbols",
+          "Love growth patterns",
+          "Together moments",
+          "Future promise elements"
+        ]
+      },
+      congratulations: {
+        role: "Congratulations Illustrator",
+        essence: "Celebrating achievements and milestones with pride and inspiration",
+        focus: [
+          "Achievement symbols",
+          "Future pathways",
+          "Celebration patterns",
+          "Inspiration symbols"
+        ]
+      },
       sympathy: {
         role: "Comfort Weaver",
         essence: "Offering gentle support through visual embrace",
@@ -79,7 +131,7 @@ export function generatePrompt(cardType: CardType, size: CardSize) {
           "Hope whispers"
         ]
       },
-      newBaby: {
+      baby: {
         role: "New Life Celebrator",
         essence: "Welcoming precious new beginnings with joy and wonder",
         focus: [

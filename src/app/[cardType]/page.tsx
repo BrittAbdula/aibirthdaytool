@@ -30,7 +30,6 @@ export const revalidate = 3600; // Revalidate every hour
 export async function generateMetadata({ params }: CardGeneratorPageProps): Promise<Metadata> {
     const cardType = params.cardType;
     const cardConfig = await getCardConfig(cardType);
-    // console.log(cardConfig)
 
     if (!cardConfig) {
         return notFound();

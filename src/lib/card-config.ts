@@ -142,6 +142,9 @@ export const getAllCardTypes = unstable_cache(
         slug: true,
         label: true,
         description: true
+      },
+      orderBy: {
+        createdAt: 'desc'
       }
     });
 
@@ -177,6 +180,9 @@ export const getAllCardPreviews = unstable_cache(
         label: true,
         description: true,
         isSystem: true
+      },
+      orderBy: {
+        createdAt: 'desc'
       }
     });
 
