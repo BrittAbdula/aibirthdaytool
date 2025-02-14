@@ -45,7 +45,10 @@ export default function EditCard({ params }: { params: { cardId: string, cardTyp
         const response = await fetch(`/api/cards/${cardId}`)
         if (response.ok) {
           const data = await response.json()
-          const content = await fetchSvgContent(data.r2Url)
+          console.log('data----------', data)
+          const content_pre = await fetch(data.r2Url)
+          const content = await content_pre.text()
+          console.log('content----------', content)
           setSvgContent(content)
           setOriginalContent(content)
           setEditableFields(extractEditableFields(content))
