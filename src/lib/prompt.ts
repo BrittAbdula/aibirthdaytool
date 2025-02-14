@@ -311,6 +311,7 @@ export function generatePrompt(cardType: CardType, size: CardSize) {
   - Necessary attributes
   - Optimized paths
   - No external dependencies
+  IMPORTANT: Generate SVG code only. Do not include any explanation, commentary, or other text.
   
   Start directly with <svg> tag.
   Include all required namespaces.

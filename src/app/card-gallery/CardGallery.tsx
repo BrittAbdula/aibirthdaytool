@@ -87,12 +87,11 @@ export default function CardGallery({ initialCardsData, wishCardType }: CardGall
           >
             <div className="aspect-[2/3] relative">
               <ImageViewer
-                svgContent={card.responseContent}
                 alt={card.cardType}
                 cardId={card.cardId}
                 cardType={card.cardType}
                 isNewCard={false}
-                imgUrl={card.r2Url}
+                imgUrl={card.r2Url || ''}
               />
             </div>
           </div>

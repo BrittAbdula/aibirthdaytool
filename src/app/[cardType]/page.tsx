@@ -97,7 +97,7 @@ export default async function CardGeneratorPage({ params }: CardGeneratorPagePro
                         <CardGenerator
                             wishCardType={cardType}
                             initialCardId={''}
-                            initialSVG={''}
+                            initialImgUrl={''}
                             cardConfig={cardConfig}
                         />
                     </Suspense>

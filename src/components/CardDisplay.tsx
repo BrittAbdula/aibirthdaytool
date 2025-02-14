@@ -13,7 +13,9 @@ export default function CardDisplay({ card }: { card: any }) {
   const [imageSrc, setImageSrc] = useState<string | null>(null)
 
   useEffect(() => {
-    if (card.editedContent) {
+    if (card.imgUrl) {
+      setImageSrc(card.imgUrl)
+    } else if (card.editedContent) {
       const dataUrl = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(card.editedContent)}`
       setImageSrc(dataUrl)
     }

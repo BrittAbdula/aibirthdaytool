@@ -5,40 +5,26 @@ import { Dialog, DialogContent, DialogTrigger, DialogTitle, DialogHeader } from 
 import { Button } from "@/components/ui/button"
 import { DownloadIcon, CopyIcon, Pencil1Icon, PaperPlaneIcon, TwitterLogoIcon, EnvelopeClosedIcon, EyeOpenIcon } from '@radix-ui/react-icons'
 import { useToast } from "@/hooks/use-toast"
-import NextImage from 'next/image'
 import { isMobile } from 'react-device-detect'
 import { recordUserAction } from '@/lib/action'
 import { useRouter } from 'next/navigation'
 import CardDisplay from './CardDisplay'
 
 interface ImageViewerProps {
-  svgContent: string
   alt: string
   cardId: string
   cardType: string
   isNewCard: boolean
-  imgUrl?: string|null
+  imgUrl?: string
 }
 
-export function ImageViewer({ svgContent, alt, cardId, cardType, isNewCard, imgUrl }: ImageViewerProps) {
+export function ImageViewer({ alt, cardId, cardType, imgUrl, isNewCard }: ImageViewerProps) {
   const [open, setOpen] = useState(false)
   const { toast } = useToast()
-  const [imageSrc, setImageSrc] = useState<string>('')
-  const [isClient, setIsClient] = useState(false)
   const router = useRouter()
   const [isShareModalOpen, setIsShareModalOpen] = useState(false)
   const [shareLink, setShareLink] = useState('')
   const [showPreview, setShowPreview] = useState(false)
-
-  useEffect(() => {
-    setIsClient(true)
-    if (imgUrl) {
-      setImageSrc(imgUrl)
-    } else {
-      const dataUrl = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svgContent)}`
-      setImageSrc(dataUrl)
-    }
-  }, [svgContent, imgUrl])
 
   const convertSvgToPng = (): Promise<string> => {
     return new Promise((resolve, reject) => {
@@ -52,27 +38,10 @@ export function ImageViewer({ svgContent, alt, cardId, cardType, isNewCard, imgU
         resolve(canvas.toDataURL('image/png'))
       }
       img.onerror = () => reject('Error loading SVG')
-      img.src = imageSrc
+      img.src = imgUrl || ''
     })
   }
 
-  const handleCopy = async () => {
-    try {
-      const pngDataUrl = await convertSvgToPng()
-      const blob = await fetch(pngDataUrl).then(res => res.blob())
-      await navigator.clipboard.write([
-        new ClipboardItem({ 'image/png': blob })
-      ])
-      toast({ description: "Image copied" })
-      await recordUserAction(cardId, 'copy')
-    } catch (err) {
-      console.error('Copy failed: ', err)
-      toast({
-        variant: "destructive",
-        description: "Copy failed. Try long-press.",
-      })
-    }
-  }
 
   const handleDownload = async () => {
     if (isMobile) {
@@ -107,37 +76,6 @@ export function ImageViewer({ svgContent, alt, cardId, cardType, isNewCard, imgU
     router.push(`/${cardType}/edit/${cardId}/`)
   }
 
-  const handleSend = async () => {
-    try {
-      const response = await fetch('/api/edited-cards', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          cardType,
-          originalCardId: cardId,
-          editedContent: svgContent,
-        }),
-      })
-
-      if (response.ok) {
-        const { id } = await response.json()
-        setShareLink(`${window.location.origin}/to/${id}`)
-        setIsShareModalOpen(true)
-        await recordUserAction(cardId, 'send')
-      } else {
-        throw new Error('Failed to save edited card')
-      }
-    } catch (error) {
-      console.error('Error saving edited card:', error)
-      toast({
-        variant: "destructive",
-        description: "Failed to generate share link. Please try again.",
-      })
-    }
-  }
-
   const handleCopyLink = () => {
     navigator.clipboard.writeText(shareLink)
     toast({ description: "Link copied to clipboard" })
@@ -156,31 +94,19 @@ export function ImageViewer({ svgContent, alt, cardId, cardType, isNewCard, imgU
     window.open(url, '_blank')
   }
 
+
   return (
     <>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>
           <div className="relative w-full h-full flex items-center justify-center cursor-pointer group">
-            {isClient && imageSrc && (
-              <>
                 <img
-                  src={imageSrc}
+                  src={imgUrl}
                   alt={alt}
                   width={400}
                   height={600}
                   className="max-w-full max-h-full"
                 />
-                {/* <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/10 via-black/5 to-transparent md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300">
-                  <div className="p-2 sm:p-3">
-                    <div className="flex items-center justify-center">
-                      <span className="px-2 py-0.5 sm:px-3 sm:py-1 rounded-full text-[10px] sm:text-xs font-medium tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-600">
-                        {cardType.charAt(0).toUpperCase() + cardType.slice(1)} Card
-                      </span>
-                    </div>
-                  </div>
-                </div> */}
-              </>
-            )}
           </div>
         </DialogTrigger>
         <DialogContent className="sm:max-w-[90vw] md:max-w-[80vw] lg:max-w-[70vw] xl:max-w-[60vw] p-0">
@@ -188,22 +114,11 @@ export function ImageViewer({ svgContent, alt, cardId, cardType, isNewCard, imgU
           <div className="flex flex-col items-center justify-center h-full">
             {!showPreview ? (
               <div className="relative w-full h-[calc(100vh-200px)] overflow-auto flex items-center justify-center p-4">
-                {isClient && imageSrc && (
-                  <>
-                    <img
-                      src={imageSrc}
-                      alt={alt}
-                      className="max-w-full max-h-full"
-                    />
-                    {/* <div className="absolute bottom-4 sm:bottom-6 left-0 right-0">
-                      <div className="flex items-center justify-center">
-                        <span className="px-2 py-1 sm:px-3 sm:py-1.5 rounded-full text-xs sm:text-sm font-medium tracking-wide bg-white/90 shadow-sm text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-600 backdrop-blur-sm">
-                          {cardType.charAt(0).toUpperCase() + cardType.slice(1)} Card
-                        </span>
-                      </div>
-                    </div> */}
-                  </>
-                )}
+              <img
+                src={imgUrl}
+                alt={alt}
+                className="max-w-full max-h-full"
+              />
               </div>
             ) : (
               <div className="w-full h-[calc(100vh-200px)] overflow-auto flex items-center justify-center">
@@ -211,7 +126,7 @@ export function ImageViewer({ svgContent, alt, cardId, cardType, isNewCard, imgU
                   card={{
                     id: cardId,
                     cardType: cardType,
-                    editedContent: svgContent
+                    imgUrl: imgUrl
                   }}
                 />
               </div>
@@ -223,7 +138,7 @@ export function ImageViewer({ svgContent, alt, cardId, cardType, isNewCard, imgU
                     <Pencil1Icon className="mr-2 h-4 w-4" />
                     Edit
                   </Button>
-                  <Button onClick={handleSend} className="bg-[#FFC0CB] text-[#4A4A4A] hover:bg-[#FFD1DC] transition-colors">
+                  <Button onClick={handleEdit} className="bg-[#FFC0CB] text-[#4A4A4A] hover:bg-[#FFD1DC] transition-colors">
                     <PaperPlaneIcon className="mr-2 h-4 w-4" />
                     Send
                   </Button>

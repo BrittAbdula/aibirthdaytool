@@ -48,9 +48,9 @@ interface ApiLogParams {
     errorMessage?: string;
 }
 
-async function logApiRequest(params: ApiLogParams) {
+async function logApiRequest(params: ApiLogParams): Promise<string | undefined> {
     try {
-        let r2Url: string | undefined;
+        let r2Url: string = '/card/goodluck.svg';
         const createdAt = new Date();
         
         // Only attempt R2 upload for successful SVG responses
@@ -71,7 +71,7 @@ async function logApiRequest(params: ApiLogParams) {
                 cardType: params.cardType,
                 userInputs: params.userInputs,
                 promptVersion: params.promptVersion,
-                responseContent: params.responseContent,
+                responseContent: params.responseContent === 'error' ? 'error' : 'success',
                 tokensUsed: params.tokensUsed,
                 duration: params.duration,
                 isError: params.isError,
@@ -80,6 +80,7 @@ async function logApiRequest(params: ApiLogParams) {
                 timestamp: createdAt,
             },
         });
+        return r2Url;
     } catch (error) {
         console.error("Error logging API request to database:", error);
     }
@@ -115,7 +116,7 @@ function getRandomModel(): string {
     return models[0].name; // Fallback, should not reach here
 }
 
-export async function generateCardContent(params: CardContentParams): Promise<{ svgContent: string, cardId: string }> {
+export async function generateCardContent(params: CardContentParams): Promise<{ r2Url: string, cardId: string }> {
     const { userId, cardType, version, templateId, size, ...otherParams } = params;
     const cardId = nanoid(10);
     const startTime = Date.now();
@@ -125,10 +126,7 @@ export async function generateCardContent(params: CardContentParams): Promise<{ 
     const formattedTime = new Date(startTime).toLocaleString(undefined, {
         year: 'numeric',
         month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: false
+        day: '2-digit'
     }).replace(/\//g, '-');
 
     try {
@@ -156,13 +154,13 @@ export async function generateCardContent(params: CardContentParams): Promise<{ 
                 cardType,
                 userInputs: otherParams,
                 promptVersion: model || '',
-                responseContent: defaultSVG,
+                responseContent: 'userPrompt is too long',
                 tokensUsed: 0,
                 duration: Date.now() - startTime,
                 isError: true,
                 errorMessage: "User prompt too long"
             });
-            return { svgContent: defaultSVG, cardId };
+            return { r2Url: defaultSVG, cardId };
         }
 
         // Make API request
@@ -226,7 +224,7 @@ export async function generateCardContent(params: CardContentParams): Promise<{ 
         const svgContent = extractSvgContent(content);
 
         // Log the request
-        await logApiRequest({
+        const r2Url = await logApiRequest({
             userId,
             cardId,
             cardType,
@@ -240,7 +238,7 @@ export async function generateCardContent(params: CardContentParams): Promise<{ 
         });
 
         return {
-            svgContent: svgContent || defaultSVG,
+            r2Url: r2Url || defaultSVG,
             cardId
         };
 
@@ -252,7 +250,7 @@ export async function generateCardContent(params: CardContentParams): Promise<{ 
             cardType,
             userInputs: otherParams,
             promptVersion: model || '',
-            responseContent: "",
+            responseContent: "error",
             tokensUsed: 0,
             duration: Date.now() - startTime,
             isError: true,

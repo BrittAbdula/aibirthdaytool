@@ -1,6 +1,5 @@
 'use client'
 import React, { useState, useEffect, useRef } from 'react'
-import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -13,7 +12,7 @@ import { Slider } from "@/components/ui/slider"
 import { Textarea } from "@/components/ui/textarea"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { ImageViewer } from '@/components/ImageViewer'
-import { cn } from '@/lib/utils'
+import { cn, fetchSvgContent } from '@/lib/utils'
 import { CardType, getCardConfig, getAllCardTypes, CardConfig } from '@/lib/card-config'
 import { useSession, signIn } from "next-auth/react"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
@@ -189,12 +188,12 @@ const CustomSelect = ({
 export default function CardGenerator({ 
   wishCardType, 
   initialCardId, 
-  initialSVG,
+  initialImgUrl,
   cardConfig
 }: { 
   wishCardType: CardType, 
   initialCardId: string, 
-  initialSVG: string,
+  initialImgUrl: string,
   cardConfig: CardConfig
 }) {
   const { data: session, status } = useSession()
@@ -203,7 +202,7 @@ export default function CardGenerator({
   const [showLimitDialog, setShowLimitDialog] = useState(false)
   const [currentCardType, setCurrentCardType] = useState<CardType>(wishCardType)
   const [formData, setFormData] = useState<Record<string, any>>({})
-  const [svgContent, setSvgContent] = useState<string | null>(initialSVG)
+  const [imgUrl, setImgUrl] = useState<string>(`/card/${wishCardType}.svg`)
   const [cardId, setCardId] = useState<string | null>(initialCardId)
   const [isLoading, setIsLoading] = useState(false)
   const [isAuthLoading, setIsAuthLoading] = useState(false)
@@ -231,15 +230,7 @@ export default function CardGenerator({
   }, [wishCardType, cardConfig])
 
   useEffect(() => {
-    fetch(sampleCard)
-      .then(response => {
-        if (!response.ok) {
-          throw new Error('Failed to fetch SVG content');
-        }
-        return response.text();
-      })
-      .then(svgContent => setSvgContent(svgContent))
-      .catch(error => console.error('load default svg failed:', error))
+    fetchSvgContent(sampleCard)
   }, [])
 
   useEffect(() => {
@@ -267,10 +258,10 @@ export default function CardGenerator({
   }
 
   const handleGenerateCard = async () => {
-    if (!session) {
-      setShowAuthDialog(true)
-      return
-    }
+    // if (!session) {
+    //   setShowAuthDialog(true)
+    //   return
+    // }
 
     try {
       setIsLoading(true)
@@ -301,7 +292,11 @@ export default function CardGenerator({
         throw new Error(data.error || 'Failed to generate card')
       }
 
-      setSvgContent(data.svgContent)
+      if (!data.r2Url) {
+        throw new Error('Failed to get image URL')
+      }
+
+      setImgUrl(data.r2Url)
       setCardId(data.cardId)
       setSubmited(true)
       confetti({
@@ -488,18 +483,7 @@ export default function CardGenerator({
                 <FlickeringGrid />
               ) : (
                 <div className="w-full h-full flex items-center justify-center overflow-hidden">
-                  {svgContent && submited ? (
-                    <ImageViewer svgContent={svgContent} alt={currentCardType} cardId={cardId || '1'} cardType={currentCardType} isNewCard={true} />
-                  ) : (
-                    <div className="w-full h-full relative">
-                      <a href='/card-gallery/'>
-                      <div
-  className="svg-container w-full h-full flex items-center justify-center overflow-hidden"
-  dangerouslySetInnerHTML={{ __html: svgContent || '<img src="/card/mewtrucard.svg" alt="Default Card" />' }}
-/>
-                      </a>
-                    </div>
-                  )}
+                  <ImageViewer  alt={currentCardType} cardId={cardId || '1'} cardType={currentCardType} imgUrl={imgUrl} isNewCard={true} />
                 </div>
               )}
             </div>
