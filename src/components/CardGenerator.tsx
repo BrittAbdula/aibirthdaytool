@@ -258,10 +258,10 @@ export default function CardGenerator({
   }
 
   const handleGenerateCard = async () => {
-    // if (!session) {
-    //   setShowAuthDialog(true)
-    //   return
-    // }
+    if (!session) {
+      setShowAuthDialog(true)
+      return
+    }
 
     try {
       setIsLoading(true)
