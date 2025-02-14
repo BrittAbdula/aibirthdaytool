@@ -69,12 +69,11 @@ export default function CardGallery({ initialCardsData, wishCardType }: CardGall
             <div className="relative w-full pb-[133.33%] mb-2">
               <div className="absolute inset-0 transition-transform duration-300 ease-in-out hover:scale-105">
                 <ImageViewer
-                  svgContent={card.responseContent}
                   alt={`${card.cardType} card`}
                   cardId={card.cardId}
                   cardType={card.cardType}
                   isNewCard={false}
-                  imgUrl={card.r2Url}
+                  imgUrl={card.r2Url || ''}
                 />
               </div>
             </div>
