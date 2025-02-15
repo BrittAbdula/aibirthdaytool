@@ -299,6 +299,7 @@ export default function CardGenerator({
       }
 
       setImgUrl(data.r2Url)
+      // console.log('-----------r2Url',data.r2Url)
       setCardId(data.cardId)
       setSubmited(true)
       confetti({
