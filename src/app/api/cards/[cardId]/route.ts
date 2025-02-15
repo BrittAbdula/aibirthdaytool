@@ -6,13 +6,16 @@ export async function GET(
   request: Request,
   { params }: { params: { cardId: string } }
 ) {
+  const cardType = request.url.split('cardType=')[1]
   try {
     const card = await prisma.apiLog.findUnique({
       where: { cardId: params.cardId },
     })
 
     if (!card) {
-      return NextResponse.json({ error: 'Card not found' }, { status: 404 })
+      // return NextResponse.json({ error: 'Card not found' }, { status: 404 })
+      const responseContent = await fetchSvgContent(`https://store.celeprime.com/${cardType}.svg`)
+      return NextResponse.json({responseContent})
     }
     card.responseContent = await fetchSvgContent(card.r2Url)
 

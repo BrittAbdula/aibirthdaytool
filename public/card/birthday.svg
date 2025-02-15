@@ -1,66 +1,118 @@
 <svg width="400" height="600" viewBox="0 0 400 600" xmlns="http://www.w3.org/2000/svg">
-  <style>
-    @keyframes flicker {
-      0% { transform: scale(1) translate(0, 0); }
-      25% { transform: scale(1.1) translate(0.5px, -0.5px); }
-      50% { transform: scale(0.9) translate(-0.5px, 0.5px); }
-      75% { transform: scale(1.2) translate(-0.5px, -0.5px); }
-      100% { transform: scale(1) translate(0, 0); }
-    }
-    .flame {
-      animation: flicker 1s ease-in-out infinite;
-      transform-origin: center bottom;
-      transform-box: fill-box;
-    }
-  </style>
+  <defs>
+    <filter id="flameBlur">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="1"/>
+    </filter>
+    
+    <radialGradient id="flameGradient" cx="50%" cy="50%" r="50%" fx="50%" fy="90%">
+      <stop offset="0%" style="stop-color:#FFA500"/>
+      <stop offset="70%" style="stop-color:#FF4500"/>
+      <stop offset="100%" style="stop-color:#FF0000"/>
+    </radialGradient>
+
+    <filter id="starGlow">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="0.5"/>
+    </filter>
+  </defs>
 
   <!-- Background -->
   <rect width="400" height="600" fill="#FFF5F7"/>
   
   <!-- Decorative Elements -->
   <g class="balloons">
-    <path d="M50,200 C50,160 20,160 20,200 C20,230 50,230 50,200" fill="#FF4081"/>
-    <path d="M45,200 L45,300" stroke="#FF4081" stroke-width="2"/>
-    <path d="M100,180 C100,140 70,140 70,180 C70,210 100,210 100,180" fill="#FF80AB"/>
-    <path d="M95,180 L95,280" stroke="#FF80AB" stroke-width="2"/>
+    <g>
+      <path d="M50,200 C50,160 20,160 20,200 C20,230 50,230 50,200" fill="#FF4081">
+        <animate attributeName="opacity" values="1;0.7;1" dur="2s" repeatCount="indefinite"/>
+      </path>
+      <path d="M45,200 L45,300" stroke="#FF4081" stroke-width="2">
+        <animate attributeName="opacity" values="1;0.7;1" dur="2s" repeatCount="indefinite"/>
+      </path>
+    </g>
+
+    <g>
+      <path d="M100,180 C100,140 70,140 70,180 C70,210 100,210 100,180" fill="#FF80AB">
+        <animate attributeName="opacity" values="1;0.7;1" dur="2.5s" repeatCount="indefinite"/>
+      </path>
+      <path d="M95,180 L95,280" stroke="#FF80AB" stroke-width="2">
+        <animate attributeName="opacity" values="1;0.7;1" dur="2.5s" repeatCount="indefinite"/>
+      </path>
+    </g>
   </g>
 
-  <!-- Stars -->
-  <g class="stars">
-    <path d="M300,100 L305,90 L310,100 L320,102 L310,108 L312,118 L302,112 L292,118 L294,108 L284,102 L294,100 Z" fill="#FFD700"/>
-    <path d="M350,150 L355,140 L360,150 L370,152 L360,158 L362,168 L352,162 L342,168 L344,158 L334,152 L344,150 Z" fill="#FFD700"/>
+  <!-- Stars with Glow and Twinkle -->
+  <g class="stars" filter="url(#starGlow)">
+    <path d="M300,100 L305,90 L310,100 L320,102 L310,108 L312,118 L302,112 L292,118 L294,108 L284,102 L294,100 Z" fill="#FFD700">
+      <animate attributeName="opacity" values="1;0.5;1" dur="1.5s" repeatCount="indefinite"/>
+    </path>
+    <path d="M350,150 L355,140 L360,150 L370,152 L360,158 L362,168 L352,162 L342,168 L344,158 L334,152 L344,150 Z" fill="#FFD700">
+      <animate attributeName="opacity" values="1;0.5;1" dur="2s" repeatCount="indefinite"/>
+    </path>
   </g>
 
   <!-- Message Area -->
   <g transform="translate(200,250)">
-    <circle cx="0" cy="0" r="120" fill="#FFF" stroke="#FF4081" stroke-width="3"/>
+    <circle cx="0" cy="0" r="120" fill="#FFF" stroke="#FF4081" stroke-width="3">
+      <animate attributeName="stroke-opacity" values="1;0.6;1" dur="3s" repeatCount="indefinite"/>
+    </circle>
     <text x="0" y="-20" fill="#1A1A1A" font-family="Comic Sans MS" font-size="24" text-anchor="middle">
       Happy Birthday!
+      <animate attributeName="fill-opacity" values="1;0.7;1" dur="3s" repeatCount="indefinite"/>
     </text>
     <text x="0" y="20" fill="#1A1A1A" font-family="Comic Sans MS" font-size="16" text-anchor="middle">
       Have a magical day!
+      <animate attributeName="fill-opacity" values="1;0.7;1" dur="3s" repeatCount="indefinite"/>
     </text>
   </g>
 
   <!-- Confetti -->
   <g class="confetti">
-    <circle cx="50" cy="50" r="3" fill="#FF80AB"/>
-    <circle cx="350" cy="80" r="3" fill="#FF4081"/>
-    <circle cx="80" cy="500" r="3" fill="#FFD700"/>
-    <circle cx="320" cy="520" r="3" fill="#FF80AB"/>
-    <rect x="150" y="480" width="5" height="5" fill="#FF4081" transform="rotate(45,152.5,482.5)"/>
-    <rect x="250" y="500" width="5" height="5" fill="#FFD700" transform="rotate(30,252.5,502.5)"/>
+    <circle cx="50" cy="50" r="3" fill="#FF80AB">
+      <animate attributeName="opacity" values="1;0.5;1" dur="1.3s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="350" cy="80" r="3" fill="#FF4081">
+      <animate attributeName="opacity" values="1;0.5;1" dur="1.7s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="80" cy="500" r="3" fill="#FFD700">
+      <animate attributeName="opacity" values="1;0.5;1" dur="1.5s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="320" cy="520" r="3" fill="#FF80AB">
+      <animate attributeName="opacity" values="1;0.5;1" dur="1.4s" repeatCount="indefinite"/>
+    </circle>
+    <rect x="150" y="480" width="5" height="5" fill="#FF4081" transform="rotate(45,152.5,482.5)">
+      <animate attributeName="opacity" values="1;0.5;1" dur="1.6s" repeatCount="indefinite"/>
+    </rect>
+    <rect x="250" y="500" width="5" height="5" fill="#FFD700" transform="rotate(30,252.5,502.5)">
+      <animate attributeName="opacity" values="1;0.5;1" dur="1.8s" repeatCount="indefinite"/>
+    </rect>
   </g>
 
   <!-- Cake -->
   <g transform="translate(200,450)">
-    <path d="M-40,0 L40,0 L30,-20 L-30,-20 Z" fill="#FF80AB"/>
-    <path d="M-30,-20 L30,-20 L20,-40 L-20,-40 Z" fill="#FF4081"/>
+    <!-- Cake layers -->
+    <path d="M-40,0 L40,0 L30,-20 L-30,-20 Z" fill="#FF80AB">
+      <animate attributeName="fill-opacity" values="1;0.7;1" dur="2s" repeatCount="indefinite"/>
+    </path>
+    <path d="M-30,-20 L30,-20 L20,-40 L-20,-40 Z" fill="#FF4081">
+      <animate attributeName="fill-opacity" values="1;0.7;1" dur="2s" repeatCount="indefinite"/>
+    </path>
     <rect x="-2" y="-60" width="4" height="20" fill="#FFD700"/>
-    <!-- Animated Flame -->
-    <g class="flame">
-      <path d="M0,-65 C2,-68 4,-72 0,-75 C-4,-72 -2,-68 0,-65" fill="#FFD700"/>
-      <path d="M0,-67 C1,-69 2,-71 0,-73 C-2,-71 -1,-69 0,-67" fill="#FFA500"/>
+    
+    <!-- Flame -->
+    <g transform="translate(0,-65)">
+      <!-- Glow -->
+      <circle cx="0" cy="0" r="4" fill="#FFD700" opacity="0.5" filter="url(#flameBlur)">
+        <animate attributeName="opacity" values="0.5;0.3;0.5" dur="0.5s" repeatCount="indefinite"/>
+      </circle>
+      
+      <!-- Main flame -->
+      <path d="M0,0 C2,-3 4,-7 0,-10 C-4,-7 -2,-3 0,0" fill="url(#flameGradient)">
+        <animate attributeName="opacity" values="1;0.7;1" dur="0.5s" repeatCount="indefinite"/>
+      </path>
+      
+      <!-- Inner flame -->
+      <path d="M0,-2 C1,-4 2,-6 0,-8 C-2,-6 -1,-4 0,-2" fill="#FFFFFF">
+        <animate attributeName="opacity" values="0.8;0.6;0.8" dur="0.5s" repeatCount="indefinite"/>
+      </path>
     </g>
   </g>
 </svg>

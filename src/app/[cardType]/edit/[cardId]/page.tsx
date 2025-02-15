@@ -42,7 +42,7 @@ export default function EditCard({ params }: { params: { cardId: string, cardTyp
     const fetchCardData = async () => {
       setIsLoading(true)
       try {
-        const response = await fetch(`/api/cards/${cardId}`)
+        const response = await fetch(`/api/cards/cardId?cardType=${cardType}`)
         if (response.ok) {
           const data = await response.json()
           const content = data.responseContent

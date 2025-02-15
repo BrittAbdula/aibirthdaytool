@@ -75,6 +75,7 @@ export interface CardConfig {
   advancedFields?: Field[];
   promptContent: string;
   defaultSize?: string;
+  isSystem: boolean;
 }
 
 // 类型守卫函数
@@ -122,7 +123,8 @@ export const getCardConfig = unstable_cache(
       templateInfo: generator.templateInfo || undefined,
       why,
       advancedFields,
-      promptContent: generator.promptContent
+      promptContent: generator.promptContent,
+      isSystem: generator.isSystem
     };
   },
   ['card-config'],

@@ -201,14 +201,14 @@ export default function CardGenerator({
   const [showLimitDialog, setShowLimitDialog] = useState(false)
   const [currentCardType, setCurrentCardType] = useState<CardType>(wishCardType)
   const [formData, setFormData] = useState<Record<string, any>>({})
-  const [imgUrl, setImgUrl] = useState<string>(`/card/${wishCardType}.svg`)
+  const [imgUrl, setImgUrl] = useState<string>(`https://store.celeprime.com/${wishCardType}.svg`)
   const [cardId, setCardId] = useState<string | null>(initialCardId)
   const [isLoading, setIsLoading] = useState(false)
   const [isAuthLoading, setIsAuthLoading] = useState(false)
   const [showAdvancedOptions, setShowAdvancedOptions] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
-  const sampleCard = `/card/${wishCardType}.svg`
+  const sampleCard = `/card/goodluck.svg`
   const [submited, setSubmited] = useState(false)
   const [progress, setProgress] = useState(0)
   const [customValues, setCustomValues] = useState<Record<string, string>>({})
@@ -218,6 +218,9 @@ export default function CardGenerator({
     setCurrentCardType(wishCardType)
     // Reset form data and set default values
     const initialFormData: Record<string, any> = {};
+    if (!cardConfig.isSystem) {
+      setImgUrl(sampleCard)
+    }
     cardConfig.fields.forEach(field => {
       if (field.type === 'select' && !field.optional && field.defaultValue) {
         initialFormData[field.name] = field.defaultValue;

@@ -113,13 +113,17 @@ export default function CardDisplay({ card }: { card: any }) {
               <div className="absolute inset-0 flex items-center justify-center z-30">
                 <button
                   onClick={handleOpenClick}
-                  className="group transform transition-all duration-300 hover:scale-105 focus:outline-none"
+                  className="group relative transform transition-all duration-300 hover:scale-105 focus:outline-none"
                 >
+                  {/* Pulsing ring animation */}
+                  <div className="absolute inset-0 rounded-full animate-ping-slow bg-[#a786ff]/20" />
+                  <div className="absolute inset-[-8px] rounded-full animate-pulse-slow bg-[#a786ff]/10" />
+                  
                   {/* Postmark Stamp */}
                   <div className="relative w-28 h-28 flex items-center justify-center">
-                    <div className="absolute inset-0 rounded-full bg-[#a786ff]/90 shadow-[inset_0_2px_4px_rgba(0,0,0,0.2)] backdrop-blur-sm group-hover:bg-[#a786ff]/95 transition-all duration-300 group-hover:shadow-[inset_0_2px_8px_rgba(0,0,0,0.3),0_0_20px_rgba(167,134,255,0.5)]"></div>
-                    <div className="absolute inset-2 rounded-full border-2 border-dashed border-white/30 group-hover:border-white/40 transition-all duration-300 group-hover:rotate-[15deg]"></div>
-                    <div className="absolute inset-0 rounded-full bg-gradient-to-br from-[#b19bff]/50 to-[#a786ff] opacity-90"></div>
+                    <div className="absolute inset-0 rounded-full bg-[#a786ff]/90 shadow-[inset_0_2px_4px_rgba(0,0,0,0.2)] backdrop-blur-sm group-hover:bg-[#a786ff] transition-all duration-300 group-hover:shadow-[inset_0_2px_8px_rgba(0,0,0,0.3),0_0_30px_rgba(167,134,255,0.6)]"></div>
+                    <div className="absolute inset-2 rounded-full border-2 border-dashed border-white/30 group-hover:border-white/50 transition-all duration-300 group-hover:rotate-[15deg]"></div>
+                    <div className="absolute inset-0 rounded-full bg-gradient-to-br from-[#b19bff]/50 to-[#a786ff] opacity-90 group-hover:opacity-100"></div>
                     <div className="relative text-center transform group-hover:scale-105 transition-transform duration-300">
                       <div className="text-[0.8rem] uppercase tracking-[0.2em] font-bold text-[#FFC0CB] 
                         [text-shadow:1px_1px_1px_rgba(0,0,0,0.3),-1px_-1px_1px_rgba(255,255,255,0.2)]">
@@ -130,8 +134,11 @@ export default function CardDisplay({ card }: { card: any }) {
                       </div>
                       <div className="mt-2 text-[#FFC0CB] text-xs font-medium flex items-center justify-center gap-1
                         [text-shadow:1px_1px_1px_rgba(0,0,0,0.2),-1px_-1px_1px_rgba(255,255,255,0.1)]">
+                        <span> Click to Open</span>
+                      </div>
+                      <div className="mt-2 text-[#FFC0CB] text-xs font-medium flex items-center justify-center gap-1
+                        [text-shadow:1px_1px_1px_rgba(0,0,0,0.2),-1px_-1px_1px_rgba(255,255,255,0.1)]">
                         <span className="animate-bounce">👆</span>
-                        <span> Open</span>
                         <span className="animate-ping">✨</span>
                       </div>
                     </div>

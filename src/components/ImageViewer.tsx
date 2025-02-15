@@ -124,9 +124,9 @@ export function ImageViewer({ alt, cardId, cardType, imgUrl, isNewCard }: ImageV
               <div className="w-full h-[calc(100vh-200px)] overflow-auto flex items-center justify-center">
                 <CardDisplay 
                   card={{
-                    id: cardId,
+                    cardId: cardId,
                     cardType: cardType,
-                    imgUrl: imgUrl
+                    r2Url: imgUrl
                   }}
                 />
               </div>

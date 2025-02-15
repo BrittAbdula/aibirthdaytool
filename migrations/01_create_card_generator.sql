@@ -299,3 +299,4 @@ INSERT INTO "CardGenerator" (
   ''
 );    
 
+update "CardGenerator" set "r2Url" = 'https://mewtrucard.com/card/goodmorning.svg' where "id" = 'clg1goodmorning';
