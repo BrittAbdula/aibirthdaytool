@@ -8,7 +8,7 @@ import { PlusIcon } from '@radix-ui/react-icons'
 
 export const metadata: Metadata = {
   title: "Card Generators | MewTruCard",
-  description: "Create personalized greeting cards with our AI-powered card generators",
+  description: "Explore our collection of AI-powered greeting card generators to create personalized messages for birthdays, anniversaries, thank-yous, and special occasions. Design beautiful custom cards in seconds with intelligent message generation.",
 };
 
 export default async function GeneratorsPage() {

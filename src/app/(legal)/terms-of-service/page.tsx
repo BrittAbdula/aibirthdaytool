@@ -6,7 +6,7 @@ export const metadata: Metadata = {
   alternates: {
     canonical: '/terms-of-service/',
   },
-  description: "MewTruCard's terms of service for the AI Greeting Card Generator service.",
+  description: "Comprehensive terms and conditions governing the use of MewTruCard's AI Greeting Card Generator service. Understand your rights, responsibilities, and our policies regarding account usage, intellectual property, and platform guidelines.",
 }
 
 export default function TermsOfService() {

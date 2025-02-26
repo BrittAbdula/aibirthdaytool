@@ -366,11 +366,11 @@ const faqs = [
 const FAQ: React.FC = () => (
     <Section>
       <div className="text-center mb-12">
-        <h1 className="text-4xl sm:text-5xl md:text-6xl font-serif font-bold mb-4 tracking-tight">
+        <h2 className="text-4xl sm:text-5xl md:text-6xl font-serif font-bold mb-4 tracking-tight">
           <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-pink-600">
             Frequently Asked Questions
           </span>
-        </h1>
+        </h2>
         <p className="text-lg sm:text-xl text-gray-600 max-w-2xl mx-auto px-4">
           Everything you need to know about your MewTru Card experience ✨
         </p>

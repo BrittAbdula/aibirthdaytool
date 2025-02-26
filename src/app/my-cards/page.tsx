@@ -1,10 +1,16 @@
 import { auth } from '@/auth'
+import { Metadata } from "next"
 import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 import Image from 'next/image'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+
+export const metadata: Metadata = {
+  title: "My Cards Collection | MewTruCard",
+  description: "Access your personalized greeting card collection, view your previously sent cards, and manage your AI-generated greeting cards all in one convenient dashboard. Create, edit, and share your special memories.",
+};
 
 export default async function MyCardsPage() {
   const session = await auth()

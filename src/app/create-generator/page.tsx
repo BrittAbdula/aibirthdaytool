@@ -4,7 +4,7 @@ import { Suspense } from "react";
 
 export const metadata: Metadata = {
   title: "Create Card Generator - MewTruCard",
-  description: "Create your own custom card generator with MewTruCard's AI-powered platform",
+  description: "Design and publish your own AI-powered card generator with our intuitive builder. Customize input fields, set design preferences, and share your unique card generator with friends, family, and the MewTruCard community.",
 };
 
 export default function CreateGeneratorPage() {

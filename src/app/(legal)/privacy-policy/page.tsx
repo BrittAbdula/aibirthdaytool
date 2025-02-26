@@ -6,7 +6,7 @@ export const metadata: Metadata = {
   alternates: {
     canonical: '/privacy-policy/',
   },
-  description: "MewTruCard's privacy policy for the AI Greeting Card Generator service.",
+  description: "Learn how MewTruCard collects, uses, and protects your personal information when using our AI Greeting Card Generator. Our detailed privacy policy outlines data security measures, user rights, and our commitment to safeguarding your privacy.",
 }
 
 export default function PrivacyPolicy() {

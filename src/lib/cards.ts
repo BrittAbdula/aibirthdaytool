@@ -59,7 +59,11 @@ async function fetchRecentCards(
 
   const cardsWithActions = await prisma.apiLog.findMany({
     where,
-    orderBy: { timestamp: 'desc' },
+    orderBy: {
+      userActions: {
+        _count: 'desc'
+      }
+    },
     take: pageSize,
     skip: (page - 1) * pageSize,
     select: {
