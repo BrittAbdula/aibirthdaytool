@@ -42,6 +42,9 @@ async function fetchRecentCards(
 ): Promise<{ cards: Card[], totalPages: number }> {
   const where = {
     isError: false,
+    r2Url: {
+      not: null
+    },
     ...(wishCardType ? { cardType: wishCardType } : {}),
     ...(relationship ? {
       userInputs: {
@@ -49,18 +52,18 @@ async function fetchRecentCards(
         equals: relationship
       }
     } : {}),
-    userActions: {
-      some: {} // Only cards with user actions
+    editedCards: {
+      some: {} // Only cards with editedCards records
     }
   };
 
   const totalCards = await prisma.apiLog.count({ where });
   const totalPages = Math.ceil(totalCards / pageSize);
 
-  const cardsWithActions = await prisma.apiLog.findMany({
+  const cardsWithEdits = await prisma.apiLog.findMany({
     where,
     orderBy: {
-      userActions: {
+      editedCards: {
         _count: 'desc'
       }
     },
@@ -73,15 +76,15 @@ async function fetchRecentCards(
       r2Url: true,
       _count: {
         select: {
-          userActions: true
+          editedCards: true
         }
       }
     },
   });
 
-  const cards = cardsWithActions.map(card => ({
+  const cards = cardsWithEdits.map(card => ({
     ...card,
-    usageCount: card._count.userActions,
+    usageCount: card._count.editedCards,
   }));
 
   return { cards, totalPages };
