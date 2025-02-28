@@ -1,0 +1,167 @@
+<svg 
+  xmlns="http://www.w3.org/2000/svg" 
+  xmlns:xlink="http://www.w3.org/1999/xlink"
+  viewBox="0 0 800 1000"
+  width="800" height="1000"
+  preserveAspectRatio="xMidYMid meet"
+  class="greeting-card">
+  
+  <defs>
+    <!-- Filters -->
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="2" result="blur"/>
+      <feComposite operator="over" in="blur" in2="SourceGraphic"/>
+    </filter>
+    
+    <!-- Gradients -->
+    <linearGradient id="skyGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#c4e0f9" />
+      <stop offset="100%" stop-color="#e8f4ff" />
+    </linearGradient>
+    
+    <linearGradient id="grassGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#7ed957" />
+      <stop offset="100%" stop-color="#5bb12f" />
+    </linearGradient>
+    
+    <radialGradient id="sunGlow" cx="70%" cy="20%" r="50%" fx="70%" fy="20%">
+      <stop offset="0%" stop-color="#fff5c3" />
+      <stop offset="100%" stop-color="#ffed85" stop-opacity="0" />
+    </radialGradient>
+
+    <!-- Patterns -->
+    <pattern id="flowerPattern" x="0" y="0" width="60" height="60" patternUnits="userSpaceOnUse">
+      <circle cx="30" cy="30" r="10" fill="#ffb7c5" />
+      <circle cx="30" cy="30" r="5" fill="#fff68f" />
+      <path d="M30,20 Q35,25 30,30 Q25,25 30,20 Z" fill="#a3d977" />
+      <path d="M30,30 Q35,35 30,40 Q25,35 30,30 Z" fill="#a3d977" />
+      <path d="M20,30 Q25,35 30,30 Q25,25 20,30 Z" fill="#a3d977" />
+      <path d="M40,30 Q35,25 30,30 Q35,35 40,30 Z" fill="#a3d977" />
+    </pattern>
+  </defs>
+  
+  <!-- Background -->
+  <g class="background">
+    <rect x="0" y="0" width="800" height="1000" fill="url(#skyGradient)" />
+    <circle cx="650" cy="150" r="80" fill="#fff5c3">
+      <animate attributeName="opacity" values="0.8;1;0.8" dur="5s" repeatCount="indefinite" />
+    </circle>
+    <circle cx="650" cy="150" r="120" fill="url(#sunGlow)" />
+    
+    <!-- Grass -->
+    <path d="M0,700 L800,700 L800,1000 L0,1000 Z" fill="url(#grassGradient)" />
+    
+    <!-- Clouds -->
+    <g>
+      <circle cx="150" cy="180" r="40" fill="white" opacity="0.9" />
+      <circle cx="200" cy="190" r="50" fill="white" opacity="0.9" />
+      <circle cx="250" cy="175" r="35" fill="white" opacity="0.9" />
+      <animate attributeName="transform" type="translate" values="0,0; 10,0; 0,0" dur="20s" repeatCount="indefinite" />
+    </g>
+    
+    <g>
+      <circle cx="450" cy="120" r="35" fill="white" opacity="0.8" />
+      <circle cx="500" cy="130" r="45" fill="white" opacity="0.8" />
+      <circle cx="550" cy="115" r="30" fill="white" opacity="0.8" />
+      <animate attributeName="transform" type="translate" values="0,0; -15,0; 0,0" dur="25s" repeatCount="indefinite" />
+    </g>
+  </g>
+  
+  <!-- Flowers in the grass -->
+  <g class="middle-ground">
+    <rect x="0" y="800" width="800" height="200" fill="url(#flowerPattern)" opacity="0.7" />
+    
+    <!-- Easter Eggs -->
+    <g transform="translate(180, 750)">
+      <ellipse cx="0" cy="0" rx="25" ry="35" fill="#ff93c7" stroke="#e56eac" stroke-width="2" />
+      <path d="M-15,-10 Q0,10 15,-10" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" />
+      <path d="M-10,10 Q0,-10 10,10" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" />
+      <circle cx="-8" cy="-15" r="3" fill="white" />
+      <circle cx="8" cy="-15" r="3" fill="white" />
+      <animate attributeName="transform" type="translate" values="180,750; 180,740; 180,750" dur="3s" repeatCount="indefinite" />
+    </g>
+    
+    <g transform="translate(300, 760)">
+      <ellipse cx="0" cy="0" rx="25" ry="35" fill="#94d2ff" stroke="#5aa7e6" stroke-width="2" />
+      <path d="M-10,-15 L10,-15 M-15,0 L15,0 M-10,15 L10,15" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" />
+      <animate attributeName="transform" type="translate" values="300,760; 300,750; 300,760" dur="4s" repeatCount="indefinite" />
+    </g>
+    
+    <g transform="translate(400, 755)">
+      <ellipse cx="0" cy="0" rx="25" ry="35" fill="#b8a9ff" stroke="#9384d1" stroke-width="2" />
+      <circle cx="-8" cy="-10" r="5" fill="white" />
+      <circle cx="8" cy="-10" r="5" fill="white" />
+      <circle cx="-8" cy="10" r="5" fill="white" />
+      <circle cx="8" cy="10" r="5" fill="white" />
+      <animate attributeName="transform" type="translate" values="400,755; 400,745; 400,755" dur="3.5s" repeatCount="indefinite" />
+    </g>
+    
+    <g transform="translate(520, 760)">
+      <ellipse cx="0" cy="0" rx="25" ry="35" fill="#ffda93" stroke="#e6b054" stroke-width="2" />
+      <path d="M-15,-15 L15,15 M-15,15 L15,-15" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" />
+      <animate attributeName="transform" type="translate" values="520,760; 520,750; 520,760" dur="4.5s" repeatCount="indefinite" />
+    </g>
+  </g>
+  
+  <!-- Easter Bunny -->
+  <g class="foreground">
+    <g transform="translate(400, 600)">
+      <!-- Body -->
+      <ellipse cx="0" cy="0" rx="80" ry="90" fill="white" stroke="#e6e6e6" stroke-width="2" />
+      
+      <!-- Head -->
+      <circle cx="0" cy="-110" r="60" fill="white" stroke="#e6e6e6" stroke-width="2" />
+      
+      <!-- Ears -->
+      <path d="M-30,-140 Q-40,-220 -20,-240 Q0,-260 0,-230 Q0,-260 20,-240 Q40,-220 30,-140" fill="white" stroke="#e6e6e6" stroke-width="2" />
+      <path d="M-20,-140 Q-30,-210 -15,-225" fill="none" stroke="#ffd1e0" stroke-width="6" stroke-linecap="round" />
+      <path d="M20,-140 Q30,-210 15,-225" fill="none" stroke="#ffd1e0" stroke-width="6" stroke-linecap="round" />
+      
+      <!-- Face -->
+      <circle cx="-20" cy="-120" r="8" fill="#333" />
+      <circle cx="20" cy="-120" r="8" fill="#333" />
+      <ellipse cx="0" cy="-100" rx="8" ry="5" fill="#ff9ebb" />
+      <path d="M-10,-90 Q0,-80 10,-90" fill="none" stroke="#333" stroke-width="2" stroke-linecap="round" />
+      
+      <!-- Paws -->
+      <ellipse cx="-60" cy="40" rx="20" ry="15" fill="white" stroke="#e6e6e6" stroke-width="2" transform="rotate(-10)" />
+      <ellipse cx="60" cy="40" rx="20" ry="15" fill="white" stroke="#e6e6e6" stroke-width="2" transform="rotate(10)" />
+      
+      <!-- Basket -->
+      <path d="M-40,50 Q0,80 40,50 L30,100 Q0,130 -30,100 Z" fill="#e6c288" stroke="#c49e69" stroke-width="2" />
+      <path d="M-20,50 Q0,30 20,50" fill="none" stroke="#c49e69" stroke-width="4" />
+      
+      <!-- Animation -->
+      <animateTransform attributeName="transform" type="translate" from="400,600" to="400,590" dur="2s" repeatCount="indefinite" additive="sum" />
+    </g>
+    
+    <!-- Message -->
+    <g transform="translate(400, 350)">
+      <path d="M-200,-80 Q-240,-40 -200,0 L200,0 Q240,-40 200,-80 Z" fill="#ffeac2" stroke="#e6c288" stroke-width="3" />
+      <text x="0" y="-25" font-family="Arial, sans-serif" font-size="36" font-weight="bold" text-anchor="middle" fill="#e68a6c">Happy Easter!</text>
+      <text x="0" y="15" font-family="Arial, sans-serif" font-size="18" text-anchor="middle" fill="#b6805b">May your day be filled with joy, hope &amp; renewal</text>
+      
+      <animate attributeName="opacity" values="0;1" dur="1s" begin="0.5s" fill="freeze" />
+    </g>
+  </g>
+  
+  <!-- Interactive elements -->
+  <g class="interactive">
+    <!-- Butterflies -->
+    <g transform="translate(150, 450)">
+      <path d="M0,0 Q10,-10 15,-5 Q20,0 15,5 Q10,10 0,0" fill="#ffb2e6" />
+      <path d="M0,0 Q-10,-10 -15,-5 Q-20,0 -15,5 Q-10,10 0,0" fill="#ffb2e6" />
+      <path d="M0,0 L0,10" stroke="#333" stroke-width="1" />
+      <animateMotion path="M0,0 Q50,-50 100,0 Q150,50 200,0 Q250,-50 300,0" dur="15s" repeatCount="indefinite" />
+      <animateTransform attributeName="transform" type="rotate" values="0;10;-10;0" dur="0.5s" repeatCount="indefinite" additive="sum" />
+    </g>
+    
+    <g transform="translate(550, 500)">
+      <path d="M0,0 Q10,-10 15,-5 Q20,0 15,5 Q10,10 0,0" fill="#a9e8ff" />
+      <path d="M0,0 Q-10,-10 -15,-5 Q-20,0 -15,5 Q-10,10 0,0" fill="#a9e8ff" />
+      <path d="M0,0 L0,10" stroke="#333" stroke-width="1" />
+      <animateMotion path="M0,0 Q-40,-40 -80,0 Q-120,40 -160,0 Q-200,-40 -240,0" dur="12s" repeatCount="indefinite" />
+      <animateTransform attributeName="transform" type="rotate" values="0;-10;10;0" dur="0.5s" repeatCount="indefinite" additive="sum" />
+    </g>
+  </g>
+</svg>

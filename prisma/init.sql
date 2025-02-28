@@ -1422,6 +1422,9 @@ insert into "Template" ("id", "cardType", "promptVersion", "name", "description"
 values
 ('valentine-v2', 'valentine', '2.0','Valentine Card', '', '', '', CURRENT_TIMESTAMP, 2)
 
+insert into "Template" ("id", "cardType", "promptVersion", "name", "description",   "updatedAt", "cardId") 
+values
+('easter-v2', 'easter', '2.0','Easter Card', '',   CURRENT_TIMESTAMP, 2)
 
 
 
@@ -1435,6 +1438,13 @@ values
 
 
 
+
+1. cardGenerator --- init.sql
+2. Template --- 01_create_card_generator.sql
+3. svg --- card/cloudflare r2
+4. spotify --- SpotifySearch.tsx
+5. card-constants.ts
+6. prompt.ts
  
 ------ happy new year
 

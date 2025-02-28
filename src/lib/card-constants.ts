@@ -27,6 +27,7 @@ export const CARD_TYPES: CardTypeOption[] = [
   { type: "goodmorning", label: "Good Morning" },
   { type: "goodnight", label: "Good Night" },
   { type: "teacher", label: "Teacher" },
+  { type: "easter", label: "Easter" },
 ]
 
 export const RELATIONSHIPS: RelationshipOption[] = [
@@ -49,4 +50,5 @@ export const RELATIONSHIPS: RelationshipOption[] = [
   { value: 'classmate', label: 'Classmate' },
   { value: 'son', label: 'Son' },
   { value: 'other', label: 'Other' },
+  { value: 'easter', label: 'Easter' },
 ] 

@@ -2,6 +2,17 @@ import { CardType, CARD_SIZES, CardSize } from './card-config';
 
 export function generatePrompt(cardType: CardType, size: CardSize) {
     const cardContexts = {
+      easter: {
+        role: "Easter Celebration Artist",
+        essence: "Crafting moments of celebration that honor life's journey and future dreams",
+        focus: [
+          "Easter symbols",
+          "Spring renewal",
+          "Eggs and bunnies",
+          "Spring flowers",
+          "Easter greetings"
+        ]
+      },
       birthday: {
         role: "Birthday Joy Weaver",
         essence: "Crafting moments of celebration that honor life's journey and future dreams",
