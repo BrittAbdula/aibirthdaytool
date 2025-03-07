@@ -187,11 +187,10 @@ export const getAllCardPreviews = unstable_cache(
         createdAt: 'desc'
       }
     });
-
     return generators
       .filter(generator => isValidSlug(generator.slug)) // Filter out invalid slugs
       .map(generator => ({
-        image: generator.isSystem ? `/card/${generator.slug}.svg` : `/card/mewtrucard.svg`,
+        image: generator.isSystem ? `https://store.celeprime.com/${generator.slug}.svg` : `/card/mewtrucard.svg`,
         title: generator.label,
         link: `/${generator.slug}/`,
         isSystem: generator.isSystem,
