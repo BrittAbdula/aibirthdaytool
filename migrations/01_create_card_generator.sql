@@ -315,3 +315,18 @@ INSERT INTO "CardGenerator" (
   '["MewtruCard''s AI creates unique Easter cards that celebrate the arrival of a new baby","Our AI transforms your baby shower wishes into extraordinary messages of celebration","Customize your cards until they perfectly express your joy and best wishes","Share the celebration with high-quality downloadable images or musical greeting links"]',
   ''
 );  
+
+-- women's day
+INSERT INTO "CardGenerator" (
+  id, name, slug, description, "isSystem", "isPublic",
+  "createdAt", "updatedAt", "userId",
+  title, label, fields, "templateInfo", why, "promptContent"
+) VALUES (
+  'clg1womensday', 'Women''s Day Card Generator', 'womensday', 'Create Women''s Day cards', true, true,
+  CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, NULL,
+  'Women''s Day Card Generator', 'Women''s Day Card',
+  '[{"name":"recipientName","type":"text","label":"Recipient''s Name","optional":false},{"name":"relationship","type":"select","label":"Relationship","options":["Myself","Friend","Father","Mother","Wife","Husband","Boyfriend","Girlfriend","Brother","Sister","Daughter","Grandparent","Student","Classmate","Son","Other"],"optional":false,"defaultValue":"Friend"},{"name":"message","type":"textarea","label":"Women''s Day Message (optional)","optional":true},{"name":"senderName","type":"text","label":"Your Name (optional)","optional":true}]',
+  'Celebrate Women''s Day with personalized cards from MewtruCard''s collection of free customizable templates ✨',
+  '["MewtruCard''s AI creates unique Women''s Day cards that celebrate the arrival of a new baby","Our AI transforms your baby shower wishes into extraordinary messages of celebration","Customize your cards until they perfectly express your joy and best wishes","Share the celebration with high-quality downloadable images or musical greeting links"]',
+  ''
+);    

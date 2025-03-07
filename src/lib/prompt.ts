@@ -2,6 +2,16 @@ import { CardType, CARD_SIZES, CardSize } from './card-config';
 
 export function generatePrompt(cardType: CardType, size: CardSize) {
     const cardContexts = {
+      womensday: {
+        role: "Women's Day Celebration Artist",
+        essence: "Crafting moments of celebration that honor life's journey and future dreams",
+        focus: [
+          "Women's Day symbols",
+          "Spring renewal", 
+          "Women's empowerment",
+          "Future dreams"
+        ]
+      },
       easter: {
         role: "Easter Celebration Artist",
         essence: "Crafting moments of celebration that honor life's journey and future dreams",

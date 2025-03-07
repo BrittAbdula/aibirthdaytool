@@ -1426,6 +1426,14 @@ insert into "Template" ("id", "cardType", "promptVersion", "name", "description"
 values
 ('easter-v2', 'easter', '2.0','Easter Card', '',   CURRENT_TIMESTAMP, 2)
 
+insert into "Template" ("id", "cardType", "promptVersion", "name", "description",   "updatedAt", "cardId") 
+values
+('womensday-v2', 'womensday', '2.0','Women''s Day', '',   CURRENT_TIMESTAMP, 2)
+
+
+
+
+
 
 
 
