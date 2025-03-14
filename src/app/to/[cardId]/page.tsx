@@ -143,6 +143,17 @@ export default async function EditedCardPage({ params }: Props) {
               <span className="inline-block transition-transform group-hover:rotate-12">✨</span>
             </a>
           </p>
+          <p className="mt-2 text-xs sm:text-sm text-gray-500">
+            📸{' '}
+            <a
+              href="https://picapica.app/"
+              target="_blank"
+              className="text-purple-600 hover:text-pink-600 transition-colors duration-200 font-medium group"
+            >
+              Take & Share Photos{' '}
+              <span className="inline-block transition-transform group-hover:translate-x-1">→</span>
+            </a>
+          </p>
         </footer>
       </div>
     </main>
