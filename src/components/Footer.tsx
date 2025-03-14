@@ -52,6 +52,16 @@ export default function Footer() {
                   Pose Generator
                 </a>
               </li>
+              <li>
+                <a 
+                  href="https://picapica.app/" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-sm text-gray-600 hover:text-purple-600 transition-colors"
+                >
+                  PicaPica
+                </a>
+              </li>
             </ul>
           </nav>
         </div>
