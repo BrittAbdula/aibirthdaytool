@@ -45,7 +45,7 @@ export default function Footer() {
               </li>
               <li>
                 <a 
-                  href="https://posegen.com" 
+                  href="https://link.zhihu.com/?target=https%3A%2F%2Fpicapica.app%2F" 
                   target="_blank" 
                   className="text-sm text-gray-600 hover:text-purple-600 transition-colors"
                 >
