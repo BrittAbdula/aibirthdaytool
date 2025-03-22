@@ -49,6 +49,15 @@ export default function Footer() {
                   target="_blank" 
                   className="text-sm text-gray-600 hover:text-purple-600 transition-colors"
                 >
+                  Aurora
+                </a>
+              </li>
+              <li>
+                <a 
+                  href="https://share.evernote.com/note/613065a4-8cb8-1736-d1e2-b81fcbf0b746" 
+                  target="_blank" 
+                  className="text-sm text-gray-600 hover:text-purple-600 transition-colors"
+                >
                   Games
                 </a>
               </li>
