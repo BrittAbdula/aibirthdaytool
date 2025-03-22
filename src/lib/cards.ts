@@ -63,9 +63,7 @@ async function fetchRecentCards(
   const cardsWithEdits = await prisma.apiLog.findMany({
     where,
     orderBy: {
-      editedCards: {
-        _count: 'desc'
-      }
+      timestamp: 'desc'
     },
     take: pageSize,
     skip: (page - 1) * pageSize,
@@ -97,7 +95,7 @@ export async function getDefaultCardByCardType(cardType: CardType): Promise<Card
       cardId: true,
       cardType: true,
       previewSvg: true,
-      r2Url: true,
+      r2Url: true
     },
     orderBy: { createdAt: 'desc' },
   });
