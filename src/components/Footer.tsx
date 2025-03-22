@@ -45,18 +45,17 @@ export default function Footer() {
               </li>
               <li>
                 <a 
-                  href="https://link.zhihu.com/?target=https%3A%2F%2Fpicapica.app%2F" 
+                  href="https://linktr.ee/auroroa" 
                   target="_blank" 
                   className="text-sm text-gray-600 hover:text-purple-600 transition-colors"
                 >
-                  Pose Generator
+                  Games
                 </a>
               </li>
               <li>
                 <a 
                   href="https://picapica.app/" 
                   target="_blank" 
-                  rel="noopener noreferrer"
                   className="text-sm text-gray-600 hover:text-purple-600 transition-colors"
                 >
                   PicaPica
