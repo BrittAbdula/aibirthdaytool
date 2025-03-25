@@ -148,6 +148,7 @@ export default async function EditedCardPage({ params }: Props) {
             <a
               href="https://picapica.app/"
               target="_blank"
+              rel="noopener noreferrer"
               className="text-purple-600 hover:text-pink-600 transition-colors duration-200 font-medium group"
             >
               Take & Share Photos{' '}

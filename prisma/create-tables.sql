@@ -11,7 +11,23 @@ CREATE TABLE IF NOT EXISTS "ApiLog" (
     "timestamp" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "isError" BOOLEAN NOT NULL DEFAULT false,
     "errorMessage" TEXT,
-    "r2Url" TEXT
+    "r2Url" TEXT,
+    "userId" TEXT
+);
+
+CREATE TABLE IF NOT EXISTS "ApiLog2" (
+    "id" SERIAL PRIMARY KEY,
+    "cardId" TEXT UNIQUE NOT NULL,
+    "cardType" TEXT NOT NULL,
+    "userInputs" JSONB NOT NULL,
+    "promptVersion" TEXT NOT NULL,
+    "responseContent" TEXT NOT NULL,
+    "tokensUsed" INTEGER NOT NULL,
+    "duration" INTEGER NOT NULL,
+    "timestamp" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "isError" BOOLEAN NOT NULL DEFAULT false,
+    "errorMessage" TEXT,
+    "userId" TEXT
 );
 
 -- Create Template table

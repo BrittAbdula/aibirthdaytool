@@ -50,21 +50,21 @@ interface ApiLogParams {
 
 async function logApiRequest(params: ApiLogParams): Promise<string | undefined> {
     try {
-        let r2Url: string = '/card/goodluck.svg';
+        // let r2Url: string = '/card/goodluck.svg';
         const createdAt = new Date();
         
         // Only attempt R2 upload for successful SVG responses
-        if (!params.isError && params.responseContent.includes('<svg')) {
-            try {
-                r2Url = await uploadSvgToR2(params.responseContent, params.cardId, createdAt);
-                console.log('<----Uploaded to R2---->')
-            } catch (error) {
-                console.error("Error uploading to R2:", error);
-            }
-        }
+        // if (!params.isError && params.responseContent.includes('<svg')) {
+        //     try {
+        //         r2Url = await uploadSvgToR2(params.responseContent, params.cardId, createdAt);
+        //         console.log('<----Uploaded to R2---->')
+        //     } catch (error) {
+        //         console.error("Error uploading to R2:", error);
+        //     }
+        // }
 
         // Create API log entry
-        await prisma.apiLog.create({
+        await prisma.apiLog2.create({
             data: {
                 ...(params.userId && { userId: params.userId }),
                 cardId: params.cardId,
@@ -76,11 +76,10 @@ async function logApiRequest(params: ApiLogParams): Promise<string | undefined> 
                 duration: params.duration,
                 isError: params.isError,
                 errorMessage: params.errorMessage ? params.errorMessage : undefined,
-                r2Url: r2Url,
                 timestamp: createdAt,
             },
         });
-        return r2Url;
+        return params.responseContent;
     } catch (error) {
         console.error("Error logging API request to database:", error);
     }
@@ -100,7 +99,7 @@ function getRandomModel(): string {
     const models = [
         { name: "anthropic/claude-3.5-haiku", weight: 2 },
         // { name: "anthropic/claude-3.7-sonnet", weight: 1 },
-        { name: "deepseek/deepseek-chat-v3-0324:free", weight: 1 }
+        // { name: "deepseek/deepseek-chat-v3-0324:free", weight: 1 }
     ];
 
     const totalWeight = models.reduce((sum, model) => sum + model.weight, 0);
@@ -117,7 +116,7 @@ function getRandomModel(): string {
     return models[0].name; // Fallback, should not reach here
 }
 
-export async function generateCardContent(params: CardContentParams): Promise<{ r2Url: string, cardId: string }> {
+export async function generateCardContent(params: CardContentParams): Promise<{ svgContent: string, cardId: string }> {
     const { userId, cardType, version, templateId, size, ...otherParams } = params;
     const cardId = nanoid(10);
     const startTime = Date.now();
@@ -161,7 +160,7 @@ export async function generateCardContent(params: CardContentParams): Promise<{ 
                 isError: true,
                 errorMessage: "User prompt too long"
             });
-            return { r2Url: defaultSVG, cardId };
+            return { svgContent: defaultSVG, cardId };
         }
 
         // Make API request
@@ -225,7 +224,7 @@ export async function generateCardContent(params: CardContentParams): Promise<{ 
         const svgContent = extractSvgContent(content);
 
         // Log the request
-        const r2Url = await logApiRequest({
+        logApiRequest({
             userId,
             cardId,
             cardType,
@@ -239,7 +238,7 @@ export async function generateCardContent(params: CardContentParams): Promise<{ 
         });
 
         return {
-            r2Url: r2Url || defaultSVG,
+            svgContent: svgContent || defaultSVG,
             cardId
         };
 
