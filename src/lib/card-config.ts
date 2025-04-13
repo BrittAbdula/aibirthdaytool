@@ -184,7 +184,7 @@ export const getAllCardPreviews = unstable_cache(
         isSystem: true
       },
       orderBy: {
-        createdAt: 'desc'
+        updatedAt: 'desc'
       }
     });
     return generators
