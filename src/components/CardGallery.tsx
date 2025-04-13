@@ -65,12 +65,12 @@ export default function CardGallery({ initialCardsData, wishCardType }: CardGall
     <div className="space-y-6">
       <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-4">
         {cards.map((card) => (
-          <div key={card.cardId} className="bg-purple-100 rounded-lg p-2 sm:p-4 transition-all duration-300 hover:shadow-lg">
+          <div key={card.id} className="bg-purple-100 rounded-lg p-2 sm:p-4 transition-all duration-300 hover:shadow-lg">
             <div className="relative w-full pb-[133.33%] mb-2">
               <div className="absolute inset-0 transition-transform duration-300 ease-in-out hover:scale-105">
                 <ImageViewer
                   alt={`${card.cardType} card`}
-                  cardId={card.cardId}
+                  cardId={card.id}
                   cardType={card.cardType}
                   isNewCard={false}
                   imgUrl={card.r2Url || ''}
