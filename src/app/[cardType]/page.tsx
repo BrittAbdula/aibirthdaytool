@@ -4,7 +4,6 @@ import { Metadata } from "next/types";
 import { CardType, getCardConfig, getAllCardTypes } from "@/lib/card-config";
 import CardTypeBubbles from "@/components/CardTypeBubbles";
 import CardGenerator from "@/components/CardGenerator";
-import { getDefaultCardByCardType } from "@/lib/cards";
 import CardGallery from '@/app/card-gallery/CardGallery'
 import { getRecentCardsServer } from '@/lib/cards';
 import Breadcrumb from "@/components/Breadcrumb"; 

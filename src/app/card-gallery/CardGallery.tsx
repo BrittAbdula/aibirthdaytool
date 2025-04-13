@@ -82,13 +82,13 @@ export default function CardGallery({ initialCardsData, wishCardType }: CardGall
       <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-4 xl:grid-cols-6 gap-2">
         {cards.map((card) => (
           <div 
-            key={card.cardId} 
+            key={card.id} 
             className="group"
           >
             <div className="aspect-[2/3] relative">
               <ImageViewer
                 alt={card.cardType}
-                cardId={card.cardId}
+                cardId={card.id}
                 cardType={card.cardType}
                 isNewCard={false}
                 imgUrl={card.r2Url || ''}

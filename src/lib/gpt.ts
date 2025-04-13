@@ -24,14 +24,14 @@ function escapeContent(content: string): string {
 function extractSvgContent(content: string): string | null {
     const svgMatch = content.match(/<svg[\s\S]*?<\/svg>/);
     if (!svgMatch) return null;
-    
+
     // Clean and escape the SVG content
     let svgContent = svgMatch[0]
         // Remove any invalid XML characters
         .replace(/[^\x09\x0A\x0D\x20-\uD7FF\uE000-\uFFFD\u10000-\u10FFFF]/g, '')
         // Ensure proper entity escaping
         .replace(/&(?!(amp|lt|gt|quot|apos);)/g, '&amp;');
-    
+
     return svgContent;
 }
 
@@ -52,7 +52,7 @@ async function logApiRequest(params: ApiLogParams): Promise<string | undefined> 
     try {
         let r2Url: string = '';
         const createdAt = new Date();
-        
+
         // Only attempt R2 upload for successful SVG responses
         // if (!params.isError && params.responseContent.includes('<svg')) {
         //     try {
@@ -142,7 +142,7 @@ export async function generateCardContent(params: CardContentParams): Promise<{ 
         // If this is a modification request, add the feedback to the user prompt
         let userPromptPrefixText = '';
         let previousSvgContent = '';
-        
+
         if (modificationFeedback && previousCardId) {
             // Get the previous card content
             try {
@@ -150,7 +150,7 @@ export async function generateCardContent(params: CardContentParams): Promise<{ 
                     where: { cardId: previousCardId },
                     select: { responseContent: true }
                 });
-                
+
                 if (previousCard && previousCard.responseContent !== 'success' && previousCard.responseContent !== 'error') {
                     previousSvgContent = previousCard.responseContent;
                     userPromptPrefixText = `
@@ -208,14 +208,14 @@ Please create a new version based on this feedback while maintaining the overall
                 "Content-Type": "application/json"
             },
             body: JSON.stringify({
-                "model":  model,
+                "model": model,
                 "messages": [
-                    { 
-                        "role": "system", 
-                        "content": systemPrompt 
+                    {
+                        "role": "system",
+                        "content": systemPrompt
                     },
-                    { 
-                        "role": "user", 
+                    {
+                        "role": "user",
                         "content": [
                             {
                                 "type": "text",
@@ -227,10 +227,10 @@ Please create a new version based on this feedback while maintaining the overall
                 "temperature": 0.7,
                 "max_tokens": 4096,
                 'provider': {
-                  'order': [
-                    'OpenAI',
-                    'Together'
-                  ]
+                    'order': [
+                        'OpenAI',
+                        'Together'
+                    ]
                 }
             })
         });
@@ -257,7 +257,7 @@ Please create a new version based on this feedback while maintaining the overall
         const content = data.choices[0].message.content;
         console.log('<----Response content : ' + content + '---->')
         const svgContent = extractSvgContent(content);
-        
+
         // Log the request
         const r2Url = await logApiRequest({
             userId,

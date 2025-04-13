@@ -84,6 +84,7 @@ model EditedCard {
   id             String   @id @default(cuid())
   originalCardId String
   cardType       String
+  relationship   String?
   editedContent  String
   spotifyTrackId String?
   r2Url          String?

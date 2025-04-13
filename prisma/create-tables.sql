@@ -50,8 +50,7 @@ CREATE TABLE IF NOT EXISTS "UserAction" (
     "id" TEXT PRIMARY KEY,
     "cardId" TEXT NOT NULL,
     "action" TEXT NOT NULL,
-    "timestamp" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY ("cardId") REFERENCES "ApiLog"("cardId")
+    "timestamp" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Create EditedCard table
@@ -59,6 +58,7 @@ CREATE TABLE IF NOT EXISTS "EditedCard" (
     "id" TEXT PRIMARY KEY,
     "originalCardId" TEXT NOT NULL,
     "cardType" TEXT NOT NULL,
+    "relationship" TEXT,
     "editedContent" TEXT NOT NULL,
     "spotifyTrackId" TEXT,
     "r2Url" TEXT,

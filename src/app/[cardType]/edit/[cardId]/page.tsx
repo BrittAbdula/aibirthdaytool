@@ -24,6 +24,7 @@ export default function EditCard({ params }: { params: { cardId: string, cardTyp
   const { cardId, cardType } = params
   const [svgContent, setSvgContent] = useState('')
   const [originalContent, setOriginalContent] = useState('')
+  const [originalCardId, setOriginalCardId] = useState('')
   const [editableFields, setEditableFields] = useState<Record<string, string>>({})
   const [imageSrc, setImageSrc] = useState<string>('')
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -45,9 +46,10 @@ export default function EditCard({ params }: { params: { cardId: string, cardTyp
         const response = await fetch(`/api/cards/${cardId}?cardType=${cardType}`)
         if (response.ok) {
           const data = await response.json()
-          const content = data.responseContent
+          const content = data.editedContent
           setSvgContent(content)
           setOriginalContent(content)
+          setOriginalCardId(data.originalCardId)
           setEditableFields(extractEditableFields(content))
           updateImageSrc(content)
         } else {
@@ -82,11 +84,16 @@ export default function EditCard({ params }: { params: { cardId: string, cardTyp
       const img = new Image()
       img.onload = () => {
         const canvas = document.createElement('canvas')
-        canvas.width = img.width
-        canvas.height = img.height
+        const scale = 2.5
+        canvas.width = img.width * scale
+        canvas.height = img.height * scale
         const ctx = canvas.getContext('2d')
-        ctx?.drawImage(img, 0, 0)
-        resolve(canvas.toDataURL('image/png'))
+        if (ctx) {
+          ctx.imageSmoothingEnabled = true
+          ctx.imageSmoothingQuality = 'high'
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
+        }
+        resolve(canvas.toDataURL('image/png', 1.0))
       }
       img.onerror = () => reject('Error loading SVG')
       img.src = imageSrc
@@ -113,11 +120,27 @@ export default function EditCard({ params }: { params: { cardId: string, cardTyp
 
   const handleDownload = async (isMobile: boolean) => {
     if (isMobile) {
-      toast({
-        description: "Long-press to save image",
-        duration: 3000,
-      });
-      await recordUserAction(cardId, 'download')
+      try {
+        const pngDataUrl = await convertSvgToPng()
+        const link = document.createElement('a')
+        link.href = pngDataUrl
+        link.target = '_blank'
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+        
+        toast({
+          description: "Long-press on the image to save",
+          duration: 5000,
+        });
+        await recordUserAction(cardId, 'download')
+      } catch (err) {
+        console.error('Mobile download failed:', err)
+        toast({
+          variant: "destructive",
+          description: "Failed to open image. Try again.",
+        })
+      }
       return;
     }
 
@@ -129,7 +152,7 @@ export default function EditCard({ params }: { params: { cardId: string, cardTyp
       document.body.appendChild(link)
       link.click()
       document.body.removeChild(link)
-      toast({ description: "Image downloaded" })
+      toast({ description: "High quality image downloaded" })
       await recordUserAction(cardId, 'download')
     } catch (err) {
       console.error('Download failed: ', err)
@@ -160,7 +183,7 @@ export default function EditCard({ params }: { params: { cardId: string, cardTyp
         body: JSON.stringify({
           editedCardId,
           cardType,
-          originalCardId: cardId,
+          originalCardId: originalCardId,
           editedContent: svgContent,
           spotifyTrackId: enableMusic ? selectedMusic?.id : null,
           customUrl: enableCustomUrl ? customUrl : null,

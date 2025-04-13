@@ -3,15 +3,10 @@ import { unstable_cache } from 'next/cache';
 import { CardType } from '@/lib/card-config'
 
 export interface Card {
-  cardId: string;
+  id: string;
   cardType: string;
-  responseContent: string;
+  editedContent: string;
   r2Url: string | null;
-  usageCount: number;
-  userActions?: {
-    action: string;
-    timestamp: Date;
-  }[];
 }
 
 // 服务端渲染使用的函数，带有缓存
@@ -19,7 +14,7 @@ export const getRecentCardsServer = unstable_cache(
   async (page: number, pageSize: number, wishCardType: string|null, relationship: string|null = null) => {
     return fetchRecentCards(page, pageSize, wishCardType, relationship);
   },
-  ['recent-cards-server'],
+  ['recent-cards-server2'],
   { revalidate: 300 }
 );
 
@@ -41,69 +36,28 @@ async function fetchRecentCards(
   relationship: string|null = null
 ): Promise<{ cards: Card[], totalPages: number }> {
   const where = {
-    isError: false,
-    r2Url: {
-      not: null
-    },
     ...(wishCardType ? { cardType: wishCardType } : {}),
-    ...(relationship ? {
-      userInputs: {
-        path: ['relationship'],
-        equals: relationship
-      }
-    } : {}),
-    editedCards: {
-      some: {} // Only cards with editedCards records
-    }
+    ...(relationship ? { relationship: relationship } : {})
   };
 
-  const totalCards = await prisma.apiLog.count({ where });
+  const totalCards = await prisma.editedCard.count({ where });
   const totalPages = Math.ceil(totalCards / pageSize);
 
-  const cardsWithEdits = await prisma.apiLog.findMany({
+  const cardsWithEdits = await prisma.editedCard.findMany({
     where,
     orderBy: {
-      timestamp: 'desc'
+      createdAt: 'desc'
     },
     take: pageSize,
     skip: (page - 1) * pageSize,
     select: {
-      cardId: true,
+      id: true,
       cardType: true,
-      responseContent: true,
-      r2Url: true,
-      _count: {
-        select: {
-          editedCards: true
-        }
-      }
-    },
-  });
-
-  const cards = cardsWithEdits.map(card => ({
-    ...card,
-    usageCount: card._count.editedCards,
-  }));
-
-  return { cards, totalPages };
-}
-
-export async function getDefaultCardByCardType(cardType: CardType): Promise<Card> {
-  const card = await prisma.template.findFirst({
-    where: { cardType: cardType },
-    select: {
-      cardId: true,
-      cardType: true,
-      previewSvg: true,
+      editedContent: true,
       r2Url: true
     },
-    orderBy: { createdAt: 'desc' },
   });
-  return {
-    cardId: card?.cardId || '',
-    cardType,
-    responseContent: card?.previewSvg || '',
-    r2Url: card?.r2Url || null,
-    usageCount: 0  // Default template cards have 0 usage count
-  };
+
+
+  return { cards: cardsWithEdits, totalPages };
 }
