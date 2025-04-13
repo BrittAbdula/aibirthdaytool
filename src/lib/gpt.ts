@@ -100,9 +100,9 @@ interface CardContentParams {
 
 function getRandomModel(): string {
     const models = [
-        { name: "anthropic/claude-3.5-haiku", weight: 2 },
+        { name: "anthropic/claude-3.5-haiku", weight: 1 },
         // { name: "anthropic/claude-3.7-sonnet", weight: 1 },
-        { name: "deepseek/deepseek-chat-v3-0324:free", weight: 1 }
+        { name: "deepseek/deepseek-chat-v3-0324:free", weight: 2 }
     ];
 
     const totalWeight = models.reduce((sum, model) => sum + model.weight, 0);

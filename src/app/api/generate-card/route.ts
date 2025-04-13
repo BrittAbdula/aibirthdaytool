@@ -47,7 +47,7 @@ export async function POST(request: Request) {
 
     // Check usage limits
     const planType = user?.plan || 'FREE';
-    const dailyLimit = planType === 'FREE' ? 5 : Infinity;
+    const dailyLimit = planType === 'FREE' ? 10 : Infinity;
     
     if (usage.count >= dailyLimit) {
       return NextResponse.json({ 
