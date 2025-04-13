@@ -25,7 +25,8 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-      <GoogleAdsense />
+        <GoogleAdsense />
+        <meta name='impact-site-verification' content='775c0013-984f-4645-82d1-36d3f5e90b39' />
       </head>
       <GoogleTagManager gtmId="GTM-57P7BF4D" />
       <body className={`${playfair.className} text-[#4A4A4A]`}>
