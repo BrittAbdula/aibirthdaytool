@@ -17,6 +17,7 @@ import { Switch } from '@/components/ui/switch'
 import { Skeleton } from "@/components/ui/skeleton"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { RecommendedCards } from '@/components/RecommendedCards'
 
 const IsMobileWrapper = dynamic(() => import('@/components/IsMobileWrapper'), { ssr: false })
 
@@ -430,6 +431,14 @@ export default function EditCard({ params }: { params: { cardId: string, cardTyp
             </div>
           </div>
         </div>
+
+        {/* Divider */}
+        {/* <div className="my-12 h-px w-full bg-gradient-to-r from-transparent via-pink-200 to-transparent opacity-70"></div> */}
+        
+        {/* Recommended Products Section */}
+        {/* <div className="bg-white/80 backdrop-blur p-6 rounded-2xl shadow-lg mb-8">
+          <RecommendedCards cardType={cardType} />
+        </div> */}
 
         {/* Share Dialog */}
         <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
