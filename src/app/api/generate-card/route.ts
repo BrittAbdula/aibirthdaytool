@@ -55,18 +55,24 @@ export async function POST(request: Request) {
       }, { status: 429 });
     }
 
+    const requestData = await request.json();
     const {
       cardType,
       recipientName,
       relationship,
       senderName,
       message,
+      modificationFeedback,
+      previousCardId,
       ...otherFields
-    } = await request.json();
+    } = requestData;
 
     if (!cardType) {
       return NextResponse.json({ error: 'Missing required field: cardType' }, { status: 400 });
     }
+
+    // Check if this is a modification request
+    const isModification = modificationFeedback && previousCardId;
 
     // Combine all fields into a single object
     const cardData = {
@@ -76,27 +82,34 @@ export async function POST(request: Request) {
       relationship,
       senderName,
       message,
+      ...(isModification && { 
+        modificationFeedback, 
+        previousCardId 
+      }),
       ...otherFields
     };
 
-    const { r2Url, cardId } = await generateCardContent(cardData);
+    const { r2Url, cardId, svgContent } = await generateCardContent(cardData);
 
-    // Increment usage count
-    await prisma.apiUsage.update({
-      where: {
-        userId_date: {
-          userId,
-          date: today,
+    // Increment usage count for new generations but not for modifications
+    // to encourage users to refine their cards
+    if (!isModification) {
+      await prisma.apiUsage.update({
+        where: {
+          userId_date: {
+            userId,
+            date: today,
+          },
         },
-      },
-      data: {
-        count: {
-          increment: 1,
+        data: {
+          count: {
+            increment: 1,
+          },
         },
-      },
-    });
+      });
+    }
 
-    return NextResponse.json({ r2Url, cardId });
+    return NextResponse.json({ r2Url, cardId, svgContent });
   } catch (error) {
     console.error('Error generating card:', error);
     return NextResponse.json({ error: 'Failed to generate card' }, { status: 500 });

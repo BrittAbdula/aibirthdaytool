@@ -16,9 +16,10 @@ interface ImageViewerProps {
   cardType: string
   isNewCard: boolean
   imgUrl?: string
+  svgContent?: string
 }
 
-export function ImageViewer({ alt, cardId, cardType, imgUrl, isNewCard }: ImageViewerProps) {
+export function ImageViewer({ alt, cardId, cardType, imgUrl, isNewCard, svgContent }: ImageViewerProps) {
   const [open, setOpen] = useState(false)
   const { toast } = useToast()
   const router = useRouter()
@@ -126,7 +127,8 @@ export function ImageViewer({ alt, cardId, cardType, imgUrl, isNewCard }: ImageV
                   card={{
                     cardId: cardId,
                     cardType: cardType,
-                    r2Url: imgUrl
+                    r2Url: imgUrl,
+                    svgContent: svgContent
                   }}
                 />
               </div>

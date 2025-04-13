@@ -50,18 +50,18 @@ interface ApiLogParams {
 
 async function logApiRequest(params: ApiLogParams): Promise<string | undefined> {
     try {
-        let r2Url: string = '/card/goodluck.svg';
+        let r2Url: string = '';
         const createdAt = new Date();
         
         // Only attempt R2 upload for successful SVG responses
-        if (!params.isError && params.responseContent.includes('<svg')) {
-            try {
-                r2Url = await uploadSvgToR2(params.responseContent, params.cardId, createdAt);
-                console.log('<----Uploaded to R2---->')
-            } catch (error) {
-                console.error("Error uploading to R2:", error);
-            }
-        }
+        // if (!params.isError && params.responseContent.includes('<svg')) {
+        //     try {
+        //         r2Url = await uploadSvgToR2(params.responseContent, params.cardId, createdAt);
+        //         console.log('<----Uploaded to R2---->')
+        //     } catch (error) {
+        //         console.error("Error uploading to R2:", error);
+        //     }
+        // }
 
         // Create API log entry
         await prisma.apiLog.create({
@@ -71,7 +71,7 @@ async function logApiRequest(params: ApiLogParams): Promise<string | undefined> 
                 cardType: params.cardType,
                 userInputs: params.userInputs,
                 promptVersion: params.promptVersion,
-                responseContent: params.responseContent === 'error' ? 'error' : 'success',
+                responseContent: params.responseContent,
                 tokensUsed: params.tokensUsed,
                 duration: params.duration,
                 isError: params.isError,
@@ -89,10 +89,12 @@ async function logApiRequest(params: ApiLogParams): Promise<string | undefined> 
 interface CardContentParams {
     userId?: string;
     cardType: CardType;
-    version: string;
-    templateId: string;
+    version?: string;
+    templateId?: string;
     size?: string;
     style?: string;
+    modificationFeedback?: string;
+    previousCardId?: string;
     [key: string]: any;
 }
 
@@ -117,8 +119,8 @@ function getRandomModel(): string {
     return models[0].name; // Fallback, should not reach here
 }
 
-export async function generateCardContent(params: CardContentParams): Promise<{ r2Url: string, cardId: string }> {
-    const { userId, cardType, version, templateId, size, ...otherParams } = params;
+export async function generateCardContent(params: CardContentParams): Promise<{ r2Url: string, cardId: string, svgContent: string }> {
+    const { userId, cardType, version, templateId, size, modificationFeedback, previousCardId, ...otherParams } = params;
     const cardId = nanoid(10);
     const startTime = Date.now();
 
@@ -137,18 +139,50 @@ export async function generateCardContent(params: CardContentParams): Promise<{ 
         // Generate dynamic prompt
         const systemPrompt = generatePrompt(cardType, cardSize);
 
+        // If this is a modification request, add the feedback to the user prompt
+        let userPromptPrefixText = '';
+        let previousSvgContent = '';
+        
+        if (modificationFeedback && previousCardId) {
+            // Get the previous card content
+            try {
+                const previousCard = await prisma.apiLog.findUnique({
+                    where: { cardId: previousCardId },
+                    select: { responseContent: true }
+                });
+                
+                if (previousCard && previousCard.responseContent !== 'success' && previousCard.responseContent !== 'error') {
+                    previousSvgContent = previousCard.responseContent;
+                    userPromptPrefixText = `
+I want to modify the previous card design with this feedback: ${modificationFeedback}
+
+Here is the previous SVG content:
+${previousSvgContent}
+
+Please create a new version based on this feedback while maintaining the overall design. Make ONLY the requested changes.
+
+`;
+                }
+            } catch (error) {
+                console.error("Error fetching previous card content:", error);
+                // Continue without the previous content if there's an error
+            }
+        }
+
         // Prepare user prompt
-        const userPrompt = Object.entries({
+        const userPromptFields = Object.entries({
             ...otherParams,
             currentTime: formattedTime
         })
             .filter(([_, value]) => value !== '' && value !== undefined)
             .map(([key, value]) => `${key}: ${value}`)
             .join('\n');
+
+        const userPrompt = userPromptPrefixText + userPromptFields;
         console.log('<----User prompt : ' + userPrompt + '---->')
 
         // Check prompt length
-        if (userPrompt.length >= 800) {
+        if (userPrompt.length >= 4000) {
             await logApiRequest({
                 userId,
                 cardId,
@@ -161,7 +195,7 @@ export async function generateCardContent(params: CardContentParams): Promise<{ 
                 isError: true,
                 errorMessage: "User prompt too long"
             });
-            return { r2Url: defaultSVG, cardId };
+            return { r2Url: '', cardId, svgContent: '' };
         }
 
         // Make API request
@@ -223,7 +257,7 @@ export async function generateCardContent(params: CardContentParams): Promise<{ 
         const content = data.choices[0].message.content;
         console.log('<----Response content : ' + content + '---->')
         const svgContent = extractSvgContent(content);
-
+        
         // Log the request
         const r2Url = await logApiRequest({
             userId,
@@ -238,9 +272,11 @@ export async function generateCardContent(params: CardContentParams): Promise<{ 
             errorMessage: svgContent ? undefined : "No valid SVG content found"
         });
 
+        // Make sure to return the SVG content
         return {
-            r2Url: r2Url || defaultSVG,
-            cardId
+            r2Url: r2Url || '',
+            cardId,
+            svgContent: svgContent || ''
         };
 
     } catch (error) {

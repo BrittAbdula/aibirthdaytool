@@ -213,6 +213,11 @@ export default function CardGenerator({
   const [progress, setProgress] = useState(0)
   const [customValues, setCustomValues] = useState<Record<string, string>>({})
   const [selectedSize, setSelectedSize] = useState(cardConfig.defaultSize || 'portrait')
+  const [svgContent, setSvgContent] = useState<string>('')
+  const [modificationFeedback, setModificationFeedback] = useState<string>('')
+  const [feedbackMode, setFeedbackMode] = useState<boolean>(false)
+  const [previousFormData, setPreviousFormData] = useState<Record<string, any>>({})
+  const [feedbackHistory, setFeedbackHistory] = useState<string[]>([])
 
   useEffect(() => {
     setCurrentCardType(wishCardType)
@@ -270,14 +275,28 @@ export default function CardGenerator({
       setProgress(0)
       setError(null)
 
+      // Save previous form data for potential modifications
+      setPreviousFormData({...formData})
+
+      // Prepare payload with feedback if in feedback mode
+      const payload: Record<string, any> = {
+        cardType: currentCardType,
+        size: selectedSize,
+        ...formData
+      }
+
+      if (feedbackMode && modificationFeedback) {
+        payload.modificationFeedback = modificationFeedback
+        payload.previousCardId = cardId
+        
+        // Add to feedback history
+        setFeedbackHistory([...feedbackHistory, modificationFeedback])
+      }
+
       const response = await fetch('/api/generate-card', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          cardType: currentCardType,
-          size: selectedSize,
-          ...formData
-        }),
+        body: JSON.stringify(payload),
       })
 
       const data = await response.json()
@@ -294,14 +313,27 @@ export default function CardGenerator({
         throw new Error(data.error || 'Failed to generate card')
       }
 
-      if (!data.r2Url) {
-        throw new Error('Failed to get image URL')
+      if (!data.svgContent) {
+        throw new Error('Failed to get SVG content')
       }
 
-      setImgUrl(data.r2Url)
-      // console.log('-----------r2Url',data.r2Url)
+      // Create a data URL from the SVG content
+      const svgDataUrl = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(data.svgContent)}`
+      setImgUrl(svgDataUrl)
+      setSvgContent(data.svgContent)
       setCardId(data.cardId)
       setSubmited(true)
+      
+      // Clear feedback after successful generation
+      if (feedbackMode) {
+        setModificationFeedback('')
+      }
+      
+      // Show feedback mode after first generation
+      if (!feedbackMode) {
+        setFeedbackMode(true)
+      }
+      
       confetti({
         particleCount: 100,
         spread: 70,
@@ -322,6 +354,13 @@ export default function CardGenerator({
       console.error('Login failed:', error)
       setIsAuthLoading(false)
     }
+  }
+
+  const handleResetFeedback = () => {
+    setFeedbackMode(false)
+    setModificationFeedback('')
+    setFeedbackHistory([])
+    setFormData(previousFormData)
   }
 
   const renderField = (field: CardConfig['fields'][0]) => {
@@ -487,13 +526,66 @@ export default function CardGenerator({
                 <FlickeringGrid />
               ) : (
                 <div className="w-full h-full flex items-center justify-center overflow-hidden">
-                  <ImageViewer alt={currentCardType} cardId={cardId || '1'} cardType={currentCardType} imgUrl={imgUrl} isNewCard={true} />
+                  <ImageViewer 
+                    alt={currentCardType} 
+                    cardId={cardId || '1'} 
+                    cardType={currentCardType} 
+                    imgUrl={imgUrl} 
+                    isNewCard={true} 
+                    svgContent={svgContent}
+                  />
                 </div>
               )}
             </div>
           </div>
         </div>
       </main>
+
+      {/* Feedback Section - Add after the main card generation UI */}
+      {submited && feedbackMode && (
+        <div className="mt-8 max-w-3xl mx-auto p-6 bg-white rounded-lg shadow-md border border-[#FFC0CB]">
+          <h3 className="text-xl font-semibold mb-4 text-[#4A4A4A]">Not quite right? Let us improve it!</h3>
+          
+          {feedbackHistory.length > 0 && (
+            <div className="mb-4">
+              <h4 className="text-sm font-medium text-gray-500 mb-2">Previous Feedback:</h4>
+              <div className="space-y-2">
+                {feedbackHistory.map((feedback, index) => (
+                  <div key={index} className="p-3 bg-gray-50 rounded-md text-sm text-gray-600 italic">
+                    &ldquo;{feedback}&rdquo;
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          
+          <Textarea
+            value={modificationFeedback}
+            onChange={(e) => setModificationFeedback(e.target.value)}
+            placeholder="Describe what you'd like to change... (e.g., 'Make the background more colorful', 'Change the font style', 'Add more decorations')"
+            className="w-full border-2 border-[#FFC0CB] rounded-md focus:ring-[#FFC0CB] focus:border-[#FFC0CB] mb-4"
+            rows={3}
+          />
+          
+          <div className="flex space-x-4">
+            <Button 
+              onClick={handleGenerateCard} 
+              disabled={isLoading || !modificationFeedback.trim()} 
+              className="bg-[#FFC0CB] text-[#4A4A4A] hover:bg-[#FFD1DC] transition-colors flex-1"
+            >
+              {isLoading ? 'Updating...' : 'Update Card'}
+            </Button>
+            
+            <Button 
+              onClick={handleResetFeedback}
+              variant="outline" 
+              className="border-[#FFC0CB] text-[#4A4A4A] hover:bg-[#FFF5F6]"
+            >
+              Start Over
+            </Button>
+          </div>
+        </div>
+      )}
 
       <Dialog open={showAuthDialog} onOpenChange={setShowAuthDialog}>
         <DialogContent className="border border-[#FFC0CB] shadow-lg">

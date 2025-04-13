@@ -119,7 +119,7 @@ export default async function EditedCardPage({ params }: Props) {
                 </div>
               }
             >
-              <CardDisplay card={card} />
+              <CardDisplay card={{ cardType: card.cardType, r2Url: card.r2Url || '', svgContent: card.editedContent || '' }} />
             </Suspense>
 
             {card.spotifyTrackId && (

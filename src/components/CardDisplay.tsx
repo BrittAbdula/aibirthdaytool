@@ -6,12 +6,32 @@ import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import confetti from "canvas-confetti"
 
-export default function CardDisplay({ card }: { card: any }) {
+interface CardDisplayProps {
+  card: {
+    cardId?: string
+    cardType: string
+    r2Url?: string
+    svgContent?: string
+  }
+}
+
+export default function CardDisplay({ card }: CardDisplayProps) {
   const [stage, setStage] = useState<'initial' | 'opening' | 'revealing' | 'final'>('initial')
   const [showEnvelope, setShowEnvelope] = useState(true)
   const [showCard, setShowCard] = useState(false)
-  const [imageSrc, setImageSrc] = useState<string | null>(card.r2Url)
+  const [imageSrc, setImageSrc] = useState<string | null>(null)
  
+  // Set image source from props on component mount
+  useEffect(() => {
+    if (card.svgContent) {
+      // Create a data URL from SVG content
+      const svgDataUrl = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(card.svgContent)}`
+      setImageSrc(svgDataUrl)
+    } else if (card.r2Url) {
+      setImageSrc(card.r2Url)
+    }
+  }, [card.r2Url, card.svgContent])
+
   // Original confetti effect
   function triggerConfetti() {
     const end = Date.now() + 3 * 1000;

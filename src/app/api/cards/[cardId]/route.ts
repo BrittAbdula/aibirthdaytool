@@ -17,7 +17,7 @@ export async function GET(
       const responseContent = await fetchSvgContent(`https://store.celeprime.com/${cardType}.svg`)
       return NextResponse.json({responseContent})
     }
-    card.responseContent = await fetchSvgContent(card.r2Url)
+    // card.responseContent = await fetchSvgContent(card.r2Url)
 
     return NextResponse.json(card)
   } catch (error) {
