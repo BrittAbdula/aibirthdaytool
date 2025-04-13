@@ -25,7 +25,7 @@ const CardItem = ({ card }: { card: Card }) => {
       "dark:border-gray-50/[.1] dark:bg-gray-50/[.10] dark:hover:bg-gray-50/[.15]"
     )}>
       <div className="bg-white rounded-lg shadow-md overflow-hidden">
-        <a href={`/${card.cardType}/edit/${card.cardId}/`}>
+        <a href={`/${card.cardType}/edit/${card.id}/`}>
           <img
             src={card.r2Url || '/card/christmas.svg'}
             alt={`${card.cardType} card`}
@@ -34,18 +34,15 @@ const CardItem = ({ card }: { card: Card }) => {
             className="max-w-full max-h-full"
           />
         </a>
-        {card.usageCount > 0 && (
-          <div className="absolute top-2 right-2 bg-pink-500 text-white text-xs px-2 py-1 rounded-full">
-            {card.usageCount}x
-          </div>
-        )}
       </div>
     </div>
   )
 }
 
 export default function CardMarquee({ wishCardType, initialCardsData, className }: CardMarqueeProps) {
-  const sortedCards = [...initialCardsData.cards].sort((a, b) => (b.usageCount || 0) - (a.usageCount || 0))
+  // const sortedCards = [...initialCardsData.cards].sort((a, b) => (b. || 0) - (a.usageCount || 0))
+  const sortedCards = [ ...initialCardsData.cards ]
+
   const firstRow = sortedCards.slice(0, Math.ceil(sortedCards.length / 2))
   const secondRow = sortedCards.slice(Math.ceil(sortedCards.length / 2))
 
@@ -57,12 +54,12 @@ export default function CardMarquee({ wishCardType, initialCardsData, className 
       )}>
         <Marquee pauseOnHover className="[--duration:40s]">
           {firstRow.map((card) => (
-            <CardItem key={card.cardId} card={card} />
+            <CardItem key={card.id} card={card} />
           ))}
         </Marquee>
         <Marquee reverse pauseOnHover className="[--duration:40s]">
           {secondRow.map((card) => (
-            <CardItem key={card.cardId} card={card} />
+            <CardItem key={card.id} card={card} />
           ))}
         </Marquee>
         
