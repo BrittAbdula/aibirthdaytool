@@ -67,7 +67,10 @@ export default async function Home() {
 
           <div className="mb-16 items-center flex justify-center space-x-4">
             <button className="bg-[#FFC0CB] text-white px-8 py-3 rounded-full hover:bg-pink-400 transition">
-              <a href="/cards">Create Your Digital Card</a>
+              <a href="/cards">Create Custom AI Card</a>
+            </button>
+            <button className="bg-purple-400 text-white px-8 py-3 rounded-full hover:bg-purple-500 transition">
+              <a href="/card-gallery">Browse Card Gallery</a>
             </button>
           </div>
 
@@ -96,11 +99,14 @@ export default async function Home() {
 
             <HowToUse />
 
-            <div className="mb-8 items-center flex justify-center">
-            <button className="bg-[#FFC0CB] text-white px-8 py-3 rounded-full hover:bg-pink-400 transition">
-              <a href="/cards">Make Your AI Card Now</a>
-            </button>
-          </div>
+            <div className="mb-8 items-center flex justify-center space-x-4">
+              <button className="bg-[#FFC0CB] text-white px-8 py-3 rounded-full hover:bg-pink-400 transition">
+                <a href="/cards">Create Custom AI Card</a>
+              </button>
+              <button className="bg-purple-400 text-white px-8 py-3 rounded-full hover:bg-purple-500 transition">
+                <a href="/card-gallery">Browse Card Gallery</a>
+              </button>
+            </div>
             <FAQ />
           </div>
         </div>
@@ -138,7 +144,7 @@ const Features: React.FC = () => (
           description="Online cards that look professionally made"
           icon="🎨"
           benefits={[
-            "Modern greeting card styles",
+            "Millions of greeting card styles",
             "High-quality digital cards",
             "Thoughtfully designed templates"
           ]}
@@ -305,12 +311,7 @@ const HowToUse: React.FC = () => (
           </div>
         </div>
         
-        <div className="text-center">
-          <a href="/cards" className="inline-block px-8 py-3 bg-gradient-to-r from-pink-500 to-purple-500 text-white rounded-full hover:opacity-90 transition shadow-md">
-            Create Your Free AI Greeting Card Now
-          </a>
-          <p className="mt-3 text-sm text-gray-500">No registration needed - design your first digital card in just seconds!</p>
-        </div>
+       
       </div>
     </section>
   );
