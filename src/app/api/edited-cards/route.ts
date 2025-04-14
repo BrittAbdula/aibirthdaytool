@@ -8,8 +8,8 @@ export async function POST(request: Request) {
     const session = await auth()
     const userId = session?.user?.id || null
 
-    const { editedCardId, cardType, originalCardId, editedContent, spotifyTrackId, customUrl, relationship } = await request.json()
-    console.log('-------------:', editedCardId, cardType, originalCardId, editedContent, spotifyTrackId)
+    const { editedCardId, cardType, originalCardId, editedContent, spotifyTrackId, customUrl, relationship, message } = await request.json()
+    // console.log('-------------:', editedCardId, cardType, originalCardId, editedContent, spotifyTrackId)
 
     const createdAt = new Date()
     
@@ -26,6 +26,7 @@ export async function POST(request: Request) {
           userId,
           customUrl,
           relationship,
+          message
         },
       })
       return NextResponse.json({ id: editedCardId, customUrl: customUrl }, { status: 200 })
@@ -48,6 +49,7 @@ export async function POST(request: Request) {
           createdAt,
           customUrl,
           relationship,
+          message
         },
       })
       return NextResponse.json({ id: editedCard.id, customUrl: customUrl }, { status: 201 })
