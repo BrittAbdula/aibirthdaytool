@@ -20,6 +20,15 @@ async function getCard(cardId: string) {
     },
     orderBy: {
       createdAt: 'desc'
+    },
+    select: {
+      id: true,
+      cardType: true,
+      editedContent: true,
+      r2Url: true,
+      spotifyTrackId: true,
+      message: true,
+      customUrl: true
     }
   })
 
@@ -121,6 +130,14 @@ export default async function EditedCardPage({ params }: Props) {
             >
               <CardDisplay card={{ cardType: card.cardType, r2Url: card.r2Url || '', svgContent: card.editedContent || '' }} />
             </Suspense>
+
+            {card.message && (
+              <div className="mt-6 p-4 bg-white/80 backdrop-blur rounded-xl shadow-sm border border-pink-100 opacity-0 animate-fade-up animation-delay-300">
+                <p className="text-gray-700 italic text-center">
+                &quot;{card.message}&quot;
+                </p>
+              </div>
+            )}
 
             {card.spotifyTrackId && (
               <div className="mt-6 opacity-0 animate-fade-up animation-delay-500">

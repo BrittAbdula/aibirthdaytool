@@ -22,7 +22,7 @@ export async function GET(
           cardId: true,
           cardType: true,
           id: true,
-          userInputs: true
+          userInputs: true,
         }
       })
       if (originalCard) {
@@ -30,14 +30,16 @@ export async function GET(
         const userInputs = originalCard.userInputs as Prisma.JsonObject;
 
         // Since userInputs is stored as a Record<string, any> and not an array
-        let relationshipValue = "Unknown";
+        let relationshipValue = "";
+        let messageValue = "";
         
         // Check if userInputs is an object with direct key-value pairs
         if (userInputs) {
           relationshipValue = 
             (userInputs.relationship as string) || 
             (userInputs.sender as string) || 
-            "Unknown";
+            "";
+          messageValue = (userInputs.message as string) || "";
         }
         
         return NextResponse.json({
@@ -45,7 +47,8 @@ export async function GET(
           originalCardId: originalCard.cardId,
           editedContent: originalCard.responseContent,
           cardType: originalCard.cardType,
-          relationship: relationshipValue
+          relationship: relationshipValue,
+          message: messageValue
         })
       } else {
         const responseContent = await fetchSvgContent(`https://store.celeprime.com/${cardType}.svg`)

@@ -1,13 +1,15 @@
 
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { Prisma } from '@prisma/client'
 
 export async function GET(request: Request, { params }: { params: { cardId: string } }) {
     let editedCards: {
         id: string | null,
         editedContent: string | null,
         r2Url: string | null,
-        originalCardId: string | null
+        originalCardId: string | null,
+        message: string | null
     } | null = null
     try {
          editedCards = await prisma.editedCard.findUnique({
@@ -16,7 +18,8 @@ export async function GET(request: Request, { params }: { params: { cardId: stri
                 id: true,
                 editedContent: true,
                 r2Url: true,
-                originalCardId: true
+                originalCardId: true,
+                message: true
             }
         })
         console.log('--------------------------------')
@@ -27,16 +30,20 @@ export async function GET(request: Request, { params }: { params: { cardId: stri
                 select: {
                     cardId: true,
                     responseContent: true,
-                    r2Url: true 
+                    r2Url: true,
+                    userInputs: true
                 }
             })
             console.log('originalCard', originalCard)
             if (originalCard) {
+                const userInputs = originalCard.userInputs as Prisma.JsonObject;
+                const messageValue = (userInputs.message as string) || "";
                 editedCards = {
                     id: null,
                     editedContent: originalCard.responseContent,
                     r2Url: originalCard.r2Url,
-                    originalCardId: originalCard.cardId
+                    originalCardId: originalCard.cardId,
+                    message: messageValue
                 }
             }
             console.log('editedCards', editedCards)

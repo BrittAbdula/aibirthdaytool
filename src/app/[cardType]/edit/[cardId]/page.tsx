@@ -40,6 +40,7 @@ export default function EditCard({ params }: { params: { cardId: string, cardTyp
   const [customUrl, setCustomUrl] = useState('')
   const [isCopied, setIsCopied] = useState(false)
   const [relationship, setRelationship] = useState('')
+  const [message, setMessage] = useState('')
   useEffect(() => {
     const fetchCardData = async () => {
       setIsLoading(true)
@@ -52,6 +53,7 @@ export default function EditCard({ params }: { params: { cardId: string, cardTyp
           setOriginalContent(content)
           setOriginalCardId(data.originalCardId)
           setRelationship(data.relationship)
+          setMessage(data.message)
           setEditableFields(extractEditableFields(content))
           updateImageSrc(content)
         } else {
@@ -190,6 +192,7 @@ export default function EditCard({ params }: { params: { cardId: string, cardTyp
           spotifyTrackId: enableMusic ? selectedMusic?.id : null,
           customUrl: enableCustomUrl ? customUrl : null,
           relationship: relationship,
+          message: message,
         }),
       })
 
@@ -289,6 +292,16 @@ export default function EditCard({ params }: { params: { cardId: string, cardTyp
               </div>
             </div>
             <div className="mt-4">
+              <div className="mb-4">
+                <label className="block text-sm font-medium mb-2">Personal Message</label>
+                <Textarea
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  placeholder="Add a personal message that will appear with your card..."
+                  className="w-full bg-white/50 border-2 border-pink-100 rounded-xl focus:ring-pink-200 focus:border-pink-300 transition-all duration-300"
+                  rows={3}
+                />
+              </div>
               <div className="flex items-center justify-between mb-2">
                 <label className="text-sm font-medium">Music</label>
                 <div className="flex items-center space-x-2">

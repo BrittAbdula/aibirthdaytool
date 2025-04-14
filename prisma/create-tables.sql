@@ -62,6 +62,7 @@ CREATE TABLE IF NOT EXISTS "EditedCard" (
     "editedContent" TEXT NOT NULL,
     "spotifyTrackId" TEXT,
     "r2Url" TEXT,
+    "message" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL
 );

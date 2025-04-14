@@ -90,6 +90,7 @@ model EditedCard {
   r2Url          String?
   userId         String?
   customUrl      String?
+  message        String?
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
   originalCard   ApiLog   @relation("OriginalCard", fields: [originalCardId], references: [cardId], onDelete: NoAction, onUpdate: NoAction)
