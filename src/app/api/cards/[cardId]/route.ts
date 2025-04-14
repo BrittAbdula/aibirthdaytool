@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma';
 import { fetchSvgContent } from '@/lib/utils';
+import { Prisma } from '@prisma/client';
 
 export async function GET(
   request: Request,
@@ -25,17 +26,20 @@ export async function GET(
         }
       })
       if (originalCard) {
-        // 从 userInputs 中提取 relationship 值
-        const userInputs = originalCard.userInputs;
+        // Extract values from userInputs
+        const userInputs = originalCard.userInputs as Prisma.JsonObject;
 
-        // 确保 userInputs 是 JSON 格式
-        const parsedInputs = typeof userInputs === "string" ? JSON.parse(userInputs) : userInputs;
-
-        // 查找 relationship 值
-        const relationshipField = parsedInputs.find((field: any) => field.name === "relationship" || field.name === "sender");
-
-        // 如果找到 relationship，返回对应值
-        const relationshipValue = relationshipField?.defaultValue || "Unknown";
+        // Since userInputs is stored as a Record<string, any> and not an array
+        let relationshipValue = "Unknown";
+        
+        // Check if userInputs is an object with direct key-value pairs
+        if (userInputs) {
+          relationshipValue = 
+            (userInputs.relationship as string) || 
+            (userInputs.sender as string) || 
+            "Unknown";
+        }
+        
         return NextResponse.json({
           id: null,
           originalCardId: originalCard.cardId,
@@ -45,7 +49,7 @@ export async function GET(
         })
       } else {
         const responseContent = await fetchSvgContent(`https://store.celeprime.com/${cardType}.svg`)
-        return NextResponse.json({responseContent})
+        return NextResponse.json({ responseContent })
       }
     } else {
       card.editedContent = await fetchSvgContent(card.r2Url)
