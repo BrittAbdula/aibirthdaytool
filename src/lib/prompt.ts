@@ -83,7 +83,10 @@ Before generating, deeply analyze the user's input  which contains vital details
     <!-- Interactive elements often live here -->
   </g>
 
-</svg>`;
+</svg>
+
+IMPORTANT: Generate SVG code only. Do not include any explanation, commentary, or other text.
+`;
 }
 
 
