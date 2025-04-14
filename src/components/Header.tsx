@@ -16,6 +16,18 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { CARD_TYPES, RELATIONSHIPS } from '@/lib/card-constants'
 
+// 定义生成器类型
+const GENERATORS = [
+  { slug: 'birthday', label: 'Birthday Generator' },
+  { slug: 'anniversary', label: 'Anniversary Generator' },
+  { slug: 'love', label: 'Love Generator' },
+  { slug: 'thankyou', label: 'Thank You Generator' },
+  { slug: 'wedding', label: 'Wedding Generator' },
+  { slug: 'graduation', label: 'Graduation Generator' },
+  { slug: 'baby', label: 'Baby Generator' },
+  { slug: 'congratulations', label: 'Congratulations Generator' },
+]
+
 function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
@@ -23,6 +35,7 @@ function Header() {
   const pathname = usePathname()
   const { data: session, status } = useSession()
   const [isRelationshipMenuOpen, setIsRelationshipMenuOpen] = useState(false)
+  const [isGeneratorMenuOpen, setIsGeneratorMenuOpen] = useState(false)
 
   useEffect(() => {
     const handleResize = () => {
@@ -92,7 +105,37 @@ function Header() {
           {/* Desktop Menu */}
           <div className="hidden md:flex items-center space-x-6">
             <Link href="/" className="text-[#4A4A4A] hover:text-[#FFC0CB] font-serif">Home</Link>
-            <Link href="/cards/" className="text-[#4A4A4A] hover:text-[#FFC0CB] font-serif">Generators</Link>
+
+            {/* Generators Dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger 
+                className="text-[#4A4A4A] hover:text-[#FFC0CB] font-serif flex items-center"
+                onMouseEnter={() => !isMobile && setIsGeneratorMenuOpen(true)}
+                onMouseLeave={() => !isMobile && setIsGeneratorMenuOpen(false)}
+              >
+                Generators <ChevronDown className="ml-1 h-4 w-4" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent 
+                className="w-[280px] p-2"
+                onMouseEnter={() => !isMobile && setIsGeneratorMenuOpen(true)}
+                onMouseLeave={() => !isMobile && setIsGeneratorMenuOpen(false)}
+              >
+                <div className="grid grid-cols-2 gap-1">
+                  <DropdownMenuItem asChild className="col-span-2">
+                    <Link href="/cards/" className="w-full font-medium text-[#4A4A4A]">
+                      All Generators
+                    </Link>
+                  </DropdownMenuItem>
+                  {GENERATORS.map((generator) => (
+                    <DropdownMenuItem key={generator.slug} asChild>
+                      <Link href={`/${generator.slug}/`} className="w-full">
+                        {generator.label}
+                      </Link>
+                    </DropdownMenuItem>
+                  ))}
+                </div>
+              </DropdownMenuContent>
+            </DropdownMenu>
             
             {/* Card Types Dropdown */}
             <DropdownMenu>
@@ -226,10 +269,31 @@ function Header() {
         {isMenuOpen && (
           <div className="mt-4 md:hidden">
             <Link href="/" className="block py-2.5 px-4 w-full text-right text-[#4A4A4A] hover:text-[#FFC0CB] hover:bg-gray-50 font-serif">Home</Link>
-            <Link href="/cards/" className="block py-2.5 px-4 w-full text-right text-[#4A4A4A] hover:text-[#FFC0CB] hover:bg-gray-50 font-serif">Card Generators</Link>
+            
+            {/* Generators Section - Mobile */}
+            <div className="border-y border-purple-100/50 my-2 bg-purple-50/30">
+              <div className="py-2 px-4">
+                <div className="text-right font-serif text-[#4A4A4A] mb-2">Generators</div>
+                <div className="grid grid-cols-2 gap-2">
+                  <Link href="/cards/" 
+                    className="block py-1.5 px-3 text-right text-[#4A4A4A]/80 hover:text-[#FFC0CB] hover:bg-white/50 rounded-md text-sm col-span-2 font-medium">
+                    All Generators
+                  </Link>
+                  {GENERATORS.map((generator) => (
+                    <Link
+                      key={generator.slug}
+                      href={`/${generator.slug}/`}
+                      className="block py-1.5 px-3 text-right text-[#4A4A4A]/80 hover:text-[#FFC0CB] hover:bg-white/50 rounded-md text-sm"
+                    >
+                      {generator.label}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            </div>
             
             {/* Card Types Section - Mobile */}
-            <div className="border-y border-purple-100/50 my-2 bg-purple-50/30">
+            <div className="border-b border-purple-100/50 mb-2 bg-purple-50/30">
               <div className="py-2 px-4">
                 <div className="text-right font-serif text-[#4A4A4A] mb-2">Card Types</div>
                 <div className="grid grid-cols-2 gap-2">

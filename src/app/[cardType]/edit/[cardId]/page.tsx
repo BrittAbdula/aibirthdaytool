@@ -39,7 +39,7 @@ export default function EditCard({ params }: { params: { cardId: string, cardTyp
   const [enableCustomUrl, setEnableCustomUrl] = useState(false)
   const [customUrl, setCustomUrl] = useState('')
   const [isCopied, setIsCopied] = useState(false)
-
+  const [relationship, setRelationship] = useState('')
   useEffect(() => {
     const fetchCardData = async () => {
       setIsLoading(true)
@@ -51,6 +51,7 @@ export default function EditCard({ params }: { params: { cardId: string, cardTyp
           setSvgContent(content)
           setOriginalContent(content)
           setOriginalCardId(data.originalCardId)
+          setRelationship(data.relationship)
           setEditableFields(extractEditableFields(content))
           updateImageSrc(content)
         } else {
@@ -188,6 +189,7 @@ export default function EditCard({ params }: { params: { cardId: string, cardTyp
           editedContent: svgContent,
           spotifyTrackId: enableMusic ? selectedMusic?.id : null,
           customUrl: enableCustomUrl ? customUrl : null,
+          relationship: relationship,
         }),
       })
 

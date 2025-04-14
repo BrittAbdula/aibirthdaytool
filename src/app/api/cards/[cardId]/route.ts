@@ -20,15 +20,28 @@ export async function GET(
           responseContent: true,
           cardId: true,
           cardType: true,
-          id: true
+          id: true,
+          userInputs: true
         }
       })
       if (originalCard) {
+        // 从 userInputs 中提取 relationship 值
+        const userInputs = originalCard.userInputs;
+
+        // 确保 userInputs 是 JSON 格式
+        const parsedInputs = typeof userInputs === "string" ? JSON.parse(userInputs) : userInputs;
+
+        // 查找 relationship 值
+        const relationshipField = parsedInputs.find((field: any) => field.name === "relationship" || field.name === "sender");
+
+        // 如果找到 relationship，返回对应值
+        const relationshipValue = relationshipField?.defaultValue || "Unknown";
         return NextResponse.json({
           id: null,
           originalCardId: originalCard.cardId,
           editedContent: originalCard.responseContent,
           cardType: originalCard.cardType,
+          relationship: relationshipValue
         })
       } else {
         const responseContent = await fetchSvgContent(`https://store.celeprime.com/${cardType}.svg`)

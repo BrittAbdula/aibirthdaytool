@@ -8,7 +8,7 @@ export async function POST(request: Request) {
     const session = await auth()
     const userId = session?.user?.id || null
 
-    const { editedCardId, cardType, originalCardId, editedContent, spotifyTrackId, customUrl } = await request.json()
+    const { editedCardId, cardType, originalCardId, editedContent, spotifyTrackId, customUrl, relationship } = await request.json()
     console.log('-------------:', editedCardId, cardType, originalCardId, editedContent, spotifyTrackId)
 
     const createdAt = new Date()
@@ -25,6 +25,7 @@ export async function POST(request: Request) {
           r2Url,
           userId,
           customUrl,
+          relationship,
         },
       })
       return NextResponse.json({ id: editedCardId, customUrl: customUrl }, { status: 200 })
@@ -46,6 +47,7 @@ export async function POST(request: Request) {
           userId,
           createdAt,
           customUrl,
+          relationship,
         },
       })
       return NextResponse.json({ id: editedCard.id, customUrl: customUrl }, { status: 201 })

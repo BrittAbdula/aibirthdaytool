@@ -12,6 +12,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import CardTypeBubbles from "@/components/CardTypeBubbles";
+import { CookieConsentWrapper } from "@/components/CookieConsentWrapper";
 
 interface FeatureCardProps {
   title: string;
@@ -104,6 +105,9 @@ export default async function Home() {
           </div>
         </div>
       </div>
+      
+      {/* Cookie Consent Component */}
+      <CookieConsentWrapper />
     </main>
   );
 }
@@ -179,95 +183,158 @@ const FeatureCard: React.FC<FeatureCardProps> = ({ title, description, icon, ben
   </div>
 );
 
-
-
 // How To Use Section
 const HowToUse: React.FC = () => (
     <section className="py-16 bg-gradient-to-r from-purple-50 to-pink-50">
       <div className="max-w-6xl mx-auto px-4">
         <h2 className="text-3xl font-serif font-semibold mb-4 text-center text-[#4A4A4A]">
-          Create Your MewTruCard in 3 Simple Steps
+          Create Beautiful Cards with Our AI Greeting Card Generator
         </h2>
         <p className="text-center text-[#666] mb-12 max-w-2xl mx-auto">
-          Express your feelings in minutes with our intuitive card creation process
+          Two simple ways to create your perfect card with our online generator
         </p>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative">
-          {/* Connection lines for desktop */}
-          <div className="hidden md:block absolute top-1/2 left-1/4 right-1/4 h-[2px] bg-pink-200 -z-10" />
-
-          <StepCard
-            number="1"
-            title="Choose MewTruCard Template"
-            description="Select the perfect design for your occasion"
-            icon="📝"
-            details={[
-              "Anniversary MewTruCard",
-              "Love MewTruCard",
-              "Apology MewTruCard",
-              "... MewTruCard",
-              "Customizable templates"
-            ]}
-          />
-          <StepCard
-            number="2"
-            title="Add Personal Touch"
-            description="Make it uniquely yours with custom details"
-            icon="✨"
-            details={[
-              "Recipient's name",
-              "Your relationship",
-              "Special message",
-              "Occasion details"
-            ]}
-          />
-          <StepCard
-            number="3"
-            title="Share & Delight"
-            description="Multiple ways to deliver your card"
-            icon="🎁"
-            details={[
-              "Download as image",
-              "Share via MewTruCard link",
-              "Print ready format",
-              "Social media sharing MewTruCard"
-            ]}
-          />
+        
+        <div className="flex flex-col md:flex-row mb-16">
+          <div className="md:w-1/2 p-4">
+            <div className="text-center mb-8">
+              <h3 className="text-xl font-serif font-semibold mb-2 text-pink-600">
+                Method 1: Create Your Custom Card
+              </h3>
+              <p className="text-[#666] text-sm">
+                Design a unique card from scratch with our AI generator
+              </p>
+            </div>
+            
+            <div className="grid grid-cols-1 gap-6 relative">
+              <div className="absolute top-0 bottom-0 left-10 w-[2px] bg-pink-200 -z-10"></div>
+              
+              <StepCard
+                number="1"
+                title="Select Card Type"
+                description="Choose from our online greeting card templates"
+                icon="📝"
+                details={[
+                  "Birthday card generator",
+                  "Anniversary card templates",
+                  "Love cards generator",
+                  "Holiday greeting cards",
+                  "And many more options"
+                ]}
+              />
+              
+              <StepCard
+                number="2"
+                title="Enter Your Details"
+                description="Tell us about the recipient and occasion"
+                icon="✨"
+                details={[
+                  "Recipient's relationship",
+                  "Special occasion details",
+                  "Your personal message",
+                  "Sentiment and tone preferences"
+                ]}
+              />
+              
+              <StepCard
+                number="3"
+                title="Generate & Share"
+                description="Our AI creates your perfect card"
+                icon="🎁"
+                details={[
+                  "One-click AI generation",
+                  "Edit and personalize",
+                  "Download high-quality image",
+                  "Share via link or social media"
+                ]}
+              />
+            </div>
+          </div>
+          
+          <div className="md:w-1/2 p-4 mt-12 md:mt-0">
+            <div className="text-center mb-8">
+              <h3 className="text-xl font-serif font-semibold mb-2 text-purple-600">
+                Method 2: Choose Ready-Made Card
+              </h3>
+              <p className="text-[#666] text-sm">
+                Select and personalize from our beautiful card gallery
+              </p>
+            </div>
+            
+            <div className="grid grid-cols-1 gap-6 relative">
+              <div className="absolute top-0 bottom-0 left-10 w-[2px] bg-purple-200 -z-10"></div>
+              
+              <StepCard
+                number="1"
+                title="Browse Card Gallery"
+                description="Find the perfect pre-designed card"
+                icon="🔍"
+                details={[
+                  "Curated collection of designs",
+                  "Filter by occasion or style",
+                  "Preview card templates",
+                  "Community favorites"
+                ]}
+              />
+              
+              <StepCard
+                number="2"
+                title="Personalize Your Card"
+                description="Add your personal touch"
+                icon="✏️"
+                details={[
+                  "Customize greeting text",
+                  "Adjust colors if needed",
+                  "Add recipient's name",
+                  "Make it uniquely yours"
+                ]}
+              />
+              
+              <StepCard
+                number="3"
+                title="Download & Share"
+                description="Deliver your heartfelt message"
+                icon="💌"
+                details={[
+                  "Save as high-quality image",
+                  "Share via unique link",
+                  "Send directly to social media",
+                  "Email to your loved ones"
+                ]}
+              />
+            </div>
+          </div>
+        </div>
+        
+        <div className="text-center">
+          <a href="/cards" className="inline-block px-8 py-3 bg-gradient-to-r from-pink-500 to-purple-500 text-white rounded-full hover:opacity-90 transition shadow-md">
+            Try Our AI Greeting Card Generator Now
+          </a>
+          <p className="mt-3 text-sm text-gray-500">No signup required - create your first card in seconds</p>
         </div>
       </div>
     </section>
   );
 
 const StepCard: React.FC<StepCardProps> = ({ number, title, description, details, icon }) => (
-  <Card className="bg-white border border-[#FFC0CB] hover:shadow-lg transition duration-300 relative">
-    <div className="absolute -top-5 left-1/2 transform -translate-x-1/2">
-      <div className="w-10 h-10 rounded-full bg-[#FFC0CB] text-white flex items-center justify-center text-lg font-semibold">
-        {number}
-      </div>
+  <div className="bg-white border border-pink-100 rounded-lg p-5 pl-12 relative shadow-sm hover:shadow-md transition duration-300">
+    <div className="absolute -left-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-gradient-to-r from-pink-400 to-purple-400 text-white flex items-center justify-center text-lg font-semibold">
+      {number}
     </div>
-    <CardHeader className="pt-8">
-      <div className="text-3xl mb-4 text-center">{icon}</div>
-      <CardTitle className="font-serif text-[#4A4A4A] text-center">{title}</CardTitle>
-      <p className="text-[#666] text-center text-sm mt-2">{description}</p>
-    </CardHeader>
-    <CardContent>
-      <ul className="space-y-2 mt-4">
-        {details.map((detail, index) => (
-          <li
-            key={index}
-            className="flex items-center text-sm text-[#666]"
-          >
-            <span className="w-1.5 h-1.5 rounded-full bg-pink-300 mr-2" />
-            {detail}
-          </li>
-        ))}
-      </ul>
-      {number === "3" && (
-        <button className="w-full mt-4 py-2 text-sm text-pink-500 hover:text-pink-600 transition duration-300">
-          <a href="/cards">Create Your MewTru Card Now  →</a>
-        </button>
-      )}
-    </CardContent>
-  </Card>
+    <div className="text-2xl absolute top-5 left-4">{icon}</div>
+    <h4 className="font-serif text-[#4A4A4A] font-medium mb-1">{title}</h4>
+    <p className="text-[#666] text-sm mb-3">{description}</p>
+    <ul className="space-y-1.5">
+      {details.map((detail, index) => (
+        <li
+          key={index}
+          className="flex items-center text-xs text-[#666]"
+        >
+          <span className="w-1.5 h-1.5 rounded-full bg-pink-300 mr-2 flex-shrink-0" />
+          {detail}
+        </li>
+      ))}
+    </ul>
+  </div>
 );
 
 // FAQ Section

@@ -8,13 +8,14 @@ import { Toaster } from "@/components/ui/toaster";
 import { GoogleAnalytics, GoogleTagManager } from '@next/third-parties/google'
 import { SessionProvider } from "next-auth/react"
 import GoogleAdsense from "@/components/GoogleAdsense";
+import Script from "next/script";
 
 const playfair = Playfair_Display({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL || 'https://mewtrucard.com/'),
   title: "MewTruCard - AI Greeting Card Generator",
-  description: "Generate personalized Greeting cards using AI",
+  description: "Generate personalized Greeting cards using AI"
 };
 
 export default function RootLayout({
@@ -27,6 +28,24 @@ export default function RootLayout({
       <head>
         <GoogleAdsense />
         <meta name='impact-site-verification' content='775c0013-984f-4645-82d1-36d3f5e90b39' />
+        
+        {/* Initial consent configuration for GTM/GA */}
+        <Script id="consent-config" strategy="beforeInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('consent', 'default', {
+              'ad_storage': 'denied',
+              'analytics_storage': 'denied',
+              'functionality_storage': 'denied',
+              'personalization_storage': 'denied',
+              'security_storage': 'granted', // Always needed for security purposes
+              'wait_for_update': 500
+            });
+            gtag('set', 'ads_data_redaction', true);
+            gtag('set', 'url_passthrough', true);
+          `}
+        </Script>
       </head>
       <GoogleTagManager gtmId="GTM-57P7BF4D" />
       <body className={`${playfair.className} text-[#4A4A4A]`}>

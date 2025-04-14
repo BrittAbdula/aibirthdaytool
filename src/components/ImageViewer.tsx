@@ -27,52 +27,6 @@ export function ImageViewer({ alt, cardId, cardType, imgUrl, isNewCard, svgConte
   const [shareLink, setShareLink] = useState('')
   const [showPreview, setShowPreview] = useState(false)
 
-  const convertSvgToPng = (): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const img = new Image()
-      img.onload = () => {
-        const canvas = document.createElement('canvas')
-        canvas.width = img.width
-        canvas.height = img.height
-        const ctx = canvas.getContext('2d')
-        ctx?.drawImage(img, 0, 0)
-        resolve(canvas.toDataURL('image/png'))
-      }
-      img.onerror = () => reject('Error loading SVG')
-      img.src = imgUrl || ''
-    })
-  }
-
-
-  const handleDownload = async () => {
-    if (isMobile) {
-      toast({
-        description: "Long-press to save image",
-        duration: 3000,
-      });
-      await recordUserAction(cardId, 'download')
-      return;
-    }
-
-    try {
-      const pngDataUrl = await convertSvgToPng()
-      const link = document.createElement('a')
-      link.href = pngDataUrl
-      link.download = 'mewtrucard.png'
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
-      toast({ description: "Image downloaded" })
-      await recordUserAction(cardId, 'download')
-    } catch (err) {
-      console.error('Download failed: ', err)
-      toast({
-        variant: "destructive",
-        description: "Download failed. Try again.",
-      })
-    }
-  }
-
   const handleEdit = () => {
     router.push(`/${cardType}/edit/${cardId}/`)
   }

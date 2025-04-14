@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 import Image from 'next/image'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { ImageViewer } from '@/components/ImageViewer'
 
 export const metadata: Metadata = {
   title: "My Cards Collection | MewTruCard",
@@ -74,22 +75,15 @@ export default async function MyCardsPage() {
           <TabsContent value="sent">
             <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
               {sentCards.map((card) => (
-                <Link
+                <ImageViewer
                   key={card.id}
-                  href={`/to/${card.id}`}
-                  className="group relative aspect-[3/4] rounded-2xl overflow-hidden bg-white shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
-                >
-                  {card.r2Url && (
-                    <Image
-                      src={card.r2Url}
-                      alt="Card"
-                      fill
-                      className="object-contain p-2 transition-transform duration-300 group-hover:scale-105"
-                      sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, 25vw"
-                    />
-                  )}
-                  <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-opacity duration-300" />
-                </Link>
+                  alt="Card"
+                  cardId={card.id}
+                  cardType={card.cardType || ''}
+                  imgUrl={card.r2Url || ''}
+                  isNewCard={false}
+                  svgContent={card.editedContent || ''}
+                />
               ))}
             </div>
             {sentCards.length === 0 && (
@@ -105,22 +99,14 @@ export default async function MyCardsPage() {
           <TabsContent value="generated">
             <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
               {generatedCards.map((card) => (
-                <Link
+                <ImageViewer 
                   key={card.id}
-                  href={`/${card.cardType}/edit/${card.cardId}`}
-                  className="group relative aspect-[3/4] rounded-2xl overflow-hidden bg-white shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
-                >
-                  {card.r2Url && (
-                    <Image
-                      src={card.r2Url}
-                      alt="Card"
-                      fill
-                      className="object-contain p-2 transition-transform duration-300 group-hover:scale-105"
-                      sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, 25vw"
-                    />
-                  )}
-                  <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-opacity duration-300" />
-                </Link>
+                  alt="Card" 
+                  cardId={card.cardId} 
+                  cardType={card.cardType} 
+                  isNewCard={false}
+                  imgUrl={`data:image/svg+xml;charset=utf-8,${encodeURIComponent(card.responseContent)}`}
+                />
               ))}
             </div>
             {generatedCards.length === 0 && (
