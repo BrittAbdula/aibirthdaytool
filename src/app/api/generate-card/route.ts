@@ -7,7 +7,7 @@ import { prisma } from '@/lib/prisma';
 export const maxDuration = 60; // 增加到 60 秒
 
 // 使用边缘运行时，提高性能
-export const runtime = 'edge';
+// export const runtime = 'edge';
 export const dynamic = 'force-dynamic';
 
 export async function POST(request: Request) {
