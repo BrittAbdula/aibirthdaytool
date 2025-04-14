@@ -3,7 +3,11 @@ import { generateCardContent } from '@/lib/gpt';
 import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
 
-export const maxDuration = 30; // This function can run for a maximum of 30 seconds
+// 增加超时限制到最大值
+export const maxDuration = 60; // 增加到 60 秒
+
+// 使用边缘运行时，提高性能
+export const runtime = 'edge';
 export const dynamic = 'force-dynamic';
 
 export async function POST(request: Request) {
@@ -15,46 +19,6 @@ export async function POST(request: Request) {
     }
 
     const userId = session.user.id;
-    // const userId = 'cm56ic66y000110jijyw2ir8r';
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    // Get or create today's usage record
-    let usage = await prisma.apiUsage.findUnique({
-      where: {
-        userId_date: {
-          userId,
-          date: today,
-        },
-      },
-    });
-
-    if (!usage) {
-      usage = await prisma.apiUsage.create({
-        data: {
-          userId,
-          date: today,
-          count: 0,
-        },
-      });
-    }
-
-    // Get user's plan type
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: { plan: true },
-    });
-
-    // Check usage limits
-    const planType = user?.plan || 'FREE';
-    const dailyLimit = planType === 'FREE' ? 10 : Infinity;
-    
-    if (usage.count >= dailyLimit) {
-      return NextResponse.json({ 
-        error: "You've reached your daily limit. Please try again tomorrow or visit our Card Gallery." 
-      }, { status: 429 });
-    }
-
     const requestData = await request.json();
     const {
       cardType,
@@ -71,10 +35,54 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Missing required field: cardType' }, { status: 400 });
     }
 
-    // Check if this is a modification request
+    // 检查是否是修改请求
     const isModification = modificationFeedback && previousCardId;
 
-    // Combine all fields into a single object
+    // 优化：并行查询用户权限和使用情况
+    const [user, usage] = await Promise.all([
+      prisma.user.findUnique({
+        where: { id: userId },
+        select: { plan: true },
+      }),
+      prisma.apiUsage.findUnique({
+        where: {
+          userId_date: {
+            userId,
+            date: new Date(new Date().setHours(0, 0, 0, 0)),
+          },
+        },
+      })
+    ]);
+
+    // 获取用户计划类型
+    const planType = user?.plan || 'FREE';
+    const dailyLimit = planType === 'FREE' ? 10 : Infinity;
+    
+    // 处理用户使用情况
+    let currentUsage = usage?.count || 0;
+    if (!usage) {
+      // 创建新的使用记录 - 这将在生成后异步完成
+      // 使用 catch 语句避免因数据库原因阻塞主流程
+      Promise.resolve().then(async () => {
+        try {
+          await prisma.apiUsage.create({
+            data: {
+              userId,
+              date: new Date(new Date().setHours(0, 0, 0, 0)),
+              count: 1, 
+            },
+          });
+        } catch (error) {
+          console.error('Error creating usage record:', error);
+        }
+      });
+    } else if (currentUsage >= dailyLimit) {
+      return NextResponse.json({ 
+        error: "You've reached your daily limit. Please try again tomorrow or visit our Card Gallery." 
+      }, { status: 429 });
+    }
+
+    // 组合所有字段到单个对象
     const cardData = {
       userId,
       cardType: cardType,
@@ -89,29 +97,38 @@ export async function POST(request: Request) {
       ...otherFields
     };
 
+    // 生成卡片内容
     const { r2Url, cardId, svgContent } = await generateCardContent(cardData);
 
-    // Increment usage count for new generations but not for modifications
-    // to encourage users to refine their cards
-    if (!isModification) {
-      await prisma.apiUsage.update({
-        where: {
-          userId_date: {
-            userId,
-            date: today,
-          },
-        },
-        data: {
-          count: {
-            increment: 1,
-          },
-        },
+    // 增加使用计数 - 异步处理以避免阻塞响应
+    if (usage) {
+      Promise.resolve().then(async () => {
+        try {
+          await prisma.apiUsage.update({
+            where: {
+              userId_date: {
+                userId,
+                date: new Date(new Date().setHours(0, 0, 0, 0)),
+              },
+            },
+            data: {
+              count: {
+                increment: 1,
+              },
+            },
+          });
+        } catch (error) {
+          console.error('Error updating usage count:', error);
+        }
       });
     }
 
     return NextResponse.json({ r2Url, cardId, svgContent });
   } catch (error) {
     console.error('Error generating card:', error);
-    return NextResponse.json({ error: 'Failed to generate card' }, { status: 500 });
+    return NextResponse.json({ 
+      error: 'Failed to generate card',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    }, { status: 500 });
   }
 }
