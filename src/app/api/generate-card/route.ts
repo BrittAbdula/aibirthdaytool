@@ -59,7 +59,7 @@ export async function POST(request: Request) {
     const {
       cardType,
       recipientName,
-      relationship,
+      sender,
       senderName,
       message,
       modificationFeedback,
@@ -79,7 +79,7 @@ export async function POST(request: Request) {
       userId,
       cardType: cardType,
       recipientName,
-      relationship,
+      sender,
       senderName,
       message,
       ...(isModification && { 
