@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "HTTP_PROXY=http://127.0.0.1:4780 HTTPS_PROXY=http://127.0.0.1:4780 next dev",
     "build": "pnpm run prisma:generate && next build",
     "start": "next start",
     "lint": "next lint",
@@ -40,6 +40,7 @@
     "nanoid": "^5.0.7",
     "next": "14.2.7",
     "next-auth": "5.0.0-beta.25",
+    "openai": "^4.95.1",
     "react": "^18",
     "react-day-picker": "^8.10.1",
     "react-device-detect": "^2.2.3",

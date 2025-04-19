@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { generateCardContent } from '@/lib/gpt';
 import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
+import OpenAI from 'openai';
 
 // 增加超时限制到最大值
 export const maxDuration = 60; // 增加到 60 秒
@@ -9,6 +10,49 @@ export const maxDuration = 60; // 增加到 60 秒
 // 使用边缘运行时，提高性能
 // export const runtime = 'edge';
 export const dynamic = 'force-dynamic';
+
+// 创建 X.AI 客户端实例
+const openai = new OpenAI({
+  apiKey: process.env.X_AI_API_KEY,
+  baseURL: "https://api.x.ai/v1",
+});
+
+// 使用 Grok 生成图像
+async function generateGrokImage(promptData: Record<string, any>) {
+  try {
+    // 构建提示词
+    const fields = Object.entries(promptData)
+      .filter(([key, value]) => 
+        value && 
+        !['userId', 'cardType', 'size', 'generationMethod', 'previousCardId', 'modificationFeedback'].includes(key)
+      )
+      .map(([key, value]) => `${key}: ${value}`)
+      .join(", ");
+    
+    const style = promptData.style || 'modern';
+    const cardType = promptData.cardType || 'greeting';
+
+    const prompt = `Generate a beautiful ${cardType} card with the following details: ${fields}. Style: ${style}. Make it look professional and artistic with appropriate text integration.`;
+
+    console.log('Prompt:', prompt);
+    // 调用 X.AI API
+    const response = await openai.images.generate({
+      model: "grok-2-image",
+      prompt,
+    });
+    console.log('Response:', response);
+
+    if (!response.data || !response.data[0]?.url) {
+      console.log('Failed to generate image with Grok AI');
+      throw new Error('Failed to generate image with Grok AI');
+    }
+
+    return response.data[0].url;
+  } catch (error) {
+    console.error('Error generating image with Grok:', error);
+    throw error;
+  }
+}
 
 export async function POST(request: Request) {
   try {
@@ -28,6 +72,7 @@ export async function POST(request: Request) {
       message,
       modificationFeedback,
       previousCardId,
+      generationMethod = 'standard',
       ...otherFields
     } = requestData;
 
@@ -97,8 +142,38 @@ export async function POST(request: Request) {
       ...otherFields
     };
 
-    // 生成卡片内容
-    const { r2Url, cardId, svgContent } = await generateCardContent(cardData);
+    let r2Url = '';
+    let cardId = '';
+    let svgContent = '';
+
+    // 根据生成方法生成卡片内容
+    if (generationMethod === 'grok') {
+      // 使用 Grok 生成图像
+      r2Url = await generateGrokImage(cardData);
+      
+      // 保存生成记录到数据库
+      const apiLog = await prisma.apiLog.create({
+        data: {
+          cardId: `grok_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+          cardType,
+          userInputs: cardData,
+          promptVersion: 'grok-2-image',
+          responseContent: '',  // Grok 不生成 SVG 内容
+          tokensUsed: 0,        // 暂不计算 token
+          duration: 0,          // 暂不计算时间
+          r2Url: r2Url,
+          userId,
+        },
+      });
+      
+      cardId = apiLog.cardId;
+    } else {
+      // 使用标准方法生成卡片
+      const result = await generateCardContent(cardData);
+      r2Url = result.r2Url;
+      cardId = result.cardId;
+      svgContent = result.svgContent;
+    }
 
     // 增加使用计数 - 异步处理以避免阻塞响应
     if (usage) {

@@ -15,9 +15,10 @@ import { ImageViewer } from '@/components/ImageViewer'
 import { cn, fetchSvgContent } from '@/lib/utils'
 import { CardType, getCardConfig, getAllCardTypes, CardConfig } from '@/lib/card-config'
 import { useSession, signIn } from "next-auth/react"
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog"
 import { Loader2 } from 'lucide-react'
 import { CARD_SIZES } from '@/lib/card-config'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 const FlickeringGrid = () => {
   return (
@@ -199,6 +200,7 @@ export default function CardGenerator({
   const [usageCount, setUsageCount] = useState<number>(0)
   const [showAuthDialog, setShowAuthDialog] = useState(false)
   const [showLimitDialog, setShowLimitDialog] = useState(false)
+  const [showGenerationDialog, setShowGenerationDialog] = useState(false)
   const [currentCardType, setCurrentCardType] = useState<CardType>(wishCardType)
   const [formData, setFormData] = useState<Record<string, any>>({})
   const [imgUrl, setImgUrl] = useState<string>(`https://store.celeprime.com/${wishCardType}.svg`)
@@ -218,6 +220,7 @@ export default function CardGenerator({
   const [feedbackMode, setFeedbackMode] = useState<boolean>(false)
   const [previousFormData, setPreviousFormData] = useState<Record<string, any>>({})
   const [feedbackHistory, setFeedbackHistory] = useState<string[]>([])
+  const [generationMethod, setGenerationMethod] = useState<'standard' | 'grok'>('standard')
 
   useEffect(() => {
     setCurrentCardType(wishCardType)
@@ -270,7 +273,14 @@ export default function CardGenerator({
       return
     }
 
+    // 显示生成方式选择对话框
+    setShowGenerationDialog(true)
+  }
+
+  const generateWithMethod = async (method: 'standard' | 'grok') => {
     try {
+      setGenerationMethod(method)
+      setShowGenerationDialog(false)
       setIsLoading(true)
       setProgress(0)
       setError(null)
@@ -282,6 +292,7 @@ export default function CardGenerator({
       const payload: Record<string, any> = {
         cardType: currentCardType,
         size: selectedSize,
+        generationMethod: method, // 添加生成方式参数
         ...formData
       }
 
@@ -313,14 +324,22 @@ export default function CardGenerator({
         throw new Error(data.error || 'Failed to generate card')
       }
 
-      if (!data.svgContent) {
-        throw new Error('Failed to get SVG content')
+      // 设置返回的图像URL和SVG内容
+      if (method === 'grok') {
+        // Grok模式只返回r2Url，没有SVG内容
+        setImgUrl(data.r2Url)
+        setSvgContent('')
+      } else {
+        // 标准模式返回SVG内容
+        if (!data.svgContent) {
+          throw new Error('Failed to get SVG content')
+        }
+        // Create a data URL from the SVG content
+        const svgDataUrl = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(data.svgContent)}`
+        setImgUrl(svgDataUrl)
+        setSvgContent(data.svgContent)
       }
-
-      // Create a data URL from the SVG content
-      const svgDataUrl = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(data.svgContent)}`
-      setImgUrl(svgDataUrl)
-      setSvgContent(data.svgContent)
+      
       setCardId(data.cardId)
       setSubmited(true)
       
@@ -649,6 +668,76 @@ export default function CardGenerator({
               Browse Card Templates
             </Button>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* 生成方式选择对话框 */}
+      <Dialog open={showGenerationDialog} onOpenChange={setShowGenerationDialog}>
+        <DialogContent className="border border-[#FFC0CB] shadow-lg sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-semibold text-[#4A4A4A]">Choose Generation Method</DialogTitle>
+            <DialogDescription className="text-gray-600 mt-2">
+              Select how you would like to generate your card
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="mt-4">
+            <Tabs defaultValue="standard" className="w-full">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="standard">Standard AI</TabsTrigger>
+                <TabsTrigger value="grok">Grok Image AI</TabsTrigger>
+              </TabsList>
+              <TabsContent value="standard" className="mt-4 space-y-4">
+                <div className="bg-[#FFF5F6] p-4 rounded-lg border border-[#FFC0CB]">
+                  <h3 className="font-medium text-[#4A4A4A]">Standard Generation</h3>
+                  <p className="text-sm text-gray-600 mt-1">
+                    Our classic AI that creates beautiful vector-based greeting cards with text and design elements.
+                  </p>
+                  <ul className="list-disc list-inside mt-2 space-y-1 text-xs text-gray-600">
+                    <li>Vector-based SVG format</li>
+                    <li>Structured layout with text</li>
+                    <li>Supports all modification options</li>
+                  </ul>
+                </div>
+                <Button 
+                  onClick={() => generateWithMethod('standard')}
+                  className="w-full bg-[#FFC0CB] text-[#4A4A4A] hover:bg-[#FFD1DC]"
+                >
+                  Generate Standard Card
+                </Button>
+              </TabsContent>
+              <TabsContent value="grok" className="mt-4 space-y-4">
+                <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
+                  <h3 className="font-medium text-[#4A4A4A]">Grok Image Generation (Beta)</h3>
+                  <p className="text-sm text-gray-600 mt-1">
+                    Use X.AI&apos;s Grok-2 model to create photorealistic greeting card images with your specified themes.
+                  </p>
+                  <ul className="list-disc list-inside mt-2 space-y-1 text-xs text-gray-600">
+                    <li>Highly detailed, artistic images</li>
+                    <li>Photorealistic quality</li>
+                    <li>Unique artistic interpretations</li>
+                    <li>Limited text placement control</li>
+                  </ul>
+                </div>
+                <Button 
+                  onClick={() => generateWithMethod('grok')}
+                  className="w-full bg-purple-500 text-white hover:bg-purple-600"
+                >
+                  Generate With Grok AI
+                </Button>
+              </TabsContent>
+            </Tabs>
+          </div>
+          
+          <DialogFooter className="mt-4">
+            <Button
+              variant="outline"
+              onClick={() => setShowGenerationDialog(false)}
+              className="w-full border-gray-300 text-gray-700"
+            >
+              Cancel
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </>
