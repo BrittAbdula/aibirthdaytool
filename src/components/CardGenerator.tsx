@@ -218,6 +218,16 @@ export default function CardGenerator({
   const [feedbackMode, setFeedbackMode] = useState<boolean>(false)
   const [previousFormData, setPreviousFormData] = useState<Record<string, any>>({})
   const [feedbackHistory, setFeedbackHistory] = useState<string[]>([])
+  
+  // Add a ref to track if we're waiting for authentication
+  const pendingAuthRef = useRef<boolean>(false)
+  // Add a state to store form data before authentication
+  const [savedFormData, setSavedFormData] = useState<{
+    formData: Record<string, any>,
+    customValues: Record<string, string>,
+    selectedSize: string,
+    modificationFeedback: string
+  } | null>(null)
 
   useEffect(() => {
     setCurrentCardType(wishCardType)
@@ -239,6 +249,29 @@ export default function CardGenerator({
   useEffect(() => {
     fetchSvgContent(sampleCard)
   }, [])
+
+  // Add effect to watch for auth status changes
+  useEffect(() => {
+    // If we were waiting for auth and now the user is authenticated
+    if (pendingAuthRef.current && session && savedFormData) {
+      pendingAuthRef.current = false;
+      // Restore saved form data
+      setFormData(savedFormData.formData);
+      setCustomValues(savedFormData.customValues);
+      setSelectedSize(savedFormData.selectedSize);
+      if (savedFormData.modificationFeedback) {
+        setModificationFeedback(savedFormData.modificationFeedback);
+      }
+      
+      // Close the auth dialog
+      setShowAuthDialog(false);
+      
+      // Optionally, trigger card generation automatically
+      setTimeout(() => {
+        handleGenerateCard();
+      }, 500);
+    }
+  }, [session, savedFormData]);
 
   useEffect(() => {
     if (isLoading) {
@@ -266,8 +299,16 @@ export default function CardGenerator({
 
   const handleGenerateCard = async () => {
     if (!session) {
-      setShowAuthDialog(true)
-      return
+      // Save current form data before authentication
+      setSavedFormData({
+        formData: {...formData},
+        customValues: {...customValues},
+        selectedSize,
+        modificationFeedback
+      });
+      pendingAuthRef.current = true;
+      setShowAuthDialog(true);
+      return;
     }
 
     try {
@@ -307,8 +348,16 @@ export default function CardGenerator({
           return
         }
         if (response.status === 401) {
-          setShowAuthDialog(true)
-          return
+          // Save form data again in case session expired
+          setSavedFormData({
+            formData: {...formData},
+            customValues: {...customValues},
+            selectedSize,
+            modificationFeedback
+          });
+          pendingAuthRef.current = true;
+          setShowAuthDialog(true);
+          return;
         }
         throw new Error(data.error || 'Failed to generate card')
       }
