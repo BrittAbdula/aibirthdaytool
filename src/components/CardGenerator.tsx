@@ -543,15 +543,140 @@ export default function CardGenerator({
 
       {/* Feedback Section - Add after the main card generation UI */}
       {submited && feedbackMode && (
-        <div className="mt-8 max-w-3xl mx-auto p-6 bg-white rounded-lg shadow-md border border-[#FFC0CB]">
-          <h3 className="text-xl font-semibold mb-4 text-[#4A4A4A]">Not quite right? Let us improve it!</h3>
+        <div className="mt-12 max-w-3xl mx-auto relative">
+          {/* Magical shimmering outer border with stars */}
+          <div className="absolute -inset-3 bg-gradient-to-r from-[#FFB6C1] via-[#b19bff] to-[#87CEFA] rounded-xl opacity-75 blur-md"
+               style={{
+                 backgroundSize: "200% 200%",
+                 animation: "gradient-x 6s ease infinite"
+               }}
+          />
           
+          {/* Animated stars around the border */}
+          <div className="absolute -top-4 -left-4 w-8 h-8 text-2xl animate-spin-slow">✨</div>
+          <div className="absolute -bottom-4 -right-4 w-8 h-8 text-2xl animate-spin-slow-reverse">✨</div>
+          <div className="absolute -top-4 -right-4 w-8 h-8 text-2xl animate-bounce-gentle">⭐</div>
+          <div className="absolute -bottom-4 -left-4 w-8 h-8 text-2xl animate-bounce-gentle">⭐</div>
+          
+          {/* Sparkle border points */}
+          {[...Array(20)].map((_, i) => (
+            <div 
+              key={i} 
+              className="absolute w-2 h-2 rounded-full bg-white animate-twinkle-star"
+              style={{
+                top: `${Math.sin(i / 3.14) * 100 + 50}%`,
+                left: `${Math.cos(i / 3.14) * 100 + 50}%`,
+                transformOrigin: 'center',
+                animationDelay: `${i * 0.2}s`,
+                boxShadow: '0 0 5px 2px rgba(255, 255, 255, 0.7)'
+              }}
+            />
+          ))}
+          
+          {/* Main content container */}
+          <div className="p-6 bg-white rounded-lg shadow-lg relative z-10 border-2 border-transparent">
+            {/* Inner glow effect */}
+            <div className="absolute inset-0 rounded-lg overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-r from-[#FFB6C1]/10 via-[#b19bff]/10 to-[#87CEFA]/10"
+                   style={{ 
+                     backgroundSize: "200% 200%",
+                     animation: "gradient-x-reverse 8s ease infinite"
+                   }}
+              />
+            </div>
+            
+            {/* Floating decorative elements */}
+            <div className="absolute top-8 right-8 w-6 h-6 rounded-full bg-[#FFB6C1] opacity-40 animate-float-slow" 
+                 style={{ animationDelay: "0s" }} />
+            <div className="absolute bottom-16 left-12 w-4 h-4 rounded-full bg-[#b19bff] opacity-40 animate-float-slow" 
+                 style={{ animationDelay: "1.5s" }} />
+            <div className="absolute top-1/2 right-16 w-5 h-5 rounded-full bg-[#87CEFA] opacity-40 animate-float-slow" 
+                 style={{ animationDelay: "0.8s" }} />
+            <div className="absolute bottom-12 right-24 w-3 h-3 rounded-full bg-[#FFB6C1] opacity-40 animate-float-slow" 
+                 style={{ animationDelay: "2.2s" }} />
+            
+            {/* Animated title */}
+            <h3 className="text-xl font-semibold mb-6 text-transparent bg-clip-text bg-gradient-to-br from-[#FF6B94] via-[#8B5CF6] to-[#3B82F6] animate-text-shimmer flex items-center justify-center relative">
+              <span className="mr-2 inline-block animate-bounce-gentle" style={{ animationDelay: "0s" }}>✨</span>
+              <span className="inline-block transition-all hover:scale-105">Not</span>
+              <span className="mx-1 inline-block transition-all hover:scale-105">quite</span>
+              <span className="mx-1 inline-block transition-all hover:scale-105">right?</span>
+              <span className="mx-1 inline-block transition-all hover:scale-105">Let</span>
+              <span className="mx-1 inline-block transition-all hover:scale-105">us</span>
+              <span className="mx-1 inline-block transition-all hover:scale-105">improve</span>
+              <span className="mx-1 inline-block transition-all hover:scale-105">it!</span>
+              <span className="ml-2 inline-block animate-bounce-gentle" style={{ animationDelay: "0.5s" }}>✨</span>
+            </h3>
+            
+            {/* Custom styles for animations */}
+            <style jsx>{`
+              @keyframes gradient-x {
+                0%, 100% { background-position: 0% 50%; }
+                50% { background-position: 100% 50%; }
+              }
+              @keyframes gradient-x-reverse {
+                0%, 100% { background-position: 100% 50%; }
+                50% { background-position: 0% 50%; }
+              }
+              @keyframes float-slow {
+                0%, 100% { transform: translateY(0) translateX(0); }
+                50% { transform: translateY(-10px) translateX(5px); }
+              }
+              @keyframes bounce-gentle {
+                0%, 100% { transform: translateY(0); }
+                50% { transform: translateY(-5px); }
+              }
+              @keyframes text-shimmer {
+                0%, 100% { background-position: 0% 50%; }
+                50% { background-position: 100% 50%; }
+              }
+              @keyframes spin-slow {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+              }
+              @keyframes spin-slow-reverse {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(-360deg); }
+              }
+              @keyframes twinkle-star {
+                0%, 100% { opacity: 0.2; transform: scale(0.8); }
+                50% { opacity: 1; transform: scale(1.2); }
+              }
+              .animate-text-shimmer {
+                background-size: 200% auto;
+                animation: text-shimmer 4s ease infinite;
+              }
+              .animate-bounce-gentle {
+                animation: bounce-gentle 2s infinite;
+              }
+              .animate-float-slow {
+                animation: float-slow 6s ease-in-out infinite;
+              }
+              .animate-spin-slow {
+                animation: spin-slow 12s linear infinite;
+              }
+              .animate-spin-slow-reverse {
+                animation: spin-slow-reverse 10s linear infinite;
+              }
+              .animate-twinkle-star {
+                animation: twinkle-star 3s ease-in-out infinite;
+              }
+            `}</style>
+            
+            {/* Previous feedback with enhanced styling */}
           {feedbackHistory.length > 0 && (
-            <div className="mb-4">
-              <h4 className="text-sm font-medium text-gray-500 mb-2">Previous Feedback:</h4>
+              <div className="mb-5 relative z-10">
+                <h4 className="text-sm font-medium text-gray-500 mb-2 flex items-center">
+                  <span className="mr-2 w-4 h-4 bg-gradient-to-r from-[#FFB6C1] to-[#b19bff] rounded-full inline-block"></span>
+                  Previous Feedback:
+                </h4>
               <div className="space-y-2">
                 {feedbackHistory.map((feedback, index) => (
-                  <div key={index} className="p-3 bg-gray-50 rounded-md text-sm text-gray-600 italic">
+                    <div 
+                      key={index} 
+                      className="p-3 rounded-md text-sm text-gray-600 italic border border-[#FFB6C1]/30 shadow-sm bg-gradient-to-r from-white to-gray-50 hover:from-gray-50 hover:to-white transition-all duration-300"
+                      style={{ animationDelay: `${index * 0.2}s` }}
+                    >
                     &ldquo;{feedback}&rdquo;
                   </div>
                 ))}
@@ -559,30 +684,43 @@ export default function CardGenerator({
             </div>
           )}
           
+            {/* Enhanced textarea with gradient focus */}
           <Textarea
             value={modificationFeedback}
             onChange={(e) => setModificationFeedback(e.target.value)}
             placeholder="Describe what you'd like to change... (e.g., 'Make the background more colorful', 'Change the font style', 'Add more decorations')"
-            className="w-full border-2 border-[#FFC0CB] rounded-md focus:ring-[#FFC0CB] focus:border-[#FFC0CB] mb-4"
+              className="w-full border-2 border-[#FFC0CB] rounded-md focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[#b19bff] focus:shadow-[0_0_0_1px_rgba(177,155,255,0.4),0_0_0_4px_rgba(177,155,255,0.1)] transition-all duration-300 mb-4 relative z-10"
             rows={3}
           />
           
-          <div className="flex space-x-4">
+            {/* Enhanced buttons with animation */}
+            <div className="flex space-x-4 relative z-10">
             <Button 
               onClick={handleGenerateCard} 
               disabled={isLoading || !modificationFeedback.trim()} 
-              className="bg-[#FFC0CB] text-[#4A4A4A] hover:bg-[#FFD1DC] transition-colors flex-1"
-            >
-              {isLoading ? 'Updating...' : 'Update Card'}
+                className="bg-gradient-to-r from-[#FFC0CB] to-[#FFB6C1] hover:from-[#FFD1DC] hover:to-[#FFC0CB] text-[#4A4A4A] transition-all duration-300 flex-1 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+              >
+                {isLoading ? (
+                  <>
+                    <span className="animate-pulse mr-2">✨</span>
+                    Updating...
+                  </>
+                ) : (
+                  <>
+                    <span className="mr-2">✨</span>
+                    Update Card
+                  </>
+                )}
             </Button>
             
             <Button 
               onClick={handleResetFeedback}
               variant="outline" 
-              className="border-[#FFC0CB] text-[#4A4A4A] hover:bg-[#FFF5F6]"
+                className="border-[#FFC0CB] text-[#4A4A4A] hover:bg-[#FFF5F6] transition-all duration-300 shadow-sm hover:shadow-md transform hover:-translate-y-0.5"
             >
               Start Over
             </Button>
+            </div>
           </div>
         </div>
       )}
