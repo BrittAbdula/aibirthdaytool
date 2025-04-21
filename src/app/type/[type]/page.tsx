@@ -3,11 +3,11 @@ import { Suspense } from 'react'
 import { CardType } from '@/lib/card-config'
 import TypeGalleryContent from './TypeGalleryContent'
 import { ScrollToTop } from '@/components/ScrollToTop'
-import { getRecentCardsServer } from '@/lib/cards'
+import { getRecentCardsServer, getPopularCardsServer, TabType } from '@/lib/cards'
 
 interface Props {
   params: { type: CardType }
-  searchParams: { relationship?: string }
+  searchParams: { relationship?: string; tab?: string }
 }
 
 export const revalidate = 300 // 每5分钟重新验证页面
@@ -49,7 +49,15 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function TypePage({ params, searchParams }: Props) {
   const type = decodeURIComponent(params.type) as CardType
   const relationship = searchParams.relationship || null
-  const initialCardsData = await getRecentCardsServer(1, 12, type, relationship)
+  const activeTab = (searchParams.tab as TabType) || 'recent'
+  
+  // Fetch cards based on active tab
+  let initialCardsData;
+  if (activeTab === 'popular') {
+    initialCardsData = await getPopularCardsServer(1, 12, type, relationship)
+  } else {
+    initialCardsData = await getRecentCardsServer(1, 12, type, relationship)
+  }
 
   return (
     <article className="min-h-screen bg-gradient-to-br from-white via-purple-50 to-pink-50">
@@ -84,6 +92,7 @@ export default async function TypePage({ params, searchParams }: Props) {
               params={params} 
               initialCardsData={initialCardsData}
               defaultRelationship={relationship}
+              activeTab={activeTab}
             />
           </Suspense>
         </section>

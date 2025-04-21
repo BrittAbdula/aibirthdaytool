@@ -194,29 +194,6 @@ model Subscription {
   user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
-model PlanFeature {
-  id          String   @id @default(cuid())
-  name        String
-  description String
-  featureKey  String   @unique
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  planLimits  PlanLimit[]
-}
-
-model PlanLimit {
-  id            String      @id @default(cuid())
-  planType      PlanType
-  featureId     String
-  feature       PlanFeature @relation(fields: [featureId], references: [id])
-  limitValue    Int         // Numeric limit value
-  limitType     String      // e.g., "daily", "monthly", "total"
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
-
-  @@unique([planType, featureId])
-}
-
 model BonusCredit {
   id          String   @id @default(cuid())
   userId      String

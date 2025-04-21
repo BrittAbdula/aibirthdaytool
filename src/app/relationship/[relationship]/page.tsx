@@ -2,12 +2,12 @@ import { Metadata } from 'next'
 import { Suspense } from 'react'
 import RelationshipGalleryContent from './RelationshipGalleryContent'
 import { ScrollToTop } from '@/components/ScrollToTop'
-import { getRecentCardsServer } from '@/lib/cards'
+import { getRecentCardsServer, getPopularCardsServer, TabType } from '@/lib/cards'
 import { CardType } from '@/lib/card-config'
 
 interface Props {
   params: { relationship: string }
-  searchParams: { type?: CardType }
+  searchParams: { type?: CardType; tab?: string }
 }
 
 export const revalidate = 300 // 每5分钟重新验证页面
@@ -51,7 +51,15 @@ export default async function RelationshipPage({ params, searchParams }: Props) 
   const relationship = decodeURIComponent(params.relationship)
     .charAt(0).toUpperCase() + decodeURIComponent(params.relationship).slice(1)
   const cardType = searchParams.type || null
-  const initialCardsData = await getRecentCardsServer(1, 12, cardType, relationship)
+  const activeTab = (searchParams.tab as TabType) || 'recent'
+  
+  // Fetch cards based on active tab
+  let initialCardsData;
+  if (activeTab === 'popular') {
+    initialCardsData = await getPopularCardsServer(1, 12, cardType, relationship)
+  } else {
+    initialCardsData = await getRecentCardsServer(1, 12, cardType, relationship)
+  }
 
   return (
     <article className="min-h-screen bg-gradient-to-br from-white via-purple-50 to-pink-50">
@@ -86,6 +94,7 @@ export default async function RelationshipPage({ params, searchParams }: Props) 
               params={params} 
               initialCardsData={initialCardsData}
               defaultType={cardType}
+              activeTab={activeTab}
             />
           </Suspense>
         </section>

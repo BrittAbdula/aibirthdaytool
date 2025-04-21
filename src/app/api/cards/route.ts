@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { getRecentCardsServer } from '@/lib/cards'
+import { getRecentCardsServer, getPopularCardsServer, TabType } from '@/lib/cards'
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
@@ -7,9 +7,17 @@ export async function GET(request: Request) {
   const pageSize = parseInt(searchParams.get('pageSize') || '12', 10)
   const wishCardType = searchParams.get('wishCardType')
   const relationship = searchParams.get('relationship')
+  const tab = (searchParams.get('tab') as TabType) || 'recent'
 
   try {
-    const cardsData = await getRecentCardsServer(page, pageSize, wishCardType, relationship)
+    let cardsData;
+    
+    if (tab === 'popular') {
+      cardsData = await getPopularCardsServer(page, pageSize, wishCardType, relationship)
+    } else {
+      cardsData = await getRecentCardsServer(page, pageSize, wishCardType, relationship)
+    }
+    
     return NextResponse.json(cardsData)
   } catch (error) {
     console.error('Error fetching cards:', error)

@@ -1,8 +1,9 @@
 import { Suspense } from 'react'
 import { Metadata } from 'next'
-import { getRecentCardsServer } from '@/lib/cards'
+import { getRecentCardsServer, getPopularCardsServer } from '@/lib/cards'
 import CardGalleryContent from './CardGalleryContent'
 import { CardType } from '@/lib/card-config'
+import { TabType } from '@/lib/cards'
 
 export const metadata: Metadata = {
   title: 'AI Card Gallery | MewtruCard - Personalized Digital Cards',
@@ -35,18 +36,32 @@ export const metadata: Metadata = {
 export const revalidate = 300 // 每5分钟重新验证页面
 
 interface PageProps {
-  searchParams: { type?: CardType }
+  searchParams: { 
+    type?: CardType;
+    tab?: TabType;
+  }
 }
 
 // Server Component
 export default async function CardGalleryPage({ searchParams }: PageProps) {
   const defaultType = searchParams.type || null
-  const initialCardsData = await getRecentCardsServer(1, 12, defaultType)
+  const activeTab = (searchParams.tab as TabType) || 'recent'
+  
+  // Fetch cards based on active tab
+  const recentCardsData = activeTab === 'recent' 
+    ? await getRecentCardsServer(1, 12, defaultType)
+    : null
+    
+  const popularCardsData = activeTab === 'popular'
+    ? await getPopularCardsServer(1, 12, defaultType)
+    : null
+    
+  const initialCardsData = activeTab === 'recent' ? recentCardsData : popularCardsData
   
   return (
     <article className="min-h-screen bg-gradient-to-br from-white via-purple-50 to-pink-50">
       <div className="container mx-auto px-4 py-8">
-        <header className="text-center mb-12">
+        <header className="text-center">
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-serif font-bold mb-4 tracking-tight">
             <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-pink-600">
               Card Templates
@@ -72,7 +87,11 @@ export default async function CardGalleryPage({ searchParams }: PageProps) {
               </div>
             }
           >
-            <CardGalleryContent initialCardsData={initialCardsData} defaultType={defaultType} />
+            <CardGalleryContent 
+              initialCardsData={initialCardsData!} 
+              defaultType={defaultType} 
+              activeTab={activeTab} 
+            />
           </Suspense>
         </section>
       </div>

@@ -74,7 +74,7 @@ export function updateSvgContent(svgContent: string, updatedFields: Record<strin
 }
 
 
-export async function fetchSvgContent(r2Url: string | null): Promise<string> {
+export async function fetchSvgContent(r2Url: string | null): Promise<string | null> {
   const defaultSvg = '/card/goodluck.svg'
   try {
     // console.log('r2Url----------', r2Url)
@@ -84,7 +84,7 @@ export async function fetchSvgContent(r2Url: string | null): Promise<string> {
     return svgContent
   } catch (error) {
     console.error('Error fetching SVG Image:', error)
-    return '<svg>error</svg>'
+    return null
   }
 }
 

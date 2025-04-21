@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { ImageViewer } from '../../components/ImageViewer'
-import { Card } from '@/lib/cards'
+import { Card, TabType } from '@/lib/cards'
 import { CardType } from '@/lib/card-config'
 
 interface CardGalleryProps {
@@ -11,11 +11,12 @@ interface CardGalleryProps {
     totalPages: number;
   };
   wishCardType: CardType | null;
+  tabType: TabType;
 }
 
 const CARDS_PER_PAGE = 12
 
-export default function CardGallery({ initialCardsData, wishCardType }: CardGalleryProps) {
+export default function CardGallery({ initialCardsData, wishCardType, tabType }: CardGalleryProps) {
   const [cards, setCards] = useState<Card[]>(initialCardsData.cards)
   const [currentPage, setCurrentPage] = useState(1)
   const [totalPages, setTotalPages] = useState(initialCardsData.totalPages)
@@ -51,18 +52,25 @@ export default function CardGallery({ initialCardsData, wishCardType }: CardGall
     setCards(initialCardsData.cards)
     setTotalPages(initialCardsData.totalPages)
     setHasMore(initialCardsData.totalPages > 1)
-  }, [wishCardType, initialCardsData])
+  }, [wishCardType, initialCardsData, tabType])
 
   useEffect(() => {
     if (currentPage > 1) {
       fetchCards(currentPage)
     }
-  }, [currentPage, wishCardType])
+  }, [currentPage, wishCardType, tabType])
 
   const fetchCards = async (page: number) => {
     setIsLoading(true)
     try {
-      const response = await fetch(`/api/cards?page=${page}&pageSize=${CARDS_PER_PAGE}&wishCardType=${wishCardType || ''}`)
+      const params = new URLSearchParams({
+        page: page.toString(),
+        pageSize: CARDS_PER_PAGE.toString(),
+        tab: tabType,
+        ...(wishCardType ? { wishCardType } : {})
+      })
+      
+      const response = await fetch(`/api/cards?${params.toString()}`)
       if (!response.ok) {
         throw new Error('Failed to fetch cards')
       }
@@ -87,11 +95,12 @@ export default function CardGallery({ initialCardsData, wishCardType }: CardGall
           >
             <div className="aspect-[2/3] relative">
               <ImageViewer
-                alt={card.cardType}
+                alt={card.cardType + '-' + card.relationship + '-' + card.id} 
                 cardId={card.id}
                 cardType={card.cardType}
                 isNewCard={false}
                 imgUrl={card.r2Url || ''}
+                svgContent={card.editedContent}
               />
             </div>
           </div>

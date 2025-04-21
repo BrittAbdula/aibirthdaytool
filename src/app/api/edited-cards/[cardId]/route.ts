@@ -22,8 +22,8 @@ export async function GET(request: Request, { params }: { params: { cardId: stri
                 message: true
             }
         })
-        console.log('--------------------------------')
-        console.log('editedCards', editedCards)
+        // console.log('--------------------------------')
+        // console.log('editedCards', editedCards)
         if (!editedCards?.id) {
             const originalCard = await prisma.apiLog.findUnique({
                 where: { cardId: params.cardId },

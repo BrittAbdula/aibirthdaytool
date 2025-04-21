@@ -12,7 +12,6 @@ export async function GET(
     const card = await prisma.editedCard.findUnique({
       where: { id: params.cardId },
     })
-
     if (!card) {
       // return NextResponse.json({ error: 'Card not found' }, { status: 404 })
       const originalCard = await prisma.apiLog.findUnique({
@@ -55,7 +54,7 @@ export async function GET(
         return NextResponse.json({ responseContent })
       }
     } else {
-      card.editedContent = await fetchSvgContent(card.r2Url)
+      card.editedContent = await fetchSvgContent(card.r2Url) || card.editedContent
 
       return NextResponse.json(card)
     }
