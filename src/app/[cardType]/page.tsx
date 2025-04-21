@@ -147,7 +147,7 @@ export default async function CardGeneratorPage({ params }: CardGeneratorPagePro
                             </div>
                         }
                     >
-                        <CardGallery wishCardType={cardType} initialCardsData={initialCardsData} />
+                        <CardGallery wishCardType={cardType} initialCardsData={initialCardsData} tabType="recent" />
                     </Suspense>
                 </section>
 
