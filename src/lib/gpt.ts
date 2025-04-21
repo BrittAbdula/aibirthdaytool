@@ -159,8 +159,8 @@ I want to modify the previous card design with this feedback: ${modificationFeed
 Here is the previous SVG content:
 ${previousSvgContent}
 
-Please create a new version based on this feedback while maintaining the overall design. Make ONLY the requested changes.
-
+Please create a new version based on this feedback while maintaining the overall design. 
+IMPORTANT: return SVG code only. Do not include any explanation, commentary, or other text.
 `;
                 }
             } catch (error) {
@@ -178,11 +178,11 @@ Please create a new version based on this feedback while maintaining the overall
             .map(([key, value]) => `${key}: ${value}`)
             .join('\n');
 
-        const userPrompt = userPromptPrefixText + userPromptFields;
+        const userPrompt = userPromptPrefixText ? userPromptPrefixText : userPromptFields;
         console.log('<----User prompt : ' + userPrompt + '---->')
 
         // Check prompt length
-        if (userPrompt.length >= 4000) {
+        if (userPrompt.length >= 5000) {
             await logApiRequest({
                 userId,
                 cardId,
