@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/accordion";
 import CardTypeBubbles from "@/components/CardTypeBubbles";
 import { CookieConsentWrapper } from "@/components/CookieConsentWrapper";
+import Link from "next/link";
 
 interface FeatureCardProps {
   title: string;
@@ -67,22 +68,46 @@ export default async function Home() {
 
           <div className="mb-16 items-center flex justify-center space-x-4">
             <button className="bg-[#FFC0CB] text-white px-8 py-3 rounded-full hover:bg-pink-400 transition">
-              <a href="/cards">Create Custom AI Card</a>
+              <a href="/cards/">Create Custom AI Card</a>
             </button>
             <button className="bg-purple-400 text-white px-8 py-3 rounded-full hover:bg-purple-500 transition">
-              <a href="/card-gallery">Browse Card Gallery</a>
-            </button>
+            <a href="/card-gallery">Browse Card Gallery</a>
+             </button>
           </div>
 
           <div className="mb-16 items-center flex justify-center">
             <CardTypeBubbles currentType="holiday" />
           </div>
 
+          {/* Feedback Section */}
+          <div className="text-center">
+            <p className="text-sm text-gray-500 max-w-2xl mx-auto">
+              We&apos;d love to hear your feedback and suggestions to help us improve MewtruCard.{' '}
+              <a
+                href="https://tally.so/r/mJXGvX"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-purple-600 hover:text-purple-700 underline"
+              >
+                Click here
+              </a>
+              {' '}to share your thoughts with us!
+            </p>
+          </div>
+          <div className="m-8 items-center flex justify-center">
+            <a
+              href="/will-you-be-my-valentine/"
+              className="bg-red-500 hover:bg-red-600 text-white px-8 py-3 rounded-full transition animate-pulse"
+            >
+              💕 Valentine&apos;s Special 💕
+            </a>
+            </div>
+
           <div className="space-y-24">
             <section className="relative">
               <TrendingCards />
             </section>
-            <Features />
+            <Features />{/* Feedback CTA */}
 
             <section className="relative">
               <h2 className="text-3xl sm:text-4xl font-bold mb-12 text-center">
@@ -111,7 +136,7 @@ export default async function Home() {
           </div>
         </div>
       </div>
-      
+
       {/* Cookie Consent Component */}
       <CookieConsentWrapper />
     </main>
@@ -191,130 +216,130 @@ const FeatureCard: React.FC<FeatureCardProps> = ({ title, description, icon, ben
 
 // How To Use Section
 const HowToUse: React.FC = () => (
-    <section className="py-16 bg-gradient-to-r from-purple-50 to-pink-50">
-      <div className="max-w-6xl mx-auto px-4">
-        <h2 className="text-3xl font-serif font-semibold mb-4 text-center text-[#4A4A4A]">
-          Create Digital Cards With Our Virtual Card Designer
-        </h2>
-        <p className="text-center text-[#666] mb-12 max-w-2xl mx-auto">
-          Two easy methods to make the perfect AI greeting cards online - totally free!
-        </p>
-        
-        <div className="flex flex-col md:flex-row mb-16">
-          <div className="md:w-1/2 p-4">
-            <div className="text-center mb-8">
-              <h3 className="text-xl font-serif font-semibold mb-2 text-pink-600">
-                Method 1: AI-Generated Custom Cards
-              </h3>
-              <p className="text-[#666] text-sm">
-                Let our smart card generator create a personalized digital greeting card
-              </p>
-            </div>
-            
-            <div className="grid grid-cols-1 gap-6 relative">
-              <div className="absolute top-0 bottom-0 left-10 w-[2px] bg-pink-200 -z-10"></div>
-              
-              <StepCard
-                number="1"
-                title="Choose Card Category"
-                description="Select from our e-card templates collection"
-                icon="📝"
-                details={[
-                  "Virtual birthday card maker",
-                  "Digital anniversary cards",
-                  "AI love card generator",
-                  "Online holiday greeting cards",
-                  "Custom occasion e-cards"
-                ]}
-              />
-              
-              <StepCard
-                number="2"
-                title="Customize Your E-Card"
-                description="Tell our AI about your recipient"
-                icon="✨"
-                details={[
-                  "Specify your relationship",
-                  "Describe the special occasion",
-                  "Add your personalized message",
-                  "Choose sentiment for your e-card"
-                ]}
-              />
-              
-              <StepCard
-                number="3"
-                title="Generate & Share Your Card"
-                description="Our AI creates your perfect digital greeting"
-                icon="🎁"
-                details={[
-                  "One-click AI card generation",
-                  "Edit your virtual card design",
-                  "Download high-quality e-card",
-                  "Share your digital card online"
-                ]}
-              />
-            </div>
+  <section className="py-16 bg-gradient-to-r from-purple-50 to-pink-50">
+    <div className="max-w-6xl mx-auto px-4">
+      <h2 className="text-3xl font-serif font-semibold mb-4 text-center text-[#4A4A4A]">
+        Create Digital Cards With Our Virtual Card Designer
+      </h2>
+      <p className="text-center text-[#666] mb-12 max-w-2xl mx-auto">
+        Two easy methods to make the perfect AI greeting cards online - totally free!
+      </p>
+
+      <div className="flex flex-col md:flex-row mb-16">
+        <div className="md:w-1/2 p-4">
+          <div className="text-center mb-8">
+            <h3 className="text-xl font-serif font-semibold mb-2 text-pink-600">
+              Method 1: AI-Generated Custom Cards
+            </h3>
+            <p className="text-[#666] text-sm">
+              Let our smart card generator create a personalized digital greeting card
+            </p>
           </div>
-          
-          <div className="md:w-1/2 p-4 mt-12 md:mt-0">
-            <div className="text-center mb-8">
-              <h3 className="text-xl font-serif font-semibold mb-2 text-purple-600">
-                Method 2: Browse Pre-Made AI Cards
-              </h3>
-              <p className="text-[#666] text-sm">
-                Choose from our gallery of AI-designed greeting card templates
-              </p>
-            </div>
-            
-            <div className="grid grid-cols-1 gap-6 relative">
-              <div className="absolute top-0 bottom-0 left-10 w-[2px] bg-purple-200 -z-10"></div>
-              
-              <StepCard
-                number="1"
-                title="Explore E-Card Templates"
-                description="Browse our AI greeting card collection"
-                icon="🔍"
-                details={[
-                  "Curated digital card designs",
-                  "Filter by card occasion or style",
-                  "Preview AI-generated templates",
-                  "Find popular e-card designs"
-                ]}
-              />
-              
-              <StepCard
-                number="2"
-                title="Customize Your Digital Card"
-                description="Make the e-card uniquely yours"
-                icon="✏️"
-                details={[
-                  "Edit AI greeting text",
-                  "Personalize virtual card elements",
-                  "Add recipient details",
-                  "Create a one-of-a-kind design"
-                ]}
-              />
-              
-              <StepCard
-                number="3"
-                title="Send Your E-Card"
-                description="Share your digital greeting instantly"
-                icon="💌"
-                details={[
-                  "Download as high-quality image",
-                  "Share via unique card link",
-                  "Post to social media directly",
-                  "Email your digital greeting card"
-                ]}
-              />
-            </div>
+
+          <div className="grid grid-cols-1 gap-6 relative">
+            <div className="absolute top-0 bottom-0 left-10 w-[2px] bg-pink-200 -z-10"></div>
+
+            <StepCard
+              number="1"
+              title="Choose Card Category"
+              description="Select from our e-card templates collection"
+              icon="📝"
+              details={[
+                "Virtual birthday card maker",
+                "Digital anniversary cards",
+                "AI love card generator",
+                "Online holiday greeting cards",
+                "Custom occasion e-cards"
+              ]}
+            />
+
+            <StepCard
+              number="2"
+              title="Customize Your E-Card"
+              description="Tell our AI about your recipient"
+              icon="✨"
+              details={[
+                "Specify your relationship",
+                "Describe the special occasion",
+                "Add your personalized message",
+                "Choose sentiment for your e-card"
+              ]}
+            />
+
+            <StepCard
+              number="3"
+              title="Generate & Share Your Card"
+              description="Our AI creates your perfect digital greeting"
+              icon="🎁"
+              details={[
+                "One-click AI card generation",
+                "Edit your virtual card design",
+                "Download high-quality e-card",
+                "Share your digital card online"
+              ]}
+            />
           </div>
         </div>
-        
-       
+
+        <div className="md:w-1/2 p-4 mt-12 md:mt-0">
+          <div className="text-center mb-8">
+            <h3 className="text-xl font-serif font-semibold mb-2 text-purple-600">
+              Method 2: Browse Pre-Made AI Cards
+            </h3>
+            <p className="text-[#666] text-sm">
+              Choose from our gallery of AI-designed greeting card templates
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 gap-6 relative">
+            <div className="absolute top-0 bottom-0 left-10 w-[2px] bg-purple-200 -z-10"></div>
+
+            <StepCard
+              number="1"
+              title="Explore E-Card Templates"
+              description="Browse our AI greeting card collection"
+              icon="🔍"
+              details={[
+                "Curated digital card designs",
+                "Filter by card occasion or style",
+                "Preview AI-generated templates",
+                "Find popular e-card designs"
+              ]}
+            />
+
+            <StepCard
+              number="2"
+              title="Customize Your Digital Card"
+              description="Make the e-card uniquely yours"
+              icon="✏️"
+              details={[
+                "Edit AI greeting text",
+                "Personalize virtual card elements",
+                "Add recipient details",
+                "Create a one-of-a-kind design"
+              ]}
+            />
+
+            <StepCard
+              number="3"
+              title="Send Your E-Card"
+              description="Share your digital greeting instantly"
+              icon="💌"
+              details={[
+                "Download as high-quality image",
+                "Share via unique card link",
+                "Post to social media directly",
+                "Email your digital greeting card"
+              ]}
+            />
+          </div>
+        </div>
       </div>
-    </section>
-  );
+
+
+    </div>
+  </section>
+);
 
 const StepCard: React.FC<StepCardProps> = ({ number, title, description, details, icon }) => (
   <div className="bg-white border border-pink-100 rounded-lg p-5 pl-12 relative shadow-sm hover:shadow-md transition duration-300">
@@ -432,48 +457,48 @@ const faqs = [
 ];
 
 const FAQ: React.FC = () => (
-    <Section>
-      <div className="text-center mb-12">
-        <h2 className="text-4xl sm:text-5xl md:text-6xl font-serif font-bold mb-4 tracking-tight">
-          <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-pink-600">
-            AI Greeting Card Generator FAQ
-          </span>
-        </h2>
-        <p className="text-lg sm:text-xl text-gray-600 max-w-2xl mx-auto px-4">
-          Common questions about our digital card maker and online greeting card tool ✨
-        </p>
-      </div>
+  <Section>
+    <div className="text-center mb-12">
+      <h2 className="text-4xl sm:text-5xl md:text-6xl font-serif font-bold mb-4 tracking-tight">
+        <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-pink-600">
+          AI Greeting Card Generator FAQ
+        </span>
+      </h2>
+      <p className="text-lg sm:text-xl text-gray-600 max-w-2xl mx-auto px-4">
+        Common questions about our digital card maker and online greeting card tool ✨
+      </p>
+    </div>
 
-      <div className="mx-auto md:max-w-[800px]">
-        <Accordion
-          type="single"
-          collapsible
-          className="flex w-full flex-col items-center justify-center space-y-4"
-        >
-          {faqs.map((faq, idx) => (
-            <AccordionItem
-              key={idx}
-              value={`question-${idx}`}
-              className="w-full border rounded-lg overflow-hidden hover:shadow-md transition-shadow duration-200"
-            >
-              <AccordionTrigger className="px-6 py-4 text-left">
-                <span className="font-medium text-gray-800">{faq.question}</span>
-              </AccordionTrigger>
-              <AccordionContent className="px-6 py-4 text-gray-600">
-                {faq.answer}
-              </AccordionContent>
-            </AccordionItem>
-          ))}
-        </Accordion>
-      </div>
+    <div className="mx-auto md:max-w-[800px]">
+      <Accordion
+        type="single"
+        collapsible
+        className="flex w-full flex-col items-center justify-center space-y-4"
+      >
+        {faqs.map((faq, idx) => (
+          <AccordionItem
+            key={idx}
+            value={`question-${idx}`}
+            className="w-full border rounded-lg overflow-hidden hover:shadow-md transition-shadow duration-200"
+          >
+            <AccordionTrigger className="px-6 py-4 text-left">
+              <span className="font-medium text-gray-800">{faq.question}</span>
+            </AccordionTrigger>
+            <AccordionContent className="px-6 py-4 text-gray-600">
+              {faq.answer}
+            </AccordionContent>
+          </AccordionItem>
+        ))}
+      </Accordion>
+    </div>
 
-      <div className="mt-12 text-center">
-        <p className="text-lg text-gray-600">
-          Have more questions about our AI card generator?{" "}
-          <a href="mailto:support@mewtrucard.com" className="text-purple-600 hover:text-purple-700 underline font-medium">
-            Contact our support team
-          </a>
-        </p>
-      </div>
-    </Section>
-  );
+    <div className="mt-12 text-center">
+      <p className="text-lg text-gray-600">
+        Have more questions about our AI card generator?{" "}
+        <a href="mailto:support@mewtrucard.com" className="text-purple-600 hover:text-purple-700 underline font-medium">
+          Contact our support team
+        </a>
+      </p>
+    </div>
+  </Section>
+);

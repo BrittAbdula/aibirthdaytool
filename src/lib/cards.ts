@@ -190,7 +190,7 @@ async function fetchPopularCards(
     WHERE rn_asc = 1 -- Select only the oldest card from each group
     ORDER BY
       group_count DESC,        -- Order groups by popularity (count)
-      max_createdAt_in_group DESC -- Tie-breaker: newest activity first
+      max_createdAt_in_group ASC -- Tie-breaker: oldest activity first
     LIMIT ${pageSize} OFFSET ${offset};
   `;
 

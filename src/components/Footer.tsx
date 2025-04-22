@@ -4,21 +4,6 @@ export default function Footer() {
   return (
     <footer className="bg-gradient-to-t from-white via-purple-50/50 to-white border-t border-purple-100/50">
       <div className="container mx-auto px-4 py-8">
-        {/* Feedback Section */}
-        <div className="text-center mb-6">
-          <p className="text-sm text-gray-500 max-w-2xl mx-auto">
-            We&apos;d love to hear your feedback and suggestions to help us improve MewtruCard.{' '}
-            <a 
-              href="https://tally.so/r/mJXGvX" 
-              target="_blank" 
-              rel="noopener noreferrer" 
-              className="text-purple-600 hover:text-purple-700 underline"
-            >
-              Click here
-            </a>
-            {' '}to share your thoughts with us!
-          </p>
-        </div>
 
         {/* Links and Copyright */}
         <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
