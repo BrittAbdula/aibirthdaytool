@@ -72,7 +72,9 @@ async function fetchRecentCards(
   }
 
   // Combine WHERE conditions
-  const whereClause = Prisma.sql`WHERE ${Prisma.join(whereConditions, ' AND ')}`;
+  const whereClause = whereConditions.length > 0 
+    ? Prisma.sql`WHERE ${Prisma.join(whereConditions, ' AND ')}`
+    : Prisma.sql``;
 
   // Main query using ROW_NUMBER() to find the oldest card per group,
   // and MAX() OVER to order groups by the newest card's date.
@@ -155,7 +157,10 @@ async function fetchPopularCards(
   if (relationship) {
     whereConditions.push(Prisma.sql`relationship = ${relationship}`);
   }
-  const whereClause = Prisma.sql`WHERE ${Prisma.join(whereConditions, ' AND ')}`;
+
+  const whereClause = whereConditions.length > 0 
+    ? Prisma.sql`WHERE ${Prisma.join(whereConditions, ' AND ')}`
+    : Prisma.sql``;
 
   // Main query using ROW_NUMBER() to find the oldest card per group,
   // and COUNT() OVER to order groups by their size (popularity).
