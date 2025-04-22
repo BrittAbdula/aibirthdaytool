@@ -14,8 +14,8 @@ export const revalidate = 300 // 每5分钟重新验证页面
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const type = decodeURIComponent(params.type)
-  const title = `${type.charAt(0).toUpperCase() + type.slice(1)} Cards | MewtruCard - AI Generated Cards`
-  const description = `Create personalized ${type.toLowerCase()} cards with our AI-powered tool. Express your feelings with unique, custom-designed cards for your ${type.toLowerCase()} celebrations.`
+  const title = `AI ${type.charAt(0).toUpperCase() + type.slice(1)} Cards |  Free & Animated Templates - MewtruCard`
+  const description = `Explore hundreds of free, animated, AI‑generated ${type.toLowerCase()} card designs. Personalise, download, and share unique e‑cards in seconds—no design skills needed.`
 
   return {
     title,
@@ -30,7 +30,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       url: `/type/${params.type}/`,
       images: [
         {
-          url: '/og-image.jpg',
+          url: 'https://mewtrucard.com/mewtrucard-generator.jpg',
           width: 1200,
           height: 630,
           alt: `${type} Cards Preview`
@@ -41,7 +41,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       card: 'summary_large_image',
       title,
       description,
-      images: ['/og-image.jpg']
+      images: ['https://mewtrucard.com/mewtrucard-generator.jpg']
     },
   }
 }
@@ -65,11 +65,12 @@ export default async function TypePage({ params, searchParams }: Props) {
         <header className="text-center mb-12">
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-serif font-bold mb-4 tracking-tight">
             <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-pink-600">
-              {type.charAt(0).toUpperCase() + type.slice(1)} Cards
+              AI {type.charAt(0).toUpperCase() + type.slice(1)} Card Templates
             </span>
           </h1>
           <p className="text-lg sm:text-xl text-gray-600 max-w-2xl mx-auto px-4 mb-6">
-            Create your perfect {type.toLowerCase()} card with our AI-powered collection ✨
+          Design animated, personalised {type.toLowerCase()} cards in seconds —
+          edit, download, share for free with MewTruCard’s AI collection. ✨
           </p>
           <div className="flex flex-wrap justify-center gap-4 text-sm">
             <span className="px-3 py-1 bg-purple-50 rounded-full">💝 Personalized Messages</span>

@@ -6,8 +6,8 @@ import { CardType } from '@/lib/card-config'
 import { TabType } from '@/lib/cards'
 
 export const metadata: Metadata = {
-  title: 'AI Card Gallery | MewtruCard - Personalized Digital Cards',
-  description: 'Explore our collection of AI-generated digital cards. Browse birthday cards, anniversary cards, thank you cards and more. Each card is uniquely crafted with artificial intelligence.',
+  title: 'AI Greeting Card Gallery | Free & Animated Templates – MewTruCard',
+  description: 'Browse hundreds of free, AI‑generated greeting card templates. Download or personalize animated birthday, love, anniversary cards and more.',
   alternates: {
     canonical: '/card-gallery/',
   },
@@ -18,7 +18,7 @@ export const metadata: Metadata = {
     url: '/card-gallery/',
     images: [
       {
-        url: '/og-image.jpg',
+        url: 'https://mewtrucard.com/mewtrucard-generator.jpg',
         width: 1200,
         height: 630,
         alt: 'MewtruCard Gallery Preview',
@@ -29,7 +29,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'AI Card Gallery | MewtruCard',
     description: 'Discover unique AI-generated digital cards for every occasion',
-    images: ['/og-image.jpg'],
+    images: ['https://mewtrucard.com/mewtrucard-generator.jpg'],
   },
 }
 
@@ -64,11 +64,11 @@ export default async function CardGalleryPage({ searchParams }: PageProps) {
         <header className="text-center">
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-serif font-bold mb-4 tracking-tight">
             <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-pink-600">
-              Card Templates
+            AI Greeting Card Gallery
             </span>
           </h1>
           <p className="text-lg sm:text-xl text-gray-600 max-w-2xl mx-auto px-4 ">
-            Create your own mewtru card with our collection of ai generated cards ✨
+            Browse hundreds of free, AI‑generated greeting card templates. Download or personalize animated birthday, love, anniversary cards and more.
           </p>
             <div className="flex flex-wrap justify-center gap-4 text-sm">
               <span className="px-3 py-1 bg-purple-50 rounded-full">✨ AI-Generated Designs</span>

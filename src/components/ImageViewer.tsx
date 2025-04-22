@@ -54,14 +54,16 @@ export function ImageViewer({ alt, cardId, cardType, imgUrl, isNewCard, svgConte
     <>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>
-          <div className="relative w-full h-full flex items-center justify-center cursor-pointer group">
+          <div className="relative w-full flex items-center justify-center cursor-pointer group overflow-hidden">
                 <img
                   src={imgUrl}
                   alt={alt}
                   width={400}
                   height={600}
-                  className="max-w-full max-h-full"
+                  className="w-full h-auto object-contain hover:scale-105 transition-transform duration-300"
+                  loading="lazy"
                 />
+                <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all duration-300"></div>
           </div>
         </DialogTrigger>
         <DialogContent className="sm:max-w-[90vw] md:max-w-[80vw] lg:max-w-[70vw] xl:max-w-[60vw] p-0">

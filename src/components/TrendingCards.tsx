@@ -140,7 +140,7 @@ export const TrendingCards = () => {
                       />
                     </div>
                   </div>
-                  <p className="text-center font-medium">{card.title}</p>
+                  <p className="text-center font-medium">AI {card.title} Generator</p>
                 </div>
               </Link>
             ))}

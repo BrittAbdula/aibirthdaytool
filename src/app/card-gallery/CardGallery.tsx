@@ -87,13 +87,13 @@ export default function CardGallery({ initialCardsData, wishCardType, tabType }:
 
   return (
     <div className="min-h-screen">
-      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-4 xl:grid-cols-6 gap-2">
+      <div className="columns-2 sm:columns-2 md:columns-3 lg:columns-4 xl:columns-5 2xl:columns-6 gap-4 space-y-4 p-2">
         {cards.map((card) => (
           <div 
             key={card.id} 
-            className="group"
+            className="break-inside-avoid mb-4 group bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow"
           >
-            <div className="aspect-[2/3] relative">
+            <div className="w-full relative">
               <ImageViewer
                 alt={card.cardType + '-' + card.relationship + '-' + card.id} 
                 cardId={card.id}

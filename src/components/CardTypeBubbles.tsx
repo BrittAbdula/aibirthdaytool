@@ -23,7 +23,7 @@ async function CardTypeBubbles({ currentType }: CardTypeBubblesProps) {
         {selected.map((card) => (
           <Link 
             key={card.type} 
-            href={`/${card.type}`}
+            href={`/${card.type}/`}
             className="inline-block m-1 sm:m-2 px-3 sm:px-4 py-2 rounded-full border border-pink-300 hover:border-pink-500 transition-colors duration-300 text-pink-600 text-sm sm:text-base font-semibold"
           >
             {card.label}
