@@ -24,6 +24,12 @@ function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: 'weekly' as const,
       priority: 0.8,
     },
+    {
+      url: `${baseUrl}will-you-be-my-valentine/`,
+      lastModified: currentDate,
+      changeFrequency: 'yearly' as const,
+      priority: 0.8,
+    },
   ]
 
   // Card type pages
