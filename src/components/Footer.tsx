@@ -43,7 +43,7 @@ export default function Footer() {
                   Terms of Service
                 </Link>
               </li>
-              <li>
+              {/* <li>
                 <a 
                   href="https://linktr.ee/auroroa" 
                   target="_blank" 
@@ -69,7 +69,7 @@ export default function Footer() {
                 >
                   PicaPica
                 </a>
-              </li>
+              </li> */}
             </ul>
           </nav>
         </div>

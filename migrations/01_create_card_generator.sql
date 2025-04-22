@@ -330,3 +330,12 @@ INSERT INTO "CardGenerator" (
   '["MewtruCard''s AI creates unique Women''s Day cards that celebrate the arrival of a new baby","Our AI transforms your baby shower wishes into extraordinary messages of celebration","Customize your cards until they perfectly express your joy and best wishes","Share the celebration with high-quality downloadable images or musical greeting links"]',
   ''
 );    
+
+
+CREATE INDEX IF NOT EXISTS "idx_editedcard_original_created" ON "EditedCard" ("originalCardId", "createdAt");
+
+-- Index for filtering by cardType in the WHERE clause.
+CREATE INDEX IF NOT EXISTS "idx_editedcard_cardtype" ON "EditedCard" ("cardType");
+
+-- Index for filtering by relationship in the WHERE clause.
+CREATE INDEX IF NOT EXISTS "idx_editedcard_relationship" ON "EditedCard" ("relationship");
