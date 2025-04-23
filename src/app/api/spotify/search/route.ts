@@ -6,19 +6,11 @@ export const dynamic = 'force-dynamic'
 const SPOTIFY_CLIENT_ID = process.env.SPOTIFY_CLIENT_ID
 const SPOTIFY_CLIENT_SECRET = process.env.SPOTIFY_CLIENT_SECRET
 
-// 存储令牌和过期时间
-let accessToken: string | null = null
-let tokenExpiry: number | null = null
 
 /**
  * 获取 Spotify API 的访问令牌
  */
 async function getAccessToken() {
-  // 如果令牌未过期，直接返回
-  if (accessToken && tokenExpiry && Date.now() < tokenExpiry) {
-    return accessToken
-  }
-
   try {
     // 请求新的访问令牌
     const response = await fetch('https://accounts.spotify.com/api/token', {
@@ -29,7 +21,11 @@ async function getAccessToken() {
           SPOTIFY_CLIENT_ID + ':' + SPOTIFY_CLIENT_SECRET
         ).toString('base64')
       },
-      body: 'grant_type=client_credentials'
+      body: 'grant_type=client_credentials',
+      next: {
+        revalidate: 3500, // 保持 fetch 缓存
+        tags: ['spotify-token'],
+      }
     })
 
     if (!response.ok) {
@@ -38,9 +34,7 @@ async function getAccessToken() {
     }
 
     const data = await response.json()
-    accessToken = data.access_token
-    tokenExpiry = Date.now() + (data.expires_in * 1000) // 更新过期时间
-    return accessToken
+    return  data.access_token
   } catch (error) {
     console.error('Error fetching Spotify access token:', error)
     throw new Error('Failed to fetch Spotify access token')
