@@ -30,17 +30,33 @@ interface StepCardProps {
   icon: string;
 }
 
-interface FaqItemProps {
-  question: string;
-  answer: string;
-}
-
 export const metadata: Metadata = {
-  title: "MewTruCard - AI Greeting Card Generator",
-  description: "Create personalized cards for birthdays, love, holidays, and more with MewTruCard's AI-powered generator. Easy to use with a variety of beautiful templates.",
+  title: "MewTruCard – Free AI Greeting Card Generator | 30000+ Templates & Download",
+  description: "Create AI-powered animated greeting cards for birthdays, holidays, love and more. with 30000+ beautiful templates you can personalize and download in seconds.",
   alternates: {
     canonical: "/",
   },
+  openGraph: {
+    type: "website",
+    url: "https://mewtrucard.com/",
+    title: "MewTruCard – Free AI Greeting Card Generator",
+    description: "100+ AI-animated templates, totally free to customize and instantly download your greeting card.",
+    images: [
+      {
+        url: "https://mewtrucard.com/og-cover.jpg",
+        width: 1200,
+        height: 630,
+        alt: "MewTruCard Preview"
+      }
+    ]
+  },
+  twitter: {
+    card: "summary_large_image",
+    creator: "@MewTruCard",
+    title: "MewTruCard – Free AI Greeting Card Generator",
+    description: "Make stunning AI-animated greeting cards for any occasion. Free to use with 100+ templates and one-click download.",
+    images: ["https://mewtrucard.com/og-cover.jpg"]
+  }
 };
 
 export const revalidate = 300; // 每5分钟重新验证页面
@@ -59,11 +75,14 @@ export default async function Home() {
         <div className="relative">
           <h1 className="text-4xl sm:text-6xl font-serif font-bold text-center mb-4 text-[#4A4A4A] tracking-tight">
             <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-pink-600">
-              Free AI Greeting Card Generator For Every Occasion
+              Free AI Greeting Card Generator
             </span>
           </h1>
+          <p className="text-center text-gray-600 text-lg max-w-2xl mx-auto font-light">
+            Design personalized digital cards with our smart AI card creator - perfect for birthdays, holidays, and special moments! 
+          </p>
           <p className="text-center text-gray-600 mb-12 text-lg max-w-2xl mx-auto font-light">
-            Design personalized digital cards with our smart AI card creator - perfect for birthdays, holidays, and special moments!
+            30000+ Templates Instant Download or Share Online.
           </p>
 
           <div className="mb-16 items-center flex justify-center space-x-4">

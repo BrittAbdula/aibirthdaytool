@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { ImageViewer } from '../../components/ImageViewer'
 import { Card, TabType } from '@/lib/cards'
 import { CardType } from '@/lib/card-config'
+import { motion } from 'framer-motion'
 
 interface CardGalleryProps {
   initialCardsData: {
@@ -16,13 +17,25 @@ interface CardGalleryProps {
 
 const CARDS_PER_PAGE = 12
 
+const SkeletonCard = () => (
+  <div className="aspect-[3/4] rounded-lg bg-gray-200 animate-pulse mb-4" />
+)
+
 export default function CardGallery({ initialCardsData, wishCardType, tabType }: CardGalleryProps) {
   const [cards, setCards] = useState<Card[]>(initialCardsData.cards)
   const [currentPage, setCurrentPage] = useState(1)
   const [totalPages, setTotalPages] = useState(initialCardsData.totalPages)
   const [isLoading, setIsLoading] = useState(false)
   const [hasMore, setHasMore] = useState(currentPage < totalPages)
+  const [preloadedImages, setPreloadedImages] = useState<Set<string>>(new Set())
   const observerTarget = useRef<HTMLDivElement>(null)
+
+  const preloadImage = (url: string) => {
+    if (!url || preloadedImages.has(url)) return
+    const img = new Image()
+    img.src = url
+    setPreloadedImages(prev => new Set(prev).add(url))
+  }
 
   const loadMore = useCallback(() => {
     if (!isLoading && hasMore) {
@@ -60,6 +73,14 @@ export default function CardGallery({ initialCardsData, wishCardType, tabType }:
     }
   }, [currentPage, wishCardType, tabType])
 
+  useEffect(() => {
+    cards.forEach(card => {
+      if (card.r2Url) {
+        preloadImage(card.r2Url)
+      }
+    })
+  }, [cards])
+
   const fetchCards = async (page: number) => {
     setIsLoading(true)
     try {
@@ -85,24 +106,58 @@ export default function CardGallery({ initialCardsData, wishCardType, tabType }:
     }
   }
 
+  // 将卡片分配到不同的列中
+  const getColumnCards = (columnIndex: number, totalColumns: number) => {
+    return cards.filter((_, index) => index % totalColumns === columnIndex)
+  }
+
+  // 根据屏幕宽度决定列数
+  const getColumnCount = () => {
+    if (typeof window === 'undefined') return 2
+    const width = window.innerWidth
+    if (width >= 1536) return 6 // 2xl
+    if (width >= 1280) return 5 // xl
+    if (width >= 1024) return 4 // lg
+    if (width >= 768) return 3  // md
+    return 2                    // sm and default
+  }
+
+  const columnCount = getColumnCount()
+
   return (
-    <div className="min-h-screen">
-      <div className="columns-2 sm:columns-2 md:columns-3 lg:columns-4 xl:columns-5 2xl:columns-6 gap-4 space-y-4 p-2">
-        {cards.map((card) => (
-          <div 
-            key={card.id} 
-            className="break-inside-avoid mb-4 group bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow"
-          >
-            <div className="w-full relative">
-              <ImageViewer
-                alt={card.cardType + '-' + card.relationship + '-' + card.id} 
-                cardId={card.id}
-                cardType={card.cardType}
-                isNewCard={false}
-                imgUrl={card.r2Url || ''}
-                svgContent={card.editedContent}
-              />
-            </div>
+    <div className="min-h-screen px-2">
+      <div className="flex gap-4">
+        {Array.from({ length: columnCount }).map((_, columnIndex) => (
+          <div key={columnIndex} className="flex-1 flex flex-col gap-4">
+            {getColumnCards(columnIndex, columnCount).map((card, index) => (
+              <motion.div
+                key={card.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{
+                  duration: 0.4,
+                  delay: index * 0.1,
+                  ease: "easeOut"
+                }}
+                className="w-full bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow"
+              >
+                <div className="w-full relative">
+                  <ImageViewer
+                    alt={card.cardType + '-' + card.relationship + '-' + card.id} 
+                    cardId={card.id}
+                    cardType={card.cardType}
+                    isNewCard={false}
+                    imgUrl={card.r2Url || ''}
+                    svgContent={card.editedContent}
+                  />
+                </div>
+              </motion.div>
+            ))}
+            
+            {/* 加载时的骨架屏 */}
+            {isLoading && columnIndex < (CARDS_PER_PAGE / columnCount) && (
+              <SkeletonCard />
+            )}
           </div>
         ))}
       </div>

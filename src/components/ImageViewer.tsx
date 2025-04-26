@@ -23,30 +23,24 @@ export function ImageViewer({ alt, cardId, cardType, imgUrl, isNewCard, svgConte
   const [open, setOpen] = useState(false)
   const { toast } = useToast()
   const router = useRouter()
-  const [isShareModalOpen, setIsShareModalOpen] = useState(false)
-  const [shareLink, setShareLink] = useState('')
   const [showPreview, setShowPreview] = useState(false)
 
   const handleEdit = () => {
     router.push(`/${cardType}/edit/${cardId}/`)
   }
 
-  const handleCopyLink = () => {
-    navigator.clipboard.writeText(shareLink)
-    toast({ description: "Link copied to clipboard" })
-  }
 
-  const handleShare = (platform: string) => {
-    let url = ''
-    switch (platform) {
-      case 'twitter':
-        url = `https://twitter.com/intent/tweet?url=${encodeURIComponent(shareLink)}`
-        break
-      case 'email':
-        url = `mailto:?body=${encodeURIComponent(shareLink)}`
-        break
-    }
-    window.open(url, '_blank')
+  function CardImage({ src, alt, isLarge = false }: { src?: string, alt: string, isLarge?: boolean }) {
+    return (
+      <img
+        src={src}
+        alt={alt}
+        loading="lazy"
+        className={`object-contain ${isLarge ? 'max-w-full max-h-full' : 'w-full h-auto hover:scale-105 transition-transform duration-300'}`}
+        width={isLarge ? undefined : 400}
+        height={isLarge ? undefined : 600}
+      />
+    )
   }
 
 
@@ -55,15 +49,8 @@ export function ImageViewer({ alt, cardId, cardType, imgUrl, isNewCard, svgConte
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>
           <div className="relative w-full flex items-center justify-center cursor-pointer group overflow-hidden">
-                <img
-                  src={imgUrl}
-                  alt={alt}
-                  width={400}
-                  height={600}
-                  className="w-full h-auto object-contain hover:scale-105 transition-transform duration-300"
-                  loading="lazy"
-                />
-                <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all duration-300"></div>
+            <CardImage src={imgUrl} alt={alt} />
+            <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all duration-300"></div>
           </div>
         </DialogTrigger>
         <DialogContent className="sm:max-w-[90vw] md:max-w-[80vw] lg:max-w-[70vw] xl:max-w-[60vw] p-0">
@@ -71,15 +58,11 @@ export function ImageViewer({ alt, cardId, cardType, imgUrl, isNewCard, svgConte
           <div className="flex flex-col items-center justify-center h-full">
             {!showPreview ? (
               <div className="relative w-full h-[calc(100vh-200px)] overflow-auto flex items-center justify-center p-4">
-              <img
-                src={imgUrl}
-                alt={alt}
-                className="max-w-full max-h-full"
-              />
+                <CardImage src={imgUrl} alt={alt} isLarge />
               </div>
             ) : (
               <div className="w-full h-[calc(100vh-200px)] overflow-auto flex items-center justify-center">
-                <CardDisplay 
+                <CardDisplay
                   card={{
                     cardId: cardId,
                     cardType: cardType,
@@ -100,14 +83,14 @@ export function ImageViewer({ alt, cardId, cardType, imgUrl, isNewCard, svgConte
                     <PaperPlaneIcon className="mr-2 h-4 w-4" />
                     Send
                   </Button>
-                  <Button 
-                    onClick={() => setShowPreview(!showPreview)} 
+                  <Button
+                    onClick={() => setShowPreview(!showPreview)}
                     className="bg-[#FFC0CB] text-[#4A4A4A] hover:bg-[#FFD1DC] transition-colors"
                   >
-                  <>
-                    <EyeOpenIcon className="mr-2 h-4 w-4" />
-                    Preview
-                  </>
+                    <>
+                      <EyeOpenIcon className="mr-2 h-4 w-4" />
+                      Preview
+                    </>
                   </Button>
                 </div>
               ) : (
@@ -116,57 +99,17 @@ export function ImageViewer({ alt, cardId, cardType, imgUrl, isNewCard, svgConte
                     <Pencil1Icon className="mr-2 h-4 w-4" />
                     customize this template
                   </Button>
-                  <Button 
-                    onClick={() => setShowPreview(!showPreview)} 
+                  <Button
+                    onClick={() => setShowPreview(!showPreview)}
                     className="bg-[#FFC0CB] text-[#4A4A4A] hover:bg-[#FFD1DC] transition-colors"
                   >
-                  <>
-                    <EyeOpenIcon className="mr-2 h-4 w-4" />
-                    Preview
-                  </>
+                    <>
+                      <EyeOpenIcon className="mr-2 h-4 w-4" />
+                      Preview
+                    </>
                   </Button>
                 </div>
               )}
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={isShareModalOpen} onOpenChange={setIsShareModalOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Share your card</DialogTitle>
-          </DialogHeader>
-          <div className="mt-2">
-            <div className="p-2 bg-gray-100 rounded">
-              <code className="text-sm font-mono break-all">{shareLink}</code>
-            </div>
-            <div className="mt-4 flex justify-between items-center space-x-2">
-              <Button
-                onClick={() => handleShare('twitter')}
-                className="bg-[#FFC0CB] text-[#4A4A4A] hover:bg-[#FFD1DC] transition-colors"
-              >
-                <TwitterLogoIcon className="h-4 w-4" />
-              </Button>
-              <Button
-                onClick={() => handleShare('email')}
-                className="bg-[#FFC0CB] text-[#4A4A4A] hover:bg-[#FFD1DC] transition-colors"
-              >
-                <EnvelopeClosedIcon className="h-4 w-4" />
-              </Button>
-              <Button
-                onClick={() => window.open(shareLink, '_blank')}
-                className="bg-[#FFC0CB] text-[#4A4A4A] hover:bg-[#FFD1DC] transition-colors"
-              >
-                <EyeOpenIcon className="h-4 w-4" />
-              </Button>
-              <Button
-                onClick={handleCopyLink}
-                className="flex-grow bg-[#FFC0CB] text-[#4A4A4A] hover:bg-[#FFD1DC] transition-colors"
-              >
-                <CopyIcon className="mr-2 h-4 w-4" />
-                Copy Link
-              </Button>
             </div>
           </div>
         </DialogContent>

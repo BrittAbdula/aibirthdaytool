@@ -1,0 +1,10 @@
+# MewTruCard
+
+> MewTruCard is a modern web application for creating AI-powered animated greeting cards. It offers a wide range of customizable templates for birthdays, anniversaries, love messages, and apologies. The platform combines cutting-edge AI technology with beautiful animations to create personalized digital greeting cards that can be downloaded and shared instantly.
+
+Key Features:
+- AI-powered personalization for card messages and designs
+- 30000+ animated templates across multiple categories
+- Free to use with no watermarks
+- Modern, responsive web interface built with Next.js and Tailwind
+- Quick download in various formats
