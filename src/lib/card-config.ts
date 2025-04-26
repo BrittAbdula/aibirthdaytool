@@ -128,7 +128,7 @@ export const getCardConfig = unstable_cache(
     };
   },
   ['card-config'],
-  { revalidate: 3600 } // 1小时后重新验证
+  { revalidate: 86400 } // 1小时后重新验证
 );
 
 // 获取所有公开的卡片类型
@@ -157,7 +157,7 @@ export const getAllCardTypes = unstable_cache(
     }));
   },
   ['all-card-types'],
-  { revalidate: 3600 }
+  { revalidate: 86400 }
 );
 
 // Utility function to validate slug
@@ -198,5 +198,5 @@ export const getAllCardPreviews = unstable_cache(
       }));
   },
   ['card-previews'],
-  { revalidate: 3600 }
+  { revalidate: 86400 }
 );
