@@ -6,10 +6,10 @@ export interface Card {
   id: string;
   cardType: string;
   relationship: string | null;
-  editedContent: string;
+  // editedContent: string;
   r2Url: string | null;
-  createdAt: Date; // Add createdAt for sorting
-  originalCardId: string; // Add originalCardId for grouping
+  // createdAt: Date; // Add createdAt for sorting
+  // originalCardId: string; // Add originalCardId for grouping
 }
 
 export type TabType = 'recent' | 'popular';
@@ -170,10 +170,7 @@ async function fetchPopularCards(
         ec.id,
         ec."cardType",
         ec.relationship,
-        ec."editedContent",
         ec."r2Url",
-        ec."createdAt",
-        ec."originalCardId",
         -- Rank within each group to find the oldest (rn_asc = 1)
         ROW_NUMBER() OVER (PARTITION BY ec."originalCardId" ORDER BY ec."createdAt" ASC) as rn_asc,
         -- Count cards per group for popularity ranking
@@ -187,10 +184,7 @@ async function fetchPopularCards(
       id,
       "cardType",
       relationship,
-      "editedContent",
       "r2Url",
-      "createdAt",
-      "originalCardId"
     FROM RankedCards
     WHERE rn_asc = 1 -- Select only the oldest card from each group
     ORDER BY
