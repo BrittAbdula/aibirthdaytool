@@ -35,7 +35,6 @@ export default function SimpleCardGallery({ initialCardsData, wishCardType, tabT
                 cardType={card.cardType}
                 isNewCard={false}
                 imgUrl={card.r2Url || ''}
-                svgContent={card.editedContent}
               />
             </div>
           </div>
