@@ -148,7 +148,6 @@ export default function CardGallery({ initialCardsData, wishCardType, tabType }:
                     cardType={card.cardType}
                     isNewCard={false}
                     imgUrl={card.r2Url || ''}
-                    svgContent={card.editedContent}
                   />
                 </div>
               </motion.div>
