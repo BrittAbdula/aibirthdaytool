@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { generateCardContent } from '@/lib/gpt';
 import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
+import { generateCardImage } from '@/lib/image';
 
 // 增加超时限制到最大值
 export const maxDuration = 60; // 增加到 60 秒
@@ -19,6 +20,7 @@ export async function POST(request: Request) {
     }
 
     const userId = session.user.id;
+    // const userId = 'cm56ic66y000110jijyw2ir8r';
     const requestData = await request.json();
     const {
       cardType,
@@ -28,6 +30,7 @@ export async function POST(request: Request) {
       message,
       modificationFeedback,
       previousCardId,
+      format = 'svg', // Default to svg if not specified
       ...otherFields
     } = requestData;
 
@@ -90,6 +93,7 @@ export async function POST(request: Request) {
       sender,
       senderName,
       message,
+      format,
       ...(isModification && { 
         modificationFeedback, 
         previousCardId 
@@ -97,8 +101,15 @@ export async function POST(request: Request) {
       ...otherFields
     };
 
-    // 生成卡片内容
-    const { r2Url, cardId, svgContent } = await generateCardContent(cardData);
+    // Generate card based on format
+    let result;
+    if (format === 'image') {
+      // Use image generator
+      result = await generateCardImage(cardData);
+    } else {
+      // Use SVG generator (default)
+      result = await generateCardContent(cardData);
+    }
 
     // 增加使用计数 - 异步处理以避免阻塞响应
     if (usage) {
@@ -123,7 +134,7 @@ export async function POST(request: Request) {
       });
     }
 
-    return NextResponse.json({ r2Url, cardId, svgContent });
+    return NextResponse.json(result);
   } catch (error) {
     console.error('Error generating card:', error);
     return NextResponse.json({ 

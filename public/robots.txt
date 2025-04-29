@@ -4,7 +4,7 @@ Allow: /
 
 User-agent: *
 Allow: /
-Disallow: /admin/
+Disallow: /admin/*
 Disallow: /*/edit/
 Disallow: /to/
 Disallow: /api/

@@ -70,6 +70,13 @@ export default function ValentineCard() {
     }
   };
 
+  const handlePlayAgain = () => {
+    setYesPressed(false);
+    setNoCount(0);
+    setNoButtonPosition({ x: 0, y: 0 });
+    setShowHeart(false);
+  };
+
   const getNoButtonText = () => {
     const phrases = [
       "No",
@@ -103,6 +110,15 @@ export default function ValentineCard() {
             <p>Thank you for accepting my invitation! ❤️</p>
             <p className="mt-2 text-pink-500">You&apos;re my favorite!</p>
           </div>
+          <button 
+            onClick={handlePlayAgain}
+            className="mt-6 bg-pink-500 hover:bg-pink-600 text-white font-bold py-2 px-4 rounded-full flex items-center gap-2 transition-transform hover:scale-105 shadow-md"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
+            </svg>
+            Dare to Reject Me Again?
+          </button>
           <div className="mt-8 flex items-center space-x-4 relative">
             <Link href="/" className="text-sm text-gray-500 hover:text-gray-700 underline">
               Back to Home

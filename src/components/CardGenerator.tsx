@@ -243,6 +243,8 @@ export default function CardGenerator({
     });
     // Set default card style to 'classic'
     initialFormData["style"] = "classic";
+    // Set default format to 'svg'
+    initialFormData["format"] = "svg";
     setFormData(initialFormData);
   }, [wishCardType, cardConfig])
 
@@ -299,7 +301,6 @@ export default function CardGenerator({
 
   const handleGenerateCard = async () => {
     if (!session) {
-      // Save current form data before authentication
       setSavedFormData({
         formData: {...formData},
         customValues: {...customValues},
@@ -323,6 +324,7 @@ export default function CardGenerator({
       const payload: Record<string, any> = {
         cardType: currentCardType,
         size: selectedSize,
+        format: formData.format || 'svg',
         ...formData
       }
 
@@ -511,6 +513,7 @@ export default function CardGenerator({
                       { id: "fairytale", name: "Fairy Tale", color: "#E0F4FF", icon: "🧚" },
                       { id: "ghibli", name: "Ghibli", color: "#D4E7C5", icon: "🌿" },
                       { id: "pastel", name: "Pastel", color: "#FFCEFE", icon: "🎀" },
+                      { id: "neon", name: "Neon", color: "#FFD1DC", icon: "🌈" },
                     ].map((style) => (
                       <button
                         key={style.id}
@@ -573,7 +576,7 @@ export default function CardGenerator({
                       className="border-[#b19bff] focus-visible:ring-[#b19bff] text-sm"
                     />
                     <p className="text-xs text-gray-500 mt-1">
-                      Try: &ldquo;watercolor&rdquo;, &ldquo;neon&rdquo;, &ldquo;3D&rdquo;, &ldquo;pastel&rdquo;, &ldquo;glitter&rdquo;, etc.
+                      Try: &ldquo;watercolor&rdquo;, &ldquo;princess&rdquo;, &ldquo;3D&rdquo;, &ldquo;pastel&rdquo;, &ldquo;glitter&rdquo;, etc.
                     </p>
                   </div>
                 )}
@@ -621,8 +624,87 @@ export default function CardGenerator({
                   </button>
                 </div>
               )}
+
+              {/* Card Format Selection */}
+              <div className="w-full">
+                <Label htmlFor="card-format" className="mb-2 block flex items-center justify-between">
+                  <span>Card Format</span>
+                  <span className="text-xs text-gray-500 italic">Choose how your card is generated</span>
+                </Label>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setFormData(prev => ({ ...prev, format: 'svg' }))}
+                    className={cn(
+                      "flex flex-col items-center justify-center p-3 rounded-md border transition-all relative",
+                      formData.format !== 'image' 
+                        ? "border-[#FFC0CB] bg-[#FFF5F6] ring-1 ring-[#FFC0CB]" 
+                        : "border-gray-200 hover:border-[#FFC0CB]"
+                    )}
+                  >
+                    {/* Animation indicator */}
+                    <div className="absolute -top-2 -right-2">
+                      <div className="animate-bounce flex items-center justify-center bg-[#FFC0CB] text-white text-[10px] px-1.5 py-0.5 rounded-full">
+                        <span className="mr-0.5">✨</span>Animated
+                      </div>
+                    </div>
+                    
+                    <svg className="w-6 h-6 mb-1" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path 
+                        d="M14 7L9 12L14 17" 
+                        stroke="#FFC0CB" 
+                        strokeWidth="2" 
+                        strokeLinecap="round" 
+                        strokeLinejoin="round"
+                        className="animate-pulse"
+                      />
+                      <path 
+                        d="M5 3L19 21" 
+                        stroke="#FFC0CB" 
+                        strokeWidth="2" 
+                        strokeLinecap="round"
+                        className="animate-pulse"
+                        style={{ animationDelay: "0.5s" }}
+                      />
+                    </svg>
+                    <span className="text-sm font-medium">SVG Card</span>
+                    <span className="text-xs text-gray-500 mt-1">Vector graphics</span>
+                    <div className="mt-2 text-xs text-gray-600 text-center">
+                      <span className="block">• Supports animations</span>
+                      <span className="block">• Interactive elements</span>
+                      <span className="block">• Precise text layout</span>
+                    </div>
+                  </button>
+                  
+                  <button
+                    type="button"
+                    onClick={() => setFormData(prev => ({ ...prev, format: 'image' }))}
+                    className={cn(
+                      "flex flex-col items-center justify-center p-3 rounded-md border transition-all",
+                      formData.format === 'image' 
+                        ? "border-[#FFC0CB] bg-[#FFF5F6] ring-1 ring-[#FFC0CB]" 
+                        : "border-gray-200 hover:border-[#FFC0CB]"
+                    )}
+                  >
+                    <svg className="w-6 h-6 mb-1" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <rect x="4" y="4" width="16" height="16" rx="2" stroke="#FFC0CB" strokeWidth="2"/>
+                      <circle cx="8.5" cy="8.5" r="1.5" fill="#FFC0CB"/>
+                      <path d="M6 14L8 12L10 14L14 10L18 14" stroke="#FFC0CB" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                    <span className="text-sm font-medium">Image Card</span>
+                    <span className="text-xs text-gray-500 mt-1">AI generated image</span>
+                    <div className="mt-2 text-xs text-gray-600 text-center">
+                      <span className="block">• Artistic style</span>
+                      <span className="block">• More creative</span>
+                    </div>
+                  </button>
+                </div>
+                <p className="text-xs text-gray-500 mt-2">
+                  SVG cards support animations and interactive elements, while Image cards offer more artistic visual styles.
+                </p>
+              </div>
             </CardContent>
-            <CardFooter>
+            <CardFooter className="flex flex-col space-y-4">
               <Button className="w-full bg-[#FFC0CB] text-[#4A4A4A] hover:bg-[#FFD1DC]" onClick={handleGenerateCard} disabled={isLoading}>
                 {isLoading ? 'Generating...' : 'Generate Card'}
               </Button>

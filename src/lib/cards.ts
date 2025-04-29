@@ -184,7 +184,7 @@ async function fetchPopularCards(
       id,
       "cardType",
       relationship,
-      "r2Url",
+      "r2Url"
     FROM RankedCards
     WHERE rn_asc = 1 -- Select only the oldest card from each group
     ORDER BY
