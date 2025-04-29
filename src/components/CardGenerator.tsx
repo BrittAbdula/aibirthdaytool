@@ -364,14 +364,27 @@ export default function CardGenerator({
         throw new Error(data.error || 'Failed to generate card')
       }
 
-      if (!data.svgContent) {
-        throw new Error('Failed to get SVG content')
-      }
+      // if (!data.svgContent) {
+      //   throw new Error('Failed to get SVG content')
+      // }
 
       // Create a data URL from the SVG content
-      const svgDataUrl = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(data.svgContent)}`
-      setImgUrl(svgDataUrl)
-      setSvgContent(data.svgContent)
+      // const svgDataUrl = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(data.svgContent)}`
+      // setImgUrl(svgDataUrl)
+      // setSvgContent(data.svgContent)
+      // Handle response based on card format
+      if (formData.format === 'image' && data.r2Url) {
+        // For image cards, use the returned image URL directly
+        setImgUrl(data.r2Url)
+        setSvgContent('') // Clear any SVG content
+      } else if (data.svgContent) {
+        // For SVG cards, create a data URL from the SVG content
+        const svgDataUrl = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(data.svgContent)}`
+        setImgUrl(svgDataUrl)
+        setSvgContent(data.svgContent)
+      } else {
+        throw new Error('Failed to get card content')
+      }
       setCardId(data.cardId)
       setSubmited(true)
       
