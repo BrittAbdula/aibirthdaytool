@@ -3,6 +3,7 @@ import { prisma } from './prisma';
 import { nanoid } from 'nanoid';
 import { CARD_SIZES, CardSize } from './card-config';
 import OpenAI from 'openai';
+import { uploadToCloudflareImages } from '@/lib/r2';
 
 interface ApiLogParams {
     userId?: string;
@@ -154,6 +155,7 @@ Based on previous design with parameters: ${JSON.stringify(previousCard.userInpu
 
         const duration = Date.now() - startTime;
         const imageUrl = response?.data?.[0]?.url || '';
+        const cf_url = await uploadToCloudflareImages(imageUrl);
         console.log('<----Response image URL : ' + imageUrl + '---->')
         
         // Log the request
@@ -164,7 +166,7 @@ Based on previous design with parameters: ${JSON.stringify(previousCard.userInpu
             userInputs: otherParams,
             promptVersion: 'grok-2-image',
             responseContent: "",
-            r2Url: imageUrl,
+            r2Url: cf_url,
             tokensUsed: 0, // No tokens for image generation
             duration,
             isError: !imageUrl,
