@@ -32,16 +32,16 @@ export async function GET(
         // Since userInputs is stored as a Record<string, any> and not an array
         let relationshipValue = "";
         let messageValue = "";
-        
+
         // Check if userInputs is an object with direct key-value pairs
         if (userInputs) {
-          relationshipValue = 
-            (userInputs.relationship as string) || 
-            (userInputs.sender as string) || 
+          relationshipValue =
+            (userInputs.relationship as string) ||
+            (userInputs.sender as string) ||
             "";
           messageValue = (userInputs.message as string) || "";
         }
-        
+
         return NextResponse.json({
           id: null,
           originalCardId: originalCard.cardId,

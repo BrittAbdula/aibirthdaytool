@@ -34,7 +34,7 @@ export async function GET(request: Request, { params }: { params: { cardId: stri
                     userInputs: true
                 }
             })
-            console.log('originalCard', originalCard)
+            // console.log('originalCard', originalCard)
             if (originalCard) {
                 const userInputs = originalCard.userInputs as Prisma.JsonObject;
                 const messageValue = (userInputs.message as string) || "";

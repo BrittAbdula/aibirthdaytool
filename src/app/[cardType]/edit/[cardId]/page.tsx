@@ -89,6 +89,12 @@ export default function EditCard({ params }: { params: { cardId: string, cardTyp
 
   const convertSvgToPng = (): Promise<string> => {
     return new Promise((resolve, reject) => {
+      if (!imageSrc.startsWith('data:image/svg+xml')) {
+        // If it's not an SVG (likely an r2Url), just return the image source
+        resolve(imageSrc)
+        return
+      }
+      
       const img = new Image()
       img.onload = () => {
         const canvas = document.createElement('canvas')

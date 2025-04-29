@@ -8,21 +8,22 @@ export async function POST(request: Request) {
     const session = await auth()
     const userId = session?.user?.id || null
 
-    const { editedCardId, cardType, originalCardId, editedContent, spotifyTrackId, customUrl, relationship, message, r2UrlImage } = await request.json()
-    // console.log('-------------:', editedCardId, cardType, originalCardId, editedContent, spotifyTrackId)
+    const { editedCardId, cardType, originalCardId, editedContent, spotifyTrackId, customUrl, relationship, message, r2Url } = await request.json()
+    console.log('-------------:', editedCardId, cardType, originalCardId, editedContent, spotifyTrackId)
+    console.log('r2UrlImage:', r2Url)
 
     const createdAt = new Date()
     
     if (editedCardId) {
       // Upload edited content to R2, overwriting the existing file
-      const r2Url = editedContent? await uploadSvgToR2(editedContent, editedCardId, createdAt) : r2UrlImage
+      const r2UrlImage = editedContent? await uploadSvgToR2(editedContent, editedCardId, createdAt) : r2Url
 
       await prisma.editedCard.update({
         where: { id: editedCardId },
         data: {
           editedContent,
           spotifyTrackId,
-          r2Url,
+          r2Url: r2UrlImage,
           userId,
           customUrl,
           relationship,
@@ -35,7 +36,7 @@ export async function POST(request: Request) {
       const newCardId = crypto.randomUUID()
       
       // Upload edited content to R2
-      const r2Url = editedContent? await uploadSvgToR2(editedContent, newCardId, createdAt) : r2UrlImage
+      const r2UrlImage = editedContent? await uploadSvgToR2(editedContent, newCardId, createdAt) : r2Url
 
       const editedCard = await prisma.editedCard.create({
         data: {
@@ -44,7 +45,7 @@ export async function POST(request: Request) {
           originalCardId,
           editedContent,
           spotifyTrackId,
-          r2Url,
+          r2Url: r2UrlImage,
           userId,
           createdAt,
           customUrl,

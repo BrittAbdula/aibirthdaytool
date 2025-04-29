@@ -103,7 +103,7 @@ export default function CardDisplay({ card }: CardDisplayProps) {
           }`}>
             <div className="relative w-full max-w-[400px] mx-auto">
               <div 
-                className="relative aspect-[2/3] rounded-lg overflow-hidden"
+                className="relative aspect-[2/3] rounded-lg overflow-hidden bg-transparent"
                 style={{ maxHeight: '70vh' }}
               >
                 <Image
@@ -111,7 +111,7 @@ export default function CardDisplay({ card }: CardDisplayProps) {
                   alt={`${card.cardType} card `}
                   fill
                   priority
-                  className="transition-transform duration-300 hover:scale-102"
+                  className="transition-transform duration-300 hover:scale-102 object-contain"
                   onClick={triggerConfetti}
                   unoptimized
                 />
@@ -207,7 +207,7 @@ export default function CardDisplay({ card }: CardDisplayProps) {
               
               {/* Card Preview in Envelope */}
               <div className={cn(
-                "absolute inset-4 bg-white rounded-lg shadow-inner transition-all duration-1000 transform-gpu",
+                "absolute inset-4 bg-transparent rounded-lg shadow-inner transition-all duration-1000 transform-gpu",
                 stage === 'revealing' 
                   ? "translate-y-[-120%] rotate-0 scale-110" 
                   : "translate-y-0 rotate-2"
@@ -220,7 +220,7 @@ export default function CardDisplay({ card }: CardDisplayProps) {
                     src={imageSrc}
                     alt={`${card.cardType} card preview`}
                     fill
-                    className="object-cover"
+                    className="object-contain"
                     unoptimized
                   />
                 </div>
