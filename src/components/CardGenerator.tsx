@@ -693,12 +693,19 @@ export default function CardGenerator({
                     type="button"
                     onClick={() => setFormData(prev => ({ ...prev, format: 'image' }))}
                     className={cn(
-                      "flex flex-col items-center justify-center p-3 rounded-md border transition-all",
+                      "flex flex-col items-center justify-center p-3 rounded-md border transition-all relative",
                       formData.format === 'image' 
                         ? "border-[#FFC0CB] bg-[#FFF5F6] ring-1 ring-[#FFC0CB]" 
                         : "border-gray-200 hover:border-[#FFC0CB]"
                     )}
                   >
+                    {/* BETA badge */}
+                    <div className="absolute -top-2 -right-2 z-10">
+                      <div className="animate-pulse flex items-center justify-center bg-gradient-to-r from-[#a786ff] to-[#b19bff] text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full shadow-sm border border-white">
+                        <span className="mr-0.5 text-[8px]">✨</span>BETA
+                      </div>
+                    </div>
+                    
                     <svg className="w-6 h-6 mb-1" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                       <rect x="4" y="4" width="16" height="16" rx="2" stroke="#FFC0CB" strokeWidth="2"/>
                       <circle cx="8.5" cy="8.5" r="1.5" fill="#FFC0CB"/>

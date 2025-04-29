@@ -11,7 +11,8 @@ interface ApiLogParams {
     userInputs: Record<string, any>;
     promptVersion: string;
     responseContent: string;
-    tokensUsed: number;
+    r2Url: string;
+    tokensUsed: number; 
     duration: number;
     isError?: boolean;
     errorMessage?: string;
@@ -35,7 +36,7 @@ async function logApiRequest(params: ApiLogParams): Promise<string | undefined> 
                 duration: params.duration,
                 isError: params.isError,
                 errorMessage: params.errorMessage ? params.errorMessage : undefined,
-                r2Url: r2Url,
+                r2Url: params.r2Url,
                 timestamp: createdAt,
             },
         });
@@ -125,6 +126,7 @@ Based on previous design with parameters: ${JSON.stringify(previousCard.userInpu
                 promptVersion: 'grok-2-image',
                 responseContent: 'userPrompt is too long',
                 tokensUsed: 0,
+                r2Url: '',
                 duration: Date.now() - startTime,
                 isError: true,
                 errorMessage: "User prompt too long"
@@ -161,7 +163,8 @@ Based on previous design with parameters: ${JSON.stringify(previousCard.userInpu
             cardType,
             userInputs: otherParams,
             promptVersion: 'grok-2-image',
-            responseContent: imageUrl,
+            responseContent: "",
+            r2Url: imageUrl,
             tokensUsed: 0, // No tokens for image generation
             duration,
             isError: !imageUrl,
@@ -185,6 +188,7 @@ Based on previous design with parameters: ${JSON.stringify(previousCard.userInpu
             promptVersion: 'grok-2-image',
             responseContent: "error",
             tokensUsed: 0,
+            r2Url: '',
             duration: Date.now() - startTime,
             isError: true,
             errorMessage: error instanceof Error ? error.message : String(error)
