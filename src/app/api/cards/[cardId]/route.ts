@@ -56,7 +56,7 @@ export async function GET(
         return NextResponse.json({ responseContent })
       }
     } else {
-      card.editedContent = await fetchSvgContent(card.r2Url) || card.editedContent
+      // card.editedContent = await fetchSvgContent(card.r2Url) || card.editedContent
 
       return NextResponse.json(card)
     }

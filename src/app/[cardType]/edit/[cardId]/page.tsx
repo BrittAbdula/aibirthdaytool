@@ -285,7 +285,7 @@ export default function EditCard({ params }: { params: { cardId: string, cardTyp
                 {isLoading ? (
                   <Skeleton className="w-full aspect-[2/3] rounded-lg" />
                 ) : (
-                  <div className="relative aspect-[2/3]">
+                  <div className="relative aspect-[2/3] flex items-center justify-center">
                     {imageSrc && (
                       <NextImage
                         src={imageSrc}
