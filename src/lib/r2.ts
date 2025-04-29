@@ -102,7 +102,7 @@ export async function uploadToCloudflareImages(
         throw new Error(`Cloudflare Images upload failed: ${JSON.stringify(data.errors)}`);
       }
 
-      const cf_url = `https://store.celeprime.com/${CF_HASH_CODE}/${data.result.id}/public`;
+      const cf_url = `https://store.celeprime.com/cdn-cgi/imagedelivery/${CF_HASH_CODE}/${data.result.id}/public`;
       
       return cf_url;
     } catch (error) {

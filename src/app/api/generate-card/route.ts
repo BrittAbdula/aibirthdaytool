@@ -59,7 +59,7 @@ export async function POST(request: Request) {
 
     // 获取用户计划类型
     const planType = user?.plan || 'FREE';
-    const dailyLimit = planType === 'FREE' ? 5 : Infinity;
+    const dailyLimit = planType === 'FREE' ? 10 : Infinity;
     
     // 处理用户使用情况
     let currentUsage = usage?.count || 0;
