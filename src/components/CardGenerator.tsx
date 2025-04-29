@@ -991,6 +991,7 @@ export default function CardGenerator({
             <DialogTitle className="text-2xl font-semibold text-[#4A4A4A]">Daily Limit Reached</DialogTitle>
             <DialogDescription className="text-gray-600 mt-2 space-y-4">
               <p>You&apos;ve reached your daily limit for card generation. Free users can generate up to 3 cards per day.</p>
+              
               <div className="bg-[#FFF5F6] p-4 rounded-lg border border-[#FFC0CB]">
                 <p className="text-[#4A4A4A] font-medium">Don&apos;t worry! You can still create beautiful cards by:</p>
                 <ul className="list-disc list-inside mt-2 space-y-1 text-[#4A4A4A]">
@@ -998,6 +999,23 @@ export default function CardGenerator({
                   <li>Customizing existing designs</li>
                   <li>Saving your favorites for later</li>
                 </ul>
+              </div>
+
+              <div className="mt-4 bg-[#f0f4ff] p-4 rounded-lg border border-[#a786ff]">
+                <p className="text-[#4A4A4A] font-medium flex items-center">
+                  <span className="text-lg mr-2">✨</span>
+                  Get 10 Extra Generations!
+                </p>
+                <div className="mt-2 space-y-2 text-[#4A4A4A]">
+                  <p className="text-sm">Share MewTruCard.com on your favorite platform:</p>
+                  <ol className="list-decimal list-inside text-sm space-y-1.5">
+                    <li>Share a link to mewtrucard.com on a forum, blog, or social media</li>
+                    <li>Email the shared URL and your account email to: 
+                      <span className="font-medium text-[#a786ff]"> support@mewtrucard.com</span>
+                    </li>
+                    <li>We&apos;ll add 10 extra generations to your account!</li>
+                  </ol>
+                </div>
               </div>
             </DialogDescription>
           </DialogHeader>

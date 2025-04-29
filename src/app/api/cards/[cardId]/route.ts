@@ -20,6 +20,7 @@ export async function GET(
           responseContent: true,
           cardId: true,
           cardType: true,
+          r2Url: true,
           id: true,
           userInputs: true,
         }
@@ -46,6 +47,7 @@ export async function GET(
           originalCardId: originalCard.cardId,
           editedContent: originalCard.responseContent,
           cardType: originalCard.cardType,
+          r2Url: originalCard.r2Url,
           relationship: relationshipValue,
           message: messageValue
         })

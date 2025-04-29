@@ -3,7 +3,7 @@ import { generateCardContent } from '@/lib/gpt';
 import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
 import { generateCardImage } from '@/lib/image';
-
+import { uploadToCloudflareImages } from '@/lib/r2';
 // 增加超时限制到最大值
 export const maxDuration = 60; // 增加到 60 秒
 
@@ -59,7 +59,7 @@ export async function POST(request: Request) {
 
     // 获取用户计划类型
     const planType = user?.plan || 'FREE';
-    const dailyLimit = planType === 'FREE' ? 10 : Infinity;
+    const dailyLimit = planType === 'FREE' ? 5 : Infinity;
     
     // 处理用户使用情况
     let currentUsage = usage?.count || 0;
@@ -106,6 +106,12 @@ export async function POST(request: Request) {
     if (format === 'image') {
       // Use image generator
       result = await generateCardImage(cardData);
+      const cf_url = await uploadToCloudflareImages(result.r2Url);
+      result = {
+        cardId: result.cardId,
+        r2Url: cf_url,
+        svgContent: result.svgContent
+      }
     } else {
       // Use SVG generator (default)
       result = await generateCardContent(cardData);

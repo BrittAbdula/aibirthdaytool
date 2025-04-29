@@ -55,7 +55,11 @@ export default function EditCard({ params }: { params: { cardId: string, cardTyp
           setRelationship(data.relationship)
           setMessage(data.message)
           setEditableFields(extractEditableFields(content))
-          updateImageSrc(content)
+          if (content) {
+            updateImageSrc(content)
+          } else {
+            setImageSrc(data.r2Url)
+          }
         } else {
           console.error('Failed to fetch card data')
         }
@@ -189,6 +193,7 @@ export default function EditCard({ params }: { params: { cardId: string, cardTyp
           cardType,
           originalCardId: originalCardId,
           editedContent: svgContent,
+          r2Url: imageSrc,
           spotifyTrackId: enableMusic ? selectedMusic?.id : null,
           customUrl: enableCustomUrl ? customUrl : null,
           relationship: relationship,
