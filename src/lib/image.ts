@@ -90,14 +90,7 @@ export async function generateCardImage(params: CardContentParams): Promise<{ r2
                 if (previousCard) {
                     userPrompt = `Create a ${cardType} card with these modifications: ${modificationFeedback}. 
 Based on previous design with parameters: ${JSON.stringify(previousCard.userInputs)}` +
-`Design Guidance:\n` +
-                `- Style: Match the event tone (e.g., pastel for soft, vibrant for lively) with subtle gradients or textures.\n` +
-                `- Theme: Infer a theme from the details (e.g., magical for Elsa, safari for a child’s birthday) with fitting elements like animals or flowers.\n` +
-                `- Imagery: Add a central thematic illustration (e.g., cute animals, elegant flowers) that complements the text.\n` +
-                `- Text: Use a handwritten font for the main message, sans-serif for details. Center the text.\n` +
-                `- Colors: Choose a cohesive palette; ensure text is legible.\n` +
-                `- Decor: Add small accents (e.g., leaves, stars) to frame the design.\n` +
-                `- Creativity: Interpret details creatively for a joyful, polished look.`;
+                `Design: Match the event tone with a fitting theme (e.g., magical for Elsa, safari for kids). Use a central illustration, cohesive colors, handwritten font for the main message, sans-serif for details, and small accents to frame. Be creative for a polished look.`;
                 }
             } catch (error) {
                 console.error("Error fetching previous card content:", error);
@@ -119,14 +112,7 @@ Based on previous design with parameters: ${JSON.stringify(previousCard.userInpu
 
                 userPrompt = `Create a ${cardType} card that feels personal and festive, using these details to inspire a unique design:\n${userPromptFields}\n` +
                 `Card dimensions: ${cardSize.width}x${cardSize.height}\n\n` +
-                `Design Guidance:\n` +
-                `- Style: Match the event tone (e.g., pastel for soft, vibrant for lively) with subtle gradients or textures.\n` +
-                `- Theme: Infer a theme from the details (e.g., magical for Elsa, safari for a child’s birthday) with fitting elements like animals or flowers.\n` +
-                `- Imagery: Add a central thematic illustration (e.g., cute animals, elegant flowers) that complements the text.\n` +
-                `- Text: Use a handwritten font for the main message, sans-serif for details. Center the text.\n` +
-                `- Colors: Choose a cohesive palette; ensure text is legible.\n` +
-                `- Decor: Add small accents (e.g., leaves, stars) to frame the design.\n` +
-                `- Creativity: Interpret details creatively for a joyful, polished look.`;
+                `Design: Match the event tone with a fitting theme (e.g., magical for Elsa, safari for kids). Use a central illustration, cohesive colors, handwritten font for the main message, sans-serif for details, and small accents to frame. Be creative for a polished look.`;
         }
 
         console.log('<----User prompt : ' + userPrompt + '---->')
