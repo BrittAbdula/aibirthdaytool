@@ -10,7 +10,20 @@ interface Props {
   searchParams: { relationship?: string; tab?: string }
 }
 
-export const revalidate = 300 // 每5分钟重新验证页面
+// Set revalidation period to 1 hour (3600 seconds)
+export const revalidate = 3600
+
+// Generate static params for common card types
+export async function generateStaticParams() {
+  return [
+    { type: 'birthday' },
+    { type: 'love' },
+    { type: 'anniversary' },
+    { type: 'wedding' },
+    { type: 'sorry' },
+    // Add more common card types as needed
+  ]
+}
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const type = decodeURIComponent(params.type)
@@ -51,13 +64,12 @@ export default async function TypePage({ params, searchParams }: Props) {
   const relationship = searchParams.relationship || null
   const activeTab = (searchParams.tab as TabType) || 'recent'
   
-  // Fetch cards based on active tab
-  let initialCardsData;
-  if (activeTab === 'popular') {
-    initialCardsData = await getPopularCardsServer(1, 12, type, relationship)
-  } else {
-    initialCardsData = await getRecentCardsServer(1, 12, type, relationship)
-  }
+  // Fetch all card data at build time or during revalidation
+  const recentCardsData = await getRecentCardsServer(1, 24, type, relationship)
+  const popularCardsData = await getPopularCardsServer(1, 24, type, relationship)
+  
+  // Select the appropriate data based on active tab
+  const initialCardsData = activeTab === 'recent' ? recentCardsData : popularCardsData
 
   return (
     <article className="min-h-screen bg-gradient-to-br from-white via-purple-50 to-pink-50">
@@ -69,8 +81,8 @@ export default async function TypePage({ params, searchParams }: Props) {
             </span>
           </h1>
           <p className="text-lg sm:text-xl text-gray-600 max-w-2xl mx-auto px-4 mb-6">
-          Design animated, personalised {type.toLowerCase()} cards in seconds —
-          edit, download, share for free with MewTruCard’s AI collection. ✨
+          Design animated, personalised {type.toLowerCase()} cards in seconds —
+          edit, download, share for free with MewTruCard&apos;s AI collection. ✨
           </p>
           <div className="flex flex-wrap justify-center gap-4 text-sm">
             <span className="px-3 py-1 bg-purple-50 rounded-full">💝 Personalized Messages</span>

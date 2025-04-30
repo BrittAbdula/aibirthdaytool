@@ -88,8 +88,16 @@ export async function generateCardImage(params: CardContentParams): Promise<{ r2
                 });
 
                 if (previousCard) {
-                    userPrompt = `Create a card (${cardType}) with these modifications: ${modificationFeedback}. 
-Based on previous design with parameters: ${JSON.stringify(previousCard.userInputs)}`;
+                    userPrompt = `Create a ${cardType} card with these modifications: ${modificationFeedback}. 
+Based on previous design with parameters: ${JSON.stringify(previousCard.userInputs)}` +
+`Design Guidance:\n` +
+                `- Style: Match the event tone (e.g., pastel for soft, vibrant for lively) with subtle gradients or textures.\n` +
+                `- Theme: Infer a theme from the details (e.g., magical for Elsa, safari for a child’s birthday) with fitting elements like animals or flowers.\n` +
+                `- Imagery: Add a central thematic illustration (e.g., cute animals, elegant flowers) that complements the text.\n` +
+                `- Text: Use a handwritten font for the main message, sans-serif for details. Center the text.\n` +
+                `- Colors: Choose a cohesive palette; ensure text is legible.\n` +
+                `- Decor: Add small accents (e.g., leaves, stars) to frame the design.\n` +
+                `- Creativity: Interpret details creatively for a joyful, polished look.`;
                 }
             } catch (error) {
                 console.error("Error fetching previous card content:", error);
@@ -109,10 +117,16 @@ Based on previous design with parameters: ${JSON.stringify(previousCard.userInpu
                 .map(([key, value]) => `${key}: ${value}`)
                 .join('\n');
 
-            userPrompt = `Create a beautiful ${cardType} card with the following details:\n${userPromptFields}`;
-            
-            // Add size information
-            userPrompt += `\nCard dimensions: ${cardSize.width}x${cardSize.height}`;
+                userPrompt = `Create a ${cardType} card that feels personal and festive, using these details to inspire a unique design:\n${userPromptFields}\n` +
+                `Card dimensions: ${cardSize.width}x${cardSize.height}\n\n` +
+                `Design Guidance:\n` +
+                `- Style: Match the event tone (e.g., pastel for soft, vibrant for lively) with subtle gradients or textures.\n` +
+                `- Theme: Infer a theme from the details (e.g., magical for Elsa, safari for a child’s birthday) with fitting elements like animals or flowers.\n` +
+                `- Imagery: Add a central thematic illustration (e.g., cute animals, elegant flowers) that complements the text.\n` +
+                `- Text: Use a handwritten font for the main message, sans-serif for details. Center the text.\n` +
+                `- Colors: Choose a cohesive palette; ensure text is legible.\n` +
+                `- Decor: Add small accents (e.g., leaves, stars) to frame the design.\n` +
+                `- Creativity: Interpret details creatively for a joyful, polished look.`;
         }
 
         console.log('<----User prompt : ' + userPrompt + '---->')

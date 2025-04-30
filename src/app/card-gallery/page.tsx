@@ -33,7 +33,17 @@ export const metadata: Metadata = {
   },
 }
 
-export const revalidate = 300 // 每5分钟重新验证页面
+// Set revalidation period to 1 hours (3600 seconds)
+export const revalidate = 3600
+
+// Generate static params for common card types
+export async function generateStaticParams() {
+  return [
+    { tab: 'recent', type: null },
+    { tab: 'popular', type: null },
+    // Add other common combinations as needed
+  ]
+}
 
 interface PageProps {
   searchParams: { 
@@ -47,14 +57,9 @@ export default async function CardGalleryPage({ searchParams }: PageProps) {
   const defaultType = searchParams.type || null
   const activeTab = (searchParams.tab as TabType) || 'recent'
   
-  // Fetch cards based on active tab
-  const recentCardsData = activeTab === 'recent' 
-    ? await getRecentCardsServer(1, 12, defaultType)
-    : null
-    
-  const popularCardsData = activeTab === 'popular'
-    ? await getPopularCardsServer(1, 12, defaultType)
-    : null
+  // Fetch all card data at build time or during revalidation
+  const recentCardsData = await getRecentCardsServer(1, 24, defaultType)
+  const popularCardsData = await getPopularCardsServer(1, 24, defaultType)
     
   const initialCardsData = activeTab === 'recent' ? recentCardsData : popularCardsData
   
