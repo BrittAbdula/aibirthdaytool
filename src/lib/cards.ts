@@ -84,7 +84,6 @@ async function fetchRecentCards(
         ec.id,
         ec."cardType",
         ec.relationship,
-        ec."editedContent",
         ec."r2Url",
         ec."createdAt",
         ec."originalCardId",
@@ -99,7 +98,6 @@ async function fetchRecentCards(
       id,
       "cardType",
       relationship,
-      "editedContent",
       "r2Url",
       "createdAt",
       "originalCardId"

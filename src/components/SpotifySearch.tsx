@@ -140,9 +140,15 @@ const defaultSongs: Record<CardType, Song> = {
     artist: "Adele",
     previewUrl: null,
     imageUrl: null,
+  },
+  mothersday: {
+    id: "3p0v2zOxN1V9eFbK4bP2xY",  // The Way I Loved You 
+    name: "The Way I Loved You",
+    artist: "Adele",
+    previewUrl: null,
+    imageUrl: null,
   }
 }
-
 export default function SpotifySearch({ cardType, onSelect }: SpotifySearchProps) {
   const [inputValue, setInputValue] = useState("")
   const [isSearchMode, setIsSearchMode] = useState(false)

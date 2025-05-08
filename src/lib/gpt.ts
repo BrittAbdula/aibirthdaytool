@@ -179,6 +179,7 @@ IMPORTANT: return SVG code only. Do not include any explanation, commentary, or 
             .join('\n');
 
         const userPrompt = userPromptPrefixText ? userPromptPrefixText : userPromptFields;
+        console.log('<----System prompt : ' + systemPrompt + '---->')
         console.log('<----User prompt : ' + userPrompt + '---->')
 
         // Check prompt length

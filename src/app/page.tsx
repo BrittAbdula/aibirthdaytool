@@ -14,6 +14,7 @@ import {
 import CardTypeBubbles from "@/components/CardTypeBubbles";
 import { CookieConsentWrapper } from "@/components/CookieConsentWrapper";
 import Link from "next/link";
+import { getAllCardTypes, CardBadge } from "@/lib/card-config";
 
 interface FeatureCardProps {
   title: string;
@@ -63,6 +64,18 @@ export const revalidate = 300; // 每5分钟重新验证页面
 
 export default async function Home() {
   const initialCardsData = await getRecentCardsServer(1, 12, "");
+  
+  // Pre-fetch card badge data
+  const allCardTypes = await getAllCardTypes();
+  const cardTypeBadges: Record<string, CardBadge> = {};
+  
+  // Convert array to record object for client-side use
+  allCardTypes.forEach(cardType => {
+    if (cardType.badge) {
+      cardTypeBadges[cardType.type] = cardType.badge;
+    }
+  });
+
   return (
     <main className="min-h-screen bg-gradient-to-b from-white to-purple-50">
       <div className="container mx-auto px-4 py-12 relative">

@@ -200,6 +200,3 @@ Based on previous design with parameters: ${JSON.stringify(previousCard.userInpu
     }
 }
 
-const defaultSVG = `<svg width="400" height="600" xmlns="http://www.w3.org/2000/svg">
-  <!-- Error content -->
-</svg>`;

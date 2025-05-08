@@ -639,7 +639,7 @@ export default function CardGenerator({
               )}
 
               {/* Card Format Selection */}
-              <div className="w-full">
+              {/* <div className="w-full">
                 <Label htmlFor="card-format" className="mb-2 block flex items-center justify-between">
                   <span>Card Format</span>
                   <span className="text-xs text-gray-500 italic">Choose how your card is generated</span>
@@ -655,7 +655,7 @@ export default function CardGenerator({
                         : "border-gray-200 hover:border-[#FFC0CB]"
                     )}
                   >
-                    {/* Animation indicator */}
+                    
                     <div className="absolute -top-2 -right-2">
                       <div className="animate-bounce flex items-center justify-center bg-[#FFC0CB] text-white text-[10px] px-1.5 py-0.5 rounded-full">
                         <span className="mr-0.5">✨</span>Animated
@@ -699,7 +699,7 @@ export default function CardGenerator({
                         : "border-gray-200 hover:border-[#FFC0CB]"
                     )}
                   >
-                    {/* BETA badge */}
+                    
                     <div className="absolute -top-2 -right-2 z-10">
                       <div className="animate-pulse flex items-center justify-center bg-gradient-to-r from-[#a786ff] to-[#b19bff] text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full shadow-sm border border-white">
                         <span className="mr-0.5 text-[8px]">✨</span>BETA
@@ -722,7 +722,7 @@ export default function CardGenerator({
                 <p className="text-xs text-gray-500 mt-2">
                   SVG cards support animations and interactive elements, while Image cards offer more artistic visual styles.
                 </p>
-              </div>
+              </div> */}
             </CardContent>
             <CardFooter className="flex flex-col space-y-4">
               <Button className="w-full bg-[#FFC0CB] text-[#4A4A4A] hover:bg-[#FFD1DC]" onClick={handleGenerateCard} disabled={isLoading}>

@@ -29,6 +29,7 @@ export const CARD_TYPES: CardTypeOption[] = [
   { type: "teacher", label: "Teacher" },
   { type: "easter", label: "Easter" },
   { type: "womensday", label: "Women's Day" },
+  { type: "mothersday", label: "Mother's Day" },
 ]
 
 export const RELATIONSHIPS: RelationshipOption[] = [

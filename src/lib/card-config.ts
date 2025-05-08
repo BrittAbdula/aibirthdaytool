@@ -1,7 +1,10 @@
 import { prisma } from './prisma'
-import { unstable_cache } from 'next/cache'
+import { cache } from 'react'
 
 export type CardType = string;
+
+// Special badge types for card display
+export type CardBadge = 'hot' | 'new' | 'pop' | 'trending' | 'special' | 'soon';
 
 export interface Field {
   name: string;
@@ -93,8 +96,8 @@ function isFieldArray(fields: unknown): fields is Field[] {
   return Array.isArray(fields) && fields.every(isField);
 }
 
-// 使用 Next.js 的缓存机制
-export const getCardConfig = unstable_cache(
+// Replace unstable_cache with React's cache for more reliable caching
+export const getCardConfig = cache(
   async (cardType: CardType): Promise<CardConfig | null> => {
     const generator = await prisma.cardGenerator.findFirst({
       where: {
@@ -104,7 +107,7 @@ export const getCardConfig = unstable_cache(
         ]
       }
     });
-    // console.log(generator)
+    
     if (!generator) return null;
 
     // 类型安全的字段转换
@@ -126,14 +129,12 @@ export const getCardConfig = unstable_cache(
       promptContent: generator.promptContent,
       isSystem: generator.isSystem
     };
-  },
-  ['card-config'],
-  { revalidate: 86400 } // 1小时后重新验证
+  }
 );
 
 // 获取所有公开的卡片类型
-export const getAllCardTypes = unstable_cache(
-  async (): Promise<{ type: CardType; label: string }[]> => {
+export const getAllCardTypes = cache(
+  async (): Promise<{ type: CardType; label: string; badge?: CardBadge; description?: string }[]> => {
     const generators = await prisma.cardGenerator.findMany({
       where: {
         OR: [
@@ -143,21 +144,100 @@ export const getAllCardTypes = unstable_cache(
       select: {
         slug: true,
         label: true,
-        description: true
+        description: true,
+        createdAt: true,
+        updatedAt: true
       },
       orderBy: {
         createdAt: 'desc'
       }
     });
 
-    return generators.map(generator => ({
-      type: generator.slug,
-      label: generator.label,
-      description: generator.description
-    }));
-  },
-  ['all-card-types'],
-  { revalidate: 86400 }
+    // Current date for calculations
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    
+    // Defining holidays and special dates
+    // Format: [month, day, days before to show badge, card type, badge type]
+    const specialDates: [number, number, number, string, CardBadge][] = [
+      // Western holidays
+      [2, 14, 14, 'valentine', 'soon'], // Valentine's Day (14 days before)
+      [6, 16, 7, 'fathersday', 'soon'], // Father's Day - third Sunday in June (approximate)
+      [12, 25, 21, 'christmas', 'soon'], // Christmas (3 weeks before)
+      [12, 31, 7, 'newyear', 'soon'], // New Year's Eve (7 days before)
+      [10, 31, 7, 'halloween', 'soon'], // Halloween (7 days before)
+      
+      // Chinese holidays
+      [1, 22, 14, 'chinesenewyear', 'soon'], // Chinese New Year (approximate - varies by year)
+      [8, 15, 7, 'midautumn', 'soon'], // Mid-Autumn Festival (approximate - varies by year)
+      
+      // Other significant days
+      [11, 11, 7, 'singlesday', 'soon'], // Singles Day
+      [3, 8, 7, 'womensday', 'soon'], // International Women's Day
+      [5, 12, 7, 'mothersday', 'soon'], // Mother's Day - second Sunday in May (approximate)
+
+    ];
+    
+    // Calculate days until a specific date
+    const daysUntil = (month: number, day: number): number => {
+      const targetDate = new Date(currentYear, month - 1, day);
+      
+      // If the date has passed this year, use next year's date
+      if (targetDate < now) {
+        targetDate.setFullYear(currentYear + 1);
+      }
+      
+      const diffTime = targetDate.getTime() - now.getTime();
+      return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    };
+    
+    // Manually defined special cards
+    const specialCards: Record<string, CardBadge> = {
+      'birthday': 'hot',
+      'valentine': 'pop',
+      'anniversary': 'trending',
+      'holiday': 'special'
+    };
+    
+    return generators.map(generator => {
+      // Calculate days since creation
+      const daysSinceCreation = Math.floor((Date.now() - new Date(generator.createdAt).getTime()) / (1000 * 60 * 60 * 24));
+      
+      // Assign badges based on criteria
+      let badge: CardBadge | undefined = undefined;
+      
+      // New badge for cards created in the last 7 days
+      if (daysSinceCreation < 7) {
+        badge = 'new';
+      }
+      
+      // Check for upcoming holidays
+      for (const [month, day, daysBeforeToShow, cardType, badgeType] of specialDates) {
+        const daysRemaining = daysUntil(month, day);
+        
+        // If this card matches a special date type and is within the badge window
+        if (generator.slug === cardType && daysRemaining <= daysBeforeToShow) {
+          badge = badgeType;
+          break;
+        }
+      }
+      
+      // Specific type badges override the 'new' and 'soon' badges
+      if (generator.slug in specialCards) {
+        badge = specialCards[generator.slug];
+      }
+      
+      // Convert null description to undefined to match the return type
+      const description = generator.description === null ? undefined : generator.description;
+      
+      return {
+        type: generator.slug,
+        label: generator.label,
+        description,
+        badge
+      };
+    });
+  }
 );
 
 // Utility function to validate slug
@@ -168,7 +248,7 @@ function isValidSlug(slug: string): boolean {
 }
 
 // 获取所有卡片生成器的预览信息
-export const getAllCardPreviews = unstable_cache(
+export const getAllCardPreviews = cache(
   async () => {
     const generators = await prisma.cardGenerator.findMany({
       where: {
@@ -196,7 +276,5 @@ export const getAllCardPreviews = unstable_cache(
         isSystem: generator.isSystem,
         description: generator.description
       }));
-  },
-  ['card-previews'],
-  { revalidate: 86400 }
+  }
 );
