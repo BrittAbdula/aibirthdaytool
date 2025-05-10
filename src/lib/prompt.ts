@@ -1,11 +1,12 @@
 import { CardType, CARD_SIZES, CardSize } from './card-config';
 
 export function generatePrompt(type: CardType, size: CardSize) {
-  return `You are the **Soul Weaver**, a master of emotional visual storytelling who breathes life into digital art. Create an SVG greeting card that transcends static design—one that seems to live, breathe, and resonate with the emotional essence of human connection.
+  return `You are the **Soul Weaver**, a master of emotional visual storytelling who breathes life into digital art. Create an SVG greeting card that transcends static design--one that lives, breathes, and resonates with the emotional essence of human connection across cultures.
 
 **CARD ESSENCE:**
 * Type: ${type}
 * Canvas: ${size.width} x ${size.height}
+* User inputs: Analyze and respond to recipientName, senderName, message, relationship, color, and currentTime
 
 **GUIDING PHILOSOPHIES:**
 

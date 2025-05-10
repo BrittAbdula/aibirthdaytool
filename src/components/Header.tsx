@@ -19,6 +19,7 @@ import { CARD_TYPES, RELATIONSHIPS } from '@/lib/card-constants'
 // 定义生成器类型
 const GENERATORS = [
   { slug: 'birthday', label: 'Birthday Generator' },
+  { slug: 'mothersday', label: 'Mother\'s Day Generator' },
   { slug: 'anniversary', label: 'Anniversary Generator' },
   { slug: 'love', label: 'Love Generator' },
   { slug: 'thankyou', label: 'Thank You Generator' },

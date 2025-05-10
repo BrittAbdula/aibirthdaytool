@@ -100,9 +100,9 @@ interface CardContentParams {
 
 function getRandomModel(): string {
     const models = [
-        { name: "anthropic/claude-3.5-haiku", weight: 1 },
-        // { name: "anthropic/claude-3.7-sonnet", weight: 1 },
-        { name: "deepseek/deepseek-chat-v3-0324:free", weight: 3 }
+        { name: "anthropic/claude-3.5-haiku", weight: 2 },
+        { name: "anthropic/claude-3.7-sonnet", weight: 1 },
+        { name: "deepseek/deepseek-chat-v3-0324:free", weight: 6 }
     ];
 
     const totalWeight = models.reduce((sum, model) => sum + model.weight, 0);
@@ -120,7 +120,7 @@ function getRandomModel(): string {
 }
 
 export async function generateCardContent(params: CardContentParams): Promise<{ r2Url: string, cardId: string, svgContent: string }> {
-    const { userId, cardType, version, templateId, size, modificationFeedback, previousCardId, ...otherParams } = params;
+    const { userId, cardType, version, format, variationIndex, size, modificationFeedback, previousCardId, ...otherParams } = params;
     const cardId = nanoid(10);
     const startTime = Date.now();
 
@@ -160,7 +160,7 @@ Here is the previous SVG content:
 ${previousSvgContent}
 
 Please create a new version based on this feedback while maintaining the overall design. 
-IMPORTANT: return SVG code only. Do not include any explanation, commentary, or other text.
+IMPORTANT: return SVG code only.
 `;
                 }
             } catch (error) {

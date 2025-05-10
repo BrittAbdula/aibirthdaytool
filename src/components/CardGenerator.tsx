@@ -201,8 +201,10 @@ export default function CardGenerator({
   const [showLimitDialog, setShowLimitDialog] = useState(false)
   const [currentCardType, setCurrentCardType] = useState<CardType>(wishCardType)
   const [formData, setFormData] = useState<Record<string, any>>({})
-  const [imgUrl, setImgUrl] = useState<string>(`https://store.celeprime.com/${wishCardType}.svg`)
-  const [cardId, setCardId] = useState<string | null>(initialCardId)
+  const [imageCount, setImageCount] = useState<number>(1)
+  const [imgUrls, setImgUrls] = useState<string[]>([`https://store.celeprime.com/${wishCardType}.svg`])
+  const [cardIds, setCardIds] = useState<string[]>([initialCardId || ''])
+  const [svgContents, setSvgContents] = useState<string[]>([''])
   const [isLoading, setIsLoading] = useState(false)
   const [isAuthLoading, setIsAuthLoading] = useState(false)
   const [showAdvancedOptions, setShowAdvancedOptions] = useState(false)
@@ -213,7 +215,6 @@ export default function CardGenerator({
   const [progress, setProgress] = useState(0)
   const [customValues, setCustomValues] = useState<Record<string, string>>({})
   const [selectedSize, setSelectedSize] = useState(cardConfig.defaultSize || 'portrait')
-  const [svgContent, setSvgContent] = useState<string>('')
   const [modificationFeedback, setModificationFeedback] = useState<string>('')
   const [feedbackMode, setFeedbackMode] = useState<boolean>(false)
   const [previousFormData, setPreviousFormData] = useState<Record<string, any>>({})
@@ -229,20 +230,32 @@ export default function CardGenerator({
     modificationFeedback: string
   } | null>(null)
 
+  const [imageLoadingStates, setImageLoadingStates] = useState<boolean[]>([])
+  const [imageProgresses, setImageProgresses] = useState<number[]>([])
+  const imageRefs = useRef<Array<HTMLDivElement | null>>([])
+
   useEffect(() => {
     setCurrentCardType(wishCardType)
     // Reset form data and set default values
     const initialFormData: Record<string, any> = {};
+    
+    // Initialize arrays with the correct length based on imageCount
+    const defaultImgUrl = cardConfig.isSystem ? `https://store.celeprime.com/${wishCardType}.svg` : sampleCard
+    setImgUrls(Array(imageCount).fill(defaultImgUrl))
+    setCardIds(Array(imageCount).fill(initialCardId || ''))
+    setSvgContents(Array(imageCount).fill(''))
+    setImageLoadingStates(Array(imageCount).fill(false))
+    setImageProgresses(Array(imageCount).fill(0))
+    
     if (!cardConfig.isSystem) {
-      setImgUrl(sampleCard)
+      setImgUrls(Array(imageCount).fill(sampleCard))
     }
+    
     cardConfig.fields.forEach(field => {
       if (field.type === 'select' && !field.optional && field.defaultValue) {
         initialFormData[field.name] = field.defaultValue;
       }
     });
-    // Set default card style to 'classic'
-    initialFormData["style"] = "classic";
     // Set default format to 'svg'
     initialFormData["format"] = "svg";
     setFormData(initialFormData);
@@ -299,6 +312,23 @@ export default function CardGenerator({
     router.push(`/${newCardType}/`)
   }
 
+  // Function to trigger confetti for a specific image
+  const triggerConfettiForImage = (index: number) => {
+    const imageRef = imageRefs.current[index];
+    if (imageRef) {
+      const rect = imageRef.getBoundingClientRect();
+      const x = (rect.left + rect.width / 2) / window.innerWidth;
+      const y = (rect.top + rect.height / 2) / window.innerHeight;
+      
+      confetti({
+        particleCount: 50,
+        spread: 50,
+        origin: { x, y: y - 0.1 },
+        zIndex: 9999
+      });
+    }
+  };
+
   const handleGenerateCard = async () => {
     if (!session) {
       setSavedFormData({
@@ -313,100 +343,171 @@ export default function CardGenerator({
     }
 
     try {
-      setIsLoading(true)
-      setProgress(0)
-      setError(null)
-
       // Save previous form data for potential modifications
       setPreviousFormData({...formData})
 
-      // Prepare payload with feedback if in feedback mode
-      const payload: Record<string, any> = {
-        cardType: currentCardType,
-        size: selectedSize,
-        format: formData.format || 'svg',
-        ...formData
-      }
+      // Reset image states
+      const newLoadingStates = Array(imageCount).fill(true);
+      setImageLoadingStates(newLoadingStates);
+      setImageProgresses(Array(imageCount).fill(0));
+      setIsLoading(true);
 
-      if (feedbackMode && modificationFeedback) {
-        payload.modificationFeedback = modificationFeedback
-        payload.previousCardId = cardId
-        
-        // Add to feedback history
-        setFeedbackHistory([...feedbackHistory, modificationFeedback])
-      }
-
-      const response = await fetch('/api/generate-card', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        if (response.status === 429) {
-          setShowLimitDialog(true)
-          return
-        }
-        if (response.status === 401) {
-          // Save form data again in case session expired
-          setSavedFormData({
-            formData: {...formData},
-            customValues: {...customValues},
-            selectedSize,
-            modificationFeedback
+      // Create array to hold promises for parallel requests
+      const generatePromises = Array.from({ length: imageCount }).map(async (_, index) => {
+        // Start progress timer for this image
+        const progressInterval = setInterval(() => {
+          setImageProgresses(prev => {
+            const newProgresses = [...prev];
+            if (newProgresses[index] < 90) {
+              newProgresses[index] += 10;
+            }
+            return newProgresses;
           });
-          pendingAuthRef.current = true;
-          setShowAuthDialog(true);
-          return;
+        }, 1000);
+
+        try {
+          // Prepare payload with feedback if in feedback mode
+          const payload: Record<string, any> = {
+            cardType: currentCardType,
+            size: selectedSize,
+            format: formData.format || 'svg',
+            ...formData,
+            variationIndex: index // Include variation index to ensure different images
+          };
+
+          if (feedbackMode && modificationFeedback) {
+            payload.modificationFeedback = modificationFeedback;
+            payload.previousCardId = cardIds[0] || ''; // Use the first card ID for feedback
+            
+            // Add to feedback history
+            if (index === 0) { // Only add to history once per batch
+              setFeedbackHistory([...feedbackHistory, modificationFeedback]);
+            }
+          }
+
+          const response = await fetch('/api/generate-card', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+          });
+
+          const data = await response.json();
+
+          if (!response.ok) {
+            if (response.status === 429) {
+              setShowLimitDialog(true);
+              return { success: false, error: 'rate_limit' };
+            }
+            if (response.status === 401) {
+              // Save form data again in case session expired
+              setSavedFormData({
+                formData: {...formData},
+                customValues: {...customValues},
+                selectedSize,
+                modificationFeedback
+              });
+              pendingAuthRef.current = true;
+              setShowAuthDialog(true);
+              return { success: false, error: 'auth' };
+            }
+            throw new Error(data.error || 'Failed to generate card');
+          }
+
+          // Handle response based on card format
+          let imgUrl = '';
+          let svgContent = '';
+          
+          if (formData.format === 'image' && data.r2Url) {
+            // For image cards, use the returned image URL directly
+            imgUrl = data.r2Url;
+          } else if (data.svgContent) {
+            // For SVG cards, create a data URL from the SVG content
+            imgUrl = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(data.svgContent)}`;
+            svgContent = data.svgContent;
+          } else {
+            throw new Error('Failed to get card content');
+          }
+
+          // Update this specific image's state
+          setImgUrls(prev => {
+            const newUrls = [...prev];
+            newUrls[index] = imgUrl;
+            return newUrls;
+          });
+
+          setSvgContents(prev => {
+            const newContents = [...prev];
+            newContents[index] = svgContent;
+            return newContents;
+          });
+
+          setCardIds(prev => {
+            const newIds = [...prev];
+            newIds[index] = data.cardId;
+            return newIds;
+          });
+
+          // Set progress to 100% for this image
+          setImageProgresses(prev => {
+            const newProgresses = [...prev];
+            newProgresses[index] = 100;
+            return newProgresses;
+          });
+
+          // Mark this image as loaded
+          setImageLoadingStates(prev => {
+            const newStates = [...prev];
+            newStates[index] = false;
+            return newStates;
+          });
+
+          // Trigger confetti for this image
+          setTimeout(() => {
+            triggerConfettiForImage(index);
+          }, 100);
+
+          setSubmited(true);
+
+          return { success: true, index };
+        } catch (error: any) {
+          return { success: false, error: error.message, index };
+        } finally {
+          clearInterval(progressInterval);
         }
-        throw new Error(data.error || 'Failed to generate card')
-      }
+      });
 
-      // if (!data.svgContent) {
-      //   throw new Error('Failed to get SVG content')
-      // }
-
-      // Create a data URL from the SVG content
-      // const svgDataUrl = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(data.svgContent)}`
-      // setImgUrl(svgDataUrl)
-      // setSvgContent(data.svgContent)
-      // Handle response based on card format
-      if (formData.format === 'image' && data.r2Url) {
-        // For image cards, use the returned image URL directly
-        setImgUrl(data.r2Url)
-        setSvgContent('') // Clear any SVG content
-      } else if (data.svgContent) {
-        // For SVG cards, create a data URL from the SVG content
-        const svgDataUrl = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(data.svgContent)}`
-        setImgUrl(svgDataUrl)
-        setSvgContent(data.svgContent)
-      } else {
-        throw new Error('Failed to get card content')
-      }
-      setCardId(data.cardId)
-      setSubmited(true)
+      // Wait for all promises to resolve
+      const results = await Promise.all(generatePromises);
       
-      // Clear feedback after successful generation
-      if (feedbackMode) {
-        setModificationFeedback('')
-      }
+      // Check for any auth or rate limit errors
+      const hasAuthError = results.some(result => !result.success && result.error === 'auth');
+      const hasRateLimitError = results.some(result => !result.success && result.error === 'rate_limit');
       
-      // Show feedback mode after first generation
-      if (!feedbackMode) {
-        setFeedbackMode(true)
+      // If we have auth errors or rate limit errors, they've already been handled
+      if (!hasAuthError && !hasRateLimitError) {
+        // Get any other errors
+        const errors = results
+          .filter(result => !result.success && result.error !== 'auth' && result.error !== 'rate_limit')
+          .map(result => result.error);
+          
+        if (errors.length > 0) {
+          setError(errors[0] || 'Failed to generate one or more cards. Please try again.');
+        }
+        
+        // Show feedback mode after first generation
+        if (!feedbackMode) {
+          setFeedbackMode(true);
+        }
+        
+        // Clear feedback after successful generation
+        if (feedbackMode) {
+          setModificationFeedback('');
+        }
       }
-      
-      confetti({
-        particleCount: 100,
-        spread: 70,
-        origin: { y: 0.6 }
-      })
     } catch (err: any) {
-      setError(err.message || 'Failed to generate card. Please try again.')
+      setError(err.message || 'Failed to generate card. Please try again.');
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
   }
 
@@ -510,86 +611,87 @@ export default function CardGenerator({
             <CardContent className="space-y-4">
               {cardConfig.fields.map((field) => renderField(field))}
 
-              {/* Style Selection */}
-              <div key="card-style" className="space-y-2">
-                <Label htmlFor="card-style" className="flex justify-between items-center">
-                  <span>Style</span>
-                  <span className="text-xs text-gray-400">← Scroll →</span>
+              {/* Color Selection */}
+              <div key="card-color" className="space-y-2">
+                <Label htmlFor="card-color" className="flex justify-between items-center">
+                  <span>Color</span>
                 </Label>
-                <div className="relative">
-                  <div className="flex overflow-x-auto pb-2 -mx-1 px-1 scroll-smooth snap-x hide-scrollbar">
-                    {[
-                      { id: "classic", name: "Classic", color: "#FFD1DC", icon: "✨" },
-                      { id: "modern", name: "Modern", color: "#B4E4FF", icon: "🌟" },
-                      { id: "minimal", name: "Minimal", color: "#F8F9FA", icon: "⚪" },
-                      { id: "vintage", name: "Vintage", color: "#F5E8C7", icon: "🏺" },
-                      { id: "fairytale", name: "Fairy Tale", color: "#E0F4FF", icon: "🧚" },
-                      { id: "ghibli", name: "Ghibli", color: "#D4E7C5", icon: "🌿" },
-                      { id: "pastel", name: "Pastel", color: "#FFCEFE", icon: "🎀" },
-                      { id: "neon", name: "Neon", color: "#FFD1DC", icon: "🌈" },
-                    ].map((style) => (
+                <div className="grid grid-cols-8 gap-2 w-full">
+                  {[
+                    { id: "black", name: "Black", color: "#000000" },
+                    { id: "gray", name: "Gray", color: "#BDBDBD" },
+                    { id: "white", name: "White", color: "#FFFFFF", border: true },
+                    { id: "red", name: "Red", color: "#D32F2F" },
+                    { id: "purple", name: "Purple", color: "#7B1FA2" },
+                    { id: "pink", name: "Pink", color: "#FF80AB" },
+                    { id: "green", name: "Green", color: "#388E3C" },
+                    { id: "light-green", name: "Light Green", color: "#A5D6A7" },
+                    { id: "blue", name: "Blue", color: "#1976D2" },
+                    { id: "navy", name: "Navy", color: "#283593" },
+                    { id: "sky", name: "Sky Blue", color: "#B3E5FC" },
+                    { id: "gold", name: "Gold", color: "#D4AF37" },
+                    { id: "beige", name: "Beige", color: "#F5F5DC" },
+                    { id: "yellow", name: "Yellow", color: "#FFF176" },
+                    { id: "brown", name: "Brown", color: "#8D5524" },
+                    { id: "peach", name: "Peach", color: "#FFCC99" },
+                  ].map((color) => {
+                    const colorValue = `${color.id}`;
+                    const isSelected = formData["color"] === colorValue;
+                    return (
                       <button
-                        key={style.id}
+                        key={color.id}
                         type="button"
-                        onClick={() => handleInputChange("style", style.id)}
+                        onClick={() => handleInputChange("color", isSelected ? '' : colorValue)}
                         className={cn(
-                          "h-16 w-20 min-w-[5rem] rounded-md border transition-all duration-200 flex flex-col items-center justify-center gap-1 relative overflow-hidden mr-2 snap-start",
-                          formData["style"] === style.id
-                            ? "border-[#FFC0CB] ring-1 ring-[#FFC0CB] shadow-sm"
-                            : "border-gray-200 hover:border-[#FFC0CB]"
+                          "h-8 w-8 rounded-full border-2 flex items-center justify-center transition-all duration-200",
+                          isSelected
+                            ? "border-[#b19bff] ring-2 ring-[#b19bff]"
+                            : color.border ? "border-gray-300" : "border-transparent"
                         )}
-                        style={{ backgroundColor: style.color }}
+                        style={{ backgroundColor: color.color }}
+                        aria-label={color.name}
                       >
-                        <span className="text-base">{style.icon}</span>
-                        <span className="text-xs font-medium text-gray-800">{style.name}</span>
-                        {formData["style"] === style.id && (
-                          <div className="absolute top-1 right-1 w-3 h-3 bg-[#FFC0CB] rounded-full flex items-center justify-center">
-                            <span className="text-white text-[8px]">✓</span>
-                          </div>
+                        {isSelected && (
+                          <span className="block w-3 h-3 rounded-full border-2 border-white bg-white" />
                         )}
                       </button>
-                    ))}
-                  </div>
-                  <div className="absolute left-0 top-0 bottom-0 w-4 bg-gradient-to-r from-white to-transparent pointer-events-none"></div>
-                  <div className="absolute right-0 top-0 bottom-0 w-4 bg-gradient-to-l from-white to-transparent pointer-events-none"></div>
+                    );
+                  })}
                 </div>
-                
                 <button
                   type="button"
                   onClick={() => {
-                    // Toggle custom style input
                     setCustomValues(prev => ({ 
                       ...prev, 
-                      style: formData["style"] === "custom" ? "" : (prev.style || "")
+                      color: formData["color"] === "custom" ? "" : (prev.color || "")
                     }));
-                    handleInputChange("style", formData["style"] === "custom" ? "" : "custom");
+                    handleInputChange("color", formData["color"] === "custom" ? "" : "custom");
                   }}
                   className={cn(
                     "mt-1 w-full py-1.5 px-2 border rounded-md flex items-center justify-center gap-1 transition-all duration-200 text-sm",
-                    formData["style"] === "custom"
+                    formData["color"] === "custom"
                       ? "border-[#b19bff] bg-[#b19bff]/10"
                       : "border-gray-200 hover:border-[#b19bff] hover:bg-[#b19bff]/5"
                   )}
                 >
                   <span className="text-sm">✨</span>
-                  <span className={formData["style"] === "custom" ? "text-[#b19bff] font-medium" : "text-gray-600"}>
-                    Custom Style
+                  <span className={formData["color"] === "custom" ? "text-[#b19bff] font-medium" : "text-gray-600"}>
+                    Custom Color
                   </span>
                 </button>
-                
-                {formData["style"] === "custom" && (
+                {formData["color"] === "custom" && (
                   <div className="mt-1">
                     <Input
-                      value={customValues["style"] || ''}
+                      value={customValues["color"] || ''}
                       onChange={(e) => {
-                        setCustomValues(prev => ({ ...prev, style: e.target.value }));
-                        handleInputChange("style", "custom");
+                        setCustomValues(prev => ({ ...prev, color: e.target.value }));
+                        handleInputChange("color", "custom");
                       }}
-                      placeholder="Describe style: colors, animations, themes..."
+                      placeholder="Describe color: e.g. 'rose gold', 'gradient', 'rainbow'..."
                       className="border-[#b19bff] focus-visible:ring-[#b19bff] text-sm"
                     />
                     <p className="text-xs text-gray-500 mt-1">
-                      Try: &ldquo;watercolor&rdquo;, &ldquo;princess&rdquo;, &ldquo;3D&rdquo;, &ldquo;pastel&rdquo;, &ldquo;glitter&rdquo;, etc.
+                      Try: &ldquo;rose gold&rdquo;, &ldquo;gradient&rdquo;, &ldquo;rainbow&rdquo;, etc.
                     </p>
                   </div>
                 )}
@@ -615,6 +717,65 @@ export default function CardGenerator({
                 </Select>
                 <p className="text-xs text-gray-500">
                   {CARD_SIZES[selectedSize].orientation} orientation
+                </p>
+              </div>
+
+              {/* Image Count Selection */}
+              <div className="space-y-2">
+                <Label>Number of Images</Label>
+                <div className="flex space-x-2">
+                  {[1, 2].map((count) => (
+                    <button
+                      key={count}
+                      type="button"
+                      onClick={() => {
+                        setImageCount(count);
+                        
+                        // 更新与图片数量相关的数组，但不重置表单数据
+                        const defaultImgUrl = cardConfig.isSystem 
+                          ? `https://store.celeprime.com/${wishCardType}.svg` 
+                          : sampleCard;
+                        
+                        setImgUrls(prev => {
+                          const newUrls = [...prev];
+                          while (newUrls.length < count) {
+                            newUrls.push(defaultImgUrl);
+                          }
+                          return newUrls.slice(0, count);
+                        });
+                        
+                        setCardIds(prev => {
+                          const newIds = [...prev];
+                          while (newIds.length < count) {
+                            newIds.push('');
+                          }
+                          return newIds.slice(0, count);
+                        });
+                        
+                        setSvgContents(prev => {
+                          const newContents = [...prev];
+                          while (newContents.length < count) {
+                            newContents.push('');
+                          }
+                          return newContents.slice(0, count);
+                        });
+                        
+                        setImageLoadingStates(Array(count).fill(false));
+                        setImageProgresses(Array(count).fill(0));
+                      }}
+                      className={cn(
+                        "flex-1 py-2 rounded-md transition-all duration-200",
+                        imageCount === count
+                          ? "bg-[#FFC0CB] text-white font-medium"
+                          : "bg-gray-100 text-gray-700 hover:bg-[#FFE5EB]"
+                      )}
+                    >
+                      {count}
+                    </button>
+                  ))}
+                </div>
+                <p className="text-xs text-gray-500">
+                  Generate {imageCount} {imageCount === 1 ? 'image' : 'images'} with different variations
                 </p>
               </div>
 
@@ -738,22 +899,50 @@ export default function CardGenerator({
           </div>
 
           <div className="w-full max-w-md">
-            {isLoading && <ProgressBar progress={progress} />}
-            <div className="bg-white p-3 sm:p-5 rounded-lg shadow-lg flex items-center justify-center relative border border-[#FFC0CB] aspect-[2/3]">
-              {isLoading ? (
-                <FlickeringGrid />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center overflow-hidden">
-                  <ImageViewer 
-                    alt={currentCardType} 
-                    cardId={cardId || '1'} 
-                    cardType={currentCardType} 
-                    imgUrl={imgUrl} 
-                    isNewCard={true} 
-                    svgContent={svgContent}
-                  />
+            <div className={cn(
+              "grid gap-3", 
+              imageCount === 1 ? "grid-cols-1" : 
+              imageCount === 2 ? "grid-cols-2" : 
+              "grid-cols-2"
+            )}>
+              {Array.from({ length: imageCount }).map((_, index) => (
+                <div 
+                  key={index}
+                  ref={(el) => { imageRefs.current[index] = el }}
+                  className={cn(
+                    "bg-white p-2 sm:p-3 rounded-lg shadow-lg flex items-center justify-center relative border border-[#FFC0CB]",
+                    "aspect-[2/3]",
+                    imageCount > 2 && index >= 2 ? "col-span-1 row-start-2" : ""
+                  )}
+                >
+                  {imageLoadingStates[index] ? (
+                    <div className="w-full h-full flex flex-col items-center justify-center">
+                      <FlickeringGrid />
+                      <div className="absolute bottom-3 left-3 right-3">
+                        <div className="w-full bg-gray-300 rounded-full h-1.5">
+                          <div
+                            className="bg-[#FFC0CB] h-1.5 rounded-full"
+                            style={{ width: `${imageProgresses[index]}%` }}
+                          ></div>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center overflow-hidden">
+                      {imgUrls[index] && (
+                        <ImageViewer 
+                          alt={`${currentCardType}-${index}`} 
+                          cardId={cardIds[index] || `${index+1}`} 
+                          cardType={currentCardType} 
+                          imgUrl={imgUrls[index]} 
+                          isNewCard={true} 
+                          svgContent={svgContents[index] || ''}
+                        />
+                      )}
+                    </div>
+                  )}
                 </div>
-              )}
+              ))}
             </div>
           </div>
         </div>
@@ -889,40 +1078,42 @@ export default function CardGenerator({
             `}</style>
             
             {/* Previous feedback with enhanced styling */}
-          {feedbackHistory.length > 0 && (
+            {feedbackHistory.length > 0 && (
               <div className="mb-5 relative z-10">
                 <h4 className="text-sm font-medium text-gray-500 mb-2 flex items-center">
                   <span className="mr-2 w-4 h-4 bg-gradient-to-r from-[#FFB6C1] to-[#b19bff] rounded-full inline-block"></span>
                   Previous Feedback:
                 </h4>
-              <div className="space-y-2">
-                {feedbackHistory.map((feedback, index) => (
+                <div className="space-y-2">
+                  {feedbackHistory.map((feedback, index) => (
                     <div 
                       key={index} 
                       className="p-3 rounded-md text-sm text-gray-600 italic border border-[#FFB6C1]/30 shadow-sm bg-gradient-to-r from-white to-gray-50 hover:from-gray-50 hover:to-white transition-all duration-300"
                       style={{ animationDelay: `${index * 0.2}s` }}
                     >
-                    &ldquo;{feedback}&rdquo;
-                  </div>
-                ))}
+                      &ldquo;{feedback}&rdquo;
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
-          )}
+            )}
           
             {/* Enhanced textarea with gradient focus */}
-          <Textarea
-            value={modificationFeedback}
-            onChange={(e) => setModificationFeedback(e.target.value)}
-            placeholder="Describe what you'd like to change... (e.g., 'Make the background more colorful', 'Add a shining star', 'Add more decorations')"
+            <Textarea
+              value={modificationFeedback}
+              onChange={(e) => setModificationFeedback(e.target.value)}
+              placeholder={imageCount > 1 
+                ? "Describe what you'd like to change for all images... (e.g., 'Make all backgrounds more colorful', 'Add shining stars to all images')" 
+                : "Describe what you'd like to change... (e.g., 'Make the background more colorful', 'Add a shining star', 'Add more decorations')"}
               className="w-full border-2 border-[#FFC0CB] rounded-md focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[#b19bff] focus:shadow-[0_0_0_1px_rgba(177,155,255,0.4),0_0_0_4px_rgba(177,155,255,0.1)] transition-all duration-300 mb-4 relative z-10"
-            rows={3}
-          />
+              rows={3}
+            />
           
             {/* Enhanced buttons with animation */}
             <div className="flex space-x-4 relative z-10">
-            <Button 
-              onClick={handleGenerateCard} 
-              disabled={isLoading || !modificationFeedback.trim()} 
+              <Button 
+                onClick={handleGenerateCard} 
+                disabled={isLoading || !modificationFeedback.trim()} 
                 className="bg-gradient-to-r from-[#FFC0CB] to-[#FFB6C1] hover:from-[#FFD1DC] hover:to-[#FFC0CB] text-[#4A4A4A] transition-all duration-300 flex-1 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
               >
                 {isLoading ? (
@@ -933,18 +1124,18 @@ export default function CardGenerator({
                 ) : (
                   <>
                     <span className="mr-2">✨</span>
-                    Update Card
+                    Update {imageCount > 1 ? 'Images' : 'Card'}
                   </>
                 )}
-            </Button>
+              </Button>
             
-            <Button 
-              onClick={handleResetFeedback}
-              variant="outline" 
+              <Button 
+                onClick={handleResetFeedback}
+                variant="outline" 
                 className="border-[#FFC0CB] text-[#4A4A4A] hover:bg-[#FFF5F6] transition-all duration-300 shadow-sm hover:shadow-md transform hover:-translate-y-0.5"
-            >
-              Start Over
-            </Button>
+              >
+                Start Over
+              </Button>
             </div>
           </div>
         </div>
