@@ -167,8 +167,8 @@ export function PremiumModal({ isOpen, onOpenChange }: PremiumPlanProps) {
                     </svg>
                   ))}
                 </div>
-                <span className="ml-1 font-medium">4.8/5</span>
-                <span className="text-sm text-gray-500">(844 reviews)</span>
+                {/* <span className="ml-1 font-medium">4.8/5</span>
+                <span className="text-sm text-gray-500">(844 reviews)</span> */}
               </div>
               
               <div className="grid grid-cols-1 gap-3">

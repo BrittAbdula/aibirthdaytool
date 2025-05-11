@@ -14,20 +14,29 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { CARD_TYPES, RELATIONSHIPS } from '@/lib/card-constants'
+import { CardTypeOption } from '@/lib/card-constants'
 import { PremiumButton } from '@/components/PremiumModal'
 
 // 定义生成器类型
 const GENERATORS = [
-  { slug: 'birthday', label: 'Birthday Generator' },
-  { slug: 'mothersday', label: 'Mother\'s Day Generator' },
-  { slug: 'anniversary', label: 'Anniversary Generator' },
-  { slug: 'love', label: 'Love Generator' },
-  { slug: 'thankyou', label: 'Thank You Generator' },
-  { slug: 'wedding', label: 'Wedding Generator' },
-  { slug: 'graduation', label: 'Graduation Generator' },
-  { slug: 'baby', label: 'Baby Generator' },
-  { slug: 'congratulations', label: 'Congratulations Generator' },
+  { slug: 'birthday', label: 'Birthday' },
+  { slug: 'mothersday', label: 'Mother\'s Day' },
+  { slug: 'anniversary', label: 'Anniversary' },
+  { slug: 'love', label: 'Love' },
+  { slug: 'thankyou', label: 'Thank You' },
+  { slug: 'wedding', label: 'Wedding' },
+  { slug: 'graduation', label: 'Graduation' },
+  { slug: 'baby', label: 'Baby' },
+  { slug: 'congratulations', label: 'Congratulations' },
+  { slug: 'goodluck', label: 'Good Luck' },
+  { slug: 'sorry', label: 'Sorry' },
+  { slug: 'christmas', label: 'Christmas' },
+  { slug: 'valentine', label: 'Valentine' },
+  { slug: 'goodmorning', label: 'Good Morning' },
+  { slug: 'goodnight', label: 'Good Night' },
+  { slug: 'teacher', label: 'Teacher' },
+  { slug: 'easter', label: 'Easter' },
+  { slug: 'womensday', label: 'Women\'s Day' },
 ]
 
 function Header() {
@@ -36,7 +45,6 @@ function Header() {
   const [isMobile, setIsMobile] = useState(false)
   const pathname = usePathname()
   const { data: session, status } = useSession()
-  const [isRelationshipMenuOpen, setIsRelationshipMenuOpen] = useState(false)
   const [isGeneratorMenuOpen, setIsGeneratorMenuOpen] = useState(false)
 
   useEffect(() => {
@@ -139,62 +147,8 @@ function Header() {
               </DropdownMenuContent>
             </DropdownMenu>
             
-            {/* Card Types Dropdown */}
-            <DropdownMenu>
-              <DropdownMenuTrigger 
-                className="text-[#4A4A4A] hover:text-[#FFC0CB] font-serif flex items-center"
-                onMouseEnter={() => !isMobile && setIsMenuOpen(true)}
-                onMouseLeave={() => !isMobile && setIsMenuOpen(false)}
-              >
-                Card Types <ChevronDown className="ml-1 h-4 w-4" />
-              </DropdownMenuTrigger>
-              <DropdownMenuContent 
-                className="w-[280px] p-2"
-                onMouseEnter={() => !isMobile && setIsMenuOpen(true)}
-                onMouseLeave={() => !isMobile && setIsMenuOpen(false)}
-              >
-                <div className="grid grid-cols-2 gap-1">
-                  <DropdownMenuItem asChild className="col-span-2">
-                    <Link href="/card-gallery/" className="w-full font-medium text-[#4A4A4A]">
-                      All Cards
-                    </Link>
-                  </DropdownMenuItem>
-                  {CARD_TYPES.map((cardType) => (
-                    <DropdownMenuItem key={cardType.type} asChild>
-                      <Link href={`/type/${cardType.type}/`} className="w-full">
-                        {cardType.label}
-                      </Link>
-                    </DropdownMenuItem>
-                  ))}
-                </div>
-              </DropdownMenuContent>
-            </DropdownMenu>
-
-            {/* Relationships Dropdown */}
-            <DropdownMenu>
-              <DropdownMenuTrigger 
-                className="text-[#4A4A4A] hover:text-[#FFC0CB] font-serif flex items-center"
-                onMouseEnter={() => !isMobile && setIsRelationshipMenuOpen(true)}
-                onMouseLeave={() => !isMobile && setIsRelationshipMenuOpen(false)}
-              >
-                For Someone Special <ChevronDown className="ml-1 h-4 w-4" />
-              </DropdownMenuTrigger>
-              <DropdownMenuContent 
-                className="w-[280px] p-2"
-                onMouseEnter={() => !isMobile && setIsRelationshipMenuOpen(true)}
-                onMouseLeave={() => !isMobile && setIsRelationshipMenuOpen(false)}
-              >
-                <div className="grid grid-cols-2 gap-1">
-                  {RELATIONSHIPS.map((relation) => (
-                    <DropdownMenuItem key={relation.value} asChild>
-                      <Link href={`/relationship/${relation.value}/`} className="w-full">
-                        {relation.label}
-                      </Link>
-                    </DropdownMenuItem>
-                  ))}
-                </div>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            {/* Gallery Link */}
+            <Link href="/card-gallery/" className="text-[#4A4A4A] hover:text-[#FFC0CB] font-serif">Gallery</Link>
 
             <Link href="/my-cards/" className="text-[#4A4A4A] hover:text-[#FFC0CB] font-serif">My Cards</Link>
             
@@ -298,47 +252,11 @@ function Header() {
               </div>
             </div>
             
-            {/* Card Types Section - Mobile */}
-            <div className="border-b border-purple-100/50 mb-2 bg-purple-50/30">
-              <div className="py-2 px-4">
-                <div className="text-right font-serif text-[#4A4A4A] mb-2">Card Types</div>
-                <div className="grid grid-cols-2 gap-2">
-                  <Link href="/card-gallery/" 
-                    className="block py-1.5 px-3 text-right text-[#4A4A4A]/80 hover:text-[#FFC0CB] hover:bg-white/50 rounded-md text-sm col-span-2 font-medium">
-                    All Cards
-                  </Link>
-                  {CARD_TYPES.map((cardType) => (
-                    <Link
-                      key={cardType.type}
-                      href={`/type/${cardType.type}/`}
-                      className="block py-1.5 px-3 text-right text-[#4A4A4A]/80 hover:text-[#FFC0CB] hover:bg-white/50 rounded-md text-sm"
-                    >
-                      {cardType.label}
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* Relationships Section - Mobile */}
-            <div className="border-b border-purple-100/50 mb-2 bg-purple-50/30">
-              <div className="py-2 px-4">
-                <div className="text-right font-serif text-[#4A4A4A] mb-2">For Someone Special</div>
-                <div className="grid grid-cols-2 gap-2">
-                  {RELATIONSHIPS.map((relation) => (
-                    <Link
-                      key={relation.value}
-                      href={`/relationship/${relation.value}/`}
-                      className="block py-1.5 px-3 text-right text-[#4A4A4A]/80 hover:text-[#FFC0CB] hover:bg-white/50 rounded-md text-sm"
-                    >
-                      {relation.label}
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            </div>
+            {/* Gallery Link - Mobile */}
+            <Link href="/card-gallery/" className="block py-2.5 px-4 w-full text-right text-[#4A4A4A] hover:text-[#FFC0CB] hover:bg-gray-50 font-serif">Gallery</Link>
 
             <Link href="/my-cards/" className="block py-2.5 px-4 w-full text-right text-[#4A4A4A] hover:text-[#FFC0CB] hover:bg-gray-50 font-serif">My Cards</Link>
+            
             {status === 'authenticated' && session ? (
               <div className="p-4 border-t">
                 <div className="flex items-center justify-end space-x-2 mb-2">

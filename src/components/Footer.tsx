@@ -1,12 +1,53 @@
 import Link from 'next/link';
+import { CARD_TYPES, RELATIONSHIPS } from '@/lib/card-constants';
 
 export default function Footer() {
   return (
     <footer className="bg-gradient-to-t from-white via-purple-50/50 to-white border-t border-purple-100/50">
       <div className="container mx-auto px-4 py-8">
+        {/* Card Types and Relationships Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+          {/* Card Types */}
+          <div>
+            <h3 className="font-serif text-[#4A4A4A] text-lg mb-4">Card Types</h3>
+            <div className="grid grid-cols-2 gap-2">
+              <Link 
+                href="/card-gallery/" 
+                className="text-sm text-gray-600 hover:text-purple-600 transition-colors font-medium"
+              >
+                All Cards
+              </Link>
+              {CARD_TYPES.map((cardType) => (
+                <Link
+                  key={cardType.type}
+                  href={`/type/${cardType.type}/`}
+                  className="text-sm text-gray-600 hover:text-purple-600 transition-colors"
+                >
+                  {cardType.label}
+                </Link>
+              ))}
+            </div>
+          </div>
+          
+          {/* Relationships */}
+          <div>
+            <h3 className="font-serif text-[#4A4A4A] text-lg mb-4">For Someone Special</h3>
+            <div className="grid grid-cols-2 gap-2">
+              {RELATIONSHIPS.map((relation) => (
+                <Link
+                  key={relation.value}
+                  href={`/relationship/${relation.value}/`}
+                  className="text-sm text-gray-600 hover:text-purple-600 transition-colors"
+                >
+                  {relation.label}
+                </Link>
+              ))}
+            </div>
+          </div>
+        </div>
 
         {/* Links and Copyright */}
-        <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
+        <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0 border-t border-purple-100/50 pt-6">
           <p className="text-sm text-gray-600 order-2 md:order-1">
             © {new Date().getFullYear()} MewTruCard. All rights reserved.
           </p>
