@@ -113,3 +113,18 @@ pnpm dev
 - API rate limiting
 - Secure file upload handling
 - Type-safe database operations
+
+# Stripe Integration
+
+To enable Stripe payments for premium subscriptions, add the following variables to your `.env` file:
+
+```
+# Stripe Configuration
+STRIPE_SECRET_KEY=sk_test_your_stripe_secret_key
+STRIPE_PUBLISHABLE_KEY=pk_test_your_stripe_publishable_key
+STRIPE_WEBHOOK_SECRET=whsec_your_stripe_webhook_secret
+STRIPE_MONTHLY_PRICE_ID=price_your_monthly_price_id
+STRIPE_YEARLY_PRICE_ID=price_your_yearly_price_id
+```
+
+You'll need to create the appropriate products and prices in your Stripe dashboard.

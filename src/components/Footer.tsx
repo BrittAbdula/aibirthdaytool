@@ -28,6 +28,14 @@ export default function Footer() {
                   Terms of Service
                 </Link>
               </li>
+              <li>
+                <Link 
+                  href="/refund-policy" 
+                  className="text-sm text-gray-600 hover:text-purple-600 transition-colors"
+                >
+                  Refund Policy
+                </Link>
+              </li> 
               {/* <li>
                 <a 
                   href="https://linktr.ee/auroroa" 

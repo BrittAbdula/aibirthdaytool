@@ -5,7 +5,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import SparklesText from '@/components/ui/sparkles-text'
-import { Menu, X, ChevronDown, Loader2 } from "lucide-react"
+import { Menu, X, ChevronDown, Loader2, Crown } from "lucide-react"
 import { useSession, signIn, signOut } from "next-auth/react"
 import { Button } from '@/components/ui/button'
 import {
@@ -15,6 +15,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { CARD_TYPES, RELATIONSHIPS } from '@/lib/card-constants'
+import { PremiumButton } from '@/components/PremiumModal'
 
 // 定义生成器类型
 const GENERATORS = [
@@ -196,6 +197,10 @@ function Header() {
             </DropdownMenu>
 
             <Link href="/my-cards/" className="text-[#4A4A4A] hover:text-[#FFC0CB] font-serif">My Cards</Link>
+            
+            {/* Premium Button - Always visible */}
+            <PremiumButton />
+            
             {status === 'authenticated' && session ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -214,9 +219,9 @@ function Header() {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48">
                 <DropdownMenuItem>
-                  <span className="text-sm font-medium text-gray-700">
+                  <div className="text-center text-sm font-medium text-gray-700">
                     {session.user?.name}
-                  </span>
+                  </div>
                 </DropdownMenuItem>
                   <DropdownMenuItem 
                     onClick={handleLogout}
@@ -346,9 +351,9 @@ function Header() {
                       className="rounded-full"
                     />
                   )}
-                  <span className="text-sm font-medium text-gray-700">
+                  <div className="text-center text-sm font-medium text-gray-700">
                     {session.user?.name}
-                  </span>
+                  </div>
                 </div>
                 <Button
                   variant="outline"
@@ -368,21 +373,33 @@ function Header() {
               </div>
             ) : (
               <div className="p-4 border-t">
-                <Button
-                  variant="outline"
-                  onClick={handleLogin}
-                  disabled={isLoading}
-                  className="w-full text-[#4A4A4A] hover:text-[#FFC0CB]"
-                >
-                  {isLoading ? (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                      Signing in...
-                    </>
-                  ) : (
-                    'Sign In'
-                  )}
-                </Button>
+                <div className="flex flex-col space-y-2">
+                  <Button
+                    variant="outline"
+                    onClick={handleLogin}
+                    disabled={isLoading}
+                    className="w-full text-[#4A4A4A] hover:text-[#FFC0CB]"
+                  >
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                        Signing in...
+                      </>
+                    ) : (
+                      'Sign In'
+                    )}
+                  </Button>
+                  
+                  {/* Premium Button - Mobile */}
+                  <Button 
+                    onClick={() => setIsMenuOpen(false)}
+                    variant="outline"
+                    className="w-full flex items-center justify-center gap-1 text-white bg-purple-600 hover:bg-purple-700 border-purple-600"
+                  >
+                    <Crown className="h-4 w-4" />
+                    <span>Premium</span>
+                  </Button>
+                </div>
               </div>
             )}
           </div>

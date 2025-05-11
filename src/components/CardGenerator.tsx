@@ -722,7 +722,7 @@ export default function CardGenerator({
 
               {/* Image Count Selection */}
               <div className="space-y-2">
-                <Label>Number of Images</Label>
+                <Label>Number of Cards</Label>
                 <div className="flex space-x-2">
                   {[1, 2].map((count) => (
                     <button

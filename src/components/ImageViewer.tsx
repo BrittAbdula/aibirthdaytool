@@ -97,7 +97,7 @@ export function ImageViewer({ alt, cardId, cardType, imgUrl, isNewCard, svgConte
                 <div className="w-full max-w-md mx-auto flex gap-4 justify-center">
                   <Button onClick={handleEdit} className="bg-[#FFC0CB] text-[#4A4A4A] hover:bg-[#FFD1DC] transition-colors">
                     <Pencil1Icon className="mr-2 h-4 w-4" />
-                    customize this template
+                    customize this card
                   </Button>
                   <Button
                     onClick={() => setShowPreview(!showPreview)}
