@@ -1,118 +1,272 @@
-<svg width="400" height="600" viewBox="0 0 400 600" xmlns="http://www.w3.org/2000/svg">
+<svg width="400" height="600" viewBox="0 0 400 600" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
   <defs>
     <filter id="flameBlur">
-      <feGaussianBlur in="SourceGraphic" stdDeviation="1"/>
+      <feGaussianBlur in="SourceGraphic" stdDeviation="1.5"/>
     </filter>
     
     <radialGradient id="flameGradient" cx="50%" cy="50%" r="50%" fx="50%" fy="90%">
       <stop offset="0%" style="stop-color:#FFA500"/>
       <stop offset="70%" style="stop-color:#FF4500"/>
       <stop offset="100%" style="stop-color:#FF0000"/>
+      <animate attributeName="fy" values="90%;85%;90%" dur="1.5s" repeatCount="indefinite"/>
     </radialGradient>
 
     <filter id="starGlow">
-      <feGaussianBlur in="SourceGraphic" stdDeviation="0.5"/>
+      <feGaussianBlur in="SourceGraphic" stdDeviation="1.5"/>
     </filter>
+    
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#FFF9F9"/>
+      <stop offset="100%" style="stop-color:#FFE5F0"/>
+      <animate attributeName="y2" values="100%;90%;100%" dur="10s" repeatCount="indefinite"/>
+    </linearGradient>
+    
+    <filter id="softShadow">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="3"/>
+      <feOffset dx="0" dy="2"/>
+      <feComposite in2="SourceAlpha" operator="arithmetic" k2="-1" k3="1"/>
+      <feColorMatrix type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.3 0"/>
+    </filter>
+    
+    <!-- Balloon string animation -->
+    <path id="stringPath" d="M0,0 C5,20 -5,40 0,60 C5,80 -5,100 0,120" stroke="none" fill="none"/>
   </defs>
 
-  <!-- Background -->
-  <rect width="400" height="600" fill="#FFF5F7"/>
+  <!-- Background with subtle animation -->
+  <rect width="400" height="600" fill="url(#bgGradient)">
+    <animate attributeName="opacity" values="1;0.95;1" dur="8s" repeatCount="indefinite"/>
+  </rect>
+  
+  <!-- Floating bubbles -->
+  <g class="bubbles">
+    <circle cx="50" cy="400" r="5" fill="#FF80AB" opacity="0.3" filter="url(#softShadow)">
+      <animate attributeName="cy" values="400;100;400" dur="25s" repeatCount="indefinite" begin="0s"/>
+      <animate attributeName="cx" values="50;70;50" dur="25s" repeatCount="indefinite" begin="0s"/>
+      <animate attributeName="r" values="5;7;5" dur="25s" repeatCount="indefinite" begin="0s"/>
+    </circle>
+    <circle cx="330" cy="500" r="4" fill="#FF4081" opacity="0.3" filter="url(#softShadow)">
+      <animate attributeName="cy" values="500;150;500" dur="28s" repeatCount="indefinite" begin="3s"/>
+      <animate attributeName="cx" values="330;310;330" dur="28s" repeatCount="indefinite" begin="3s"/>
+      <animate attributeName="r" values="4;6;4" dur="28s" repeatCount="indefinite" begin="3s"/>
+    </circle>
+    <circle cx="150" cy="550" r="6" fill="#FFD700" opacity="0.2" filter="url(#softShadow)">
+      <animate attributeName="cy" values="550;200;550" dur="30s" repeatCount="indefinite" begin="5s"/>
+      <animate attributeName="cx" values="150;180;150" dur="30s" repeatCount="indefinite" begin="5s"/>
+      <animate attributeName="r" values="6;8;6" dur="30s" repeatCount="indefinite" begin="5s"/>
+    </circle>
+  </g>
   
   <!-- Decorative Elements -->
   <g class="balloons">
-    <g>
-      <path d="M50,200 C50,160 20,160 20,200 C20,230 50,230 50,200" fill="#FF4081">
-        <animate attributeName="opacity" values="1;0.7;1" dur="2s" repeatCount="indefinite"/>
+    <!-- Balloon 1 with float animation -->
+    <g transform="translate(50,200)">
+      <animateTransform attributeName="transform" type="translate" 
+        values="50,200; 52,196; 50,200" dur="4s" repeatCount="indefinite"/>
+      
+      <path d="M0,0 C0,-40 -30,-40 -30,0 C-30,30 0,30 0,0" fill="#FF4081" filter="url(#softShadow)">
+        <animate attributeName="d" 
+          values="M0,0 C0,-40 -30,-40 -30,0 C-30,30 0,30 0,0;
+                 M0,0 C0,-42 -28,-42 -28,0 C-28,32 0,32 0,0;
+                 M0,0 C0,-40 -30,-40 -30,0 C-30,30 0,30 0,0" 
+          dur="3s" repeatCount="indefinite"/>
       </path>
-      <path d="M45,200 L45,300" stroke="#FF4081" stroke-width="2">
-        <animate attributeName="opacity" values="1;0.7;1" dur="2s" repeatCount="indefinite"/>
-      </path>
+      
+      <!-- String with wave animation -->
+      <g>
+        <use xlink:href="#stringPath" stroke="#FF4081" stroke-width="1.5"/>
+        <animateTransform attributeName="transform" type="scale" 
+          values="1 1; 1.02 1; 1 1" dur="4s" repeatCount="indefinite" additive="sum"/>
+      </g>
     </g>
 
-    <g>
-      <path d="M100,180 C100,140 70,140 70,180 C70,210 100,210 100,180" fill="#FF80AB">
-        <animate attributeName="opacity" values="1;0.7;1" dur="2.5s" repeatCount="indefinite"/>
+    <!-- Balloon 2 with different float rhythm -->
+    <g transform="translate(100,180)">
+      <animateTransform attributeName="transform" type="translate" 
+        values="100,180; 97,177; 100,180" dur="5s" repeatCount="indefinite"/>
+      
+      <path d="M0,0 C0,-40 -30,-40 -30,0 C-30,30 0,30 0,0" fill="#FF80AB" filter="url(#softShadow)">
+        <animate attributeName="d" 
+          values="M0,0 C0,-40 -30,-40 -30,0 C-30,30 0,30 0,0;
+                 M0,0 C0,-42 -32,-42 -32,0 C-32,28 0,28 0,0;
+                 M0,0 C0,-40 -30,-40 -30,0 C-30,30 0,30 0,0" 
+          dur="4s" repeatCount="indefinite"/>
       </path>
-      <path d="M95,180 L95,280" stroke="#FF80AB" stroke-width="2">
-        <animate attributeName="opacity" values="1;0.7;1" dur="2.5s" repeatCount="indefinite"/>
+      
+      <!-- String with wave animation -->
+      <g>
+        <use xlink:href="#stringPath" stroke="#FF80AB" stroke-width="1.5"/>
+        <animateTransform attributeName="transform" type="scale" 
+          values="1 1; 1.02 1; 1 1" dur="5s" repeatCount="indefinite" additive="sum"/>
+      </g>
+    </g>
+    
+    <!-- Bonus balloon on the right -->
+    <g transform="translate(350,190)">
+      <animateTransform attributeName="transform" type="translate" 
+        values="350,190; 353,186; 350,190" dur="4.5s" repeatCount="indefinite"/>
+      
+      <path d="M0,0 C0,-40 -30,-40 -30,0 C-30,30 0,30 0,0" fill="#9C27B0" filter="url(#softShadow)">
+        <animate attributeName="d" 
+          values="M0,0 C0,-40 -30,-40 -30,0 C-30,30 0,30 0,0;
+                 M0,0 C0,-38 -28,-38 -28,0 C-28,28 0,28 0,0;
+                 M0,0 C0,-40 -30,-40 -30,0 C-30,30 0,30 0,0" 
+          dur="3.5s" repeatCount="indefinite"/>
       </path>
+      
+      <!-- String with wave animation -->
+      <g>
+        <use xlink:href="#stringPath" stroke="#9C27B0" stroke-width="1.5"/>
+        <animateTransform attributeName="transform" type="scale" 
+          values="1 1; 0.98 1; 1 1" dur="4.5s" repeatCount="indefinite" additive="sum"/>
+      </g>
     </g>
   </g>
 
-  <!-- Stars with Glow and Twinkle -->
-  <g class="stars" filter="url(#starGlow)">
-    <path d="M300,100 L305,90 L310,100 L320,102 L310,108 L312,118 L302,112 L292,118 L294,108 L284,102 L294,100 Z" fill="#FFD700">
-      <animate attributeName="opacity" values="1;0.5;1" dur="1.5s" repeatCount="indefinite"/>
+  <!-- Enhanced Stars with Glow and Twinkle -->
+  <g class="stars">
+    <path d="M300,100 L305,90 L310,100 L320,102 L310,108 L312,118 L302,112 L292,118 L294,108 L284,102 L294,100 Z" fill="#FFD700" filter="url(#starGlow)">
+      <animate attributeName="opacity" values="1;0.4;1" dur="3s" repeatCount="indefinite"/>
+      <animateTransform attributeName="transform" type="scale" values="1;1.1;1" dur="3s" repeatCount="indefinite" additive="sum"/>
     </path>
-    <path d="M350,150 L355,140 L360,150 L370,152 L360,158 L362,168 L352,162 L342,168 L344,158 L334,152 L344,150 Z" fill="#FFD700">
-      <animate attributeName="opacity" values="1;0.5;1" dur="2s" repeatCount="indefinite"/>
+    <path d="M350,150 L355,140 L360,150 L370,152 L360,158 L362,168 L352,162 L342,168 L344,158 L334,152 L344,150 Z" fill="#FFD700" filter="url(#starGlow)">
+      <animate attributeName="opacity" values="1;0.5;1" dur="2.5s" repeatCount="indefinite"/>
+      <animateTransform attributeName="transform" type="scale" values="1;1.2;1" dur="2.5s" repeatCount="indefinite" additive="sum"/>
+    </path>
+    <path d="M270,180 L272,175 L274,180 L279,181 L274,184 L275,189 L270,186 L265,189 L266,184 L261,181 L266,180 Z" fill="#FFD700" filter="url(#starGlow)">
+      <animate attributeName="opacity" values="1;0.3;1" dur="2s" repeatCount="indefinite"/>
+      <animateTransform attributeName="transform" type="scale" values="1;1.3;1" dur="2s" repeatCount="indefinite" additive="sum"/>
     </path>
   </g>
 
-  <!-- Message Area -->
+  <!-- Enhanced Message Area with breathing effect -->
   <g transform="translate(200,250)">
-    <circle cx="0" cy="0" r="120" fill="#FFF" stroke="#FF4081" stroke-width="3">
-      <animate attributeName="stroke-opacity" values="1;0.6;1" dur="3s" repeatCount="indefinite"/>
+    <animateTransform attributeName="transform" type="translate" 
+      values="200,250; 200,248; 200,250" dur="5s" repeatCount="indefinite"/>
+      
+    <!-- Outer glow -->
+    <circle cx="0" cy="0" r="124" fill="none" stroke="#FF80AB" stroke-width="2" opacity="0.3">
+      <animate attributeName="r" values="124;126;124" dur="3s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.3;0.5;0.3" dur="3s" repeatCount="indefinite"/>
     </circle>
-    <text x="0" y="-20" fill="#1A1A1A" font-family="Comic Sans MS" font-size="24" text-anchor="middle">
+    
+    <!-- Main circle with pulse -->
+    <circle cx="0" cy="0" r="120" fill="#FFF" stroke="#FF4081" stroke-width="3" filter="url(#softShadow)">
+      <animate attributeName="r" values="120;118;120" dur="5s" repeatCount="indefinite"/>
+      <animate attributeName="stroke-opacity" values="1;0.7;1" dur="3s" repeatCount="indefinite"/>
+    </circle>
+    
+    <text x="0" y="-25" fill="#1A1A1A" font-family="Comic Sans MS, Arial, sans-serif" font-size="26" text-anchor="middle" font-weight="bold">
       Happy Birthday!
-      <animate attributeName="fill-opacity" values="1;0.7;1" dur="3s" repeatCount="indefinite"/>
+      <animate attributeName="fill-opacity" values="1;0.8;1" dur="3s" repeatCount="indefinite"/>
     </text>
-    <text x="0" y="20" fill="#1A1A1A" font-family="Comic Sans MS" font-size="16" text-anchor="middle">
+    <text x="0" y="20" fill="#1A1A1A" font-family="Comic Sans MS, Arial, sans-serif" font-size="18" text-anchor="middle">
       Have a magical day!
-      <animate attributeName="fill-opacity" values="1;0.7;1" dur="3s" repeatCount="indefinite"/>
+      <animate attributeName="fill-opacity" values="1;0.8;1" dur="3s" repeatCount="indefinite"/>
     </text>
   </g>
 
-  <!-- Confetti -->
+  <!-- Enhanced Confetti with movement -->
   <g class="confetti">
     <circle cx="50" cy="50" r="3" fill="#FF80AB">
       <animate attributeName="opacity" values="1;0.5;1" dur="1.3s" repeatCount="indefinite"/>
+      <animate attributeName="cy" values="50;55;50" dur="3s" repeatCount="indefinite"/>
     </circle>
     <circle cx="350" cy="80" r="3" fill="#FF4081">
       <animate attributeName="opacity" values="1;0.5;1" dur="1.7s" repeatCount="indefinite"/>
+      <animate attributeName="cx" values="350;345;350" dur="2.5s" repeatCount="indefinite"/>
     </circle>
     <circle cx="80" cy="500" r="3" fill="#FFD700">
       <animate attributeName="opacity" values="1;0.5;1" dur="1.5s" repeatCount="indefinite"/>
+      <animate attributeName="cy" values="500;505;500" dur="3.2s" repeatCount="indefinite"/>
     </circle>
     <circle cx="320" cy="520" r="3" fill="#FF80AB">
       <animate attributeName="opacity" values="1;0.5;1" dur="1.4s" repeatCount="indefinite"/>
+      <animate attributeName="cx" values="320;325;320" dur="2.7s" repeatCount="indefinite"/>
     </circle>
     <rect x="150" y="480" width="5" height="5" fill="#FF4081" transform="rotate(45,152.5,482.5)">
       <animate attributeName="opacity" values="1;0.5;1" dur="1.6s" repeatCount="indefinite"/>
+      <animateTransform attributeName="transform" type="rotate" 
+        values="45,152.5,482.5; 90,152.5,482.5; 45,152.5,482.5" dur="5s" repeatCount="indefinite" additive="sum"/>
     </rect>
     <rect x="250" y="500" width="5" height="5" fill="#FFD700" transform="rotate(30,252.5,502.5)">
       <animate attributeName="opacity" values="1;0.5;1" dur="1.8s" repeatCount="indefinite"/>
+      <animateTransform attributeName="transform" type="rotate" 
+        values="30,252.5,502.5; 60,252.5,502.5; 30,252.5,502.5" dur="6s" repeatCount="indefinite" additive="sum"/>
     </rect>
   </g>
 
-  <!-- Cake -->
+  <!-- Enhanced Cake with breathing and dancing flame -->
   <g transform="translate(200,450)">
-    <!-- Cake layers -->
-    <path d="M-40,0 L40,0 L30,-20 L-30,-20 Z" fill="#FF80AB">
-      <animate attributeName="fill-opacity" values="1;0.7;1" dur="2s" repeatCount="indefinite"/>
-    </path>
-    <path d="M-30,-20 L30,-20 L20,-40 L-20,-40 Z" fill="#FF4081">
-      <animate attributeName="fill-opacity" values="1;0.7;1" dur="2s" repeatCount="indefinite"/>
-    </path>
-    <rect x="-2" y="-60" width="4" height="20" fill="#FFD700"/>
+    <animateTransform attributeName="transform" type="translate" 
+      values="200,450; 200,448; 200,450" dur="4s" repeatCount="indefinite"/>
     
-    <!-- Flame -->
+    <!-- Cake plate -->
+    <ellipse cx="0" cy="10" rx="50" ry="10" fill="#F5F5F5" filter="url(#softShadow)">
+      <animate attributeName="rx" values="50;48;50" dur="3s" repeatCount="indefinite"/>
+    </ellipse>
+    
+    <!-- Cake layers with pulsing effect -->
+    <path d="M-40,0 L40,0 L30,-20 L-30,-20 Z" fill="#FF80AB" filter="url(#softShadow)">
+      <animate attributeName="d" 
+        values="M-40,0 L40,0 L30,-20 L-30,-20 Z;
+               M-38,0 L38,0 L28,-20 L-28,-20 Z;
+               M-40,0 L40,0 L30,-20 L-30,-20 Z" 
+        dur="3s" repeatCount="indefinite"/>
+      <animate attributeName="fill-opacity" values="1;0.85;1" dur="2s" repeatCount="indefinite"/>
+    </path>
+    <path d="M-30,-20 L30,-20 L20,-40 L-20,-40 Z" fill="#FF4081" filter="url(#softShadow)">
+      <animate attributeName="d" 
+        values="M-30,-20 L30,-20 L20,-40 L-20,-40 Z;
+               M-28,-20 L28,-20 L18,-40 L-18,-40 Z;
+               M-30,-20 L30,-20 L20,-40 L-20,-40 Z" 
+        dur="3s" repeatCount="indefinite"/>
+      <animate attributeName="fill-opacity" values="1;0.85;1" dur="2s" repeatCount="indefinite"/>
+    </path>
+    <rect x="-2" y="-60" width="4" height="20" fill="#FFD700" rx="1">
+      <animate attributeName="height" values="20;19;20" dur="2s" repeatCount="indefinite"/>
+    </rect>
+    
+    <!-- Enhanced Flame with dancing effect -->
     <g transform="translate(0,-65)">
-      <!-- Glow -->
-      <circle cx="0" cy="0" r="4" fill="#FFD700" opacity="0.5" filter="url(#flameBlur)">
-        <animate attributeName="opacity" values="0.5;0.3;0.5" dur="0.5s" repeatCount="indefinite"/>
+      <animateTransform attributeName="transform" type="translate" 
+        values="0,-65; -1,-66; 1,-64; 0,-65" dur="0.8s" repeatCount="indefinite"/>
+      
+      <!-- Outer Glow -->
+      <circle cx="0" cy="0" r="8" fill="#FFD700" opacity="0.2" filter="url(#flameBlur)">
+        <animate attributeName="r" values="8;9;8" dur="0.5s" repeatCount="indefinite"/>
+        <animate attributeName="opacity" values="0.2;0.3;0.2" dur="0.5s" repeatCount="indefinite"/>
       </circle>
       
-      <!-- Main flame -->
+      <!-- Main flame with dancing effect -->
       <path d="M0,0 C2,-3 4,-7 0,-10 C-4,-7 -2,-3 0,0" fill="url(#flameGradient)">
-        <animate attributeName="opacity" values="1;0.7;1" dur="0.5s" repeatCount="indefinite"/>
+        <animate attributeName="d" 
+          values="M0,0 C2,-3 4,-7 0,-10 C-4,-7 -2,-3 0,0;
+                 M0,0 C3,-4 3,-8 0,-11 C-3,-8 -3,-4 0,0;
+                 M0,0 C2,-3 4,-7 0,-10 C-4,-7 -2,-3 0,0" 
+          dur="0.5s" repeatCount="indefinite"/>
+        <animate attributeName="opacity" values="1;0.8;1" dur="0.5s" repeatCount="indefinite"/>
       </path>
       
-      <!-- Inner flame -->
+      <!-- Inner flame with dancing effect -->
       <path d="M0,-2 C1,-4 2,-6 0,-8 C-2,-6 -1,-4 0,-2" fill="#FFFFFF">
+        <animate attributeName="d" 
+          values="M0,-2 C1,-4 2,-6 0,-8 C-2,-6 -1,-4 0,-2;
+                 M0,-2 C1.5,-5 1.5,-7 0,-9 C-1.5,-7 -1.5,-5 0,-2;
+                 M0,-2 C1,-4 2,-6 0,-8 C-2,-6 -1,-4 0,-2" 
+          dur="0.5s" repeatCount="indefinite"/>
         <animate attributeName="opacity" values="0.8;0.6;0.8" dur="0.5s" repeatCount="indefinite"/>
       </path>
     </g>
+    
+    <!-- Decorative frosting -->
+    <circle cx="-25" cy="-10" r="3" fill="#FFFFFF">
+      <animate attributeName="r" values="3;2.8;3" dur="3s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="25" cy="-10" r="3" fill="#FFFFFF">
+      <animate attributeName="r" values="3;2.8;3" dur="3s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="0" cy="-30" r="3" fill="#FFFFFF">
+      <animate attributeName="r" values="3;2.8;3" dur="3s" repeatCount="indefinite"/>
+    </circle>
   </g>
 </svg>

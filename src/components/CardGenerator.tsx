@@ -371,6 +371,7 @@ export default function CardGenerator({
             cardType: currentCardType,
             size: selectedSize,
             format: formData.format || 'svg',
+            modelTier: formData.modelTier || "Free", // Default to Free if not specified
             ...formData,
             variationIndex: index // Include variation index to ensure different images
           };
@@ -775,7 +776,44 @@ export default function CardGenerator({
                   ))}
                 </div>
                 <p className="text-xs text-gray-500">
-                  Generate {imageCount} {imageCount === 1 ? 'image' : 'images'} with different variations
+                  Generate {imageCount} {imageCount === 1 ? 'card' : 'cards'} with different variations
+                </p>
+              </div>
+
+              {/* Price / Model Selection */}
+              <div className="space-y-2">
+                <Label>Model</Label>
+                <div className="flex space-x-2">
+                  {["Free", "Premium"].map((option) => (
+                    <button
+                      key={option}
+                      type="button"
+                      onClick={() => handleInputChange("modelTier", option)}
+                      className={cn(
+                        "flex-1 py-2 rounded-md border transition-all duration-200 relative",
+                        (formData.modelTier === undefined && option === "Free") || 
+                        formData.modelTier === option
+                          ? option === "Premium" 
+                            ? "bg-gradient-to-r from-[#a786ff] to-[#FF6B94] text-white font-medium border-transparent" 
+                            : "bg-[#FFF5F6] text-[#4A4A4A] font-medium border-[#FFC0CB]"
+                          : "bg-white text-gray-700 border-gray-200 hover:border-[#FFC0CB]"
+                      )}
+                    >
+                      {option === "Premium" && (
+                        <div className="absolute -top-2 -right-2 z-10">
+                          <div className="animate-pulse flex items-center justify-center bg-gradient-to-r from-[#a786ff] to-[#FF6B94] text-white text-[9px] font-bold px-2 py-0.5 rounded-full shadow-sm border border-white">
+                            <span className="mr-0.5">💰</span>Coming Soon
+                          </div>
+                        </div>
+                      )}
+                      {option}
+                    </button>
+                  ))}
+                </div>
+                <p className="text-xs text-gray-500">
+                  {formData.modelTier === "Premium" 
+                    ? "Premium model provides higher quality and more creative effects" 
+                    : "Free model available for all users"}
                 </p>
               </div>
 

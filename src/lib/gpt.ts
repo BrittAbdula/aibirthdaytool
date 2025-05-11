@@ -46,6 +46,7 @@ interface ApiLogParams {
     duration: number;
     isError?: boolean;
     errorMessage?: string;
+    modificationFeedback?: string;
 }
 
 async function logApiRequest(params: ApiLogParams): Promise<string | undefined> {
@@ -78,6 +79,7 @@ async function logApiRequest(params: ApiLogParams): Promise<string | undefined> 
                 errorMessage: params.errorMessage ? params.errorMessage : undefined,
                 r2Url: r2Url,
                 timestamp: createdAt,
+                modificationFeedback: params.modificationFeedback
             },
         });
         return r2Url;
@@ -100,9 +102,9 @@ interface CardContentParams {
 
 function getRandomModel(): string {
     const models = [
-        { name: "anthropic/claude-3.5-haiku", weight: 2 },
+        { name: "anthropic/claude-3.5-haiku", weight: 5 },
         { name: "anthropic/claude-3.7-sonnet", weight: 1 },
-        { name: "deepseek/deepseek-chat-v3-0324:free", weight: 6 }
+        { name: "deepseek/deepseek-chat-v3-0324:free", weight: 20 }
     ];
 
     const totalWeight = models.reduce((sum, model) => sum + model.weight, 0);
@@ -120,12 +122,13 @@ function getRandomModel(): string {
 }
 
 export async function generateCardContent(params: CardContentParams): Promise<{ r2Url: string, cardId: string, svgContent: string }> {
-    const { userId, cardType, version, format, variationIndex, size, modificationFeedback, previousCardId, ...otherParams } = params;
+    const { userId, cardType, version, format, modelTier, variationIndex, size, modificationFeedback, previousCardId, ...otherParams } = params;
     const cardId = nanoid(10);
     const startTime = Date.now();
 
     const model = getRandomModel();
     console.log('<----Using model : ' + model + '---->')
+    console.log('<----Using model tier : ' + modelTier + '---->')
     const formattedTime = new Date(startTime).toLocaleString(undefined, {
         year: 'numeric',
         month: '2-digit',
@@ -159,8 +162,7 @@ I want to modify the previous card design with this feedback: ${modificationFeed
 Here is the previous SVG content:
 ${previousSvgContent}
 
-Please create a new version based on this feedback while maintaining the overall design. 
-IMPORTANT: return SVG code only.
+IMPORTANT: return SVG code only. Do not include any explanation, commentary, or other text.
 `;
                 }
             } catch (error) {
@@ -179,7 +181,7 @@ IMPORTANT: return SVG code only.
             .join('\n');
 
         const userPrompt = userPromptPrefixText ? userPromptPrefixText : userPromptFields;
-        console.log('<----System prompt : ' + systemPrompt + '---->')
+        // console.log('<----System prompt : ' + systemPrompt + '---->')
         console.log('<----User prompt : ' + userPrompt + '---->')
 
         // Check prompt length
@@ -194,7 +196,8 @@ IMPORTANT: return SVG code only.
                 tokensUsed: 0,
                 duration: Date.now() - startTime,
                 isError: true,
-                errorMessage: "User prompt too long"
+                errorMessage: "User prompt too long",
+                modificationFeedback: modificationFeedback,
             });
             return { r2Url: '', cardId, svgContent: '' };
         }
@@ -270,7 +273,8 @@ IMPORTANT: return SVG code only.
             tokensUsed: data.usage?.total_tokens || 0,
             duration,
             isError: !svgContent,
-            errorMessage: svgContent ? undefined : "No valid SVG content found"
+            errorMessage: svgContent ? undefined : "No valid SVG content found",
+            modificationFeedback: modificationFeedback
         });
 
         // Make sure to return the SVG content

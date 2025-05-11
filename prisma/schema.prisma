@@ -32,25 +32,10 @@ model ApiLog {
   errorMessage    String?      @db.Text
   r2Url           String?
   userId          String?      
+  modificationFeedback String? @db.Text
   user            User?        @relation(fields: [userId], references: [id])
   userActions     UserAction[]
   editedCards     EditedCard[] @relation("OriginalCard")
-}
-
-
-model ApiLog2 {
-  id              Int          @id @default(autoincrement())
-  cardId          String       @unique
-  cardType        String
-  userInputs      Json
-  promptVersion   String
-  responseContent String       @db.Text
-  tokensUsed      Int
-  duration        Int
-  timestamp       DateTime     @default(now())
-  isError         Boolean      @default(false)
-  errorMessage    String?      @db.Text
-  userId          String?      
 }
 
 model Template {
