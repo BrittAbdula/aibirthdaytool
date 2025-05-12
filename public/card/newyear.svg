@@ -1,53 +1,401 @@
-
 <svg width="400" height="600" xmlns="http://www.w3.org/2000/svg">
-  <!-- Background with soft gradient -->
   <defs>
+    <!-- 柔和的背景渐变 - 更温暖的晨光色调 -->
     <linearGradient id="bgGradient" x1="0%" y1="0%" x2="0%" y2="100%">
       <stop offset="0%" style="stop-color:#fff5eb;stop-opacity:1" />
       <stop offset="100%" style="stop-color:#fce8d5;stop-opacity:1" />
+      <animate attributeName="y2" values="100%;90%;100%" dur="15s" repeatCount="indefinite" />
     </linearGradient>
-    <!-- Coffee steam path -->
-    <path id="steam" d="M0,0 Q5,-10 0,-20 Q-5,-10 0,0" fill="none" stroke="#8b7355" stroke-width="2" opacity="0.6">
-      <animate attributeName="d" dur="3s" repeatCount="indefinite"
-        values="M0,0 Q5,-10 0,-20 Q-5,-10 0,0;
-                M0,0 Q8,-12 0,-20 Q-8,-12 0,0;
-                M0,0 Q5,-10 0,-20 Q-5,-10 0,0"/>
-    </path>
+    
+    <!-- 咖啡液体渐变 -->
+    <linearGradient id="coffeeGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#8b5a2b;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#6b4423;stop-opacity:1" />
+    </linearGradient>
+    
+    <!-- 蒸汽滤镜 - 更加柔和的效果 -->
+    <filter id="steamFilter" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="1.5" result="blur" />
+      <feComposite in="blur" in2="SourceGraphic" operator="out" />
+    </filter>
+    
+    <!-- 香气滤镜 - 更加柔和扩散 -->
+    <filter id="aromaFilter" x="-100%" y="-100%" width="300%" height="300%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="2" result="blur" />
+      <feColorMatrix in="blur" type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 10 -5" result="glow" />
+      <feComposite in="glow" in2="SourceGraphic" operator="over" />
+    </filter>
+    
+    <!-- 陶瓷杯纹理 -->
+    <pattern id="ceramicTexture" patternUnits="userSpaceOnUse" width="10" height="10">
+      <rect width="10" height="10" fill="#ffffff" opacity="0.05" />
+      <circle cx="5" cy="5" r="3" fill="#f5f5f5" opacity="0.05" />
+    </pattern>
+    
+    <!-- 光泽高光滤镜 -->
+    <filter id="glossEffect">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="2" />
+      <feOffset dx="0" dy="1" result="offsetblur" />
+      <feComponentTransfer>
+        <feFuncA type="linear" slope="0.3" />
+      </feComponentTransfer>
+      <feMerge> 
+        <feMergeNode />
+        <feMergeNode in="SourceGraphic" /> 
+      </feMerge>
+    </filter>
+    
+    <!-- 温暖的光晕 -->
+    <radialGradient id="warmGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" style="stop-color:#ffe0b2;stop-opacity:0.5" />
+      <stop offset="100%" style="stop-color:#ffe0b2;stop-opacity:0" />
+      <animate attributeName="r" values="50%;55%;50%" dur="10s" repeatCount="indefinite" />
+    </radialGradient>
+    
+    <!-- 咖啡香气渐变 -->
+    <radialGradient id="aromaGradient" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" style="stop-color:#8b5a2b;stop-opacity:0.2" />
+      <stop offset="100%" style="stop-color:#8b5a2b;stop-opacity:0" />
+    </radialGradient>
+    
+    <!-- 香气路径 -->
+    <path id="aromaPath" d="M0,0 C0,-10 10,-20 0,-30 C-10,-40 10,-50 0,-60" fill="none" />
   </defs>
 
-  <!-- Main background -->
+  <!-- 主背景 -->
   <rect width="400" height="600" fill="url(#bgGradient)" />
   
-  <!-- Coffee cup -->
+  <!-- 温暖的光晕 -->
+  <circle cx="200" cy="280" r="150" fill="url(#warmGlow)">
+    <animate attributeName="opacity" values="0.5;0.7;0.5" dur="8s" repeatCount="indefinite" />
+  </circle>
+  
+  <!-- 早晨的阳光射线 -->
+  <g opacity="0.2">
+    <path d="M100,50 L150,110" stroke="#ffcc80" stroke-width="2">
+      <animate attributeName="opacity" values="0.2;0.3;0.2" dur="5s" repeatCount="indefinite" />
+    </path>
+    <path d="M300,50 L250,110" stroke="#ffcc80" stroke-width="2">
+      <animate attributeName="opacity" values="0.2;0.3;0.2" dur="6s" repeatCount="indefinite" />
+    </path>
+    <path d="M200,30 L200,90" stroke="#ffcc80" stroke-width="2">
+      <animate attributeName="opacity" values="0.2;0.3;0.2" dur="7s" repeatCount="indefinite" />
+    </path>
+  </g>
+  
+  <!-- 咖啡香气扩散效果 - 可视化的香气波浪 -->
+  <g opacity="0.6" filter="url(#aromaFilter)">
+    <!-- 香气波浪1 -->
+    <ellipse cx="200" cy="210" rx="20" ry="10" fill="url(#aromaGradient)" opacity="0">
+      <animate attributeName="ry" values="10;40" dur="6s" begin="0s;12s;24s;36s" fill="freeze" />
+      <animate attributeName="rx" values="20;60" dur="6s" begin="0s;12s;24s;36s" fill="freeze" />
+      <animate attributeName="opacity" values="0;0.3;0" dur="6s" begin="0s;12s;24s;36s" fill="freeze" />
+      <animate attributeName="cy" values="210;160" dur="6s" begin="0s;12s;24s;36s" fill="freeze" />
+    </ellipse>
+    
+    <!-- 香气波浪2 -->
+    <ellipse cx="200" cy="210" rx="20" ry="10" fill="url(#aromaGradient)" opacity="0">
+      <animate attributeName="ry" values="10;35" dur="6s" begin="4s;16s;28s;40s" fill="freeze" />
+      <animate attributeName="rx" values="20;50" dur="6s" begin="4s;16s;28s;40s" fill="freeze" />
+      <animate attributeName="opacity" values="0;0.2;0" dur="6s" begin="4s;16s;28s;40s" fill="freeze" />
+      <animate attributeName="cy" values="210;170" dur="6s" begin="4s;16s;28s;40s" fill="freeze" />
+    </ellipse>
+    
+    <!-- 香气波浪3 -->
+    <ellipse cx="200" cy="210" rx="20" ry="10" fill="url(#aromaGradient)" opacity="0">
+      <animate attributeName="ry" values="10;30" dur="6s" begin="8s;20s;32s;44s" fill="freeze" />
+      <animate attributeName="rx" values="20;45" dur="6s" begin="8s;20s;32s;44s" fill="freeze" />
+      <animate attributeName="opacity" values="0;0.25;0" dur="6s" begin="8s;20s;32s;44s" fill="freeze" />
+      <animate attributeName="cy" values="210;180" dur="6s" begin="8s;20s;32s;44s" fill="freeze" />
+    </ellipse>
+  </g>
+  
+  <!-- 香气粒子 - 代表咖啡分子 -->
+  <g>
+    <!-- 左侧香气分子 -->
+    <path d="M170,235 Q168,225 166,215 Q164,205 166,195 Q168,185 170,175" 
+          fill="none" stroke="#8b5a2b" stroke-width="0.5" opacity="0.5">
+      <animate attributeName="d" 
+               values="M170,235 Q168,225 166,215 Q164,205 166,195 Q168,185 170,175;
+                       M170,235 Q166,225 164,215 Q162,205 164,195 Q166,185 168,175;
+                       M170,235 Q168,225 166,215 Q164,205 166,195 Q168,185 170,175" 
+               dur="8s" 
+               repeatCount="indefinite" />
+      <animate attributeName="opacity" values="0;0.5;0" dur="8s" repeatCount="indefinite" />
+    </path>
+    
+    <!-- 中左香气分子 -->
+    <path d="M185,230 Q187,220 185,210 Q183,200 185,190 Q187,180 185,170" 
+          fill="none" stroke="#8b5a2b" stroke-width="0.5" opacity="0.5">
+      <animate attributeName="d" 
+               values="M185,230 Q187,220 185,210 Q183,200 185,190 Q187,180 185,170;
+                       M185,230 Q189,220 187,210 Q185,200 187,190 Q189,180 187,170;
+                       M185,230 Q187,220 185,210 Q183,200 185,190 Q187,180 185,170" 
+               dur="9s" 
+               repeatCount="indefinite" />
+      <animate attributeName="opacity" values="0;0.5;0" dur="9s" repeatCount="indefinite" />
+    </path>
+    
+    <!-- 中右香气分子 -->
+    <path d="M215,230 Q213,220 215,210 Q217,200 215,190 Q213,180 215,170" 
+          fill="none" stroke="#8b5a2b" stroke-width="0.5" opacity="0.5">
+      <animate attributeName="d" 
+               values="M215,230 Q213,220 215,210 Q217,200 215,190 Q213,180 215,170;
+                       M215,230 Q211,220 213,210 Q215,200 213,190 Q211,180 213,170;
+                       M215,230 Q213,220 215,210 Q217,200 215,190 Q213,180 215,170" 
+               dur="7s" 
+               repeatCount="indefinite" />
+      <animate attributeName="opacity" values="0;0.5;0" dur="7s" repeatCount="indefinite" />
+    </path>
+    
+    <!-- 右侧香气分子 -->
+    <path d="M230,235 Q232,225 234,215 Q236,205 234,195 Q232,185 230,175" 
+          fill="none" stroke="#8b5a2b" stroke-width="0.5" opacity="0.5">
+      <animate attributeName="d" 
+               values="M230,235 Q232,225 234,215 Q236,205 234,195 Q232,185 230,175;
+                       M230,235 Q234,225 236,215 Q238,205 236,195 Q234,185 232,175;
+                       M230,235 Q232,225 234,215 Q236,205 234,195 Q232,185 230,175" 
+               dur="10s" 
+               repeatCount="indefinite" />
+      <animate attributeName="opacity" values="0;0.5;0" dur="10s" repeatCount="indefinite" />
+    </path>
+  </g>
+  
+  <!-- 香气小气泡 -->
+  <g>
+    <circle cx="180" cy="220" r="1" fill="#8b5a2b" opacity="0">
+      <animate attributeName="cy" values="220;180;140;100" dur="8s" begin="1s;9s;17s;25s;33s" fill="freeze" />
+      <animate attributeName="cx" values="180;175;180;185;180" dur="8s" begin="1s;9s;17s;25s;33s" fill="freeze" />
+      <animate attributeName="opacity" values="0;0.4;0.7;0.4;0" dur="8s" begin="1s;9s;17s;25s;33s" fill="freeze" />
+    </circle>
+    
+    <circle cx="190" cy="220" r="0.8" fill="#8b5a2b" opacity="0">
+      <animate attributeName="cy" values="220;180;140;100" dur="10s" begin="3s;13s;23s;33s;43s" fill="freeze" />
+      <animate attributeName="cx" values="190;195;190;185;190" dur="10s" begin="3s;13s;23s;33s;43s" fill="freeze" />
+      <animate attributeName="opacity" values="0;0.3;0.6;0.3;0" dur="10s" begin="3s;13s;23s;33s;43s" fill="freeze" />
+    </circle>
+    
+    <circle cx="210" cy="220" r="0.8" fill="#8b5a2b" opacity="0">
+      <animate attributeName="cy" values="220;180;140;100" dur="9s" begin="5s;14s;23s;32s;41s" fill="freeze" />
+      <animate attributeName="cx" values="210;205;210;215;210" dur="9s" begin="5s;14s;23s;32s;41s" fill="freeze" />
+      <animate attributeName="opacity" values="0;0.3;0.6;0.3;0" dur="9s" begin="5s;14s;23s;32s;41s" fill="freeze" />
+    </circle>
+    
+    <circle cx="220" cy="220" r="1" fill="#8b5a2b" opacity="0">
+      <animate attributeName="cy" values="220;180;140;100" dur="7s" begin="2s;9s;16s;23s;30s" fill="freeze" />
+      <animate attributeName="cx" values="220;225;220;215;220" dur="7s" begin="2s;9s;16s;23s;30s" fill="freeze" />
+      <animate attributeName="opacity" values="0;0.4;0.7;0.4;0" dur="7s" begin="2s;9s;16s;23s;30s" fill="freeze" />
+    </circle>
+  </g>
+  
+  <!-- 咖啡杯和内容的整体动效 -->
   <g transform="translate(200,280)">
-    <ellipse cx="0" cy="0" rx="45" ry="15" fill="#8b7355" />
-    <path d="M-45,0 Q-45,-60 0,-60 Q45,-60 45,0" fill="none" stroke="#8b7355" stroke-width="4"/>
-    <!-- Handle -->
-    <path d="M35,-30 Q55,-30 55,-15 Q55,0 35,0" fill="none" stroke="#8b7355" stroke-width="4"/>
-    <!-- Steam effects -->
-    <use href="#steam" transform="translate(-20,-58)" />
-    <use href="#steam" transform="translate(0,-62)" />
-    <use href="#steam" transform="translate(20,-58)" />
+    <animateTransform attributeName="transform" 
+                      type="translate" 
+                      values="200,280;200,278;200,280" 
+                      dur="5s" 
+                      repeatCount="indefinite" 
+                      additive="replace" />
+    
+    <!-- 杯底影子 -->
+    <ellipse cx="0" cy="10" rx="55" ry="10" fill="#8b7355" opacity="0.2">
+      <animate attributeName="rx" values="55;53;55" dur="5s" repeatCount="indefinite" />
+    </ellipse>
+    
+    <!-- 杯子外部 - 杯子本身 -->
+    <g filter="url(#glossEffect)">
+      <!-- 杯底 -->
+      <ellipse cx="0" cy="0" rx="45" ry="15" fill="#f0f0f0" stroke="#e0e0e0" stroke-width="1" />
+      
+      <!-- 杯子侧面 -->
+      <path d="M-45,0 Q-45,-60 0,-60 Q45,-60 45,0" 
+            fill="#f0f0f0" 
+            stroke="#e0e0e0" 
+            stroke-width="1"
+            fill-opacity="0.95" />
+      
+      <!-- 杯子内部纹理 -->
+      <path d="M-44,-1 Q-44,-59 0,-59 Q44,-59 44,-1" 
+            fill="url(#ceramicTexture)" 
+            opacity="0.5" />
+      
+      <!-- 杯子边缘高光 -->
+      <path d="M-44,-2 Q-44,-58 0,-58 Q44,-58 44,-2" 
+            fill="none" 
+            stroke="#ffffff" 
+            stroke-width="1"
+            opacity="0.3" />
+            
+      <!-- 咖啡液体表面 - 真实的液体表面 -->
+      <ellipse cx="0" cy="-30" rx="40" ry="12" fill="url(#coffeeGradient)">
+        <animate attributeName="cy" values="-30;-29;-30;-31;-30" dur="4s" repeatCount="indefinite" />
+        <animate attributeName="rx" values="40;39;40;41;40" dur="4s" repeatCount="indefinite" />
+        <animate attributeName="ry" values="12;11.5;12;12.5;12" dur="4s" repeatCount="indefinite" />
+      </ellipse>
+      
+      <!-- 咖啡表面光泽 -->
+      <ellipse cx="0" cy="-30" rx="35" ry="10" fill="#ffffff" opacity="0.2">
+        <animate attributeName="cy" values="-30;-29;-30;-31;-30" dur="4s" repeatCount="indefinite" />
+      </ellipse>
+    </g>
+    
+    <!-- 杯子把手 - 更精美的弧形 -->
+    <path d="M38,-30 Q65,-30 65,-10 Q65,5 37,5" 
+          fill="none" 
+          stroke="#f0f0f0" 
+          stroke-width="5"
+          stroke-linecap="round"
+          filter="url(#glossEffect)">
+      <animate attributeName="d" 
+               values="M38,-30 Q65,-30 65,-10 Q65,5 37,5;
+                       M38,-29 Q66,-29 66,-9 Q66,6 37,6;
+                       M38,-30 Q65,-30 65,-10 Q65,5 37,5" 
+               dur="5s" 
+               repeatCount="indefinite" />
+    </path>
+    
+    <!-- 咖啡表面的涟漪效果 -->
+    <ellipse cx="0" cy="-30" rx="25" ry="7" fill="none" stroke="#6b4423" stroke-width="0.5" opacity="0">
+      <animate attributeName="rx" values="15;35" dur="3s" begin="0.5s;3.5s;6.5s;9.5s" fill="freeze" />
+      <animate attributeName="ry" values="4;10" dur="3s" begin="0.5s;3.5s;6.5s;9.5s" fill="freeze" />
+      <animate attributeName="opacity" values="0.5;0" dur="3s" begin="0.5s;3.5s;6.5s;9.5s" fill="freeze" />
+    </ellipse>
+    
+    <!-- 蒸汽效果 - 多个更自然的蒸汽路径 -->
+    <g filter="url(#steamFilter)">
+      <!-- 蒸汽1 -->
+      <path d="M-20,-58 C-15,-68 -25,-78 -20,-88 C-15,-98 -25,-108 -20,-118" 
+            fill="none" 
+            stroke="#ffffff" 
+            stroke-width="2" 
+            opacity="0.6">
+        <animate attributeName="d" 
+                 values="M-20,-58 C-15,-68 -25,-78 -20,-88 C-15,-98 -25,-108 -20,-118;
+                         M-20,-58 C-22,-68 -18,-78 -15,-88 C-12,-98 -22,-108 -15,-118;
+                         M-20,-58 C-15,-68 -25,-78 -20,-88 C-15,-98 -25,-108 -20,-118" 
+                 dur="7s" 
+                 repeatCount="indefinite" />
+        <animate attributeName="opacity" 
+                 values="0.6;0.1;0.6" 
+                 dur="7s" 
+                 repeatCount="indefinite" />
+      </path>
+      
+      <!-- 蒸汽2 -->
+      <path d="M0,-62 C5,-72 -5,-82 0,-92 C5,-102 -5,-112 0,-122" 
+            fill="none" 
+            stroke="#ffffff" 
+            stroke-width="2" 
+            opacity="0.6">
+        <animate attributeName="d" 
+                 values="M0,-62 C5,-72 -5,-82 0,-92 C5,-102 -5,-112 0,-122;
+                         M0,-62 C8,-72 -8,-82 3,-92 C10,-102 -3,-112 0,-122;
+                         M0,-62 C5,-72 -5,-82 0,-92 C5,-102 -5,-112 0,-122" 
+                 dur="6s" 
+                 repeatCount="indefinite" />
+        <animate attributeName="opacity" 
+                 values="0.6;0.1;0.6" 
+                 dur="6s" 
+                 repeatCount="indefinite" />
+      </path>
+      
+      <!-- 蒸汽3 -->
+      <path d="M20,-58 C15,-68 25,-78 20,-88 C15,-98 25,-108 20,-118" 
+            fill="none" 
+            stroke="#ffffff" 
+            stroke-width="2" 
+            opacity="0.6">
+        <animate attributeName="d" 
+                 values="M20,-58 C15,-68 25,-78 20,-88 C15,-98 25,-108 20,-118;
+                         M20,-58 C22,-68 18,-78 24,-88 C17,-98 27,-108 20,-118;
+                         M20,-58 C15,-68 25,-78 20,-88 C15,-98 25,-108 20,-118" 
+                 dur="8s" 
+                 repeatCount="indefinite" />
+        <animate attributeName="opacity" 
+                 values="0.6;0.1;0.6" 
+                 dur="8s" 
+                 repeatCount="indefinite" />
+      </path>
+    </g>
   </g>
 
-  <!-- Text elements -->
+  <!-- 咖啡豆装饰 -->
+  <g>
+    <path d="M120,350 q-5,-10 -10,0 t10,10 t10,-10 t-10,0" fill="#6b4423" transform="rotate(30,120,350)">
+      <animate attributeName="opacity" values="1;0.8;1" dur="10s" repeatCount="indefinite" />
+    </path>
+    <path d="M280,350 q-5,-10 -10,0 t10,10 t10,-10 t-10,0" fill="#6b4423" transform="rotate(-30,280,350)">
+      <animate attributeName="opacity" values="0.8;1;0.8" dur="10s" repeatCount="indefinite" />
+    </path>
+  </g>
+
+  <!-- 文字元素 - 带有更柔和的动画 -->
   <text x="200" y="120" text-anchor="middle" font-family="Brush Script MT, cursive" font-size="40" fill="#8b7355">
     Dear Judy
+    <animate attributeName="opacity" values="0.9;1;0.9" dur="7s" repeatCount="indefinite" />
   </text>
   
-  <text x="200" y="380" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" fill="#6d5744" width="300">
-    <tspan x="200" dy="0">Every morning starts better</tspan>
-    <tspan x="200" dy="25">with you and a cup of coffee.</tspan>
-  </text>
-
-  <!-- Signature -->
-  <text x="200" y="480" text-anchor="middle" font-family="Brush Script MT, cursive" font-size="32" fill="#8b7355">
-    Love, leaf
-  </text>
-
-  <!-- Decorative hearts -->
-  <g fill="#d4a788" opacity="0.6">
-    <path d="M150,440 q-7.5-15-15,0t15,15t15-15t-15,0" />
-    <path d="M250,440 q-7.5-15-15,0t15,15t15-15t-15,0" />
+  <g fill="#6d5744">
+    <text x="200" y="380" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" width="300">
+      <tspan x="200" dy="0">Every morning starts better</tspan>
+      <animate attributeName="opacity" values="0.9;1;0.9" dur="6s" repeatCount="indefinite" />
+    </text>
+    <text x="200" y="405" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" width="300">
+      <tspan x="200" dy="0">with you and a cup of coffee.</tspan>
+      <animate attributeName="opacity" values="0.9;1;0.9" dur="6s" repeatCount="indefinite" />
+    </text>
   </g>
+
+  <!-- 签名 - 带有笔迹动画 -->
+  <text x="200" y="480" text-anchor="middle" font-family="Brush Script MT, cursive" font-size="32" fill="#8b7355">
+    Love, Leaf
+    <animate attributeName="opacity" values="0.9;1;0.9" dur="4s" repeatCount="indefinite" />
+  </text>
+
+  <!-- 更精致的心形装饰 -->
+  <g>
+    <!-- 左侧心形 -->
+    <path d="M150,440 q-7.5-15-15,0t15,15t15-15t-15,0" fill="#d4a788">
+      <animate attributeName="opacity" values="0.6;0.8;0.6" dur="5s" repeatCount="indefinite" />
+      <animate attributeName="d" 
+               values="M150,440 q-7.5-15-15,0t15,15t15-15t-15,0;
+                       M150,440 q-8-16-16,0t16,16t16-16t-16,0;
+                       M150,440 q-7.5-15-15,0t15,15t15-15t-15,0" 
+               dur="7s" 
+               repeatCount="indefinite" />
+    </path>
+    
+    <!-- 右侧心形 -->
+    <path d="M250,440 q-7.5-15-15,0t15,15t15-15t-15,0" fill="#d4a788">
+      <animate attributeName="opacity" values="0.6;0.8;0.6" dur="5s" begin="1s" repeatCount="indefinite" />
+      <animate attributeName="d" 
+               values="M250,440 q-7.5-15-15,0t15,15t15-15t-15,0;
+                       M250,440 q-8-16-16,0t16,16t16-16t-16,0;
+                       M250,440 q-7.5-15-15,0t15,15t15-15t-15,0" 
+               dur="7s" 
+               begin="1s"
+               repeatCount="indefinite" />
+    </path>
+  </g>
+  
+  <!-- 悬浮的微小热气粒子 -->
+  <g>
+    <circle cx="170" cy="240" r="1.5" fill="#ffffff" opacity="0.4">
+      <animate attributeName="cy" values="240;220;240" dur="10s" repeatCount="indefinite" />
+      <animate attributeName="opacity" values="0.4;0;0.4" dur="10s" repeatCount="indefinite" />
+    </circle>
+    <circle cx="200" cy="230" r="1" fill="#ffffff" opacity="0.4">
+      <animate attributeName="cy" values="230;210;230" dur="12s" repeatCount="indefinite" />
+      <animate attributeName="opacity" values="0.4;0;0.4" dur="12s" repeatCount="indefinite" />
+    </circle>
+    <circle cx="230" cy="245" r="1" fill="#ffffff" opacity="0.4">
+      <animate attributeName="cy" values="245;225;245" dur="9s" repeatCount="indefinite" />
+      <animate attributeName="opacity" values="0.4;0;0.4" dur="9s" repeatCount="indefinite" />
+    </circle>
+  </g>
+  
+  <!-- 清晨的光线效果 -->
+  <rect x="0" y="0" width="400" height="600" fill="url(#warmGlow)" opacity="0.1">
+    <animate attributeName="opacity" values="0.1;0.15;0.1" dur="15s" repeatCount="indefinite" />
+  </rect>
 </svg>

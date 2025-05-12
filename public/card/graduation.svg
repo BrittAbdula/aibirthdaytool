@@ -1,59 +1,238 @@
-
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 760">
   <defs>
-    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#f0f4ff;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#e6eeff;stop-opacity:1" />
+    <!-- 更有情感的背景渐变，从青春的蓝紫色到希望的金黄色 -->
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#7b68ee;stop-opacity:0.1" />
+      <stop offset="50%" style="stop-color:#f8f9fa;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#ffd700;stop-opacity:0.15" />
     </linearGradient>
-    <pattern id="dots" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
-      <circle cx="2" cy="2" r="1" fill="#4b6bff" opacity="0.1"/>
-    </pattern>
+    
+    <!-- 毕业帽 -->
+    <symbol id="graduationCap" viewBox="0 0 100 100">
+      <path d="M50,20 L10,40 L50,60 L90,40 Z" fill="#2c3e50"/>
+      <path d="M50,60 V75 M25,45 V65 L50,80 L75,65 V45" fill="none" stroke="#2c3e50" stroke-width="2"/>
+      <rect x="45" y="5" width="10" height="15" fill="#2c3e50"/>
+    </symbol>
+    
+    <!-- 流苏 - 独立出来以便更好地动画控制 -->
+    <symbol id="tassel" viewBox="0 0 30 30">
+      <path d="M15,0 Q25,10 20,30" stroke="#d4af37" stroke-width="2" fill="none"/>
+      <circle cx="20" cy="30" r="3" fill="#d4af37"/>
+    </symbol>
+    
+    <!-- 回忆相册页面 -->
+    <symbol id="albumPage" viewBox="0 0 100 120">
+      <rect x="5" y="5" width="90" height="110" rx="2" ry="2" fill="white" stroke="#ccc" stroke-width="1"/>
+      <rect x="15" y="15" width="70" height="50" fill="#f9f9f9" stroke="#ddd" stroke-width="0.5"/>
+      <path d="M30,30 L40,25 L50,35 L65,20 L75,30 L75,55 L25,55 Z" fill="#e9ecef"/>
+      <circle cx="30" cy="22" r="3" fill="#ced4da"/>
+      <rect x="15" y="75" width="70" height="5" fill="#e9ecef"/>
+      <rect x="15" y="85" width="50" height="3" fill="#e9ecef"/>
+      <rect x="15" y="95" width="40" height="3" fill="#e9ecef"/>
+    </symbol>
+    
+    <!-- 光晕效果 - 更加柔和的光晕 -->
+    <filter id="softGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="4" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+    
+    <!-- 时光沙漏 -->
+    <symbol id="hourglass" viewBox="0 0 50 80">
+      <path d="M10,5 H40 V15 Q40,30 25,40 Q10,30 10,15 V5 Z" fill="#d0ebff" opacity="0.8"/>
+      <path d="M10,75 H40 V65 Q40,50 25,40 Q10,50 10,65 V75 Z" fill="#ced4da" opacity="0.6"/>
+      <rect x="8" y="5" width="34" height="3" fill="#adb5bd"/>
+      <rect x="8" y="72" width="34" height="3" fill="#adb5bd"/>
+    </symbol>
+    
+    <!-- 回忆之门 -->
+    <symbol id="doorway" viewBox="0 0 60 100">
+      <path d="M10,10 V90 H50 V10 Z" fill="#f8f9fa" stroke="#adb5bd" stroke-width="1"/>
+      <path d="M15,15 V85 H45 V15 Z" fill="#f5f8ff"/>
+      <circle cx="42" cy="50" r="2" fill="#6c757d"/>
+    </symbol>
+    
+    <!-- 新月 - 代表新的开始 -->
+    <symbol id="crescent" viewBox="0 0 50 50">
+      <path d="M25,5 A20,20 0 1,1 25,45 A15,15 0 1,0 25,5" fill="#ffd700"/>
+    </symbol>
+    
+    <!-- 花瓣图案 -->
+    <symbol id="petal" viewBox="0 0 20 20">
+      <path d="M10,0 Q15,5 10,10 Q5,5 10,0" fill="#7b68ee" opacity="0.7"/>
+    </symbol>
+    
+    <!-- 内心交流线 - 表达情感 -->
+    <filter id="heartLine" x="-20%" y="-20%" width="140%" height="140%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.01" numOctaves="1" seed="1" result="noise"/>
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="5" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
   </defs>
 
-  <!-- Background -->
+  <!-- 背景 -->
   <rect width="100%" height="100%" fill="url(#bgGradient)"/>
-  <rect width="100%" height="100%" fill="url(#dots)"/>
-
-  <!-- Decorative Elements -->
-  <g class="books-and-pencils">
-    <rect x="40" y="40" width="400" height="5" fill="#4b6bff" opacity="0.7" rx="2"/>
-    <rect x="40" y="60" width="400" height="5" fill="#4b6bff" opacity="0.6" rx="2"/>
-    <rect x="40" y="80" width="400" height="5" fill="#4b6bff" opacity="0.5" rx="2"/>
+  
+  <!-- 青春足迹 - 更有色彩和维度感 -->
+  <g class="footprints">
+    <path d="M110,120 C240,110 240,150 370,140" stroke="#7b68ee" stroke-width="2" fill="none" stroke-dasharray="2,6" opacity="0.5" filter="url(#heartLine)">
+      <animate attributeName="stroke-dashoffset" values="0;20" dur="5s" repeatCount="indefinite"/>
+    </path>
   </g>
 
-  <!-- Main Content Area -->
-  <g class="message-container" transform="translate(60, 160)">
-    <text x="0" y="0" font-family="Noto Sans, system-ui" font-size="28" fill="#2c3e50">
-      <tspan x="0" dy="1.2em">To a Great</tspan>
-      <tspan x="0" dy="1.2em">Classmate</tspan>
+  <!-- 分隔线 - 时间线，从青春到新的开始 -->
+  <g opacity="0.7">
+    <path d="M100,80 Q240,100 380,80" stroke="#7b68ee" stroke-width="1" fill="none" stroke-dasharray="1,3">
+      <animate attributeName="stroke" values="#7b68ee;#6c757d;#7b68ee" dur="8s" repeatCount="indefinite"/>
+    </path>
+    <path d="M100,680 Q240,660 380,680" stroke="#ffd700" stroke-width="1" fill="none" stroke-dasharray="1,3">
+      <animate attributeName="stroke" values="#ffd700;#e9b44c;#ffd700" dur="8s" repeatCount="indefinite"/>
+    </path>
+  </g>
+
+  <!-- 情感时刻轴 -->
+  <g class="time-moments">
+    <circle cx="120" cy="80" r="5" fill="#7b68ee" opacity="0.8">
+      <animate attributeName="r" values="5;6;5" dur="3s" repeatCount="indefinite"/>
+    </circle>
+    <text x="120" y="65" font-family="Georgia, serif" font-size="10" fill="#6c757d" text-anchor="middle">First Day</text>
+    
+    <circle cx="240" cy="80" r="5" fill="#7b68ee" opacity="0.8">
+      <animate attributeName="r" values="5;6;5" dur="3s" begin="1s" repeatCount="indefinite"/>
+    </circle>
+    <text x="240" y="65" font-family="Georgia, serif" font-size="10" fill="#6c757d" text-anchor="middle">Friendships</text>
+    
+    <circle cx="360" cy="80" r="5" fill="#7b68ee" opacity="0.8">
+      <animate attributeName="r" values="5;6;5" dur="3s" begin="2s" repeatCount="indefinite"/>
+    </circle>
+    <text x="360" y="65" font-family="Georgia, serif" font-size="10" fill="#6c757d" text-anchor="middle">Growth</text>
+  </g>
+
+  <!-- 标题 - 带有强烈情感的动画效果 -->
+  <g class="title" filter="url(#softGlow)">
+    <text x="240" y="150" font-family="Georgia, serif" font-size="36" fill="#7b68ee" text-anchor="middle" letter-spacing="1">
+      Graduation
+      <animate attributeName="opacity" values="0.9;1;0.9" dur="5s" repeatCount="indefinite"/>
+      <animate attributeName="fill" values="#7b68ee;#8a78ee;#7b68ee" dur="5s" repeatCount="indefinite"/>
+    </text>
+    <text x="240" y="190" font-family="Georgia, serif" font-size="18" fill="#6c757d" text-anchor="middle" letter-spacing="3">
+      THE END IS JUST THE BEGINNING
+      <animate attributeName="opacity" values="0.8;0.9;0.8" dur="5s" repeatCount="indefinite"/>
+    </text>
+  </g>
+
+  <!-- 核心内容区域 - 情感视觉焦点 -->
+  <g transform="translate(240, 370)">
+    <!-- 沙漏 - 暗示时光流逝 -->
+    <use href="#hourglass" width="50" height="80" x="-140" y="-40" opacity="0.8">
+      <animate attributeName="opacity" values="0.8;0.9;0.8" dur="10s" repeatCount="indefinite"/>
+      <animate attributeName="transform" values="rotate(0);rotate(5);rotate(0);rotate(-5);rotate(0)" dur="15s" repeatCount="indefinite"/>
+    </use>
+    
+    <!-- 中心毕业帽 - 有更生动的动画 -->
+    <g filter="url(#softGlow)">
+      <use href="#graduationCap" width="120" height="120" x="-60" y="-100">
+        <animate attributeName="transform" type="translate" values="0,0;0,-8;0,0;0,8;0,0" dur="5s" repeatCount="indefinite" additive="sum"/>
+      </use>
+      
+      <!-- 流苏动画 - 更加生动的摆动 -->
+      <use href="#tassel" width="30" height="30" x="-20" y="-90">
+        <animate attributeName="transform" values="rotate(0);rotate(15);rotate(0);rotate(-15);rotate(0)" dur="3s" repeatCount="indefinite"/>
+        <animate attributeName="opacity" values="0.9;1;0.9" dur="3s" repeatCount="indefinite"/>
+      </use>
+    </g>
+    
+    <!-- 相册 - 更有情感和动态感的翻页效果 -->
+    <g class="album">
+      <!-- 底层页 -->
+      <use href="#albumPage" width="160" height="200" x="-80" y="-60" transform="rotate(-8)">
+        <animate attributeName="transform" values="rotate(-8);rotate(-10);rotate(-8);rotate(-6);rotate(-8)" dur="10s" repeatCount="indefinite" additive="sum"/>
+      </use>
+      <!-- 中间页 - 慢慢翻起 -->
+      <use href="#albumPage" width="160" height="200" x="-80" y="-70">
+        <animate attributeName="transform" values="rotate(0);rotate(-3);rotate(0);rotate(3);rotate(0)" dur="8s" repeatCount="indefinite"/>
+      </use>
+      <!-- 顶层页 - 明显的翻页效果 -->
+      <use href="#albumPage" width="160" height="200" x="-80" y="-80" transform="rotate(5)">
+        <animate attributeName="transform" values="rotate(5);rotate(10);rotate(5);rotate(0);rotate(5)" dur="7s" repeatCount="indefinite" additive="sum"/>
+        <animate attributeName="opacity" values="1;0.9;1" dur="7s" repeatCount="indefinite"/>
+      </use>
+    </g>
+    
+    <!-- 回忆之门 - 象征未来的机会 -->
+    <use href="#doorway" width="60" height="100" x="100" y="-50" opacity="0.9">
+      <animate attributeName="transform" values="translate(0,0);translate(0,-5);translate(0,0);translate(0,5);translate(0,0)" dur="8s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.9;1;0.9" dur="8s" repeatCount="indefinite"/>
+    </use>
+    
+    <!-- 代表新开始的新月 -->
+    <use href="#crescent" width="50" height="50" x="105" y="-120" opacity="0.9">
+      <animate attributeName="transform" values="rotate(0);rotate(10);rotate(0);rotate(-10);rotate(0)" dur="10s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.9;1;0.9" dur="10s" repeatCount="indefinite"/>
+    </use>
+  </g>
+
+  <!-- 感恩之情的文字区域 -->
+  <g class="emotional-text" filter="url(#softGlow)">
+    <text x="240" y="580" font-family="Georgia, serif" font-size="20" fill="#6c757d" text-anchor="middle">
+      "For the laughs, the lessons,
+    </text>
+    <text x="240" y="615" font-family="Georgia, serif" font-size="20" fill="#6c757d" text-anchor="middle">
+      the friendships that shaped us."
     </text>
     
-    <!-- Decorative Elements -->
-    <g class="study-icons" transform="translate(0, 100)">
-      <circle cx="30" cy="30" r="25" fill="#4b6bff" opacity="0.2"/>
-      <circle cx="100" cy="30" r="25" fill="#4b6bff" opacity="0.2"/>
-      <circle cx="170" cy="30" r="25" fill="#4b6bff" opacity="0.2"/>
-    </g>
-  </g>
-
-  <!-- Footer -->
-  <g class="footer" transform="translate(60, 640)">
-    <rect x="0" y="0" width="360" height="2" fill="#4b6bff" opacity="0.3"/>
-    <text x="0" y="30" font-family="Noto Sans, system-ui" font-size="16" fill="#666">
-      Thanks for being an awesome study buddy!
+    <!-- 动态签名 -->
+    <text x="240" y="670" font-family="'Brush Script MT', cursive" font-size="30" fill="#ffd700" text-anchor="middle" filter="url(#softGlow)">
+      Class of 2025
+      <animate attributeName="opacity" values="0.8;1;0.8" dur="5s" repeatCount="indefinite"/>
+      <animate attributeName="fill" values="#ffd700;#ffdf4d;#ffd700" dur="5s" repeatCount="indefinite"/>
     </text>
   </g>
-
-  <!-- Animated Elements -->
-  <g class="floating-elements">
-    <circle cx="440" cy="40" r="8" fill="#4b6bff" opacity="0.5">
-      <animate attributeName="cy" values="40;45;40" dur="3s" repeatCount="indefinite"/>
-    </circle>
-    <circle cx="420" cy="60" r="6" fill="#4b6bff" opacity="0.3">
-      <animate attributeName="cy" values="60;65;60" dur="2.5s" repeatCount="indefinite"/>
-    </circle>
-    <circle cx="400" cy="80" r="4" fill="#4b6bff" opacity="0.2">
-      <animate attributeName="cy" values="80;85;80" dur="2s" repeatCount="indefinite"/>
-    </circle>
+  
+  <!-- 飘落的花瓣 - 更多样，更生动，更丰富的颜色 -->
+  <g class="falling-petals">
+    <!-- 紫色记忆花瓣 -->
+    <use href="#petal" width="20" height="20" x="120" y="50">
+      <animate attributeName="y" values="50;700" dur="15s" repeatCount="indefinite"/>
+      <animate attributeName="x" values="120;140;110;150;100" dur="15s" repeatCount="indefinite"/>
+      <animate attributeName="transform" values="rotate(0);rotate(180);rotate(360)" dur="15s" repeatCount="indefinite"/>
+    </use>
+    
+    <use href="#petal" width="15" height="15" x="200" y="0">
+      <animate attributeName="y" values="0;700" dur="18s" begin="2s" repeatCount="indefinite"/>
+      <animate attributeName="x" values="200;180;220;190;230" dur="18s" begin="2s" repeatCount="indefinite"/>
+      <animate attributeName="transform" values="rotate(0);rotate(180);rotate(360)" dur="18s" begin="2s" repeatCount="indefinite"/>
+    </use>
+    
+    <!-- 金色希望花瓣 -->
+    <use href="#petal" width="20" height="20" x="300" y="30" fill="#ffd700">
+      <animate attributeName="y" values="30;700" dur="20s" begin="1s" repeatCount="indefinite"/>
+      <animate attributeName="x" values="300;320;290;330;280" dur="20s" begin="1s" repeatCount="indefinite"/>
+      <animate attributeName="transform" values="rotate(0);rotate(180);rotate(360)" dur="20s" begin="1s" repeatCount="indefinite"/>
+    </use>
+    
+    <use href="#petal" width="15" height="15" x="380" y="10" fill="#ffd700">
+      <animate attributeName="y" values="10;700" dur="17s" begin="3s" repeatCount="indefinite"/>
+      <animate attributeName="x" values="380;360;390;350;400" dur="17s" begin="3s" repeatCount="indefinite"/>
+      <animate attributeName="transform" values="rotate(0);rotate(180);rotate(360)" dur="17s" begin="3s" repeatCount="indefinite"/>
+    </use>
+  </g>
+  
+  <!-- 情感跃动纹样 - 象征回忆波动 -->
+  <g class="memory-waves" opacity="0.15">
+    <path d="M0,280 Q60,250 120,280 Q180,310 240,280 Q300,250 360,280 Q420,310 480,280" fill="none" stroke="#7b68ee" stroke-width="2">
+      <animate attributeName="d" 
+               values="M0,280 Q60,250 120,280 Q180,310 240,280 Q300,250 360,280 Q420,310 480,280;
+                      M0,280 Q60,310 120,280 Q180,250 240,280 Q300,310 360,280 Q420,250 480,280;
+                      M0,280 Q60,250 120,280 Q180,310 240,280 Q300,250 360,280 Q420,310 480,280" 
+               dur="10s" repeatCount="indefinite"/>
+    </path>
+    
+    <path d="M0,470 Q60,440 120,470 Q180,500 240,470 Q300,440 360,470 Q420,500 480,470" fill="none" stroke="#ffd700" stroke-width="2">
+      <animate attributeName="d" 
+               values="M0,470 Q60,440 120,470 Q180,500 240,470 Q300,440 360,470 Q420,500 480,470;
+                      M0,470 Q60,500 120,470 Q180,440 240,470 Q300,500 360,470 Q420,440 480,470;
+                      M0,470 Q60,440 120,470 Q180,500 240,470 Q300,440 360,470 Q420,500 480,470" 
+               dur="12s" repeatCount="indefinite"/>
+    </path>
   </g>
 </svg>

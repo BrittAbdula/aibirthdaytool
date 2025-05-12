@@ -1,44 +1,182 @@
 <svg width="400" height="600" xmlns="http://www.w3.org/2000/svg">
-  <!-- Card Background -->
-  <rect x="0" y="0" width="400" height="600" fill="#ffffff" stroke="#2C3E50" stroke-width="2"/>
+  <defs>
+    <!-- 柔和的光晕效果 -->
+    <filter id="softGlow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="2" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+    
+    <!-- 水滴形状 -->
+    <symbol id="teardrop" viewBox="0 0 10 15">
+      <path d="M5,0 Q5,0 8,8 T5,15 Q5,15 2,8 T5,0" fill="#6AB0DE" opacity="0.7"/>
+    </symbol>
+    
+    <!-- 纸张纹理 -->
+    <pattern id="paperTexture" patternUnits="userSpaceOnUse" width="100" height="100">
+      <rect width="100" height="100" fill="#ffffff"/>
+      <path d="M0,0 L100,100 M100,0 L0,100" stroke="#2C3E50" stroke-width="0.3" opacity="0.03"/>
+    </pattern>
+    
+    <!-- 心形路径 -->
+    <path id="heartPath" d="M-50,0 Q-50,-30 -25,-30 T0,0 T25,-30 T50,0 Q50,30 0,60 Q-50,30 -50,0 Z" fill="none"/>
+  </defs>
   
-  <!-- Decorative Elements -->
-  <path d="M 20,40 C 100,30 300,30 380,40" 
-        fill="none" stroke="#34495E" stroke-width="1" opacity="0.3"/>
-  <path d="M 20,560 C 100,570 300,570 380,560" 
-        fill="none" stroke="#34495E" stroke-width="1" opacity="0.3"/>
+  <!-- 背景与纸张效果 -->
+  <rect x="0" y="0" width="400" height="600" fill="url(#paperTexture)">
+    <!-- 纸张微妙的波动 -->
+    <animate attributeName="opacity" values="1;0.97;1" dur="10s" repeatCount="indefinite"/>
+  </rect>
   
-  <!-- Header -->
-  <text x="200" y="80" text-anchor="middle" 
-        font-family="Georgia" font-size="24" fill="#2C3E50">
+  <!-- 内框 -->
+  <rect x="15" y="15" width="370" height="570" fill="none" stroke="#2C3E50" stroke-width="1" stroke-dasharray="1,1" opacity="0.2"/>
+  
+  <!-- 标题下划线，从左到右渐渐展开，循环 -->
+  <path d="M120,85 L280,85" fill="none" stroke="#2C3E50" stroke-width="1" opacity="0.5">
+    <animate attributeName="stroke-dasharray" values="0,160;160,0;160,0;0,160;0,160" dur="10s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0.5;0.8;0.8;0.5;0.5" dur="10s" repeatCount="indefinite"/>
+  </path>
+  
+  <!-- 标题 -->
+  <text x="200" y="80" text-anchor="middle" font-family="Georgia" font-size="26" fill="#2C3E50">
     I'm Sorry
   </text>
   
-  <!-- Main Message -->
-  <text x="200" y="160" text-anchor="middle" 
-        font-family="Georgia" font-size="16" fill="#2C3E50">
+  <!-- 主要信息 -->
+  <text x="200" y="160" text-anchor="middle" font-family="Georgia" font-size="16" fill="#2C3E50">
     <tspan x="200" dy="0">I sincerely apologize for my actions.</tspan>
     <tspan x="200" dy="30">I understand the impact they had</tspan>
     <tspan x="200" dy="30">and deeply regret any hurt caused.</tspan>
   </text>
   
-  <!-- Commitment Message -->
-  <text x="200" y="300" text-anchor="middle" 
-        font-family="Georgia" font-size="16" fill="#2C3E50">
+  <!-- 水滴效果区域 - 放在文字下方不重叠 -->
+  <g transform="translate(0, 20)">
+    <use href="#teardrop" x="160" y="210" width="10" height="15">
+      <animate attributeName="opacity" values="0;0.7;0" dur="6s" begin="0s" repeatCount="indefinite"/>
+      <animate attributeName="y" values="210;260" dur="6s" begin="0s" repeatCount="indefinite"/>
+    </use>
+    <use href="#teardrop" x="200" y="210" width="10" height="15">
+      <animate attributeName="opacity" values="0;0.7;0" dur="5s" begin="1s" repeatCount="indefinite"/>
+      <animate attributeName="y" values="210;260" dur="5s" begin="1s" repeatCount="indefinite"/>
+    </use>
+    <use href="#teardrop" x="240" y="210" width="10" height="15">
+      <animate attributeName="opacity" values="0;0.7;0" dur="7s" begin="2s" repeatCount="indefinite"/>
+      <animate attributeName="y" values="210;260" dur="7s" begin="2s" repeatCount="indefinite"/>
+    </use>
+  </g>
+  
+  <!-- 承诺信息 -->
+  <text x="200" y="300" text-anchor="middle" font-family="Georgia" font-size="16" fill="#2C3E50">
     <tspan x="200" dy="0">I am committed to making</tspan>
     <tspan x="200" dy="30">things right and ensuring this</tspan>
     <tspan x="200" dy="30">never happens again.</tspan>
   </text>
   
-  <!-- Reconciliation Symbol -->
-  <path d="M 180,400 C 160,380 220,380 200,400 C 180,420 220,420 200,400" 
-        fill="none" stroke="#34495E" stroke-width="2"/>
+  <!-- 心形动画区域 - 独立区域，不与文字重叠 -->
+  <g transform="translate(200, 400)">
+    <!-- 心形轮廓动画 - 从破碎到完整，循环 -->
+    <path d="M0,0 Q-20,-30 -50,0 Q-50,40 0,70 Q50,40 50,0 Q20,-30 0,0" fill="none" stroke="#E74C3C" stroke-width="2" opacity="0.9">
+      <!-- 心形从破碎到愈合 -->
+      <animate attributeName="d" 
+               values="M0,0 Q-20,-30 -50,0 Q-50,40 0,70 L0,70 Q50,40 50,0 Q20,-30 0,0;
+                      M0,0 Q-20,-30 -50,0 Q-50,40 0,70 Q50,40 50,0 Q20,-30 0,0;
+                      M0,0 Q-20,-30 -50,0 Q-50,40 0,70 Q50,40 50,0 Q20,-30 0,0;
+                      M0,0 Q-20,-30 -50,0 Q-50,40 0,70 L0,70 Q50,40 50,0 Q20,-30 0,0;
+                      M0,0 Q-20,-30 -50,0 Q-50,40 0,70 L0,70 Q50,40 50,0 Q20,-30 0,0" 
+               dur="12s" repeatCount="indefinite"/>
+      
+      <!-- 心形颜色变化 -->
+      <animate attributeName="fill" 
+               values="none;none;#E74C3C;#E74C3C;none" 
+               dur="12s" repeatCount="indefinite"/>
+      
+      <!-- 边框宽度变化 -->
+      <animate attributeName="stroke-width" 
+               values="2;2;1;2;2" 
+               dur="12s" repeatCount="indefinite"/>
+    </path>
+    
+    <!-- 心跳动画 - 心形填充后开始跳动 -->
+    <animateTransform attributeName="transform" type="scale" 
+                      values="1;1;1;1.08;1;1.08;1" 
+                      dur="12s" repeatCount="indefinite" additive="sum"/>
+  </g>
   
-  <!-- Signature Line -->
-  <line x1="100" y1="500" x2="300" y2="500" 
-        stroke="#2C3E50" stroke-width="1" opacity="0.5"/>
-  <text x="200" y="530" text-anchor="middle" 
-        font-family="Georgia" font-size="14" fill="#2C3E50">
+  <!-- 连接线动画 - 从虚线到实线，循环 -->
+  <path d="M120,450 C160,430 240,470 280,450" fill="none" stroke="#2C3E50" stroke-width="1.5" stroke-dasharray="5,5">
+    <animate attributeName="stroke-dasharray" 
+             values="5,5;0,0;0,0;5,5;5,5" 
+             dur="12s" repeatCount="indefinite"/>
+    
+    <animate attributeName="stroke" 
+             values="#2C3E50;#2C3E50;#3498DB;#3498DB;#2C3E50" 
+             dur="12s" repeatCount="indefinite"/>
+    
+    <animate attributeName="opacity" 
+             values="0.5;0.8;0.8;0.5;0.5" 
+             dur="12s" repeatCount="indefinite"/>
+  </path>
+  
+  <!-- 光晕效果 - 在心形区域，不与文字重叠 -->
+  <circle cx="200" cy="400" r="60" fill="#3498DB" filter="url(#softGlow)">
+    <animate attributeName="opacity" 
+             values="0;0;0.1;0.1;0;0" 
+             dur="12s" repeatCount="indefinite"/>
+    
+    <animate attributeName="r" 
+             values="60;60;70;60;60" 
+             dur="12s" repeatCount="indefinite"/>
+  </circle>
+  
+  <!-- 签名线 -->
+  <line x1="100" y1="500" x2="300" y2="500" stroke="#2C3E50" stroke-width="1" opacity="0.5"/>
+  
+  <!-- 签名文字 -->
+  <text x="200" y="530" text-anchor="middle" font-family="Georgia" font-size="14" fill="#2C3E50">
     With sincere regrets
   </text>
+  
+  <!-- 装饰小光点 - 随心形动画出现在心形区域周围 -->
+  <g>
+    <circle cx="180" cy="380" r="1" fill="#ffffff">
+      <animate attributeName="opacity" 
+               values="0;0;0.8;0;0" 
+               dur="12s" repeatCount="indefinite"/>
+      <animate attributeName="r" 
+               values="0;0;2;0;0" 
+               dur="12s" repeatCount="indefinite"/>
+    </circle>
+    
+    <circle cx="220" cy="380" r="1" fill="#ffffff">
+      <animate attributeName="opacity" 
+               values="0;0;0.8;0;0" 
+               dur="12s" repeatCount="indefinite" begin="0.5s"/>
+      <animate attributeName="r" 
+               values="0;0;2;0;0" 
+               dur="12s" repeatCount="indefinite" begin="0.5s"/>
+    </circle>
+    
+    <circle cx="200" cy="360" r="1" fill="#ffffff">
+      <animate attributeName="opacity" 
+               values="0;0;0.8;0;0" 
+               dur="12s" repeatCount="indefinite" begin="1s"/>
+      <animate attributeName="r" 
+               values="0;0;2;0;0" 
+               dur="12s" repeatCount="indefinite" begin="1s"/>
+    </circle>
+  </g>
+  
+  <!-- 左上角和右下角装饰元素 -->
+  <path d="M 20,40 C 100,30 300,30 380,40" 
+        fill="none" stroke="#34495E" stroke-width="1" opacity="0.3">
+    <animate attributeName="opacity" 
+             values="0.3;0.5;0.3" 
+             dur="8s" repeatCount="indefinite"/>
+  </path>
+  
+  <path d="M 20,560 C 100,570 300,570 380,560" 
+        fill="none" stroke="#34495E" stroke-width="1" opacity="0.3">
+    <animate attributeName="opacity" 
+             values="0.3;0.5;0.3" 
+             dur="8s" repeatCount="indefinite" begin="4s"/>
+  </path>
 </svg>

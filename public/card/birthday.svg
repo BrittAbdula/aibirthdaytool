@@ -1,9 +1,11 @@
 <svg width="400" height="600" viewBox="0 0 400 600" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
   <defs>
+    <!-- 火焰模糊滤镜 -->
     <filter id="flameBlur">
       <feGaussianBlur in="SourceGraphic" stdDeviation="1.5"/>
     </filter>
     
+    <!-- 火焰渐变 -->
     <radialGradient id="flameGradient" cx="50%" cy="50%" r="50%" fx="50%" fy="90%">
       <stop offset="0%" style="stop-color:#FFA500"/>
       <stop offset="70%" style="stop-color:#FF4500"/>
@@ -11,16 +13,28 @@
       <animate attributeName="fy" values="90%;85%;90%" dur="1.5s" repeatCount="indefinite"/>
     </radialGradient>
 
+    <!-- 星星的光晕效果 -->
     <filter id="starGlow">
       <feGaussianBlur in="SourceGraphic" stdDeviation="1.5"/>
     </filter>
     
+    <!-- 闪烁的金色 -->
+    <linearGradient id="goldGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#FFD700"/>
+      <stop offset="50%" style="stop-color:#FFECB3"/>
+      <stop offset="100%" style="stop-color:#FFD700"/>
+      <animate attributeName="x1" values="0%;25%;0%" dur="3s" repeatCount="indefinite"/>
+      <animate attributeName="x2" values="100%;75%;100%" dur="3s" repeatCount="indefinite"/>
+    </linearGradient>
+    
+    <!-- 柔和背景渐变 -->
     <linearGradient id="bgGradient" x1="0%" y1="0%" x2="0%" y2="100%">
       <stop offset="0%" style="stop-color:#FFF9F9"/>
       <stop offset="100%" style="stop-color:#FFE5F0"/>
       <animate attributeName="y2" values="100%;90%;100%" dur="10s" repeatCount="indefinite"/>
     </linearGradient>
     
+    <!-- 柔和阴影 -->
     <filter id="softShadow">
       <feGaussianBlur in="SourceAlpha" stdDeviation="3"/>
       <feOffset dx="0" dy="2"/>
@@ -28,16 +42,46 @@
       <feColorMatrix type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.3 0"/>
     </filter>
     
-    <!-- Balloon string animation -->
+    <!-- 气球绳子路径 -->
     <path id="stringPath" d="M0,0 C5,20 -5,40 0,60 C5,80 -5,100 0,120" stroke="none" fill="none"/>
+    
+    <!-- 彩带路径 -->
+    <path id="ribbonPath" d="M0,0 C20,10 40,-10 60,0 C80,10 100,-10 120,0" stroke="none" fill="none"/>
+    
+    <!-- 糖霜效果 -->
+    <filter id="frostingGlow">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="1"/>
+      <feComposite in2="SourceGraphic" operator="over"/>
+    </filter>
+    
+    <!-- 彩虹蛋糕渐变 -->
+    <linearGradient id="cakeGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#FF80AB"/>
+      <stop offset="25%" style="stop-color:#81D4FA"/>
+      <stop offset="50%" style="stop-color:#A5D6A7"/>
+      <stop offset="75%" style="stop-color:#FFE082"/>
+      <stop offset="100%" style="stop-color:#CE93D8"/>
+    </linearGradient>
+    
+    <!-- 礼物盒缎带渐变 -->
+    <linearGradient id="ribbonGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#E91E63"/>
+      <stop offset="100%" style="stop-color:#FF4081"/>
+    </linearGradient>
+    
+    <!-- 蜡烛上闪耀的光晕 -->
+    <radialGradient id="candleGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" style="stop-color:#FFFFFF" stop-opacity="0.7"/>
+      <stop offset="100%" style="stop-color:#FFFFFF" stop-opacity="0"/>
+    </radialGradient>
   </defs>
 
-  <!-- Background with subtle animation -->
+  <!-- 背景 -->
   <rect width="400" height="600" fill="url(#bgGradient)">
     <animate attributeName="opacity" values="1;0.95;1" dur="8s" repeatCount="indefinite"/>
   </rect>
   
-  <!-- Floating bubbles -->
+  <!-- 上升的彩色气泡 -->
   <g class="bubbles">
     <circle cx="50" cy="400" r="5" fill="#FF80AB" opacity="0.3" filter="url(#softShadow)">
       <animate attributeName="cy" values="400;100;400" dur="25s" repeatCount="indefinite" begin="0s"/>
@@ -54,11 +98,23 @@
       <animate attributeName="cx" values="150;180;150" dur="30s" repeatCount="indefinite" begin="5s"/>
       <animate attributeName="r" values="6;8;6" dur="30s" repeatCount="indefinite" begin="5s"/>
     </circle>
+    
+    <!-- 额外的气泡 -->
+    <circle cx="100" cy="480" r="4" fill="#81D4FA" opacity="0.3" filter="url(#softShadow)">
+      <animate attributeName="cy" values="480;100;480" dur="22s" repeatCount="indefinite" begin="2s"/>
+      <animate attributeName="cx" values="100;120;100" dur="22s" repeatCount="indefinite" begin="2s"/>
+      <animate attributeName="r" values="4;6;4" dur="22s" repeatCount="indefinite" begin="2s"/>
+    </circle>
+    <circle cx="280" cy="520" r="5" fill="#A5D6A7" opacity="0.2" filter="url(#softShadow)">
+      <animate attributeName="cy" values="520;150;520" dur="26s" repeatCount="indefinite" begin="4s"/>
+      <animate attributeName="cx" values="280;260;280" dur="26s" repeatCount="indefinite" begin="4s"/>
+      <animate attributeName="r" values="5;7;5" dur="26s" repeatCount="indefinite" begin="4s"/>
+    </circle>
   </g>
   
-  <!-- Decorative Elements -->
+  <!-- 漂浮气球 -->
   <g class="balloons">
-    <!-- Balloon 1 with float animation -->
+    <!-- 气球1 -->
     <g transform="translate(50,200)">
       <animateTransform attributeName="transform" type="translate" 
         values="50,200; 52,196; 50,200" dur="4s" repeatCount="indefinite"/>
@@ -71,7 +127,7 @@
           dur="3s" repeatCount="indefinite"/>
       </path>
       
-      <!-- String with wave animation -->
+      <!-- 气球绳 -->
       <g>
         <use xlink:href="#stringPath" stroke="#FF4081" stroke-width="1.5"/>
         <animateTransform attributeName="transform" type="scale" 
@@ -79,12 +135,12 @@
       </g>
     </g>
 
-    <!-- Balloon 2 with different float rhythm -->
+    <!-- 气球2 -->
     <g transform="translate(100,180)">
       <animateTransform attributeName="transform" type="translate" 
         values="100,180; 97,177; 100,180" dur="5s" repeatCount="indefinite"/>
       
-      <path d="M0,0 C0,-40 -30,-40 -30,0 C-30,30 0,30 0,0" fill="#FF80AB" filter="url(#softShadow)">
+      <path d="M0,0 C0,-40 -30,-40 -30,0 C-30,30 0,30 0,0" fill="#81D4FA" filter="url(#softShadow)">
         <animate attributeName="d" 
           values="M0,0 C0,-40 -30,-40 -30,0 C-30,30 0,30 0,0;
                  M0,0 C0,-42 -32,-42 -32,0 C-32,28 0,28 0,0;
@@ -92,15 +148,15 @@
           dur="4s" repeatCount="indefinite"/>
       </path>
       
-      <!-- String with wave animation -->
+      <!-- 气球绳 -->
       <g>
-        <use xlink:href="#stringPath" stroke="#FF80AB" stroke-width="1.5"/>
+        <use xlink:href="#stringPath" stroke="#81D4FA" stroke-width="1.5"/>
         <animateTransform attributeName="transform" type="scale" 
           values="1 1; 1.02 1; 1 1" dur="5s" repeatCount="indefinite" additive="sum"/>
       </g>
     </g>
     
-    <!-- Bonus balloon on the right -->
+    <!-- 气球3 -->
     <g transform="translate(350,190)">
       <animateTransform attributeName="transform" type="translate" 
         values="350,190; 353,186; 350,190" dur="4.5s" repeatCount="indefinite"/>
@@ -113,59 +169,146 @@
           dur="3.5s" repeatCount="indefinite"/>
       </path>
       
-      <!-- String with wave animation -->
+      <!-- 气球绳 -->
       <g>
         <use xlink:href="#stringPath" stroke="#9C27B0" stroke-width="1.5"/>
         <animateTransform attributeName="transform" type="scale" 
           values="1 1; 0.98 1; 1 1" dur="4.5s" repeatCount="indefinite" additive="sum"/>
       </g>
     </g>
+
+    <!-- 金色气球 -->
+    <g transform="translate(300,170)">
+      <animateTransform attributeName="transform" type="translate" 
+        values="300,170; 298,166; 300,170" dur="4s" repeatCount="indefinite"/>
+      
+      <path d="M0,0 C0,-40 -30,-40 -30,0 C-30,30 0,30 0,0" fill="url(#goldGradient)" filter="url(#softShadow)">
+        <animate attributeName="d" 
+          values="M0,0 C0,-40 -30,-40 -30,0 C-30,30 0,30 0,0;
+                 M0,0 C0,-39 -29,-39 -29,0 C-29,29 0,29 0,0;
+                 M0,0 C0,-40 -30,-40 -30,0 C-30,30 0,30 0,0" 
+          dur="3.8s" repeatCount="indefinite"/>
+      </path>
+      
+      <!-- 气球绳 -->
+      <g>
+        <use xlink:href="#stringPath" stroke="#FFD700" stroke-width="1.5"/>
+        <animateTransform attributeName="transform" type="scale" 
+          values="1 1; 1.01 1; 1 1" dur="4s" repeatCount="indefinite" additive="sum"/>
+      </g>
+    </g>
   </g>
 
-  <!-- Enhanced Stars with Glow and Twinkle -->
+  <!-- 金色星星 -->
   <g class="stars">
-    <path d="M300,100 L305,90 L310,100 L320,102 L310,108 L312,118 L302,112 L292,118 L294,108 L284,102 L294,100 Z" fill="#FFD700" filter="url(#starGlow)">
+    <path d="M300,100 L305,90 L310,100 L320,102 L310,108 L312,118 L302,112 L292,118 L294,108 L284,102 L294,100 Z" fill="url(#goldGradient)" filter="url(#starGlow)">
       <animate attributeName="opacity" values="1;0.4;1" dur="3s" repeatCount="indefinite"/>
       <animateTransform attributeName="transform" type="scale" values="1;1.1;1" dur="3s" repeatCount="indefinite" additive="sum"/>
     </path>
-    <path d="M350,150 L355,140 L360,150 L370,152 L360,158 L362,168 L352,162 L342,168 L344,158 L334,152 L344,150 Z" fill="#FFD700" filter="url(#starGlow)">
+    <path d="M350,150 L355,140 L360,150 L370,152 L360,158 L362,168 L352,162 L342,168 L344,158 L334,152 L344,150 Z" fill="url(#goldGradient)" filter="url(#starGlow)">
       <animate attributeName="opacity" values="1;0.5;1" dur="2.5s" repeatCount="indefinite"/>
       <animateTransform attributeName="transform" type="scale" values="1;1.2;1" dur="2.5s" repeatCount="indefinite" additive="sum"/>
     </path>
-    <path d="M270,180 L272,175 L274,180 L279,181 L274,184 L275,189 L270,186 L265,189 L266,184 L261,181 L266,180 Z" fill="#FFD700" filter="url(#starGlow)">
+    <path d="M270,180 L272,175 L274,180 L279,181 L274,184 L275,189 L270,186 L265,189 L266,184 L261,181 L266,180 Z" fill="url(#goldGradient)" filter="url(#starGlow)">
       <animate attributeName="opacity" values="1;0.3;1" dur="2s" repeatCount="indefinite"/>
       <animateTransform attributeName="transform" type="scale" values="1;1.3;1" dur="2s" repeatCount="indefinite" additive="sum"/>
     </path>
+    
+    <!-- 额外的金色星星 -->
+    <path d="M70,130 L72,125 L74,130 L79,131 L74,134 L75,139 L70,136 L65,139 L66,134 L61,131 L66,130 Z" fill="url(#goldGradient)" filter="url(#starGlow)">
+      <animate attributeName="opacity" values="1;0.4;1" dur="2.2s" repeatCount="indefinite"/>
+      <animateTransform attributeName="transform" type="scale" values="1;1.15;1" dur="2.2s" repeatCount="indefinite" additive="sum"/>
+    </path>
+    <path d="M120,90 L123,82 L126,90 L134,92 L126,96 L128,104 L120,99 L112,104 L114,96 L106,92 L114,90 Z" fill="url(#goldGradient)" filter="url(#starGlow)">
+      <animate attributeName="opacity" values="1;0.5;1" dur="2.8s" repeatCount="indefinite"/>
+      <animateTransform attributeName="transform" type="scale" values="1;1.1;1" dur="2.8s" repeatCount="indefinite" additive="sum"/>
+    </path>
   </g>
 
-  <!-- Enhanced Message Area with breathing effect -->
+  <!-- 祝福消息圆圈 -->
   <g transform="translate(200,250)">
     <animateTransform attributeName="transform" type="translate" 
       values="200,250; 200,248; 200,250" dur="5s" repeatCount="indefinite"/>
       
-    <!-- Outer glow -->
-    <circle cx="0" cy="0" r="124" fill="none" stroke="#FF80AB" stroke-width="2" opacity="0.3">
+    <!-- 外部光晕 -->
+    <circle cx="0" cy="0" r="124" fill="none" stroke="url(#goldGradient)" stroke-width="2" opacity="0.3">
       <animate attributeName="r" values="124;126;124" dur="3s" repeatCount="indefinite"/>
       <animate attributeName="opacity" values="0.3;0.5;0.3" dur="3s" repeatCount="indefinite"/>
     </circle>
     
-    <!-- Main circle with pulse -->
+    <!-- 主圆圈 -->
     <circle cx="0" cy="0" r="120" fill="#FFF" stroke="#FF4081" stroke-width="3" filter="url(#softShadow)">
       <animate attributeName="r" values="120;118;120" dur="5s" repeatCount="indefinite"/>
       <animate attributeName="stroke-opacity" values="1;0.7;1" dur="3s" repeatCount="indefinite"/>
     </circle>
     
-    <text x="0" y="-25" fill="#1A1A1A" font-family="Comic Sans MS, Arial, sans-serif" font-size="26" text-anchor="middle" font-weight="bold">
+    <text x="0" y="-35" fill="#1A1A1A" font-family="Comic Sans MS, Arial, sans-serif" font-size="28" text-anchor="middle" font-weight="bold">
       Happy Birthday!
       <animate attributeName="fill-opacity" values="1;0.8;1" dur="3s" repeatCount="indefinite"/>
     </text>
-    <text x="0" y="20" fill="#1A1A1A" font-family="Comic Sans MS, Arial, sans-serif" font-size="18" text-anchor="middle">
-      Have a magical day!
+    <text x="0" y="10" fill="#FF4081" font-family="Comic Sans MS, Arial, sans-serif" font-size="24" text-anchor="middle">
+      Make a Wish!
+      <animate attributeName="fill-opacity" values="1;0.8;1" dur="3s" repeatCount="indefinite"/>
+    </text>
+    <text x="0" y="40" fill="#1A1A1A" font-family="Comic Sans MS, Arial, sans-serif" font-size="16" text-anchor="middle">
+      May all your dreams come true!
       <animate attributeName="fill-opacity" values="1;0.8;1" dur="3s" repeatCount="indefinite"/>
     </text>
   </g>
 
-  <!-- Enhanced Confetti with movement -->
+  <!-- 彩色礼物盒 -->
+  <g transform="translate(100, 380)">
+    <animateTransform attributeName="transform" type="translate" values="100,380; 100,377; 100,380" dur="3s" repeatCount="indefinite"/>
+    
+    <!-- 礼物盒 -->
+    <rect x="-25" y="-25" width="50" height="50" rx="5" fill="#81D4FA" filter="url(#softShadow)">
+      <animate attributeName="fill" values="#81D4FA;#89D7FC;#81D4FA" dur="3s" repeatCount="indefinite"/>
+    </rect>
+    
+    <!-- 礼物缎带 -->
+    <rect x="-5" y="-25" width="10" height="50" fill="url(#ribbonGradient)">
+      <animate attributeName="fill-opacity" values="1;0.8;1" dur="3s" repeatCount="indefinite"/>
+    </rect>
+    <rect x="-25" y="-5" width="50" height="10" fill="url(#ribbonGradient)">
+      <animate attributeName="fill-opacity" values="1;0.8;1" dur="3s" repeatCount="indefinite"/>
+    </rect>
+    
+    <!-- 礼物蝴蝶结 -->
+    <path d="M0,-5 L10,0 L0,5 Z" fill="#FF4081">
+      <animate attributeName="d" values="M0,-5 L10,0 L0,5 Z; M0,-6 L11,0 L0,6 Z; M0,-5 L10,0 L0,5 Z" dur="3s" repeatCount="indefinite"/>
+    </path>
+    <path d="M0,-5 L-10,0 L0,5 Z" fill="#FF4081">
+      <animate attributeName="d" values="M0,-5 L-10,0 L0,5 Z; M0,-6 L-11,0 L0,6 Z; M0,-5 L-10,0 L0,5 Z" dur="3s" repeatCount="indefinite"/>
+    </path>
+  </g>
+  
+  <!-- 另一个不同颜色的礼物盒 -->
+  <g transform="translate(300, 380)">
+    <animateTransform attributeName="transform" type="translate" values="300,380; 300,378; 300,380" dur="4s" repeatCount="indefinite"/>
+    
+    <!-- 礼物盒 -->
+    <rect x="-25" y="-25" width="50" height="50" rx="5" fill="#A5D6A7" filter="url(#softShadow)">
+      <animate attributeName="fill" values="#A5D6A7;#AEDAB0;#A5D6A7" dur="4s" repeatCount="indefinite"/>
+    </rect>
+    
+    <!-- 礼物缎带 -->
+    <rect x="-5" y="-25" width="10" height="50" fill="url(#goldGradient)">
+      <animate attributeName="fill-opacity" values="1;0.8;1" dur="4s" repeatCount="indefinite"/>
+    </rect>
+    <rect x="-25" y="-5" width="50" height="10" fill="url(#goldGradient)">
+      <animate attributeName="fill-opacity" values="1;0.8;1" dur="4s" repeatCount="indefinite"/>
+    </rect>
+    
+    <!-- 礼物蝴蝶结 -->
+    <path d="M0,-5 L10,0 L0,5 Z" fill="#FFD700">
+      <animate attributeName="d" values="M0,-5 L10,0 L0,5 Z; M0,-6 L11,0 L0,6 Z; M0,-5 L10,0 L0,5 Z" dur="4s" repeatCount="indefinite"/>
+    </path>
+    <path d="M0,-5 L-10,0 L0,5 Z" fill="#FFD700">
+      <animate attributeName="d" values="M0,-5 L-10,0 L0,5 Z; M0,-6 L-11,0 L0,6 Z; M0,-5 L-10,0 L0,5 Z" dur="4s" repeatCount="indefinite"/>
+    </path>
+  </g>
+
+  <!-- 彩色纸屑 -->
   <g class="confetti">
     <circle cx="50" cy="50" r="3" fill="#FF80AB">
       <animate attributeName="opacity" values="1;0.5;1" dur="1.3s" repeatCount="indefinite"/>
@@ -193,80 +336,240 @@
       <animateTransform attributeName="transform" type="rotate" 
         values="30,252.5,502.5; 60,252.5,502.5; 30,252.5,502.5" dur="6s" repeatCount="indefinite" additive="sum"/>
     </rect>
+    
+    <!-- 更多彩色纸屑 -->
+    <rect x="50" y="450" width="5" height="5" fill="#81D4FA" transform="rotate(15,52.5,452.5)">
+      <animate attributeName="opacity" values="1;0.5;1" dur="1.9s" repeatCount="indefinite"/>
+      <animateTransform attributeName="transform" type="rotate" 
+        values="15,52.5,452.5; 45,52.5,452.5; 15,52.5,452.5" dur="5.5s" repeatCount="indefinite" additive="sum"/>
+    </rect>
+    <rect x="350" y="470" width="5" height="5" fill="#A5D6A7" transform="rotate(60,352.5,472.5)">
+      <animate attributeName="opacity" values="1;0.5;1" dur="2s" repeatCount="indefinite"/>
+      <animateTransform attributeName="transform" type="rotate" 
+        values="60,352.5,472.5; 90,352.5,472.5; 60,352.5,472.5" dur="4.5s" repeatCount="indefinite" additive="sum"/>
+    </rect>
+    <circle cx="180" cy="530" r="3" fill="#9C27B0">
+      <animate attributeName="opacity" values="1;0.5;1" dur="1.6s" repeatCount="indefinite"/>
+      <animate attributeName="cy" values="530;525;530" dur="3.4s" repeatCount="indefinite"/>
+    </circle>
   </g>
 
-  <!-- Enhanced Cake with breathing and dancing flame -->
+  <!-- 彩色多层蛋糕 -->
   <g transform="translate(200,450)">
     <animateTransform attributeName="transform" type="translate" 
       values="200,450; 200,448; 200,450" dur="4s" repeatCount="indefinite"/>
     
-    <!-- Cake plate -->
-    <ellipse cx="0" cy="10" rx="50" ry="10" fill="#F5F5F5" filter="url(#softShadow)">
-      <animate attributeName="rx" values="50;48;50" dur="3s" repeatCount="indefinite"/>
+    <!-- 蛋糕盘 -->
+    <ellipse cx="0" cy="15" rx="65" ry="10" fill="#F5F5F5" filter="url(#softShadow)">
+      <animate attributeName="rx" values="65;63;65" dur="4s" repeatCount="indefinite"/>
     </ellipse>
     
-    <!-- Cake layers with pulsing effect -->
-    <path d="M-40,0 L40,0 L30,-20 L-30,-20 Z" fill="#FF80AB" filter="url(#softShadow)">
+    <!-- 蛋糕层 - 彩虹层次 -->
+    <path d="M-60,0 L60,0 L50,-15 L-50,-15 Z" fill="#FF80AB" filter="url(#softShadow)">
       <animate attributeName="d" 
-        values="M-40,0 L40,0 L30,-20 L-30,-20 Z;
-               M-38,0 L38,0 L28,-20 L-28,-20 Z;
-               M-40,0 L40,0 L30,-20 L-30,-20 Z" 
-        dur="3s" repeatCount="indefinite"/>
-      <animate attributeName="fill-opacity" values="1;0.85;1" dur="2s" repeatCount="indefinite"/>
+        values="M-60,0 L60,0 L50,-15 L-50,-15 Z;
+               M-58,0 L58,0 L48,-15 L-48,-15 Z;
+               M-60,0 L60,0 L50,-15 L-50,-15 Z" 
+        dur="4s" repeatCount="indefinite"/>
+      <animate attributeName="fill-opacity" values="1;0.9;1" dur="3s" repeatCount="indefinite"/>
     </path>
-    <path d="M-30,-20 L30,-20 L20,-40 L-20,-40 Z" fill="#FF4081" filter="url(#softShadow)">
-      <animate attributeName="d" 
-        values="M-30,-20 L30,-20 L20,-40 L-20,-40 Z;
-               M-28,-20 L28,-20 L18,-40 L-18,-40 Z;
-               M-30,-20 L30,-20 L20,-40 L-20,-40 Z" 
-        dur="3s" repeatCount="indefinite"/>
-      <animate attributeName="fill-opacity" values="1;0.85;1" dur="2s" repeatCount="indefinite"/>
-    </path>
-    <rect x="-2" y="-60" width="4" height="20" fill="#FFD700" rx="1">
-      <animate attributeName="height" values="20;19;20" dur="2s" repeatCount="indefinite"/>
-    </rect>
     
-    <!-- Enhanced Flame with dancing effect -->
-    <g transform="translate(0,-65)">
-      <animateTransform attributeName="transform" type="translate" 
-        values="0,-65; -1,-66; 1,-64; 0,-65" dur="0.8s" repeatCount="indefinite"/>
+    <path d="M-50,-15 L50,-15 L42,-30 L-42,-30 Z" fill="#81D4FA" filter="url(#softShadow)">
+      <animate attributeName="d" 
+        values="M-50,-15 L50,-15 L42,-30 L-42,-30 Z;
+               M-48,-15 L48,-15 L40,-30 L-40,-30 Z;
+               M-50,-15 L50,-15 L42,-30 L-42,-30 Z" 
+        dur="4s" repeatCount="indefinite"/>
+      <animate attributeName="fill-opacity" values="1;0.9;1" dur="3s" repeatCount="indefinite"/>
+    </path>
+    
+    <path d="M-42,-30 L42,-30 L36,-45 L-36,-45 Z" fill="#A5D6A7" filter="url(#softShadow)">
+      <animate attributeName="d" 
+        values="M-42,-30 L42,-30 L36,-45 L-36,-45 Z;
+               M-40,-30 L40,-30 L34,-45 L-34,-45 Z;
+               M-42,-30 L42,-30 L36,-45 L-36,-45 Z" 
+        dur="4s" repeatCount="indefinite"/>
+      <animate attributeName="fill-opacity" values="1;0.9;1" dur="3s" repeatCount="indefinite"/>
+    </path>
+    
+    <path d="M-36,-45 L36,-45 L30,-60 L-30,-60 Z" fill="#FFE082" filter="url(#softShadow)">
+      <animate attributeName="d" 
+        values="M-36,-45 L36,-45 L30,-60 L-30,-60 Z;
+               M-34,-45 L34,-45 L28,-60 L-28,-60 Z;
+               M-36,-45 L36,-45 L30,-60 L-30,-60 Z" 
+        dur="4s" repeatCount="indefinite"/>
+      <animate attributeName="fill-opacity" values="1;0.9;1" dur="3s" repeatCount="indefinite"/>
+    </path>
+    
+    <!-- 糖霜装饰 -->
+    <!-- 底层 -->
+    <circle cx="-45" cy="-8" r="4" fill="#FFFFFF" filter="url(#frostingGlow)">
+      <animate attributeName="r" values="4;3.8;4" dur="3s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="-15" cy="-8" r="4" fill="#FFFFFF" filter="url(#frostingGlow)">
+      <animate attributeName="r" values="4;3.8;4" dur="3.2s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="15" cy="-8" r="4" fill="#FFFFFF" filter="url(#frostingGlow)">
+      <animate attributeName="r" values="4;3.8;4" dur="3.3s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="45" cy="-8" r="4" fill="#FFFFFF" filter="url(#frostingGlow)">
+      <animate attributeName="r" values="4;3.8;4" dur="3.4s" repeatCount="indefinite"/>
+    </circle>
+    
+    <!-- 中层 -->
+    <circle cx="-35" cy="-23" r="3" fill="#FFFFFF" filter="url(#frostingGlow)">
+      <animate attributeName="r" values="3;2.9;3" dur="3.1s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="0" cy="-23" r="3" fill="#FFFFFF" filter="url(#frostingGlow)">
+      <animate attributeName="r" values="3;2.9;3" dur="3.2s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="35" cy="-23" r="3" fill="#FFFFFF" filter="url(#frostingGlow)">
+      <animate attributeName="r" values="3;2.9;3" dur="3.3s" repeatCount="indefinite"/>
+    </circle>
+    
+    <!-- 上层 -->
+    <circle cx="-25" cy="-38" r="3" fill="#FFFFFF" filter="url(#frostingGlow)">
+      <animate attributeName="r" values="3;2.9;3" dur="3.4s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="25" cy="-38" r="3" fill="#FFFFFF" filter="url(#frostingGlow)">
+      <animate attributeName="r" values="3;2.9;3" dur="3.5s" repeatCount="indefinite"/>
+    </circle>
+    
+    <!-- 顶层 -->
+    <circle cx="0" cy="-53" r="3" fill="#FFFFFF" filter="url(#frostingGlow)">
+      <animate attributeName="r" values="3;2.9;3" dur="3.6s" repeatCount="indefinite"/>
+    </circle>
+    
+    <!-- 蜡烛 -->
+    <g>
+      <!-- 多根蜡烛 -->
+      <!-- 中间蜡烛 -->
+      <rect x="-2" y="-75" width="4" height="15" fill="#FFD700" rx="1">
+        <animate attributeName="height" values="15;14;15" dur="3s" repeatCount="indefinite"/>
+      </rect>
       
-      <!-- Outer Glow -->
-      <circle cx="0" cy="0" r="8" fill="#FFD700" opacity="0.2" filter="url(#flameBlur)">
-        <animate attributeName="r" values="8;9;8" dur="0.5s" repeatCount="indefinite"/>
-        <animate attributeName="opacity" values="0.2;0.3;0.2" dur="0.5s" repeatCount="indefinite"/>
-      </circle>
+      <!-- 左侧蜡烛 -->
+      <rect x="-25" y="-70" width="3" height="10" fill="#FF80AB" rx="1">
+        <animate attributeName="height" values="10;9.5;10" dur="3.2s" repeatCount="indefinite"/>
+      </rect>
       
-      <!-- Main flame with dancing effect -->
-      <path d="M0,0 C2,-3 4,-7 0,-10 C-4,-7 -2,-3 0,0" fill="url(#flameGradient)">
-        <animate attributeName="d" 
-          values="M0,0 C2,-3 4,-7 0,-10 C-4,-7 -2,-3 0,0;
-                 M0,0 C3,-4 3,-8 0,-11 C-3,-8 -3,-4 0,0;
-                 M0,0 C2,-3 4,-7 0,-10 C-4,-7 -2,-3 0,0" 
-          dur="0.5s" repeatCount="indefinite"/>
-        <animate attributeName="opacity" values="1;0.8;1" dur="0.5s" repeatCount="indefinite"/>
-      </path>
-      
-      <!-- Inner flame with dancing effect -->
-      <path d="M0,-2 C1,-4 2,-6 0,-8 C-2,-6 -1,-4 0,-2" fill="#FFFFFF">
-        <animate attributeName="d" 
-          values="M0,-2 C1,-4 2,-6 0,-8 C-2,-6 -1,-4 0,-2;
-                 M0,-2 C1.5,-5 1.5,-7 0,-9 C-1.5,-7 -1.5,-5 0,-2;
-                 M0,-2 C1,-4 2,-6 0,-8 C-2,-6 -1,-4 0,-2" 
-          dur="0.5s" repeatCount="indefinite"/>
-        <animate attributeName="opacity" values="0.8;0.6;0.8" dur="0.5s" repeatCount="indefinite"/>
-      </path>
+      <!-- 右侧蜡烛 -->
+      <rect x="22" y="-70" width="3" height="10" fill="#81D4FA" rx="1">
+        <animate attributeName="height" values="10;9.5;10" dur="2.8s" repeatCount="indefinite"/>
+      </rect>
     </g>
     
-    <!-- Decorative frosting -->
-    <circle cx="-25" cy="-10" r="3" fill="#FFFFFF">
-      <animate attributeName="r" values="3;2.8;3" dur="3s" repeatCount="indefinite"/>
-    </circle>
-    <circle cx="25" cy="-10" r="3" fill="#FFFFFF">
-      <animate attributeName="r" values="3;2.8;3" dur="3s" repeatCount="indefinite"/>
-    </circle>
-    <circle cx="0" cy="-30" r="3" fill="#FFFFFF">
-      <animate attributeName="r" values="3;2.8;3" dur="3s" repeatCount="indefinite"/>
-    </circle>
+    <!-- 蜡烛火焰 -->
+    <g>
+      <!-- 中间蜡烛的火焰 -->
+      <g transform="translate(0,-80)">
+        <animateTransform attributeName="transform" type="translate" 
+          values="0,-80; -1,-81; 1,-79; 0,-80" dur="0.8s" repeatCount="indefinite"/>
+        
+        <!-- 外部光晕 -->
+        <circle cx="0" cy="0" r="8" fill="#FFD700" opacity="0.2" filter="url(#flameBlur)">
+          <animate attributeName="r" values="8;9;8" dur="0.5s" repeatCount="indefinite"/>
+          <animate attributeName="opacity" values="0.2;0.3;0.2" dur="0.5s" repeatCount="indefinite"/>
+        </circle>
+        
+        <!-- 主火焰 -->
+        <path d="M0,0 C2,-3 4,-7 0,-10 C-4,-7 -2,-3 0,0" fill="url(#flameGradient)" filter="url(#flameBlur)">
+          <animate attributeName="d" 
+            values="M0,0 C2,-3 4,-7 0,-10 C-4,-7 -2,-3 0,0;
+                   M0,0 C3,-4 3,-8 0,-11 C-3,-8 -3,-4 0,0;
+                   M0,0 C2,-3 4,-7 0,-10 C-4,-7 -2,-3 0,0" 
+            dur="0.5s" repeatCount="indefinite"/>
+          <animate attributeName="opacity" values="1;0.8;1" dur="0.5s" repeatCount="indefinite"/>
+        </path>
+        
+        <!-- 内部火焰 -->
+        <path d="M0,-2 C1,-4 2,-6 0,-8 C-2,-6 -1,-4 0,-2" fill="#FFFFFF" filter="url(#flameBlur)">
+          <animate attributeName="d" 
+            values="M0,-2 C1,-4 2,-6 0,-8 C-2,-6 -1,-4 0,-2;
+                   M0,-2 C1.5,-5 1.5,-7 0,-9 C-1.5,-7 -1.5,-5 0,-2;
+                   M0,-2 C1,-4 2,-6 0,-8 C-2,-6 -1,-4 0,-2" 
+            dur="0.5s" repeatCount="indefinite"/>
+          <animate attributeName="opacity" values="0.8;0.6;0.8" dur="0.5s" repeatCount="indefinite"/>
+        </path>
+        
+        <!-- 蜡烛光晕 -->
+        <circle cx="0" cy="-5" r="10" fill="url(#candleGlow)" opacity="0.3">
+          <animate attributeName="opacity" values="0.3;0.5;0.3" dur="1s" repeatCount="indefinite"/>
+        </circle>
+      </g>
+      
+      <!-- 左侧蜡烛的火焰 -->
+      <g transform="translate(-25,-75)">
+        <animateTransform attributeName="transform" type="translate" 
+          values="-25,-75; -26,-76; -24,-74; -25,-75" dur="0.7s" repeatCount="indefinite"/>
+        
+        <!-- 主火焰 -->
+        <path d="M0,0 C1.5,-2 3,-5 0,-7 C-3,-5 -1.5,-2 0,0" fill="url(#flameGradient)" filter="url(#flameBlur)">
+          <animate attributeName="d" 
+            values="M0,0 C1.5,-2 3,-5 0,-7 C-3,-5 -1.5,-2 0,0;
+                   M0,0 C2,-3 2,-6 0,-8 C-2,-6 -2,-3 0,0;
+                   M0,0 C1.5,-2 3,-5 0,-7 C-3,-5 -1.5,-2 0,0" 
+            dur="0.6s" repeatCount="indefinite"/>
+        </path>
+        
+        <!-- 内部火焰 -->
+        <path d="M0,-1 C0.7,-2.5 1.5,-4 0,-5.5 C-1.5,-4 -0.7,-2.5 0,-1" fill="#FFFFFF" filter="url(#flameBlur)">
+          <animate attributeName="opacity" values="0.8;0.6;0.8" dur="0.6s" repeatCount="indefinite"/>
+        </path>
+      </g>
+      
+      <!-- 右侧蜡烛的火焰 -->
+      <g transform="translate(22,-75)">
+        <animateTransform attributeName="transform" type="translate" 
+          values="22,-75; 23,-76; 21,-74; 22,-75" dur="0.9s" repeatCount="indefinite"/>
+        
+        <!-- 主火焰 -->
+        <path d="M0,0 C1.5,-2 3,-5 0,-7 C-3,-5 -1.5,-2 0,0" fill="url(#flameGradient)" filter="url(#flameBlur)">
+          <animate attributeName="d" 
+            values="M0,0 C1.5,-2 3,-5 0,-7 C-3,-5 -1.5,-2 0,0;
+                   M0,0 C2,-3 2,-6 0,-8 C-2,-6 -2,-3 0,0;
+                   M0,0 C1.5,-2 3,-5 0,-7 C-3,-5 -1.5,-2 0,0" 
+            dur="0.7s" repeatCount="indefinite"/>
+        </path>
+        
+        <!-- 内部火焰 -->
+        <path d="M0,-1 C0.7,-2.5 1.5,-4 0,-5.5 C-1.5,-4 -0.7,-2.5 0,-1" fill="#FFFFFF" filter="url(#flameBlur)">
+          <animate attributeName="opacity" values="0.8;0.6;0.8" dur="0.7s" repeatCount="indefinite"/>
+        </path>
+      </g>
+    </g>
+  </g>
+  
+  <!-- 彩色飘带 -->
+  <g class="ribbons">
+    <!-- 飘带1 -->
+    <path d="M50,530 C80,510 120,540 150,520 C180,500 220,530 250,510" 
+          fill="none" stroke="#FF80AB" stroke-width="3" stroke-linecap="round" opacity="0.6">
+      <animate attributeName="d" 
+               values="M50,530 C80,510 120,540 150,520 C180,500 220,530 250,510;
+                      M50,530 C80,515 120,535 150,515 C180,495 220,525 250,505;
+                      M50,530 C80,510 120,540 150,520 C180,500 220,530 250,510" 
+               dur="5s" repeatCount="indefinite"/>
+    </path>
+    
+    <!-- 飘带2 -->
+    <path d="M150,550 C180,530 220,560 250,540 C280,520 320,550 350,530" 
+          fill="none" stroke="#81D4FA" stroke-width="3" stroke-linecap="round" opacity="0.6">
+      <animate attributeName="d" 
+               values="M150,550 C180,530 220,560 250,540 C280,520 320,550 350,530;
+                      M150,550 C180,535 220,555 250,535 C280,515 320,545 350,525;
+                      M150,550 C180,530 220,560 250,540 C280,520 320,550 350,530" 
+               dur="6s" repeatCount="indefinite"/>
+    </path>
+    
+    <!-- 金色飘带 -->
+    <path d="M100,570 C130,550 170,580 200,560 C230,540 270,570 300,550" 
+          fill="none" stroke="url(#goldGradient)" stroke-width="3" stroke-linecap="round" opacity="0.6">
+      <animate attributeName="d" 
+               values="M100,570 C130,550 170,580 200,560 C230,540 270,570 300,550;
+                      M100,570 C130,555 170,575 200,555 C230,535 270,565 300,545;
+                      M100,570 C130,550 170,580 200,560 C230,540 270,570 300,550" 
+               dur="5.5s" repeatCount="indefinite"/>
+    </path>
   </g>
 </svg>

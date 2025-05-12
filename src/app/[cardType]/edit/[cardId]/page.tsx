@@ -43,6 +43,20 @@ export default function EditCard({ params }: { params: { cardId: string, cardTyp
   const [message, setMessage] = useState('')
   useEffect(() => {
     const fetchCardData = async () => {
+      if (cardId === '1') {
+        setIsLoading(false)
+        const content = await fetchSvgContent('https://store.celeprime.com/'+cardType+'.svg')
+        if (content) {
+          setSvgContent(content)
+          setOriginalContent(content)
+          setOriginalCardId('1')
+          setRelationship('')
+          setMessage('')
+          setEditableFields(extractEditableFields(content))
+          updateImageSrc(content)
+        }
+        return
+      }
       setIsLoading(true)
       try {
         const response = await fetch(`/api/cards/${cardId}?cardType=${cardType}`)
@@ -314,7 +328,10 @@ export default function EditCard({ params }: { params: { cardId: string, cardTyp
                 />
               </div>
               <div className="flex items-center justify-between mb-2">
-                <label className="text-sm font-medium">Music</label>
+                <div className="space-y-1">
+                  <label className="text-sm font-medium">Music</label>
+                  <p className="text-xs text-muted-foreground">Add a song to make your card more special</p>
+                </div>
                 <div className="flex items-center space-x-2">
                   <label className="text-sm text-muted-foreground">Enable music</label>
                   <Switch
@@ -355,7 +372,8 @@ export default function EditCard({ params }: { params: { cardId: string, cardTyp
           <div className="bg-white/90 backdrop-blur p-4 sm:p-6 rounded-2xl shadow-lg">
             <h2 className="text-2xl font-semibold mb-6 text-[#4A4A4A] text-center flex items-center justify-center gap-2">
               <span className="text-pink-400">✏️</span>
-              Customize Text
+              Customize Your Card
+              <span className="text-pink-400">✏️</span>
             </h2>
             <div className="space-y-5">
               {Object.entries(editableFields).map(([fieldName, value]) => (

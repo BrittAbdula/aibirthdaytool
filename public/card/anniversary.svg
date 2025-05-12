@@ -1,34 +1,119 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="400" height="600">
-    <!-- Background -->
-    <rect width="400" height="600" fill="#FFF5F5"/>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="400" height="600" viewBox="0 0 400 600">
+    <defs>
+        <!-- 渐变定义 -->
+        <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#FFF8F8"/>
+            <stop offset="100%" stop-color="#FFF0F0"/>
+        </linearGradient>
+        
+        <!-- 金色渐变 -->
+        <linearGradient id="goldGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#D4AF37"/>
+            <stop offset="50%" stop-color="#E6C15A"/>
+            <stop offset="100%" stop-color="#D4AF37"/>
+        </linearGradient>
+        
+        <!-- 银色渐变 -->
+        <linearGradient id="silverGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#C0C0C0"/>
+            <stop offset="50%" stop-color="#E0E0E0"/>
+            <stop offset="100%" stop-color="#C0C0C0"/>
+        </linearGradient>
+        
+        <!-- 心形渐变 -->
+        <radialGradient id="heartGradient" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="#FFD700" stop-opacity="0.8"/>
+            <stop offset="100%" stop-color="#FFD700" stop-opacity="0.5"/>
+        </radialGradient>
+        
+        <!-- 柔和阴影 -->
+        <filter id="softShadow" x="-10%" y="-10%" width="120%" height="120%">
+            <feGaussianBlur in="SourceAlpha" stdDeviation="2"/>
+            <feOffset dx="0" dy="1" result="offsetblur"/>
+            <feComponentTransfer>
+                <feFuncA type="linear" slope="0.2"/>
+            </feComponentTransfer>
+            <feMerge> 
+                <feMergeNode/>
+                <feMergeNode in="SourceGraphic"/> 
+            </feMerge>
+        </filter>
+    </defs>
     
-    <!-- Decorative border -->
-    <rect x="10" y="10" width="380" height="580" fill="none" stroke="#D4AF37" stroke-width="2"/>
+    <!-- 背景 -->
+    <rect width="400" height="600" fill="url(#bgGradient)"/>
     
-    <!-- Hearts -->
-    <path d="M200 150 C160 110, 110 110, 110 160 C110 200, 200 240, 200 240 C200 240, 290 200, 290 160 C290 110, 240 110, 200 150" fill="#FFD700" opacity="0.6"/>
+    <!-- 主边框 -->
+    <rect x="10" y="10" width="380" height="580" fill="none" stroke="url(#goldGradient)" stroke-width="2" rx="8" ry="8"/>
     
-    <!-- Wedding Rings -->
-    <circle cx="180" cy="320" r="25" fill="none" stroke="#D4AF37" stroke-width="4"/>
-    <circle cx="220" cy="320" r="25" fill="none" stroke="#C0C0C0" stroke-width="4"/>
+    <!-- 内边框 -->
+    <rect x="20" y="20" width="360" height="560" fill="none" stroke="#D4AF37" stroke-width="0.5" rx="4" ry="4" opacity="0.4"/>
     
-    <!-- Year Text -->
-    <text x="200" y="100" font-family="Dancing Script, cursive" font-size="24" fill="#D4AF37" text-anchor="middle"><tspan x="200" dy="0">1st Anniversary</tspan></text>
+    <!-- 心形元素，轻微动画 -->
+    <path d="M200 150 C160 110, 110 110, 110 160 C110 200, 200 240, 200 240 C200 240, 290 200, 290 160 C290 110, 240 110, 200 150" fill="url(#heartGradient)" filter="url(#softShadow)">
+        <animate attributeName="d" 
+                values="M200 150 C160 110, 110 110, 110 160 C110 200, 200 240, 200 240 C200 240, 290 200, 290 160 C290 110, 240 110, 200 150;
+                       M200 150 C160 110, 110 110, 110 162 C110 202, 200 242, 200 242 C200 242, 290 202, 290 162 C290 110, 240 110, 200 150;
+                       M200 150 C160 110, 110 110, 110 160 C110 200, 200 240, 200 240 C200 240, 290 200, 290 160 C290 110, 240 110, 200 150" 
+                dur="8s" repeatCount="indefinite"/>
+    </path>
     
-    <!-- Names -->
-    <text x="200" y="250" font-family="Dancing Script, cursive" font-size="32" fill="#8B0000" text-anchor="middle"><tspan x="200" dy="0">Tarique &amp; Afreen</tspan></text>
+    <!-- 婚戒动画组 -->
+    <g transform="translate(200, 320)">
+        <!-- 金戒指 -->
+        <circle cx="-40" cy="0" r="25" fill="none" stroke="url(#goldGradient)" stroke-width="4" filter="url(#softShadow)">
+            <!-- 戒指水平移动动画 -->
+            <animate attributeName="cx" 
+                     values="-40; -10; 10; -10; -40" 
+                     dur="10s" 
+                     repeatCount="indefinite"/>
+        </circle>
+        
+        <!-- 银戒指 -->
+        <circle cx="40" cy="0" r="25" fill="none" stroke="url(#silverGradient)" stroke-width="4" filter="url(#softShadow)">
+            <!-- 戒指水平移动动画，与金戒指相反方向 -->
+            <animate attributeName="cx" 
+                     values="40; 10; -10; 10; 40" 
+                     dur="10s" 
+                     repeatCount="indefinite"/>
+        </circle>
+    </g>
     
-    <!-- Message -->
-    <text x="200" y="400" font-family="Dancing Script, cursive" font-size="24" fill="#8B0000" text-anchor="middle"><tspan x="200" dy="0">Happy Anniversary</tspan></text>
+    <!-- 周年纪念文字 -->
+    <text x="200" y="100" font-family="'Dancing Script', cursive" font-size="24" fill="url(#goldGradient)" text-anchor="middle" filter="url(#softShadow)">
+        <tspan x="200" dy="0">1st Anniversary</tspan>
+    </text>
     
-    <!-- Secondary message -->
-    <text x="200" y="440" font-family="Arial, sans-serif" font-size="16" fill="#666666" text-anchor="middle"><tspan x="200" dy="0">both of you 💝</tspan></text>
+    <!-- 名字 -->
+    <text x="200" y="250" font-family="'Dancing Script', cursive" font-size="32" fill="#8B0000" text-anchor="middle" filter="url(#softShadow)">
+        <tspan x="200" dy="0">Tarique &amp; Afreen</tspan>
+    </text>
     
-    <!-- From -->
-    <text x="200" y="500" font-family="Arial, sans-serif" font-size="18" fill="#666666" text-anchor="middle"><tspan x="200" dy="0">With love,</tspan></text>
-    <text x="200" y="530" font-family="Dancing Script, cursive" font-size="24" fill="#D4AF37" text-anchor="middle"><tspan x="200" dy="0">Areeba</tspan></text>
+    <!-- 祝福语 -->
+    <text x="200" y="400" font-family="'Dancing Script', cursive" font-size="24" fill="#8B0000" text-anchor="middle" filter="url(#softShadow)">
+        <tspan x="200" dy="0">Happy Anniversary</tspan>
+    </text>
     
-    <!-- Decorative flourishes -->
-    <path d="M50 200 C100 180, 150 180, 200 200" fill="none" stroke="#D4AF37" stroke-width="1"/>
-    <path d="M200 200 C250 180, 300 180, 350 200" fill="none" stroke="#D4AF37" stroke-width="1"/>
+    <!-- 附加信息 -->
+    <text x="200" y="440" font-family="Arial, sans-serif" font-size="16" fill="#666666" text-anchor="middle">
+        <tspan x="200" dy="0">both of you 💝</tspan>
+    </text>
+    
+    <!-- 署名 -->
+    <text x="200" y="500" font-family="Arial, sans-serif" font-size="18" fill="#666666" text-anchor="middle">
+        <tspan x="200" dy="0">With love,</tspan>
+    </text>
+    <text x="200" y="530" font-family="'Dancing Script', cursive" font-size="24" fill="url(#goldGradient)" text-anchor="middle" filter="url(#softShadow)">
+        <tspan x="200" dy="0">Areeba</tspan>
+    </text>
+    
+    <!-- 装饰线条 -->
+    <path d="M50 200 C100 180, 150 180, 200 200" fill="none" stroke="url(#goldGradient)" stroke-width="1"/>
+    <path d="M200 200 C250 180, 300 180, 350 200" fill="none" stroke="url(#goldGradient)" stroke-width="1"/>
+    
+    <!-- 角落装饰元素 -->
+    <path d="M30 30 L40 30 L40 40" stroke="#D4AF37" stroke-width="0.8" fill="none" opacity="0.6"/>
+    <path d="M370 30 L360 30 L360 40" stroke="#D4AF37" stroke-width="0.8" fill="none" opacity="0.6"/>
+    <path d="M30 570 L40 570 L40 560" stroke="#D4AF37" stroke-width="0.8" fill="none" opacity="0.6"/>
+    <path d="M370 570 L360 570 L360 560" stroke="#D4AF37" stroke-width="0.8" fill="none" opacity="0.6"/>
 </svg>
