@@ -1,17 +1,25 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { Prisma } from '@prisma/client';
+import { auth } from "@/auth";
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: Request) {
   try {
+    const session = await auth();
+    
+    if (session?.user?.id !== 'cm56ic66y000110jijyw2ir8r') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    
     const { searchParams } = new URL(request.url);
     const startDate = searchParams.get('startDate') || new Date(Date.now() - 29 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
     const endDate = searchParams.get('endDate') || new Date().toISOString().split('T')[0];
 
-    const [stats, errorStats] = await Promise.all([
-      // 用户行为统计
+
+    // Collect raw query results first, without destructuring
+    const results = await Promise.all([
+      // 1. 用户行为统计 (按 action 分类)
       prisma.$queryRaw`
         WITH date_range AS (
           SELECT generate_series(
@@ -20,20 +28,16 @@ export async function GET(request: Request) {
             interval '1 day'
           )::date as dt
         )
-        SELECT 
+        SELECT
           to_char(d.dt, 'YYYY-MM-DD') as dt,
-          COUNT(a.id)::integer as action_cards,
-          SUM(CASE WHEN to_char(a.timestamp, 'YYYY-MM-DD') = to_char(b.timestamp, 'YYYY-MM-DD') THEN 1 ELSE 0 END)::integer as same_day_cards,
-          SUM(CASE WHEN to_char(a.timestamp, 'YYYY-MM-DD') != to_char(b.timestamp, 'YYYY-MM-DD') THEN 1 ELSE 0 END)::integer as different_day_cards,
-          COUNT(DISTINCT a."cardId")::integer as unique_cards,
-          COUNT(DISTINCT CASE WHEN to_char(a.timestamp, 'YYYY-MM-DD') = to_char(b.timestamp, 'YYYY-MM-DD') THEN a."cardId" ELSE NULL END)::integer as unique_same_day_cards
+          COALESCE(ua.action, 'unknown') as action,
+          COUNT(ua.id)::integer as count
         FROM date_range d
-        LEFT JOIN "UserAction" a ON to_char(a.timestamp, 'YYYY-MM-DD') = to_char(d.dt, 'YYYY-MM-DD')
-        LEFT JOIN "ApiLog" b ON a."cardId" = b."cardId"
-        GROUP BY d.dt
-        ORDER BY d.dt DESC
+        LEFT JOIN "UserAction" ua ON to_char(ua.timestamp, 'YYYY-MM-DD') = to_char(d.dt, 'YYYY-MM-DD')
+        GROUP BY d.dt, ua.action
+        ORDER BY d.dt ASC, ua.action ASC
       `,
-      // API 错误统计
+      // 2. API 错误统计根据 promptVersion 进行分类统计
       prisma.$queryRaw`
         WITH date_range AS (
           SELECT generate_series(
@@ -42,44 +46,127 @@ export async function GET(request: Request) {
             interval '1 day'
           )::date as dt
         )
-        SELECT 
+        SELECT
           to_char(d.dt, 'YYYY-MM-DD') as dt,
-          COUNT(CASE WHEN l."isError" = true THEN 1 END)::integer as error_count,
-          COUNT(CASE WHEN l."isError" = false THEN 1 END)::integer as success_count,
-          COUNT(l.id)::integer as total_count
+          COALESCE(al."promptVersion", 'unknown') as "promptVersion",
+          COUNT(al.id)::integer as error_count
         FROM date_range d
-        LEFT JOIN "ApiLog" l ON to_char(l.timestamp, 'YYYY-MM-DD') = to_char(d.dt, 'YYYY-MM-DD')
+        LEFT JOIN "ApiLog" al ON to_char(al.timestamp, 'YYYY-MM-DD') = to_char(d.dt, 'YYYY-MM-DD') AND al."isError" = true
+        GROUP BY d.dt, al."promptVersion"
+        ORDER BY d.dt ASC, al."promptVersion" ASC
+      `,
+      // 3. 近三十天每天卡片类型cardType的api调用量统计
+      prisma.$queryRaw`
+         WITH date_range AS (
+          SELECT generate_series(
+            ${startDate}::date,
+            ${endDate}::date,
+            interval '1 day'
+          )::date as dt
+        )
+        SELECT
+          to_char(d.dt, 'YYYY-MM-DD') as dt,
+          COALESCE(al."cardType", 'unknown') as "cardType",
+          COUNT(al.id)::integer as total_count
+        FROM date_range d
+        LEFT JOIN "ApiLog" al ON to_char(al.timestamp, 'YYYY-MM-DD') = to_char(d.dt, 'YYYY-MM-DD')
+        GROUP BY d.dt, al."cardType"
+        ORDER BY d.dt ASC, al."cardType" ASC
+      `,
+      // 4. 近三十天每天用户调用量的分层统计
+      prisma.$queryRaw`
+        WITH date_range AS (
+          SELECT generate_series(
+            ${startDate}::date,
+            ${endDate}::date,
+            interval '1 day'
+          )::date as dt
+        )
+        SELECT
+          to_char(d.dt, 'YYYY-MM-DD') as dt,
+          COUNT(au.id)::integer AS total_users,
+          COALESCE(SUM(au.count), 0)::integer AS total_calls,
+          COALESCE(SUM(CASE WHEN au.count > 2 THEN 1 ELSE 0 END), 0)::integer AS up2_users,
+          COALESCE(SUM(CASE WHEN au.count > 5 THEN 1 ELSE 0 END), 0)::integer AS up5_users,
+          COALESCE(SUM(CASE WHEN au.count > 8 THEN 1 ELSE 0 END), 0)::integer AS up8_users,
+          COALESCE(to_char(CASE 
+                          WHEN COUNT(au.id) > 0 THEN round(SUM(COALESCE(au.count, 0))::numeric / COUNT(au.id), 2)
+                          ELSE 0
+                       END, 'FM9999990.99'), '0.00') AS avg_calls
+        FROM date_range d
+        LEFT JOIN "ApiUsage" au ON to_char(au."createdAt", 'YYYY-MM-DD') = to_char(d.dt, 'YYYY-MM-DD')
         GROUP BY d.dt
-        ORDER BY d.dt DESC
+        ORDER BY d.dt ASC
       `
     ]);
 
-    // 确保返回的是数组
-    if (!Array.isArray(stats) || !Array.isArray(errorStats)) {
-      throw new Error('Invalid data format from database');
+    // Now destructure with more confidence
+    const [userActionStatsRaw, apiErrorStatsByVersionRaw, apiCallStatsByTypeRaw, userCallVolumeStatsRaw] = results;
+
+    // 确保返回的是数组，使用更精确的错误消息
+    if (!Array.isArray(userActionStatsRaw)) {
+      console.error("userActionStatsRaw is not an array:", userActionStatsRaw);
+      throw new Error('userActionStats query did not return an array');
+    }
+    if (!Array.isArray(apiErrorStatsByVersionRaw)) {
+      console.error("apiErrorStatsByVersionRaw is not an array:", apiErrorStatsByVersionRaw);
+      throw new Error('apiErrorStatsByVersion query did not return an array');
+    }
+    if (!Array.isArray(apiCallStatsByTypeRaw)) {
+      console.error("apiCallStatsByTypeRaw is not an array:", apiCallStatsByTypeRaw);
+      throw new Error('apiCallStatsByType query did not return an array');
+    }
+    if (!Array.isArray(userCallVolumeStatsRaw)) {
+      console.error("userCallVolumeStatsRaw is not an array:", userCallVolumeStatsRaw);
+      throw new Error('userCallVolumeStats query did not return an array');
     }
 
-    // 处理 null 值
-    const processedStats = stats.map(stat => ({
-      ...stat,
-      action_cards: Number(stat.action_cards) || 0,
-      same_day_cards: Number(stat.same_day_cards) || 0,
-      different_day_cards: Number(stat.different_day_cards) || 0,
-      unique_cards: Number(stat.unique_cards) || 0,
-      unique_same_day_cards: Number(stat.unique_same_day_cards) || 0,
+    // Process and format data (handle potential nulls and convert numeric types)
+    const processedUserActionStats = userActionStatsRaw.map(stat => ({
+        dt: String(stat.dt),
+        action: String(stat.action || 'unknown'),
+        count: Number(stat.count) || 0,
     }));
 
-    const processedErrorStats = errorStats.map(stat => ({
-      ...stat,
-      error_count: Number(stat.error_count) || 0,
-      success_count: Number(stat.success_count) || 0,
-      total_count: Number(stat.total_count) || 0,
+    const processedApiErrorStatsByVersion = apiErrorStatsByVersionRaw.map(stat => ({
+        dt: String(stat.dt),
+        promptVersion: stat.promptVersion === null ? null : String(stat.promptVersion),
+        error_count: Number(stat.error_count) || 0,
     }));
 
-    return NextResponse.json({ 
-      stats: processedStats,
-      errorStats: processedErrorStats
-    });
+    const processedApiCallStatsByType = apiCallStatsByTypeRaw.map(stat => ({
+        dt: String(stat.dt),
+        cardType: stat.cardType === null ? null : String(stat.cardType),
+        total_count: Number(stat.total_count) || 0,
+    }));
+
+    const processedUserCallVolumeStats = userCallVolumeStatsRaw.map(stat => ({
+        dt: String(stat.dt),
+        total_users: Number(stat.total_users) || 0,
+        total_calls: Number(stat.total_calls) || 0,
+        up2_users: Number(stat.up2_users) || 0,
+        up5_users: Number(stat.up5_users) || 0,
+        up8_users: Number(stat.up8_users) || 0,
+        avg_calls: String(stat.avg_calls || '0.00'),
+    }));
+
+    // Log processed data for debugging
+    // console.log("Processed User Action Stats sample:", processedUserActionStats.length > 0 ? processedUserActionStats[0] : 'Empty array');
+    // console.log("Processed API Error Stats by Version sample:", processedApiErrorStatsByVersion.length > 0 ? processedApiErrorStatsByVersion[0] : 'Empty array');
+    // console.log("Processed API Call Stats by Type sample:", processedApiCallStatsByType.length > 0 ? processedApiCallStatsByType[0] : 'Empty array');
+    // console.log("Processed User Call Volume Stats sample:", processedUserCallVolumeStats.length > 0 ? processedUserCallVolumeStats[0] : 'Empty array');
+
+    // Ensure we have data in all arrays (even if the arrays are empty, they should exist)
+    const responseData = {
+      userActionStats: processedUserActionStats,
+      apiErrorStatsByVersion: processedApiErrorStatsByVersion,
+      apiCallStatsByType: processedApiCallStatsByType,
+      userCallVolumeStats: processedUserCallVolumeStats
+    };
+
+    console.log("Returning response with structure:", Object.keys(responseData));
+
+    return NextResponse.json(responseData);
   } catch (error) {
     console.error("Error fetching user stats:", error);
     return NextResponse.json(

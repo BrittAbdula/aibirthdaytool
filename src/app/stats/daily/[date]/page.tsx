@@ -22,6 +22,7 @@ interface ApiCallDetail {
   isError: boolean;
   errorMessage?: string;
   r2Url?: string;
+  responseContent?: string;
   user: {
     name: string;
     email: string;
@@ -76,12 +77,10 @@ export default function DailyDetailPage({ params }: { params: { date: string } }
     totalTokens: details.reduce((acc, d) => acc + d.tokensUsed, 0),
   };
 
-  const getCardImageUrl = (timestamp: string, cardId: string) => {
-    const date = new Date(timestamp);
-    const year = date.getUTCFullYear();
-    const month = String(date.getUTCMonth() + 1).padStart(2, '0');
-    const day = String(date.getUTCDate()).padStart(2, '0');
-    return `https://store.celeprime.com/cards/${year}/${month}/${day}/${cardId}.svg`;
+  const getCardImageUrl = (responseContent: string) => {
+    // svg code to url
+    const url = `data:image/svg+xml;base64,${Buffer.from(responseContent).toString('base64')}`;
+    return url;
   };
 
   return (
@@ -206,13 +205,13 @@ export default function DailyDetailPage({ params }: { params: { date: string } }
                       <TableCell>{detail.duration}ms</TableCell>
                       <TableCell>{detail.promptVersion}</TableCell>
                       <TableCell>
-                        {!detail.isError && detail.r2Url && (
+                        {!detail.isError && detail.responseContent && (
                           <button
-                            onClick={() => setSelectedImage(getCardImageUrl(detail.timestamp, detail.cardId))}
+                            onClick={() => setSelectedImage(getCardImageUrl(detail.responseContent || ''))}
                             className="block relative w-20 h-20 rounded-lg overflow-hidden border border-gray-200 hover:border-purple-400 transition-colors duration-200 cursor-pointer group"
                           >
                             <Image
-                              src={getCardImageUrl(detail.timestamp, detail.cardId)}
+                              src={getCardImageUrl(detail.responseContent || '')}
                               alt={`Card ${detail.cardId}`}
                               fill
                               className="object-contain transition-transform duration-200 group-hover:scale-105"

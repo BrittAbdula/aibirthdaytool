@@ -265,7 +265,7 @@
   <!-- Year with glow -->
   <g filter="url(#starGlow)">
     <text x="200" y="520" text-anchor="middle" font-family="Georgia" font-size="22" fill="#C62828">
-      2024
+      2025
       <animate attributeName="opacity" values="1;0.8;1" dur="3s" repeatCount="indefinite"/>
     </text>
   </g>

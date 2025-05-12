@@ -47,8 +47,8 @@ export async function generateMetadata(
     }
   }
 
-  const imageUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/api/og/${card.id}` // 使用实际的 card.id
-  const cardPath = card.customUrl || card.id // 使用自定义 URL 或 ID
+  const imageUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/api/og/${card.id}`
+  const cardPath = card.customUrl || card.id
   const url = `${process.env.NEXT_PUBLIC_BASE_URL}/to/${cardPath}`
 
   const title = `Personalized ${card.cardType} Card`
@@ -57,6 +57,10 @@ export async function generateMetadata(
   return {
     title,
     description,
+    robots: {
+      index: false,
+      follow: false,
+    },
     openGraph: {
       title,
       description,

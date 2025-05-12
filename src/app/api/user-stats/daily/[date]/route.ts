@@ -1,17 +1,23 @@
 import { NextResponse } from 'next/server';
 import {prisma} from '@/lib/prisma';
+import { auth } from '@/auth';
 
 export async function GET(
   request: Request,
   { params }: { params: { date: string } }
 ) {
   try {
+    const session = await auth();
+    
+    if (session?.user?.id !== 'cm56ic66y000110jijyw2ir8r') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
     const date = params.date;
     const startDate = new Date(date);
     const endDate = new Date(date);
     endDate.setDate(endDate.getDate() + 1);
 
-    // Query API logs directly instead of edited cards
+    // Query API logs directly instead of edited cards, the limit is 100 order by timestamp desc
     const logs = await prisma.apiLog.findMany({
       where: {
         timestamp: {
@@ -22,6 +28,7 @@ export async function GET(
       orderBy: {
         timestamp: 'desc',
       },
+      take: 100,
       select: {
         id: true,
         cardId: true,
@@ -57,6 +64,7 @@ export async function GET(
       isError: log.isError,
       errorMessage: log.errorMessage,
       r2Url: log.r2Url,
+      responseContent: log.responseContent,
       user: log.user ? {
         name: log.user.name,
         email: log.user.email,

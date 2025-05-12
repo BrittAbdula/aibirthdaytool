@@ -6,7 +6,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { extractEditableFields, updateSvgContent, cn, fetchSvgContent } from '@/lib/utils'
 import NextImage from 'next/image'
-import { DownloadIcon, CopyIcon, PaperPlaneIcon, TwitterLogoIcon, LinkedInLogoIcon, EnvelopeClosedIcon } from '@radix-ui/react-icons'
+import { DownloadIcon, CopyIcon, PaperPlaneIcon, TwitterLogoIcon, EnvelopeClosedIcon } from '@radix-ui/react-icons'
 import { useToast } from "@/hooks/use-toast"
 import { recordUserAction } from '@/lib/action'
 import dynamic from 'next/dynamic'
@@ -18,6 +18,14 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { RecommendedCards } from '@/components/RecommendedCards'
+import { Metadata } from 'next'
+
+export const metadata: Metadata = {
+  robots: {
+    index: false,
+    follow: false,
+  },
+}
 
 const IsMobileWrapper = dynamic(() => import('@/components/IsMobileWrapper'), { ssr: false })
 
