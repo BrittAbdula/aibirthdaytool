@@ -44,16 +44,28 @@ export default function EditCard({ params }: { params: { cardId: string, cardTyp
   useEffect(() => {
     const fetchCardData = async () => {
       if (cardId === '1') {
-        setIsLoading(false)
-        const content = await fetchSvgContent('https://store.celeprime.com/'+cardType+'.svg')
-        if (content) {
-          setSvgContent(content)
-          setOriginalContent(content)
-          setOriginalCardId('1')
-          setRelationship('')
-          setMessage('')
-          setEditableFields(extractEditableFields(content))
-          updateImageSrc(content)
+        setIsLoading(true)
+        try {
+          const content = await fetchSvgContent('https://store.celeprime.com/'+cardType+'.svg')
+          if (content) {
+            setSvgContent(content)
+            setOriginalContent(content)
+            setOriginalCardId('1')
+            setRelationship('')
+            setMessage('')
+            setEditableFields(extractEditableFields(content))
+            updateImageSrc(content)
+          } else {
+            throw new Error('Failed to fetch SVG content')
+          }
+        } catch (error) {
+          console.error('Error fetching template SVG:', error)
+          toast({
+            variant: "destructive",
+            description: "Failed to load template. Please try again.",
+          })
+        } finally {
+          setIsLoading(false)
         }
         return
       }

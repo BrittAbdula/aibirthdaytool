@@ -73,13 +73,22 @@ export function updateSvgContent(svgContent: string, updatedFields: Record<strin
   return new XMLSerializer().serializeToString(svgDoc)
 }
 
-
 export async function fetchSvgContent(r2Url: string | null): Promise<string | null> {
   const defaultSvg = '/card/goodluck.svg'
   try {
-    // console.log('r2Url----------', r2Url)
+    // Use proxy for external URLs to avoid CORS issues
+    if (r2Url && (r2Url.startsWith('http://') || r2Url.startsWith('https://'))) {
+      // Check if it's not from the same origin
+      if (typeof window !== 'undefined' && !r2Url.startsWith(window.location.origin)) {
+        const proxyUrl = `/api/proxy-svg?url=${encodeURIComponent(r2Url)}`
+        const response = await fetch(proxyUrl)
+        const svgContent = await response.text()
+        return svgContent
+      }
+    }
+    
+    // For local URLs or same-origin URLs, fetch directly
     const response = await fetch(r2Url || defaultSvg)
-    // console.log('response----------', response)
     const svgContent = await response.text()
     return svgContent
   } catch (error) {
