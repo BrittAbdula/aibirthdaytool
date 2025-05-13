@@ -51,7 +51,7 @@ async function reportMissingGenerator(searchTerm: string) {
       },
       body: JSON.stringify({ searchTerm }),
     })
-    
+
     if (!response.ok) {
       throw new Error('Failed to report missing generator')
     }
@@ -116,21 +116,21 @@ function Header() {
     }
 
     if (searchTerm) {
-      const filtered = GENERATORS.filter(generator => 
+      const filtered = GENERATORS.filter(generator =>
         generator.label.toLowerCase().includes(searchTerm.toLowerCase()) ||
         generator.slug.toLowerCase().includes(searchTerm.toLowerCase())
       )
-      
+
       setFilteredGenerators(filtered)
-      
+
       // 检查是否有完全匹配
-      const exactMatch = GENERATORS.some(g => 
-        g.label.toLowerCase() === searchTerm.toLowerCase() || 
+      const exactMatch = GENERATORS.some(g =>
+        g.label.toLowerCase() === searchTerm.toLowerCase() ||
         g.slug.toLowerCase() === searchTerm.toLowerCase()
       )
-      
+
       setHasExactMatch(exactMatch)
-      
+
       // 设置定时器，当用户停止输入3秒后，如果没有匹配项且输入长度足够，自动上报
       if (filtered.length === 0 && searchTerm.length >= 3) {
         const timeout = setTimeout(() => {
@@ -139,17 +139,17 @@ function Header() {
             reportMissingGenerator(searchTerm)
           }
         }, 3000)
-        
+
         setTypingTimeout(timeout)
       }
     } else {
       setFilteredGenerators(GENERATORS.slice(0, 8)) // 只显示前8个作为推荐
       setHasExactMatch(false)
     }
-    
+
     // 清除Coming Soon提示
     setShowComingSoon(false)
-    
+
     return () => {
       if (typingTimeout) {
         clearTimeout(typingTimeout)
@@ -164,20 +164,20 @@ function Header() {
         setIsSearchOpen(false)
       }
     }
-    
+
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     // 如果有匹配的生成器，导航到第一个匹配的生成器
     if (filteredGenerators.length > 0) {
       window.location.href = `/${filteredGenerators[0].slug}/`
       return
     }
-    
+
     // 如果没有匹配项，显示Coming Soon信息
     if (searchTerm.length >= 2) {
       handleRequestGenerator()
@@ -186,13 +186,13 @@ function Header() {
 
   const handleRequestGenerator = async () => {
     if (!searchTerm || searchTerm.length < 2 || isSubmitting) return
-    
+
     setIsSubmitting(true)
-    
+
     try {
       await reportMissingGenerator(searchTerm)
       setShowComingSoon(true)
-      
+
       // 清空搜索框，但保持聚焦
       setTimeout(() => {
         if (inputRef.current) {
@@ -249,16 +249,52 @@ function Header() {
           <div className="hidden md:flex items-center space-x-6">
             <Link href="/" className="text-[#4A4A4A] hover:text-[#FFC0CB] font-serif">Home</Link>
 
+            {/* Generators Dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                className="text-[#4A4A4A] hover:text-[#FFC0CB] font-serif flex items-center"
+                onMouseEnter={() => !isMobile && setIsGeneratorMenuOpen(true)}
+                onMouseLeave={() => !isMobile && setIsGeneratorMenuOpen(false)}
+              >
+                Generators <ChevronDown className="ml-1 h-4 w-4" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                className="w-[280px] p-2"
+                onMouseEnter={() => !isMobile && setIsGeneratorMenuOpen(true)}
+                onMouseLeave={() => !isMobile && setIsGeneratorMenuOpen(false)}
+              >
+                <div className="grid grid-cols-2 gap-1">
+                  <DropdownMenuItem asChild className="col-span-2">
+                    <Link href="/cards/" className="w-full font-medium text-[#4A4A4A]">
+                      All Generators
+                    </Link>
+                  </DropdownMenuItem>
+                  {GENERATORS.map((generator) => (
+                    <DropdownMenuItem key={generator.slug} asChild>
+                      <Link href={`/${generator.slug}/`} className="w-full">
+                        {generator.label}
+                      </Link>
+                    </DropdownMenuItem>
+                  ))}
+                </div>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            {/* Gallery Link */}
+            <Link href="/card-gallery/" className="text-[#4A4A4A] hover:text-[#FFC0CB] font-serif">Gallery</Link>
+
+            <Link href="/my-cards/" className="text-[#4A4A4A] hover:text-[#FFC0CB] font-serif">My Cards</Link>
+
             {/* Search Icon & Dropdown */}
             <div className="relative" ref={searchRef}>
-              <button 
+              <button
                 onClick={() => setIsSearchOpen(!isSearchOpen)}
                 className="text-[#4A4A4A] hover:text-[#FFC0CB] p-1 rounded-full hover:bg-purple-50 transition-colors"
                 aria-label="Search generators"
               >
                 <Search className="h-5 w-5" />
               </button>
-              
+
               {isSearchOpen && (
                 <div className="absolute right-0 top-full mt-2 w-80 bg-white rounded-lg shadow-lg border border-purple-100 overflow-hidden z-50">
                   <form onSubmit={handleSearch} className="p-3 border-b border-purple-50">
@@ -273,7 +309,7 @@ function Header() {
                         autoFocus
                       />
                       <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-purple-400" />
-                      <button 
+                      <button
                         type="submit"
                         className="absolute right-3 top-1/2 transform -translate-y-1/2 text-purple-500 hover:text-purple-700"
                         aria-label="Search"
@@ -282,7 +318,7 @@ function Header() {
                       </button>
                     </div>
                   </form>
-                  
+
                   <div className="max-h-64 overflow-y-auto p-1">
                     {showComingSoon ? (
                       <div className="px-4 py-6 text-center">
@@ -292,8 +328,8 @@ function Header() {
                         <div className="text-sm text-gray-600 mb-4">
                           &quot;{searchTerm}&quot; generator is coming soon.
                         </div>
-                        <Link 
-                          href="/cards/" 
+                        <Link
+                          href="/cards/"
                           className="text-sm text-purple-700 hover:underline"
                           onClick={() => setIsSearchOpen(false)}
                         >
@@ -333,10 +369,10 @@ function Header() {
                       </div>
                     ) : null}
                   </div>
-                  
+
                   <div className="p-2 border-t border-purple-50 bg-purple-50/30">
-                    <Link 
-                      href="/cards/" 
+                    <Link
+                      href="/cards/"
                       className="block px-4 py-2 text-sm text-center text-purple-700 hover:bg-purple-100 rounded-md font-medium"
                       onClick={() => setIsSearchOpen(false)}
                     >
@@ -347,45 +383,9 @@ function Header() {
               )}
             </div>
 
-            {/* Generators Dropdown */}
-            <DropdownMenu>
-              <DropdownMenuTrigger 
-                className="text-[#4A4A4A] hover:text-[#FFC0CB] font-serif flex items-center"
-                onMouseEnter={() => !isMobile && setIsGeneratorMenuOpen(true)}
-                onMouseLeave={() => !isMobile && setIsGeneratorMenuOpen(false)}
-              >
-                Generators <ChevronDown className="ml-1 h-4 w-4" />
-              </DropdownMenuTrigger>
-              <DropdownMenuContent 
-                className="w-[280px] p-2"
-                onMouseEnter={() => !isMobile && setIsGeneratorMenuOpen(true)}
-                onMouseLeave={() => !isMobile && setIsGeneratorMenuOpen(false)}
-              >
-                <div className="grid grid-cols-2 gap-1">
-                  <DropdownMenuItem asChild className="col-span-2">
-                    <Link href="/cards/" className="w-full font-medium text-[#4A4A4A]">
-                      All Generators
-                    </Link>
-                  </DropdownMenuItem>
-                  {GENERATORS.map((generator) => (
-                    <DropdownMenuItem key={generator.slug} asChild>
-                      <Link href={`/${generator.slug}/`} className="w-full">
-                        {generator.label}
-                      </Link>
-                    </DropdownMenuItem>
-                  ))}
-                </div>
-              </DropdownMenuContent>
-            </DropdownMenu>
-            
-            {/* Gallery Link */}
-            <Link href="/card-gallery/" className="text-[#4A4A4A] hover:text-[#FFC0CB] font-serif">Gallery</Link>
-
-            <Link href="/my-cards/" className="text-[#4A4A4A] hover:text-[#FFC0CB] font-serif">My Cards</Link>
-            
             {/* Premium Button - Always visible */}
             <PremiumButton />
-            
+
             {status === 'authenticated' && session ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -403,12 +403,12 @@ function Header() {
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48">
-                <DropdownMenuItem>
-                  <div className="text-center text-sm font-medium text-gray-700">
-                    {session.user?.name}
-                  </div>
-                </DropdownMenuItem>
-                  <DropdownMenuItem 
+                  <DropdownMenuItem>
+                    <div className="text-center text-sm font-medium text-gray-700">
+                      {session.user?.name}
+                    </div>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
                     onClick={handleLogout}
                     disabled={isLoading}
                     className="relative"
@@ -446,16 +446,16 @@ function Header() {
           {/* Mobile Menu Button and Search */}
           <div className="md:hidden flex items-center space-x-2">
             {/* Search Icon - Mobile */}
-            <button 
+            <button
               onClick={() => setIsSearchOpen(!isSearchOpen)}
               className="text-[#4A4A4A] p-1 rounded-full hover:bg-purple-50/50"
               aria-label="Search generators"
             >
               <Search className="h-5 w-5" />
             </button>
-            
+
             {/* Mobile Menu Button */}
-            <button 
+            <button
               aria-label="Toggle menu"
               className="text-[#4A4A4A] relative w-6 h-6"
               onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -483,7 +483,7 @@ function Header() {
                   autoFocus
                 />
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-purple-400" />
-                <button 
+                <button
                   type="submit"
                   className="absolute right-3 top-1/2 transform -translate-y-1/2 text-purple-500 hover:text-purple-700"
                 >
@@ -491,7 +491,7 @@ function Header() {
                 </button>
               </div>
             </form>
-            
+
             {showComingSoon ? (
               <div className="bg-white rounded-lg shadow border border-purple-100 overflow-hidden p-4 text-center">
                 <div className="text-purple-600 font-medium mb-2">
@@ -500,8 +500,8 @@ function Header() {
                 <div className="text-sm text-gray-600 mb-3">
                   &quot;{searchTerm}&quot; generator is coming soon.
                 </div>
-                <Link 
-                  href="/cards/" 
+                <Link
+                  href="/cards/"
                   className="text-sm text-purple-700 hover:underline"
                   onClick={() => setIsSearchOpen(false)}
                 >
@@ -551,13 +551,13 @@ function Header() {
         {isMenuOpen && (
           <div className="mt-4 md:hidden">
             <Link href="/" className="block py-2.5 px-4 w-full text-right text-[#4A4A4A] hover:text-[#FFC0CB] hover:bg-gray-50 font-serif">Home</Link>
-            
+
             {/* Generators Section - Mobile */}
             <div className="border-y border-purple-100/50 my-2 bg-purple-50/30">
               <div className="py-2 px-4">
                 <div className="text-right font-serif text-[#4A4A4A] mb-2">Generators</div>
                 <div className="grid grid-cols-2 gap-2">
-                  <Link href="/cards/" 
+                  <Link href="/cards/"
                     className="block py-1.5 px-3 text-right text-[#4A4A4A]/80 hover:text-[#FFC0CB] hover:bg-white/50 rounded-md text-sm col-span-2 font-medium">
                     All Generators
                   </Link>
@@ -573,12 +573,12 @@ function Header() {
                 </div>
               </div>
             </div>
-            
+
             {/* Gallery Link - Mobile */}
             <Link href="/card-gallery/" className="block py-2.5 px-4 w-full text-right text-[#4A4A4A] hover:text-[#FFC0CB] hover:bg-gray-50 font-serif">Gallery</Link>
 
             <Link href="/my-cards/" className="block py-2.5 px-4 w-full text-right text-[#4A4A4A] hover:text-[#FFC0CB] hover:bg-gray-50 font-serif">My Cards</Link>
-            
+
             {status === 'authenticated' && session ? (
               <div className="p-4 border-t">
                 <div className="flex items-center justify-end space-x-2 mb-2">
@@ -629,9 +629,9 @@ function Header() {
                       'Sign In'
                     )}
                   </Button>
-                  
+
                   {/* Premium Button - Mobile */}
-                  <Button 
+                  <Button
                     onClick={() => setIsMenuOpen(false)}
                     variant="outline"
                     className="w-full flex items-center justify-center gap-1 text-white bg-purple-600 hover:bg-purple-700 border-purple-600"

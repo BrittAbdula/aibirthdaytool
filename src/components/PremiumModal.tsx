@@ -279,7 +279,7 @@ export function PremiumButton() {
       <Button 
         onClick={() => setIsOpen(true)}
         variant="outline"
-        className="flex items-center gap-1 text-white bg-purple-600 hover:bg-purple-700 border-purple-600"
+        className="flex items-center gap-1 text-white hover:text-[#FFC0CB] bg-purple-600 hover:bg-purple-700 border-purple-600"
       >
         <Crown className="h-4 w-4" />
         <span>Premium</span>
