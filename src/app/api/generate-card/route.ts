@@ -13,13 +13,13 @@ export const dynamic = 'force-dynamic';
 export async function POST(request: Request) {
   try {
     const session = await auth();
-    
+
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const userId = session.user.id;
-    
+
     // const userId = 'cm56ic66y000110jijyw2ir8r';
     const requestData = await request.json();
     const {
@@ -60,7 +60,7 @@ export async function POST(request: Request) {
     // 获取用户计划类型
     const planType = user?.plan || 'FREE';
     const dailyLimit = planType === 'FREE' ? 10 : Infinity;
-    
+
     // 处理用户使用情况
     let currentUsage = usage?.count || 0;
     if (!usage) {
@@ -72,7 +72,7 @@ export async function POST(request: Request) {
             data: {
               userId,
               date: new Date(new Date().setHours(0, 0, 0, 0)),
-              count: 1, 
+              count: 1,
             },
           });
         } catch (error) {
@@ -80,8 +80,8 @@ export async function POST(request: Request) {
         }
       });
     } else if (currentUsage >= dailyLimit) {
-      return NextResponse.json({ 
-        error: "You've reached your daily limit. Please try again tomorrow or visit our Card Gallery." 
+      return NextResponse.json({
+        error: "You've reached your daily limit. Please try again tomorrow or visit our Card Gallery."
       }, { status: 429 });
     }
 
@@ -94,9 +94,9 @@ export async function POST(request: Request) {
       senderName,
       message,
       format,
-      ...(isModification && { 
-        modificationFeedback, 
-        previousCardId 
+      ...(isModification && {
+        modificationFeedback,
+        previousCardId
       }),
       ...otherFields
     };
@@ -108,7 +108,7 @@ export async function POST(request: Request) {
       result = await generateCardImage(cardData);
     } else {
       // Use SVG generator (default)
-      result = await generateCardContent(cardData, userPlan);
+      result = await generateCardContent(cardData, planType);
     }
 
     // 增加使用计数 - 异步处理以避免阻塞响应
@@ -137,7 +137,7 @@ export async function POST(request: Request) {
     return NextResponse.json(result);
   } catch (error) {
     console.error('Error generating card:', error);
-    return NextResponse.json({ 
+    return NextResponse.json({
       error: 'Failed to generate card',
       message: error instanceof Error ? error.message : 'Unknown error'
     }, { status: 500 });

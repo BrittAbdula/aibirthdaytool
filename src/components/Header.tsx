@@ -636,21 +636,28 @@ function Header() {
                     )}
                   </div>
                 </div>
-                <Button
-                  variant="outline"
-                  onClick={handleLogout}
-                  disabled={isLoading}
-                  className="w-full text-[#4A4A4A] hover:text-[#FFC0CB]"
-                >
-                  {isLoading ? (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                      Signing out...
-                    </>
-                  ) : (
-                    'Sign Out'
+                <div className="flex flex-col space-y-2">
+                  <Button
+                    variant="outline"
+                    onClick={handleLogout}
+                    disabled={isLoading}
+                    className="w-full text-[#4A4A4A] hover:text-[#FFC0CB]"
+                  >
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                        Signing out...
+                      </>
+                    ) : (
+                      'Sign Out'
+                    )}
+                  </Button>
+                  
+                  {/* Premium Button - Mobile (only if not premium) */}
+                  {!isPremiumUser && (
+                    <PremiumButton />
                   )}
-                </Button>
+                </div>
               </div>
             ) : (
               <div className="p-4 border-t">
@@ -671,17 +678,8 @@ function Header() {
                     )}
                   </Button>
                   
-                  {/* Premium Button - Mobile (only if not premium) */}
-                  {!isPremiumUser && (
-                    <Button
-                      onClick={() => setIsMenuOpen(false)}
-                      variant="outline"
-                      className="w-full flex items-center justify-center gap-1 text-white bg-purple-600 hover:bg-purple-700 border-purple-600"
-                    >
-                      <Crown className="h-4 w-4" />
-                      <span>Premium</span>
-                    </Button>
-                  )}
+                  {/* Premium Button - Mobile (for non-authenticated users) */}
+                  <PremiumButton />
                 </div>
               </div>
             )}
