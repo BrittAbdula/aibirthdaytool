@@ -217,3 +217,16 @@ model CardGenerator {
   // 关联的卡片
 }
 
+model MissingGenerator {
+  id          String   @id @default(cuid())
+  searchTerm  String   @unique
+  count       Int      @default(1)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  isProcessed Boolean  @default(false)
+  notes       String?
+
+  @@index([count])
+  @@index([createdAt])
+}
+
