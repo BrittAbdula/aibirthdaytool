@@ -9,6 +9,12 @@ import { Label } from '@/components/ui/label';
 import { useCookieConsent, CookieConsent as ConsentType } from '@/hooks/use-cookie-consent';
 import { toast } from '@/hooks/use-toast';
 
+declare global {
+  interface Window {
+    gtag: (...args: any[]) => void;
+  }
+}
+
 export function CookieConsentWrapper() {
   const { consent, updateConsent } = useCookieConsent();
   const [showPreferences, setShowPreferences] = useState(false);
@@ -22,6 +28,15 @@ export function CookieConsentWrapper() {
 
   const handleSavePreferences = () => {
     updateConsent(tempConsent);
+    // Call gtag consent update after saving preferences
+    if (window.gtag) {
+      window.gtag('consent', 'update', {
+        'ad_storage': tempConsent.targeting ? 'granted' : 'denied',
+        'analytics_storage': tempConsent.performance ? 'granted' : 'denied',
+        'functionality_storage': tempConsent.functional ? 'granted' : 'denied',
+        'personalization_storage': tempConsent.functional ? 'granted' : 'denied', // Assuming functional implies personalization
+      });
+    }
     setShowPreferences(false);
     toast({ description: "Cookie preferences saved" });
   };
@@ -32,16 +47,18 @@ export function CookieConsentWrapper() {
       <CookieConsent />
 
       {/* Cookie 设置按钮 - 在所有页面显示 */}
-      <div className="fixed bottom-4 left-4 z-50">
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={openPreferences}
-          className="text-xs bg-white/80 backdrop-blur-sm shadow-md hover:bg-white"
-        >
-          Cookie Settings
-        </Button>
-      </div>
+      {typeof window !== 'undefined' && window.location.pathname === '/' && (
+        <div className="fixed bottom-4 left-4 z-50">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={openPreferences}
+            className="text-xs bg-white/80 backdrop-blur-sm shadow-md hover:bg-white"
+          >
+            Cookie Settings
+          </Button>
+        </div>
+      )}
 
       {/* Cookie Preferences Dialog */}
       <Dialog open={showPreferences} onOpenChange={setShowPreferences}>

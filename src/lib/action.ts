@@ -3,7 +3,7 @@
 import { auth } from '@/auth'
 import { prisma } from '@/lib/prisma'
 
-export async function recordUserAction(cardId: string, action: 'copy' | 'download' | 'send'): Promise<void> {
+export async function recordUserAction(cardId: string, action: 'copy' | 'download' | 'send' | 'up'): Promise<void> {
   try {
     const session = await auth()
     const userId = session?.user?.id

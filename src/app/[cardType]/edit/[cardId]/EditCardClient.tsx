@@ -285,7 +285,7 @@ export default function EditCardClient({ params }: { params: { cardId: string, c
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#FFF9F0] via-[#FFF5F7] to-[#FFF0F5] px-4 py-6 sm:py-8">
+    <div className="min-h-screen bg-gradient-to-br from-[#FFF9F0] via-[#FFF5F7] to-[#FFF0F5] py-6 sm:py-8">
       <div className="container mx-auto max-w-5xl">
         {/* Header Section */}
         <header className="text-center mb-8 sm:mb-12">
@@ -378,6 +378,44 @@ export default function EditCardClient({ params }: { params: { cardId: string, c
                 />
               )}
             </div>
+
+            {/* Action Buttons (Mobile only) */}
+            <div className="flex flex-col gap-3 mt-8 lg:hidden">
+              <Button
+                onClick={handleCopy}
+                className="flex-1 bg-gradient-to-r from-pink-400 to-pink-500 text-white hover:opacity-90 shadow-md hover:shadow-lg transition-all duration-300"
+              >
+                <CopyIcon className="mr-2 h-4 w-4" />
+                Copy
+              </Button>
+              <IsMobileWrapper>
+                {(isMobile) => (
+                  <Button
+                    onClick={() => handleDownload(isMobile)}
+                    className="flex-1 bg-gradient-to-r from-pink-500 to-pink-600 text-white hover:opacity-90 shadow-md hover:shadow-lg transition-all duration-300"
+                  >
+                    <DownloadIcon className="mr-2 h-4 w-4" />
+                    {isMobile ? "Save" : "Download"}
+                  </Button>
+                )}
+              </IsMobileWrapper>
+              <Button
+                onClick={handleSend}
+                disabled={isSending}
+                className={cn(
+                  "flex-1 text-white shadow-md hover:shadow-lg transition-all duration-300",
+                  isSending 
+                    ? "bg-pink-800 cursor-wait" 
+                    : "bg-gradient-to-r from-pink-600 to-pink-700 hover:opacity-90"
+                )}
+              >
+                <PaperPlaneIcon className={cn(
+                  "mr-2 h-4 w-4",
+                  isSending && "animate-spin"
+                )} />
+                {isSending ? "Sending..." : "Send"}
+              </Button>
+            </div>
           </div>
 
           {/* Edit Section */}
@@ -446,12 +484,10 @@ export default function EditCardClient({ params }: { params: { cardId: string, c
               </div>
             </div>
 
-
-
-            {/* Action Buttons */}
-            <div className="flex flex-col sm:flex-row gap-3 mt-8">
-              <Button 
-                onClick={handleCopy} 
+            {/* Action Buttons (Desktop/Large only) */}
+            <div className="flex-col gap-3 mt-8 hidden lg:flex sm:flex-row">
+              <Button
+                onClick={handleCopy}
                 className="flex-1 bg-gradient-to-r from-pink-400 to-pink-500 text-white hover:opacity-90 shadow-md hover:shadow-lg transition-all duration-300"
               >
                 <CopyIcon className="mr-2 h-4 w-4" />
@@ -459,7 +495,7 @@ export default function EditCardClient({ params }: { params: { cardId: string, c
               </Button>
               <IsMobileWrapper>
                 {(isMobile) => (
-                  <Button 
+                  <Button
                     onClick={() => handleDownload(isMobile)}
                     className="flex-1 bg-gradient-to-r from-pink-500 to-pink-600 text-white hover:opacity-90 shadow-md hover:shadow-lg transition-all duration-300"
                   >
@@ -468,7 +504,7 @@ export default function EditCardClient({ params }: { params: { cardId: string, c
                   </Button>
                 )}
               </IsMobileWrapper>
-              <Button 
+              <Button
                 onClick={handleSend}
                 disabled={isSending}
                 className={cn(

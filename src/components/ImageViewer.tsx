@@ -3,12 +3,12 @@
 import React, { useState, useEffect } from 'react'
 import { Dialog, DialogContent, DialogTrigger, DialogTitle, DialogHeader } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
-import { DownloadIcon, CopyIcon, Pencil1Icon, PaperPlaneIcon, TwitterLogoIcon, EnvelopeClosedIcon, EyeOpenIcon } from '@radix-ui/react-icons'
-import { useToast } from "@/hooks/use-toast"
+import { DownloadIcon, CopyIcon, Pencil1Icon, PaperPlaneIcon, TwitterLogoIcon, EnvelopeClosedIcon, EyeOpenIcon, HeartFilledIcon, ArrowUpIcon } from '@radix-ui/react-icons'
 import { isMobile } from 'react-device-detect'
 import { recordUserAction } from '@/lib/action'
 import { useRouter } from 'next/navigation'
 import CardDisplay from './CardDisplay'
+import { ThumbsUpIcon } from 'lucide-react'
 
 interface ImageViewerProps {
   alt: string
@@ -21,13 +21,40 @@ interface ImageViewerProps {
 
 export function ImageViewer({ alt, cardId, cardType, imgUrl, isNewCard, svgContent }: ImageViewerProps) {
   const [open, setOpen] = useState(false)
-  const { toast } = useToast()
   const router = useRouter()
   const [showPreview, setShowPreview] = useState(false)
+  const [isLiked, setIsLiked] = useState(false)
+  const [animateLike, setAnimateLike] = useState(false)
+
+  useEffect(() => {
+    const likedCards = JSON.parse(localStorage.getItem('likedCards') || '{}');
+    if (likedCards[cardId]) {
+      setIsLiked(true);
+    }
+  }, [cardId]);
 
   const handleEdit = () => {
     router.push(`/${cardType}/edit/${cardId}/`)
   }
+
+  const handleLike = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const likedCards = JSON.parse(localStorage.getItem('likedCards') || '{}');
+    const newLikedStatus = !isLiked;
+
+    setIsLiked(newLikedStatus);
+    setAnimateLike(true);
+    setTimeout(() => setAnimateLike(false), 300);
+
+    if (newLikedStatus) {
+      recordUserAction(cardId, 'up');
+      likedCards[cardId] = true;
+    } else {
+      delete likedCards[cardId];
+    }
+
+    localStorage.setItem('likedCards', JSON.stringify(likedCards));
+  };
 
 
   function CardImage({ src, alt, isLarge = false }: { src?: string, alt: string, isLarge?: boolean }) {
@@ -51,6 +78,17 @@ export function ImageViewer({ alt, cardId, cardType, imgUrl, isNewCard, svgConte
           <div className="relative w-full flex items-center justify-center cursor-pointer group overflow-hidden">
             <CardImage src={imgUrl} alt={alt} />
             <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all duration-300"></div>
+            <div
+              className={
+                `absolute bottom-4 right-4 p-2 rounded-full cursor-pointer transition-all duration-300
+                ${isLiked ? 'bg-red-100' : 'bg-gray-200'}
+                ${animateLike ? 'scale-125' : 'scale-100'}
+                `
+              }
+              onClick={handleLike}
+            >
+              <ThumbsUpIcon className={`h-5 w-5 ${isLiked ? 'text-red-500' : 'text-gray-400'}`} />
+            </div>
           </div>
         </DialogTrigger>
         <DialogContent className="sm:max-w-[90vw] md:max-w-[80vw] lg:max-w-[70vw] xl:max-w-[60vw] p-0">
