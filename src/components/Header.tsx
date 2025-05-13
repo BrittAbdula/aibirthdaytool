@@ -146,7 +146,7 @@ function Header() {
         setTypingTimeout(timeout)
       }
     } else {
-      setFilteredGenerators(GENERATORS.slice(0, 8)) // 只显示前8个作为推荐
+      setFilteredGenerators(GENERATORS) // Show all generators as recommendations
       setHasExactMatch(false)
     }
 

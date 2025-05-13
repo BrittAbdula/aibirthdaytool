@@ -100,10 +100,10 @@ export default async function Home() {
 
           <div className="mb-16 items-center flex justify-center space-x-4">
             <button className="bg-[#FFC0CB] text-white px-8 py-3 rounded-full hover:bg-pink-400 transition">
-              <a href="/cards/">Create Custom AI Card</a>
+              <a href="/cards/">Create AI Card</a>
             </button>
             <button className="bg-purple-400 text-white px-8 py-3 rounded-full hover:bg-purple-500 transition">
-            <a href="/card-gallery">Browse Card Gallery</a>
+            <a href="/card-gallery">Card Gallery</a>
              </button>
           </div>
 
