@@ -100,7 +100,11 @@ interface CardContentParams {
     [key: string]: any;
 }
 
-function getRandomModel(): string {
+function getRandomModel(userPlan: string): string {
+    if (userPlan === 'Premium') {
+        return 'anthropic/claude-3.7-sonnet';
+    }
+    
     const models = [
         { name: "anthropic/claude-3.5-haiku", weight: 5 },
         { name: "anthropic/claude-3.7-sonnet", weight: 1 },
@@ -121,12 +125,12 @@ function getRandomModel(): string {
     return models[0].name; // Fallback, should not reach here
 }
 
-export async function generateCardContent(params: CardContentParams): Promise<{ r2Url: string, cardId: string, svgContent: string }> {
+export async function generateCardContent(params: CardContentParams, userPlan: string): Promise<{ r2Url: string, cardId: string, svgContent: string }> {
     const { userId, cardType, version, format, modelTier, variationIndex, size, modificationFeedback, previousCardId, ...otherParams } = params;
     const cardId = nanoid(10);
     const startTime = Date.now();
 
-    const model = getRandomModel();
+    const model = getRandomModel(userPlan);
     console.log('<----Using model : ' + model + '---->')
     console.log('<----Using model tier : ' + modelTier + '---->')
     const formattedTime = new Date(startTime).toLocaleString(undefined, {

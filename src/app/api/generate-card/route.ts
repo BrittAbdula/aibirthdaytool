@@ -108,7 +108,7 @@ export async function POST(request: Request) {
       result = await generateCardImage(cardData);
     } else {
       // Use SVG generator (default)
-      result = await generateCardContent(cardData);
+      result = await generateCardContent(cardData, userPlan);
     }
 
     // 增加使用计数 - 异步处理以避免阻塞响应
