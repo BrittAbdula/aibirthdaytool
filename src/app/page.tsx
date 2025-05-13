@@ -156,12 +156,12 @@ export default async function Home() {
 
             <HowToUse />
 
-            <div className="mb-8 items-center flex justify-center space-x-4">
+            <div className="items-center flex justify-center space-x-4">
               <button className="bg-[#FFC0CB] text-white px-8 py-3 rounded-full hover:bg-pink-400 transition">
-                <a href="/cards">Create Custom AI Card</a>
+                <a href="/cards">Create AI Card</a>
               </button>
               <button className="bg-purple-400 text-white px-8 py-3 rounded-full hover:bg-purple-500 transition">
-                <a href="/card-gallery">Browse Card Gallery</a>
+                <a href="/card-gallery">Card Gallery</a>
               </button>
             </div>
             <FAQ />
@@ -248,7 +248,7 @@ const FeatureCard: React.FC<FeatureCardProps> = ({ title, description, icon, ben
 
 // How To Use Section
 const HowToUse: React.FC = () => (
-  <section className="py-16 bg-gradient-to-r from-purple-50 to-pink-50">
+  <section className="pt-16 bg-gradient-to-r from-purple-50 to-pink-50">
     <div className="max-w-6xl mx-auto px-4">
       <h2 className="text-3xl font-serif font-semibold mb-4 text-center text-[#4A4A4A]">
         Create Digital Cards With Our Virtual Card Designer
