@@ -105,7 +105,7 @@ export async function POST(request: Request) {
     let result;
     if (format === 'image') {
       // Use image generator
-      result = await generateCardImage(cardData);
+      result = await generateCardImage(cardData, planType);
     } else {
       // Use SVG generator (default)
       result = await generateCardContent(cardData, planType);

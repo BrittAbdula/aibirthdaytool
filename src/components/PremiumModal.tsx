@@ -72,11 +72,11 @@ export function PremiumModal({ isOpen, onOpenChange }: PremiumPlanProps) {
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-white sm:max-w-[900px] p-0 overflow-hidden rounded-xl border-0 md:border md:border-gray-200">
-        <div className="flex flex-col md:flex-row relative overflow-hidden">
+      <DialogContent className="bg-white sm:max-w-[900px] p-0 overflow-auto max-h-[90vh] rounded-xl border-0 md:border md:border-gray-200">
+        <div className="flex flex-col md:flex-row relative">
           {/* Left side - Plan comparison (PC) / Bottom (Mobile) */}
-          <div className="w-full md:w-3/5 bg-white p-6 overflow-auto max-h-[80vh] md:max-h-none order-2 md:order-1 border-t border-gray-100 md:border-t-0">
-            <DialogHeader className="mb-4 hidden md:block">
+          <div className="w-full md:w-3/5 bg-white p-6 md:overflow-auto md:max-h-[80vh] order-2 md:order-1 border-t border-gray-100 md:border-t-0">
+            <DialogHeader className="mb-4 md:block">
               <DialogTitle className="text-2xl font-bold text-gray-800">
                 Free vs Premium
               </DialogTitle>

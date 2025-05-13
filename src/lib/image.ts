@@ -60,7 +60,7 @@ interface CardContentParams {
 }
 
 
-export async function generateCardImage(params: CardContentParams): Promise<{ r2Url: string, cardId: string, svgContent: string }> {
+export async function generateCardImage(params: CardContentParams, userPlan: string): Promise<{ r2Url: string, cardId: string, svgContent: string }> {
     const { userId, cardType, version, templateId, size, style, modificationFeedback, previousCardId, ...otherParams } = params;
     const cardId = nanoid(10);
     const startTime = Date.now();
