@@ -146,6 +146,7 @@ model User {
   cardGenerators CardGenerator[]
   plan          PlanType       @default(FREE)
   bonusCredits  BonusCredit[]
+  stripeLogs    StripeLog[]
 }
 
 model ApiUsage {
@@ -227,6 +228,30 @@ model MissingGenerator {
   notes       String?
 
   @@index([count])
+  @@index([createdAt])
+}
+
+model StripeLog {
+  id              String        @id @default(cuid())
+  userId          String?       
+  user            User?         @relation(fields: [userId], references: [id])
+  eventId         String        @unique // Stripe event ID
+  eventType       String        // Type of the Stripe event (e.g., checkout.session.completed)
+  objectId        String        // ID of the relevant Stripe object (e.g., subscription ID, invoice ID)
+  objectType      String        // Type of the Stripe object (e.g., subscription, invoice)
+  amount          Int?          // Amount in cents
+  currency        String?       // Currency code
+  status          String?       // Status of the payment/subscription
+  paymentMethod   String?       // Payment method used
+  description     String?       // Description of the transaction
+  metadata        Json?         // Additional metadata
+  rawData         Json          // Complete JSON response for detailed auditing
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([userId])
+  @@index([eventType])
+  @@index([objectId])
   @@index([createdAt])
 }
 

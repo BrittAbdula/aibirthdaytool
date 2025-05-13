@@ -78,6 +78,9 @@ function Header() {
   const [showComingSoon, setShowComingSoon] = useState(false)
   const searchRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
+  
+  // 检查用户是否为Premium会员
+  const isPremiumUser = session?.user?.plan === "PREMIUM"
 
   useEffect(() => {
     const handleResize = () => {
@@ -383,21 +386,34 @@ function Header() {
               )}
             </div>
 
-            {/* Premium Button - Always visible */}
-            <PremiumButton />
+            {/* Premium Button - Only show for non-premium users */}
+            {!isPremiumUser && <PremiumButton />}
 
             {status === 'authenticated' && session ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button className="flex items-center space-x-2 hover:opacity-80">
                     {session.user?.image && (
-                      <Image
-                        src={session.user.image}
-                        alt={session.user.name || ''}
-                        width={32}
-                        height={32}
-                        className="rounded-full"
-                      />
+                      <div className={cn(
+                        "relative",
+                        isPremiumUser && "ring-2 ring-purple-500 ring-offset-2 rounded-full"
+                      )}>
+                        <Image
+                          src={session.user.image}
+                          alt={session.user.name || ''}
+                          width={32}
+                          height={32}
+                          className={cn(
+                            "rounded-full",
+                            isPremiumUser && "border-2 border-white"
+                          )}
+                        />
+                        {isPremiumUser && (
+                          <div className="absolute -top-1 -right-1 bg-purple-500 text-white rounded-full w-4 h-4 flex items-center justify-center">
+                            <Crown className="h-3 w-3" />
+                          </div>
+                        )}
+                      </div>
                     )}
                     <ChevronDown className="h-4 w-4 text-gray-500" />
                   </button>
@@ -406,6 +422,12 @@ function Header() {
                   <DropdownMenuItem>
                     <div className="text-center text-sm font-medium text-gray-700">
                       {session.user?.name}
+                      {isPremiumUser && (
+                        <div className="flex items-center justify-center mt-1 text-xs text-purple-600">
+                          <Crown className="h-3 w-3 mr-1" />
+                          <span>Premium user</span>
+                        </div>
+                      )}
                     </div>
                   </DropdownMenuItem>
                   <DropdownMenuItem
@@ -583,16 +605,35 @@ function Header() {
               <div className="p-4 border-t">
                 <div className="flex items-center justify-end space-x-2 mb-2">
                   {session.user?.image && (
-                    <Image
-                      src={session.user.image}
-                      alt={session.user.name || ''}
-                      width={24}
-                      height={24}
-                      className="rounded-full"
-                    />
+                    <div className={cn(
+                      "relative",
+                      isPremiumUser && "ring-2 ring-purple-500 ring-offset-1 rounded-full"
+                    )}>
+                      <Image
+                        src={session.user.image}
+                        alt={session.user.name || ''}
+                        width={24}
+                        height={24}
+                        className={cn(
+                          "rounded-full",
+                          isPremiumUser && "border border-white"
+                        )}
+                      />
+                      {isPremiumUser && (
+                        <div className="absolute -top-1 -right-1 bg-purple-500 text-white rounded-full w-3 h-3 flex items-center justify-center">
+                          <Crown className="h-2 w-2" />
+                        </div>
+                      )}
+                    </div>
                   )}
                   <div className="text-center text-sm font-medium text-gray-700">
                     {session.user?.name}
+                    {isPremiumUser && (
+                      <div className="flex items-center justify-end mt-1 text-xs text-purple-600">
+                        <Crown className="h-2 w-2 mr-1" />
+                        <span>Premium</span>
+                      </div>
+                    )}
                   </div>
                 </div>
                 <Button
@@ -629,16 +670,18 @@ function Header() {
                       'Sign In'
                     )}
                   </Button>
-
-                  {/* Premium Button - Mobile */}
-                  <Button
-                    onClick={() => setIsMenuOpen(false)}
-                    variant="outline"
-                    className="w-full flex items-center justify-center gap-1 text-white bg-purple-600 hover:bg-purple-700 border-purple-600"
-                  >
-                    <Crown className="h-4 w-4" />
-                    <span>Premium</span>
-                  </Button>
+                  
+                  {/* Premium Button - Mobile (only if not premium) */}
+                  {!isPremiumUser && (
+                    <Button
+                      onClick={() => setIsMenuOpen(false)}
+                      variant="outline"
+                      className="w-full flex items-center justify-center gap-1 text-white bg-purple-600 hover:bg-purple-700 border-purple-600"
+                    >
+                      <Crown className="h-4 w-4" />
+                      <span>Premium</span>
+                    </Button>
+                  )}
                 </div>
               </div>
             )}

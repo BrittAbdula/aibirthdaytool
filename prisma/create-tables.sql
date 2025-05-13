@@ -72,6 +72,37 @@ CREATE TABLE "SpotifyMusic" (
 CREATE UNIQUE INDEX IF NOT EXISTS "SpotifyMusic_cardType_spotifyId_key" ON "SpotifyMusic"("cardType", "spotifyId");
 CREATE INDEX IF NOT EXISTS "SpotifyMusic_cardType_selectCount_idx" ON "SpotifyMusic"("cardType", "selectCount");
 
+-- Create StripeLog table
+CREATE TABLE "StripeLog" (
+  "id" TEXT NOT NULL,
+  "userId" TEXT,
+  "eventId" TEXT NOT NULL,
+  "eventType" TEXT NOT NULL,
+  "objectId" TEXT NOT NULL,
+  "objectType" TEXT NOT NULL,
+  "amount" INTEGER,
+  "currency" TEXT,
+  "status" TEXT,
+  "paymentMethod" TEXT,
+  "description" TEXT,
+  "metadata" JSONB,
+  "rawData" JSONB NOT NULL,
+  "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "updatedAt" TIMESTAMP(3) NOT NULL,
+
+  CONSTRAINT "StripeLog_pkey" PRIMARY KEY ("id"),
+  CONSTRAINT "StripeLog_eventId_key" UNIQUE ("eventId")
+);
+
+-- Create foreign key relationship
+ALTER TABLE "StripeLog" ADD CONSTRAINT "StripeLog_userId_fkey" 
+  FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- Create indexes for better query performance
+CREATE INDEX "StripeLog_userId_idx" ON "StripeLog"("userId");
+CREATE INDEX "StripeLog_eventType_idx" ON "StripeLog"("eventType");
+CREATE INDEX "StripeLog_objectId_idx" ON "StripeLog"("objectId");
+CREATE INDEX "StripeLog_createdAt_idx" ON "StripeLog"("createdAt");
 
 -- 创建 PlanType 枚举类型
 CREATE TYPE "PlanType" AS ENUM ('FREE', 'BASIC', 'PREMIUM');

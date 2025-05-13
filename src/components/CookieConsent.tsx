@@ -9,6 +9,12 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { toast } from '@/hooks/use-toast'
 import { useCookieConsent, CookieConsent as ConsentType } from '@/hooks/use-cookie-consent'
 
+declare global {
+  interface Window {
+    gtag: (...args: any[]) => void;
+  }
+}
+
 // Cookie consent types
 type CookieConsent = {
   essential: boolean;
@@ -59,32 +65,67 @@ export function CookieConsent() {
   }, [consent])
 
   const handleAcceptAll = () => {
-    updateConsent({
+    const updatedConsent = updateConsent({
       essential: true,
       performance: true,
       functional: true,
       targeting: true
     })
+    // Call gtag consent update
+    if (window.gtag) {
+      window.gtag('consent', 'update', {
+        'ad_storage': updatedConsent.targeting ? 'granted' : 'denied',
+        'analytics_storage': updatedConsent.performance ? 'granted' : 'denied',
+        'functionality_storage': updatedConsent.functional ? 'granted' : 'denied',
+        'personalization_storage': updatedConsent.functional ? 'granted' : 'denied', // Assuming functional implies personalization
+      });
+    }
     setIsOpen(false)
     toast({ description: "All cookies accepted" })
   }
 
   const handleAcceptEssential = () => {
-    updateConsent({
+    const updatedConsent = updateConsent({
       essential: true,
       performance: false,
       functional: false,
       targeting: false
     })
+    // Call gtag consent update
+    if (window.gtag) {
+      window.gtag('consent', 'update', {
+        'ad_storage': updatedConsent.targeting ? 'granted' : 'denied',
+        'analytics_storage': updatedConsent.performance ? 'granted' : 'denied',
+        'functionality_storage': updatedConsent.functional ? 'granted' : 'denied',
+        'personalization_storage': updatedConsent.functional ? 'granted' : 'denied', // Assuming functional implies personalization
+      });
+    }
     setIsOpen(false)
     toast({ description: "Only essential cookies accepted" })
   }
 
+  // Open preferences dialog
+  const openPreferences = () => {
+    setTempConsent(consent); // Sync temp consent with current global consent
+    setShowPreferences(true);
+    setIsOpen(false); // Close initial dialog if open
+  };
+
+  // Save preferences from preferences dialog
   const handleSavePreferences = () => {
-    updateConsent(tempConsent)
-    setShowPreferences(false)
-    toast({ description: "Cookie preferences saved" })
-  }
+    const updatedConsent = updateConsent(tempConsent);
+    // Call gtag consent update after saving preferences
+    if (window.gtag) {
+      window.gtag('consent', 'update', {
+        'ad_storage': updatedConsent.targeting ? 'granted' : 'denied',
+        'analytics_storage': updatedConsent.performance ? 'granted' : 'denied',
+        'functionality_storage': updatedConsent.functional ? 'granted' : 'denied',
+        'personalization_storage': updatedConsent.functional ? 'granted' : 'denied', // Assuming functional implies personalization
+      });
+    }
+    setShowPreferences(false);
+    toast({ description: "Cookie preferences saved" });
+  };
 
   return (
     <>
@@ -111,7 +152,7 @@ export function CookieConsent() {
           <DialogFooter className="flex flex-col sm:flex-row gap-2">
             <Button 
               variant="outline" 
-              onClick={() => setShowPreferences(true)}
+              onClick={openPreferences}
               className="sm:order-first"
             >
               Preferences
@@ -133,6 +174,18 @@ export function CookieConsent() {
         </DialogContent>
       </Dialog>
 
+      {/* Cookie Settings Button - always visible */}
+      <div className="fixed bottom-4 left-4 z-50">
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={openPreferences}
+          className="text-xs bg-white/80 backdrop-blur-sm shadow-md hover:bg-white"
+        >
+          Cookie Settings
+        </Button>
+      </div>
+
       {/* Cookie Preferences Dialog */}
       <Dialog open={showPreferences} onOpenChange={setShowPreferences}>
         <DialogContent className="sm:max-w-[550px]">
@@ -146,13 +199,13 @@ export function CookieConsent() {
           <div className="space-y-4 py-2">
             <div className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
               <Checkbox 
-                id="essential" 
+                id="essential-settings" 
                 checked={tempConsent.essential} 
                 disabled 
               />
               <div className="space-y-1 leading-none">
                 <Label
-                  htmlFor="essential"
+                  htmlFor="essential-settings"
                   className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                 >
                   Essential Cookies
@@ -165,7 +218,7 @@ export function CookieConsent() {
             
             <div className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
               <Checkbox 
-                id="performance" 
+                id="performance-settings" 
                 checked={tempConsent.performance}
                 onCheckedChange={(checked) => 
                   setTempConsent({...tempConsent, performance: checked === true})
@@ -173,7 +226,7 @@ export function CookieConsent() {
               />
               <div className="space-y-1 leading-none">
                 <Label
-                  htmlFor="performance"
+                  htmlFor="performance-settings"
                   className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                 >
                   Performance Cookies
@@ -186,7 +239,7 @@ export function CookieConsent() {
             
             <div className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
               <Checkbox 
-                id="functional" 
+                id="functional-settings" 
                 checked={tempConsent.functional}
                 onCheckedChange={(checked) => 
                   setTempConsent({...tempConsent, functional: checked === true})
@@ -194,7 +247,7 @@ export function CookieConsent() {
               />
               <div className="space-y-1 leading-none">
                 <Label
-                  htmlFor="functional"
+                  htmlFor="functional-settings"
                   className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                 >
                   Functional Cookies
@@ -207,7 +260,7 @@ export function CookieConsent() {
             
             <div className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
               <Checkbox 
-                id="targeting" 
+                id="targeting-settings" 
                 checked={tempConsent.targeting}
                 onCheckedChange={(checked) => 
                   setTempConsent({...tempConsent, targeting: checked === true})
@@ -215,7 +268,7 @@ export function CookieConsent() {
               />
               <div className="space-y-1 leading-none">
                 <Label
-                  htmlFor="targeting"
+                  htmlFor="targeting-settings"
                   className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                 >
                   Targeting Cookies

@@ -49,9 +49,9 @@ export async function GET(request: Request) {
         SELECT
           to_char(d.dt, 'YYYY-MM-DD') as dt,
           COALESCE(al."promptVersion", 'unknown') as "promptVersion",
-          COUNT(al.id)::integer as error_count
+          COUNT(al.id)::integer as count
         FROM date_range d
-        LEFT JOIN "ApiLog" al ON to_char(al.timestamp, 'YYYY-MM-DD') = to_char(d.dt, 'YYYY-MM-DD') AND al."isError" = true
+        LEFT JOIN "ApiLog" al ON to_char(al.timestamp, 'YYYY-MM-DD') = to_char(d.dt, 'YYYY-MM-DD')
         GROUP BY d.dt, al."promptVersion"
         ORDER BY d.dt ASC, al."promptVersion" ASC
       `,
@@ -101,16 +101,16 @@ export async function GET(request: Request) {
     ]);
 
     // Now destructure with more confidence
-    const [userActionStatsRaw, apiErrorStatsByVersionRaw, apiCallStatsByTypeRaw, userCallVolumeStatsRaw] = results;
+    const [userActionStatsRaw, apiStatsByVersionRaw, apiCallStatsByTypeRaw, userCallVolumeStatsRaw] = results;
 
     // 确保返回的是数组，使用更精确的错误消息
     if (!Array.isArray(userActionStatsRaw)) {
       console.error("userActionStatsRaw is not an array:", userActionStatsRaw);
       throw new Error('userActionStats query did not return an array');
     }
-    if (!Array.isArray(apiErrorStatsByVersionRaw)) {
-      console.error("apiErrorStatsByVersionRaw is not an array:", apiErrorStatsByVersionRaw);
-      throw new Error('apiErrorStatsByVersion query did not return an array');
+    if (!Array.isArray(apiStatsByVersionRaw)) {
+      console.error("apiStatsByVersionRaw is not an array:", apiStatsByVersionRaw);
+      throw new Error('apiStatsByVersion query did not return an array');
     }
     if (!Array.isArray(apiCallStatsByTypeRaw)) {
       console.error("apiCallStatsByTypeRaw is not an array:", apiCallStatsByTypeRaw);
@@ -128,10 +128,10 @@ export async function GET(request: Request) {
         count: Number(stat.count) || 0,
     }));
 
-    const processedApiErrorStatsByVersion = apiErrorStatsByVersionRaw.map(stat => ({
+    const processedApiStatsByVersion = apiStatsByVersionRaw.map(stat => ({
         dt: String(stat.dt),
         promptVersion: stat.promptVersion === null ? null : String(stat.promptVersion),
-        error_count: Number(stat.error_count) || 0,
+        count: Number(stat.count) || 0,
     }));
 
     const processedApiCallStatsByType = apiCallStatsByTypeRaw.map(stat => ({
@@ -159,7 +159,7 @@ export async function GET(request: Request) {
     // Ensure we have data in all arrays (even if the arrays are empty, they should exist)
     const responseData = {
       userActionStats: processedUserActionStats,
-      apiErrorStatsByVersion: processedApiErrorStatsByVersion,
+      apiStatsByVersion: processedApiStatsByVersion,
       apiCallStatsByType: processedApiCallStatsByType,
       userCallVolumeStats: processedUserCallVolumeStats
     };

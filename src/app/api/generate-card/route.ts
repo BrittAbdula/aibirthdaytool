@@ -19,6 +19,7 @@ export async function POST(request: Request) {
     }
 
     const userId = session.user.id;
+    
     // const userId = 'cm56ic66y000110jijyw2ir8r';
     const requestData = await request.json();
     const {

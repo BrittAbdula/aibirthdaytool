@@ -12,7 +12,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import CardTypeBubbles from "@/components/CardTypeBubbles";
-import { CookieConsentWrapper } from "@/components/CookieConsentWrapper";
+import { CookieConsent } from "@/components/CookieConsent";
 import Link from "next/link";
 import { getAllCardTypes, CardBadge } from "@/lib/card-config";
 
@@ -170,7 +170,7 @@ export default async function Home() {
       </div>
 
       {/* Cookie Consent Component */}
-      <CookieConsentWrapper />
+      <CookieConsent />
     </main>
   );
 }

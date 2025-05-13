@@ -2,6 +2,7 @@
 
 import Script from 'next/script'
 import { usePathname } from 'next/navigation'
+import { useSession } from 'next-auth/react'
 
 // 不允许显示广告的页面路径
 const DISALLOW_PATHS = [
@@ -22,9 +23,10 @@ function isPathDisallowed(pathname: string, disallowPaths: string[]): boolean {
 
 export default function GoogleAdsense() {
   const pathname = usePathname()
+  const { status } = useSession()
   
   // Check if the current page is allowed to show ads
-  const disallowShowAds = isPathDisallowed(pathname, DISALLOW_PATHS)
+  const disallowShowAds = isPathDisallowed(pathname, DISALLOW_PATHS) || status === 'authenticated'
   
   if (disallowShowAds) {
     return null

@@ -1,11 +1,12 @@
 import { NextResponse } from "next/server"
 import { auth } from "@/auth"
-import { prisma } from "@/lib/prisma"
 import Stripe from "stripe"
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", {
-  apiVersion: "2025-04-30.basil",
+  // @ts-ignore - Using recommended stable version instead of the hardcoded preview version
+  apiVersion: "2023-10-16", 
 })
+
 
 export async function POST(request: Request) {
   try {
@@ -16,7 +17,10 @@ export async function POST(request: Request) {
     }
 
     const userId = session.user.id
-    const { plan } = await request.json()
+    const customer_email = session.user.email
+    // const userId = "cm56ic66y000110jijyw2ir8r"
+    // const customer_email = "auroroa@gmail.com"
+    const { plan, returnUrl } = await request.json()
     
     if (!plan || (plan !== "monthly" && plan !== "yearly")) {
       return NextResponse.json(
@@ -42,7 +46,7 @@ export async function POST(request: Request) {
 
     // Create Stripe checkout session
     const checkoutSession = await stripe.checkout.sessions.create({
-      customer_email: session.user.email || undefined,
+      customer_email: customer_email || undefined,
       client_reference_id: userId,
       payment_method_types: ["card"],
       line_items: [
@@ -58,7 +62,7 @@ export async function POST(request: Request) {
           userId,
         },
       },
-      success_url: `${origin}/account?status=success&session_id={CHECKOUT_SESSION_ID}`,
+      success_url: `${origin}${returnUrl || '/'}?status=success&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}?status=cancelled`,
       metadata: {
         userId,

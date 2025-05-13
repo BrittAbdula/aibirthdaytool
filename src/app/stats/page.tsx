@@ -22,10 +22,10 @@ interface UserActionStat {
   count: number;
 }
 
-interface ApiErrorStatByVersion {
+interface ApiStatByVersion {
   dt: string;
   promptVersion: string | null;
-  error_count: number;
+  count: number;
 }
 
 interface ApiCallStatByType {
@@ -48,7 +48,7 @@ export default function StatsPage() {
   const router = useRouter();
 
   const [userActionStats, setUserActionStats] = useState<UserActionStat[]>([]);
-  const [apiErrorStatsByVersion, setApiErrorStatsByVersion] = useState<ApiErrorStatByVersion[]>([]);
+  const [apiStatsByVersion, setApiStatsByVersion] = useState<ApiStatByVersion[]>([]);
   const [apiCallStatsByType, setApiCallStatsByType] = useState<ApiCallStatByType[]>([]);
   const [userCallVolumeStats, setUserCallVolumeStats] = useState<UserCallVolumeStat[]>([]);
 
@@ -63,6 +63,8 @@ export default function StatsPage() {
   const [processedApiErrorChartData, setProcessedApiErrorChartData] = useState<any[]>([]);
   const [processedApiCallChartData, setProcessedApiCallChartData] = useState<any[]>([]);
   const [processedUserCallVolumeStats, setProcessedUserCallVolumeStats] = useState<UserCallVolumeStat[]>([]); 
+  const [topPromptVersions, setTopPromptVersions] = useState<string[]>([]);
+  const [topCardTypes, setTopCardTypes] = useState<string[]>([]);
 
   const fetchStats = async () => {
     if (!date?.from || !date?.to) return;
@@ -81,19 +83,15 @@ export default function StatsPage() {
       }
       
       const data = await response.json();
-      console.log("API Response Data:", data);
 
-      // 验证接收到的数据结构
       if (!data || typeof data !== 'object') {
         throw new Error('Invalid response format: expected an object');
       }
 
-      // 设置状态变量，确保处理空数组的情况
       setUserActionStats(Array.isArray(data.userActionStats) ? data.userActionStats : []);
-      setApiErrorStatsByVersion(Array.isArray(data.apiErrorStatsByVersion) ? data.apiErrorStatsByVersion : []);
+      setApiStatsByVersion(Array.isArray(data.apiStatsByVersion) ? data.apiStatsByVersion : []);
       setApiCallStatsByType(Array.isArray(data.apiCallStatsByType) ? data.apiCallStatsByType : []);
       
-      // 排序用户调用量统计
       const sortedStats = Array.isArray(data.userCallVolumeStats) 
         ? [...data.userCallVolumeStats].sort((a, b) => new Date(a.dt).getTime() - new Date(b.dt).getTime())
         : [];
@@ -102,9 +100,8 @@ export default function StatsPage() {
     } catch (error) {
       console.error('Error fetching stats:', error);
       setError(error instanceof Error ? error.message : 'Failed to fetch stats');
-      // 重置所有状态为空数组
       setUserActionStats([]);
-      setApiErrorStatsByVersion([]);
+      setApiStatsByVersion([]);
       setApiCallStatsByType([]);
       setUserCallVolumeStats([]);
     } finally {
@@ -118,7 +115,6 @@ export default function StatsPage() {
 
   // 处理数据用于图表展示
   useEffect(() => {
-    // 处理用户行为统计数据
     try {
       // 用户行为按日期分组
       const userActionGroupedByDate: Record<string, { dt: string; [key: string]: any }> = {};
@@ -137,41 +133,83 @@ export default function StatsPage() {
       );
       setProcessedUserActionChartData(processedData);
 
-      // API错误统计按版本分组
+      // API错误统计按版本分组，每个日期保留前5个
       const apiErrorGroupedByDate: Record<string, { dt: string; [key: string]: any }> = {};
-      const promptVersions = new Set<string>();
+      const versionCountsByDate: Record<string, { version: string; count: number }[]> = {};
+      const allTopVersions = new Set<string>();
 
-      apiErrorStatsByVersion.forEach(stat => {
+      // 第一步：按日期分组并记录计数
+      apiStatsByVersion.forEach(stat => {
         const version = stat.promptVersion || 'unknown';
-        if (!apiErrorGroupedByDate[stat.dt]) {
-          apiErrorGroupedByDate[stat.dt] = { dt: stat.dt };
+        const date = stat.dt;
+        
+        if (!versionCountsByDate[date]) {
+          versionCountsByDate[date] = [];
         }
-        apiErrorGroupedByDate[stat.dt][version] = stat.error_count;
-        promptVersions.add(version);
+        
+        versionCountsByDate[date].push({ 
+          version, 
+          count: stat.count 
+        });
       });
-
+      
+      // 第二步：对每个日期的版本按计数排序，并只保留前5个
+      Object.keys(versionCountsByDate).forEach(date => {
+        versionCountsByDate[date].sort((a, b) => b.count - a.count);
+        
+        const topFive = versionCountsByDate[date].slice(0, 5);
+        apiErrorGroupedByDate[date] = { dt: date };
+        
+        topFive.forEach(item => {
+          apiErrorGroupedByDate[date][item.version] = item.count;
+          allTopVersions.add(item.version);
+        });
+      });
+      
       const processedErrorData = Object.values(apiErrorGroupedByDate).sort((a, b) => 
         new Date(a.dt).getTime() - new Date(b.dt).getTime()
       );
       setProcessedApiErrorChartData(processedErrorData);
+      setTopPromptVersions(Array.from(allTopVersions));
 
-      // API调用按卡片类型分组
+      // API调用按卡片类型分组，每个日期保留前5个
       const apiCallGroupedByDate: Record<string, { dt: string; [key: string]: any }> = {};
-      const cardTypes = new Set<string>();
+      const typeCountsByDate: Record<string, { type: string; count: number }[]> = {};
+      const allTopCardTypes = new Set<string>();
 
+      // 第一步：按日期分组并记录计数
       apiCallStatsByType.forEach(stat => {
         const type = stat.cardType || 'unknown';
-        if (!apiCallGroupedByDate[stat.dt]) {
-          apiCallGroupedByDate[stat.dt] = { dt: stat.dt };
+        const date = stat.dt;
+        
+        if (!typeCountsByDate[date]) {
+          typeCountsByDate[date] = [];
         }
-        apiCallGroupedByDate[stat.dt][type] = stat.total_count;
-        cardTypes.add(type);
+        
+        typeCountsByDate[date].push({ 
+          type, 
+          count: stat.total_count 
+        });
       });
-
+      
+      // 第二步：对每个日期的类型按计数排序，并只保留前5个
+      Object.keys(typeCountsByDate).forEach(date => {
+        typeCountsByDate[date].sort((a, b) => b.count - a.count);
+        
+        const topFive = typeCountsByDate[date].slice(0, 5);
+        apiCallGroupedByDate[date] = { dt: date };
+        
+        topFive.forEach(item => {
+          apiCallGroupedByDate[date][item.type] = item.count;
+          allTopCardTypes.add(item.type);
+        });
+      });
+      
       const processedCallData = Object.values(apiCallGroupedByDate).sort((a, b) => 
         new Date(a.dt).getTime() - new Date(b.dt).getTime()
       );
       setProcessedApiCallChartData(processedCallData);
+      setTopCardTypes(Array.from(allTopCardTypes));
 
       // 用户调用量统计可以直接使用
       setProcessedUserCallVolumeStats(userCallVolumeStats);
@@ -179,7 +217,7 @@ export default function StatsPage() {
     } catch (err) {
       console.error("Error processing chart data:", err);
     }
-  }, [userActionStats, apiErrorStatsByVersion, apiCallStatsByType, userCallVolumeStats]);
+  }, [userActionStats, apiStatsByVersion, apiCallStatsByType, userCallVolumeStats]);
 
   if (loading) {
     return (
@@ -200,14 +238,6 @@ export default function StatsPage() {
   // 获取唯一的行为、版本和卡片类型用于图表渲染
   const uniqueActions = processedUserActionChartData.length > 0 
     ? Object.keys(processedUserActionChartData[0]).filter(key => key !== 'dt') 
-    : [];
-  
-  const uniquePromptVersions = processedApiErrorChartData.length > 0 
-    ? Object.keys(processedApiErrorChartData[0]).filter(key => key !== 'dt') 
-    : [];
-  
-  const uniqueCardTypes = processedApiCallChartData.length > 0 
-    ? Object.keys(processedApiCallChartData[0]).filter(key => key !== 'dt') 
     : [];
 
   // 图表颜色
@@ -245,10 +275,10 @@ export default function StatsPage() {
           </CardContent>
         </Card>
 
-        {/* 图表2: API错误统计 */}
+        {/* 图表2: API调用统计 (Top 5 per date) */}
         <Card>
           <CardHeader>
-            <CardTitle>Daily API Errors by Prompt Version</CardTitle>
+            <CardTitle>Daily API Calls by Prompt Version (Top 5)</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="h-[300px]">
@@ -259,7 +289,7 @@ export default function StatsPage() {
                   <YAxis />
                   <Tooltip />
                   <Legend />
-                  {uniquePromptVersions.map((version, index) => (
+                  {topPromptVersions.map((version, index) => (
                     <Bar 
                       key={version} 
                       dataKey={version} 
@@ -274,10 +304,10 @@ export default function StatsPage() {
           </CardContent>
         </Card>
 
-        {/* 图表3: 卡片类型API调用统计 */}
+        {/* 图表3: 卡片类型API调用统计 (Top 5 per date) */}
         <Card>
           <CardHeader>
-            <CardTitle>Daily API Calls by Card Type</CardTitle>
+            <CardTitle>Daily API Calls by Card Type (Top 5)</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="h-[300px]">
@@ -288,7 +318,7 @@ export default function StatsPage() {
                   <YAxis />
                   <Tooltip />
                   <Legend />
-                  {uniqueCardTypes.map((type, index) => (
+                  {topCardTypes.map((type, index) => (
                     <Bar 
                       key={type} 
                       dataKey={type} 
@@ -306,7 +336,7 @@ export default function StatsPage() {
         {/* 图表4: 用户调用量分层统计 */}
         <Card>
           <CardHeader>
-            <CardTitle>Daily User Call Volume and Tiers</CardTitle>
+            <CardTitle>Daily User Call Volume by Tiers</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="h-[300px]">
@@ -319,11 +349,11 @@ export default function StatsPage() {
                   <Tooltip />
                   <Legend />
                   <Line yAxisId="left" type="monotone" dataKey="total_users" stroke="#8884d8" name="Total Users" />
-                  <Line yAxisId="left" type="monotone" dataKey="total_calls" stroke="#82ca9d" name="Total Calls" />
+                  {/* <Line yAxisId="left" type="monotone" dataKey="total_calls" stroke="#82ca9d" name="Total Calls" /> */}
                   <Line yAxisId="left" type="monotone" dataKey="up2_users" stroke="#ffc658" name="Users > 2 Calls" />
                   <Line yAxisId="left" type="monotone" dataKey="up5_users" stroke="#ff7300" name="Users > 5 Calls" />
                   <Line yAxisId="left" type="monotone" dataKey="up8_users" stroke="#a4de6c" name="Users > 8 Calls" />
-                  <Line yAxisId="right" type="monotone" dataKey="avg_calls" stroke="#d0ed57" name="Avg Calls" />
+                  {/* <Line yAxisId="right" type="monotone" dataKey="avg_calls" stroke="#d0ed57" name="Avg Calls" /> */}
                 </LineChart>
               </ResponsiveContainer>
             </div>

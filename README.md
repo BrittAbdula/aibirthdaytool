@@ -127,4 +127,18 @@ STRIPE_MONTHLY_PRICE_ID=price_your_monthly_price_id
 STRIPE_YEARLY_PRICE_ID=price_your_yearly_price_id
 ```
 
+## Webhook Setup
+
+1. Install the Stripe CLI: https://stripe.com/docs/stripe-cli
+2. Login to your Stripe account: `stripe login`
+3. Forward webhook events to your local server:
+   ```
+   stripe listen --forward-to localhost:3000/api/webhooks/stripe
+   ```
+4. The CLI will provide a webhook signing secret - add this to your `.env.local` file:
+   ```
+   STRIPE_WEBHOOK_SECRET=whsec_...
+   ```
+5. For production, set up a webhook endpoint in the Stripe Dashboard pointing to `https://yourdomain.com/api/webhooks/stripe`
+
 You'll need to create the appropriate products and prices in your Stripe dashboard.
