@@ -938,7 +938,7 @@ export default function CardGenerator({
               )}
 
               {/* Card Format Selection */}
-              <div className="w-full">
+              {/* <div className="w-full">
                 <Label htmlFor="card-format" className="mb-2 block flex items-center justify-between">
                   <span>Card Format</span>
                 </Label>
@@ -982,7 +982,7 @@ export default function CardGenerator({
                     <span className="text-sm font-medium">Image Card</span>
                   </button>
                 </div>
-              </div>
+              </div> */}
             </CardContent>
             <CardFooter className="flex flex-col space-y-4">
               <Button className="w-full bg-[#FFC0CB] text-[#4A4A4A] hover:bg-[#FFD1DC]" onClick={handleGenerateCard} disabled={isLoading}>
