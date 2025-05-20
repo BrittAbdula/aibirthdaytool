@@ -136,7 +136,7 @@ export default async function EditedCardPage({ params }: Props) {
             </Suspense>
 
             {card.message && (
-              <div className="p-4 bg-white/80 backdrop-blur rounded-xl shadow-sm border border-pink-100 opacity-0 animate-fade-up animation-delay-300">
+              <div className="p-4  opacity-0 animate-fade-up animation-delay-300">
                 <p className="text-gray-700 italic text-center">
                 &quot;{card.message}&quot;
                 </p>

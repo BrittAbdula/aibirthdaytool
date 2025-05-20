@@ -37,7 +37,7 @@ export async function GET(request: Request) {
         GROUP BY d.dt, ua.action
         ORDER BY d.dt ASC, ua.action ASC
       `,
-      // 2. API 错误统计根据 promptVersion 进行分类统计
+      // 2. API 调用统计根据 promptVersion 进行分类统计 (全部调用)
       prisma.$queryRaw`
         WITH date_range AS (
           SELECT generate_series(
@@ -97,11 +97,30 @@ export async function GET(request: Request) {
         LEFT JOIN "ApiUsage" au ON to_char(au."createdAt", 'YYYY-MM-DD') = to_char(d.dt, 'YYYY-MM-DD')
         GROUP BY d.dt
         ORDER BY d.dt ASC
+      `,
+      // 5. API 失败调用统计（按 promptVersion 分类，只包含错误）
+      prisma.$queryRaw`
+        WITH date_range AS (
+          SELECT generate_series(
+            ${startDate}::date,
+            ${endDate}::date,
+            interval '1 day'
+          )::date as dt
+        )
+        SELECT
+          to_char(d.dt, 'YYYY-MM-DD') as dt,
+          COALESCE(al."promptVersion", 'unknown') as "promptVersion",
+          COUNT(al.id)::integer as count
+        FROM date_range d
+        LEFT JOIN "ApiLog" al ON to_char(al.timestamp, 'YYYY-MM-DD') = to_char(d.dt, 'YYYY-MM-DD')
+          AND al."isError" = 'true'
+        GROUP BY d.dt, al."promptVersion"
+        ORDER BY d.dt ASC, al."promptVersion" ASC
       `
     ]);
 
     // Now destructure with more confidence
-    const [userActionStatsRaw, apiStatsByVersionRaw, apiCallStatsByTypeRaw, userCallVolumeStatsRaw] = results;
+    const [userActionStatsRaw, apiStatsByVersionRaw, apiCallStatsByTypeRaw, userCallVolumeStatsRaw, apiFailureStatsByVersionRaw] = results;
 
     // 确保返回的是数组，使用更精确的错误消息
     if (!Array.isArray(userActionStatsRaw)) {
@@ -119,6 +138,10 @@ export async function GET(request: Request) {
     if (!Array.isArray(userCallVolumeStatsRaw)) {
       console.error("userCallVolumeStatsRaw is not an array:", userCallVolumeStatsRaw);
       throw new Error('userCallVolumeStats query did not return an array');
+    }
+    if (!Array.isArray(apiFailureStatsByVersionRaw)) {
+      console.error("apiFailureStatsByVersionRaw is not an array:", apiFailureStatsByVersionRaw);
+      throw new Error('apiFailureStatsByVersion query did not return an array');
     }
 
     // Process and format data (handle potential nulls and convert numeric types)
@@ -150,18 +173,19 @@ export async function GET(request: Request) {
         avg_calls: String(stat.avg_calls || '0.00'),
     }));
 
-    // Log processed data for debugging
-    // console.log("Processed User Action Stats sample:", processedUserActionStats.length > 0 ? processedUserActionStats[0] : 'Empty array');
-    // console.log("Processed API Error Stats by Version sample:", processedApiErrorStatsByVersion.length > 0 ? processedApiErrorStatsByVersion[0] : 'Empty array');
-    // console.log("Processed API Call Stats by Type sample:", processedApiCallStatsByType.length > 0 ? processedApiCallStatsByType[0] : 'Empty array');
-    // console.log("Processed User Call Volume Stats sample:", processedUserCallVolumeStats.length > 0 ? processedUserCallVolumeStats[0] : 'Empty array');
+    const processedApiFailureStatsByVersion = apiFailureStatsByVersionRaw.map(stat => ({
+        dt: String(stat.dt),
+        promptVersion: stat.promptVersion === null ? null : String(stat.promptVersion),
+        count: Number(stat.count) || 0,
+    }));
 
     // Ensure we have data in all arrays (even if the arrays are empty, they should exist)
     const responseData = {
       userActionStats: processedUserActionStats,
       apiStatsByVersion: processedApiStatsByVersion,
       apiCallStatsByType: processedApiCallStatsByType,
-      userCallVolumeStats: processedUserCallVolumeStats
+      userCallVolumeStats: processedUserCallVolumeStats,
+      apiFailureStatsByVersion: processedApiFailureStatsByVersion
     };
 
     console.log("Returning response with structure:", Object.keys(responseData));

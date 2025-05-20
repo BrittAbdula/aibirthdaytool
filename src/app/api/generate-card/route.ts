@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server';
-import { generateCardContent } from '@/lib/gpt';
+import { generateCardContentWithDeepSeek, generateCardContent } from '@/lib/gpt';
 import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
-import { generateCardImage } from '@/lib/image';
+import { generateCardImageWithOpenAI } from '@/lib/image';
+import { nanoid } from 'nanoid';
 // 增加超时限制到最大值
 export const maxDuration = 60; // 增加到 60 秒
 
@@ -85,10 +86,55 @@ export async function POST(request: Request) {
       }, { status: 429 });
     }
 
-    // 组合所有字段到单个对象
+    // Generate a new cardId
+    const cardId = nanoid(10);
+    const startTime = Date.now();
+
+    // Create initial API log entry with pending status
+    await prisma.apiLog.create({
+      data: {
+        userId,
+        cardId,
+        cardType,
+        userInputs: requestData,
+        promptVersion: format === 'image' ? 'grok-2-image' : 'pending',
+        responseContent: '',
+        tokensUsed: 0,
+        duration: 0,
+        status: 'pending',
+        modificationFeedback,
+      },
+    });
+
+    // Update usage count
+    if (!usage) {
+      await prisma.apiUsage.create({
+        data: {
+          userId,
+          date: new Date(new Date().setHours(0, 0, 0, 0)),
+          count: 1,
+        },
+      });
+    } else {
+      await prisma.apiUsage.update({
+        where: {
+          userId_date: {
+            userId,
+            date: new Date(new Date().setHours(0, 0, 0, 0)),
+          },
+        },
+        data: {
+          count: {
+            increment: 1,
+          },
+        },
+      });
+    }
+
+    // Start async processing
     const cardData = {
       userId,
-      cardType: cardType,
+      cardType,
       recipientName,
       sender,
       senderName,
@@ -101,44 +147,55 @@ export async function POST(request: Request) {
       ...otherFields
     };
 
-    // Generate card based on format
-    let result;
-    if (format === 'image') {
-      // Use image generator
-      result = await generateCardImage(cardData, planType);
-    } else {
-      // Use SVG generator (default)
-      result = await generateCardContent(cardData, planType);
-    }
+    // Start async processing without awaiting
+    Promise.resolve().then(async () => {
+      try {
+        // Update status to processing
+        await prisma.apiLog.update({
+          where: { cardId },
+          data: { status: 'processing' },
+        });
 
-    // 增加使用计数 - 异步处理以避免阻塞响应
-    if (usage) {
-      Promise.resolve().then(async () => {
-        try {
-          await prisma.apiUsage.update({
-            where: {
-              userId_date: {
-                userId,
-                date: new Date(new Date().setHours(0, 0, 0, 0)),
-              },
-            },
-            data: {
-              count: {
-                increment: 1,
-              },
-            },
-          });
-        } catch (error) {
-          console.error('Error updating usage count:', error);
-        }
-      });
-    }
+        // Generate card
+        const result = format === 'image'
+          ? await generateCardImageWithOpenAI(cardData, planType)
+          : await generateCardContent(cardData, planType);
 
-    return NextResponse.json(result);
+        // Update status to completed with results
+        await prisma.apiLog.update({
+          where: { cardId },
+          data: {
+            status: 'completed',
+            r2Url: result.r2Url,
+            responseContent: result.svgContent,
+            promptVersion: result.model,
+            tokensUsed: result.tokensUsed,
+            duration: result.duration,
+          },
+        });
+      } catch (error) {
+        console.error('Error in async card generation:', error);
+        // Update status to failed
+        await prisma.apiLog.update({
+          where: { cardId },
+          data: {
+            status: 'failed',
+            isError: true,
+            errorMessage: error instanceof Error ? error.message : 'Unknown error',
+            promptVersion: format === 'image' ? 'grok-2-image' : 'unknown', // Fallback
+            tokensUsed: 0,
+            duration: Date.now() - startTime, // Need to capture startTime in the outer scope or recalculate
+          },
+        });
+      }
+    });
+
+    // Return immediately with cardId
+    return NextResponse.json({ cardId });
   } catch (error) {
-    console.error('Error generating card:', error);
+    console.error('Error in card generation request:', error);
     return NextResponse.json({
-      error: 'Failed to generate card',
+      error: 'Failed to initiate card generation',
       message: error instanceof Error ? error.message : 'Unknown error'
     }, { status: 500 });
   }

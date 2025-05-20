@@ -344,63 +344,57 @@ export default function CardGenerator({
 
     try {
       // Save previous form data for potential modifications
-      setPreviousFormData({...formData})
+      setPreviousFormData({...formData});
 
-      // Reset image states
-      const newLoadingStates = Array(imageCount).fill(true);
-      setImageLoadingStates(newLoadingStates);
-      setImageProgresses(Array(imageCount).fill(0));
-      setIsLoading(true);
+      // Reset image states for all images
+      const initialLoadingStates = Array(imageCount).fill(true);
+      const initialProgresses = Array(imageCount).fill(0);
+      setImageLoadingStates(initialLoadingStates);
+      setImageProgresses(initialProgresses);
+      setImgUrls(Array(imageCount).fill('')); // Clear previous images
+      setSvgContents(Array(imageCount).fill('')); // Clear previous svg contents
+      setCardIds(Array(imageCount).fill('')); // Clear previous card ids
+      
+      setIsLoading(true); // Overall loading indicator
+      setError(null);
 
       // Create array to hold promises for parallel requests
       const generatePromises = Array.from({ length: imageCount }).map(async (_, index) => {
-        // Start progress timer for this image
-        const progressInterval = setInterval(() => {
-          setImageProgresses(prev => {
-            const newProgresses = [...prev];
-            if (newProgresses[index] < 90) {
-              newProgresses[index] += 10;
-            }
-            return newProgresses;
-          });
-        }, 1000);
+        // Prepare payload with feedback if in feedback mode
+        const payload: Record<string, any> = {
+          cardType: currentCardType,
+          size: selectedSize,
+          format: formData.format || 'svg',
+          modelTier: formData.modelTier || "Free",
+          ...formData,
+          variationIndex: index
+        };
 
-        try {
-          // Prepare payload with feedback if in feedback mode
-          const payload: Record<string, any> = {
-            cardType: currentCardType,
-            size: selectedSize,
-            format: formData.format || 'svg',
-            modelTier: formData.modelTier || "Free", // Default to Free if not specified
-            ...formData,
-            variationIndex: index // Include variation index to ensure different images
-          };
-
-          if (feedbackMode && modificationFeedback) {
-            payload.modificationFeedback = modificationFeedback;
-            payload.previousCardId = cardIds[0] || ''; // Use the first card ID for feedback
-            
-            // Add to feedback history
-            if (index === 0) { // Only add to history once per batch
-              setFeedbackHistory([...feedbackHistory, modificationFeedback]);
-            }
+        if (feedbackMode && modificationFeedback) {
+          payload.modificationFeedback = modificationFeedback;
+          payload.previousCardId = cardIds[0] || '';
+          
+          if (index === 0) {
+            setFeedbackHistory([...feedbackHistory, modificationFeedback]);
           }
+        }
 
+        let cardId = '';
+        try {
+          // Initial request to start generation
           const response = await fetch('/api/generate-card', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload),
           });
 
-          const data = await response.json();
-
           if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
             if (response.status === 429) {
               setShowLimitDialog(true);
               return { success: false, error: 'rate_limit' };
             }
             if (response.status === 401) {
-              // Save form data again in case session expired
               setSavedFormData({
                 formData: {...formData},
                 customValues: {...customValues},
@@ -411,106 +405,185 @@ export default function CardGenerator({
               setShowAuthDialog(true);
               return { success: false, error: 'auth' };
             }
-            throw new Error(data.error || 'Failed to generate card');
+            throw new Error(errorData.error || 'Failed to start card generation');
           }
 
-          // Handle response based on card format
-          let imgUrl = '';
-          let svgContent = '';
+          const data = await response.json();
+          cardId = data.cardId;
+          if (!cardId) {
+             throw new Error('No card ID returned from initial request');
+          }
           
-          if (formData.format === 'image' && data.r2Url) {
-            // For image cards, use the returned image URL directly
-            imgUrl = data.r2Url;
-          } else if (data.svgContent) {
-            // For SVG cards, create a data URL from the SVG content
-            imgUrl = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(data.svgContent)}`;
-            svgContent = data.svgContent;
-          } else {
-            throw new Error('Failed to get card content');
+          setCardIds(prev => { // Update cardId immediately in state
+              const newIds = [...prev];
+              newIds[index] = cardId;
+              return newIds;
+          });
+
+          // Start polling for results
+          let attempts = 0;
+          const maxAttempts = 60; // Max 60 seconds timeout
+          const pollingInterval = 1000; // Poll every 1 second
+
+          while (attempts < maxAttempts) {
+            const statusResponse = await fetch(`/api/card-status?cardId=${cardId}`);
+            if (!statusResponse.ok) {
+               // Log error but continue polling unless it's a severe network issue
+               console.error(`Failed to check status for card ${cardId}: ${statusResponse.status}`);
+               // continue polling if not 404? Or maybe stop and mark failed?
+               // For now, let's just log and wait.
+               await new Promise(resolve => setTimeout(resolve, pollingInterval));
+               attempts++;
+               continue;
+            }
+
+            const statusData = await statusResponse.json();
+            
+            // Update progress based on status
+            setImageProgresses(prev => {
+              const newProgresses = [...prev];
+              switch (statusData.status) {
+                case 'pending':
+                  newProgresses[index] = 10;
+                  break;
+                case 'processing':
+                  // Increase progress gradually while processing
+                  newProgresses[index] = Math.min(prev[index] + 5, 90);
+                  break;
+                case 'completed':
+                  newProgresses[index] = 100;
+                  break;
+                case 'failed':
+                  newProgresses[index] = 0; // Or maybe a small error indicator like 5%?
+                  break;
+              }
+              return newProgresses;
+            });
+
+            if (statusData.status === 'completed') {
+              // Update image states
+              setImgUrls(prev => {
+                const newUrls = [...prev];
+                // If we have r2Url use it, otherwise create data URL from SVG content
+                newUrls[index] = statusData.r2Url || 
+                  (statusData.responseContent ? `data:image/svg+xml;charset=utf-8,${encodeURIComponent(statusData.responseContent)}` : '');
+                return newUrls;
+              });
+
+              setSvgContents(prev => {
+                const newContents = [...prev];
+                newContents[index] = statusData.responseContent || '';
+                return newContents;
+              });
+
+              setImageLoadingStates(prev => { // Mark as loaded
+                const newStates = [...prev];
+                newStates[index] = false;
+                return newStates;
+              });
+
+              // Trigger confetti
+              setTimeout(() => {
+                triggerConfettiForImage(index);
+              }, 100);
+
+              return { success: true, index };
+            }
+
+            if (statusData.status === 'failed') {
+              setImageLoadingStates(prev => { // Mark as failed
+                const newStates = [...prev];
+                newStates[index] = false;
+                return newStates;
+              });
+              throw new Error(statusData.errorMessage || 'Card generation failed');
+            }
+
+            // Wait before next attempt
+            await new Promise(resolve => setTimeout(resolve, pollingInterval));
+            attempts++;
           }
 
-          // Update this specific image's state
-          setImgUrls(prev => {
-            const newUrls = [...prev];
-            newUrls[index] = imgUrl;
-            return newUrls;
+          // If loop finishes without completion/failure
+          setImageLoadingStates(prev => { // Mark as failed due to timeout
+             const newStates = [...prev];
+             newStates[index] = false;
+             return newStates;
           });
+          throw new Error('Card generation timed out');
 
-          setSvgContents(prev => {
-            const newContents = [...prev];
-            newContents[index] = svgContent;
-            return newContents;
-          });
-
-          setCardIds(prev => {
-            const newIds = [...prev];
-            newIds[index] = data.cardId;
-            return newIds;
-          });
-
-          // Set progress to 100% for this image
-          setImageProgresses(prev => {
-            const newProgresses = [...prev];
-            newProgresses[index] = 100;
-            return newProgresses;
-          });
-
-          // Mark this image as loaded
-          setImageLoadingStates(prev => {
-            const newStates = [...prev];
-            newStates[index] = false;
-            return newStates;
-          });
-
-          // Trigger confetti for this image
-          setTimeout(() => {
-            triggerConfettiForImage(index);
-          }, 100);
-
-          setSubmited(true);
-
-          return { success: true, index };
         } catch (error: any) {
-          return { success: false, error: error.message, index };
-        } finally {
-          clearInterval(progressInterval);
+           // Handle errors specific to this image generation
+           setImageLoadingStates(prev => { // Ensure loading is false on error
+             const newStates = [...prev];
+             if(newStates[index] !== false) { // Only set to false if not already set by failed status
+                newStates[index] = false;
+             }
+             return newStates;
+           });
+           setImageProgresses(prev => { // Reset progress or show error indicator
+              const newProgresses = [...prev];
+              newProgresses[index] = 0; // Reset progress on error
+              return newProgresses;
+           });
+           console.error(`Error generating card ${cardId || index}:`, error);
+           return { success: false, error: error.message, index };
         }
       });
 
       // Wait for all promises to resolve
       const results = await Promise.all(generatePromises);
       
-      // Check for any auth or rate limit errors
+      // Check for any auth or rate limit errors that might have stopped the process early
       const hasAuthError = results.some(result => !result.success && result.error === 'auth');
       const hasRateLimitError = results.some(result => !result.success && result.error === 'rate_limit');
       
-      // If we have auth errors or rate limit errors, they've already been handled
-      if (!hasAuthError && !hasRateLimitError) {
-        // Get any other errors
-        const errors = results
-          .filter(result => !result.success && result.error !== 'auth' && result.error !== 'rate_limit')
-          .map(result => result.error);
-          
-        if (errors.length > 0) {
-          setError(errors[0] || 'Failed to generate one or more cards. Please try again.');
-        }
-        
-        // Show feedback mode after first generation
+      if (hasAuthError || hasRateLimitError) {
+         // These errors are handled by showing dialogs, no need to set global error here
+         return; // Exit early if auth or rate limit error occurred
+      }
+
+      // Check for any other errors among individual image generations
+      const errors = results
+        .filter(result => !result.success)
+        .map(result => result.error);
+       
+      if (errors.length > 0) {
+        // Display the first error encountered, or a generic message
+        setError(errors[0] || 'Failed to generate one or more cards. Please try again.');
+      } else if (results.every(result => result.success)) {
+        // Only set submitted true and show feedback if ALL images succeeded
+        setSubmited(true);
+         // Show feedback mode after first successful batch generation
         if (!feedbackMode) {
           setFeedbackMode(true);
         }
-        
         // Clear feedback after successful generation
         if (feedbackMode) {
           setModificationFeedback('');
         }
+      } else {
+          // Some images failed, some succeeded. Show a generic error.
+          setError('Some cards failed to generate. Please check them individually.');
+           // Still show feedback mode if it was the first attempt
+          if (!feedbackMode) {
+             setFeedbackMode(true);
+          }
+          // Clear feedback if it was a feedback attempt
+          if (feedbackMode) {
+             setModificationFeedback('');
+          }
       }
+
     } catch (err: any) {
-      setError(err.message || 'Failed to generate card. Please try again.');
+      // This catch block handles errors that occur *before* the individual promises start
+      console.error('Error initiating card generation process:', err);
+      setError(err.message || 'Failed to initiate card generation. Please try again.');
     } finally {
+      // Always set overall loading to false once all individual promises are settled
       setIsLoading(false);
     }
-  }
+  };
 
   const handleLogin = async () => {
     try {
@@ -838,10 +911,9 @@ export default function CardGenerator({
               )}
 
               {/* Card Format Selection */}
-              {/* <div className="w-full">
+              <div className="w-full">
                 <Label htmlFor="card-format" className="mb-2 block flex items-center justify-between">
                   <span>Card Format</span>
-                  <span className="text-xs text-gray-500 italic">Choose how your card is generated</span>
                 </Label>
                 <div className="grid grid-cols-2 gap-3">
                   <button
@@ -861,31 +933,7 @@ export default function CardGenerator({
                       </div>
                     </div>
                     
-                    <svg className="w-6 h-6 mb-1" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path 
-                        d="M14 7L9 12L14 17" 
-                        stroke="#FFC0CB" 
-                        strokeWidth="2" 
-                        strokeLinecap="round" 
-                        strokeLinejoin="round"
-                        className="animate-pulse"
-                      />
-                      <path 
-                        d="M5 3L19 21" 
-                        stroke="#FFC0CB" 
-                        strokeWidth="2" 
-                        strokeLinecap="round"
-                        className="animate-pulse"
-                        style={{ animationDelay: "0.5s" }}
-                      />
-                    </svg>
-                    <span className="text-sm font-medium">SVG Card</span>
-                    <span className="text-xs text-gray-500 mt-1">Vector graphics</span>
-                    <div className="mt-2 text-xs text-gray-600 text-center">
-                      <span className="block">• Supports animations</span>
-                      <span className="block">• Interactive elements</span>
-                      <span className="block">• Precise text layout</span>
-                    </div>
+                    <span className="text-sm font-medium">Animated Card</span>
                   </button>
                   
                   <button
@@ -904,24 +952,10 @@ export default function CardGenerator({
                         <span className="mr-0.5 text-[8px]">✨</span>BETA
                       </div>
                     </div>
-                    
-                    <svg className="w-6 h-6 mb-1" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <rect x="4" y="4" width="16" height="16" rx="2" stroke="#FFC0CB" strokeWidth="2"/>
-                      <circle cx="8.5" cy="8.5" r="1.5" fill="#FFC0CB"/>
-                      <path d="M6 14L8 12L10 14L14 10L18 14" stroke="#FFC0CB" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
                     <span className="text-sm font-medium">Image Card</span>
-                    <span className="text-xs text-gray-500 mt-1">AI generated image</span>
-                    <div className="mt-2 text-xs text-gray-600 text-center">
-                      <span className="block">• Artistic style</span>
-                      <span className="block">• More creative</span>
-                    </div>
                   </button>
                 </div>
-                <p className="text-xs text-gray-500 mt-2">
-                  SVG cards support animations and interactive elements, while Image cards offer more artistic visual styles.
-                </p>
-              </div> */}
+              </div>
             </CardContent>
             <CardFooter className="flex flex-col space-y-4">
               <Button className="w-full bg-[#FFC0CB] text-[#4A4A4A] hover:bg-[#FFD1DC]" onClick={handleGenerateCard} disabled={isLoading}>

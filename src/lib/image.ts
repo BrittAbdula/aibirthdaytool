@@ -1,51 +1,8 @@
 import { CardType } from './card-config';
 import { prisma } from './prisma';
-import { nanoid } from 'nanoid';
 import { CARD_SIZES, CardSize } from './card-config';
 import OpenAI from 'openai';
 import { uploadToCloudflareImages } from '@/lib/r2';
-
-interface ApiLogParams {
-    userId?: string;
-    cardId: string;
-    cardType: CardType;
-    userInputs: Record<string, any>;
-    promptVersion: string;
-    responseContent: string;
-    r2Url: string;
-    tokensUsed: number; 
-    duration: number;
-    isError?: boolean;
-    errorMessage?: string;
-}
-
-async function logApiRequest(params: ApiLogParams): Promise<string | undefined> {
-    try {
-        let r2Url: string = '';
-        const createdAt = new Date();
-
-        // Create API log entry
-        await prisma.apiLog.create({
-            data: {
-                ...(params.userId && { userId: params.userId }),
-                cardId: params.cardId,
-                cardType: params.cardType,
-                userInputs: params.userInputs,
-                promptVersion: params.promptVersion,
-                responseContent: params.responseContent,
-                tokensUsed: params.tokensUsed,
-                duration: params.duration,
-                isError: params.isError,
-                errorMessage: params.errorMessage ? params.errorMessage : undefined,
-                r2Url: params.r2Url,
-                timestamp: createdAt,
-            },
-        });
-        return r2Url;
-    } catch (error) {
-        console.error("Error logging API request to database:", error);
-    }
-}
 
 interface CardContentParams {
     userId?: string;
@@ -59,12 +16,10 @@ interface CardContentParams {
     [key: string]: any;
 }
 
-
-export async function generateCardImage(params: CardContentParams, userPlan: string): Promise<{ r2Url: string, cardId: string, svgContent: string }> {
+export async function generateCardImageWithOpenAI(params: CardContentParams, userPlan: string): Promise<{ r2Url: string, svgContent: string, model: string, tokensUsed: number, duration: number }> {
     const { userId, cardType, version, templateId, size, style, modificationFeedback, previousCardId, ...otherParams } = params;
-    const cardId = nanoid(10);
-    const startTime = Date.now();
 
+    const startTime = Date.now();
     const formattedTime = new Date(startTime).toLocaleString(undefined, {
         year: 'numeric',
         month: '2-digit',
@@ -119,20 +74,7 @@ Based on previous design with parameters: ${JSON.stringify(previousCard.userInpu
 
         // Check prompt length
         if (userPrompt.length >= 5000) {
-            await logApiRequest({
-                userId,
-                cardId,
-                cardType,
-                userInputs: otherParams,
-                promptVersion: 'grok-2-image',
-                responseContent: 'userPrompt is too long',
-                tokensUsed: 0,
-                r2Url: '',
-                duration: Date.now() - startTime,
-                isError: true,
-                errorMessage: "User prompt too long"
-            });
-            return { r2Url: '', cardId, svgContent: '' };
+            throw new Error("User prompt too long");
         }
 
         const openai = new OpenAI({
@@ -140,63 +82,29 @@ Based on previous design with parameters: ${JSON.stringify(previousCard.userInpu
             baseURL: "https://api.x.ai/v1",
         });
 
-
         const response = await openai.images.generate({
             model: "grok-2-image",
             prompt: userPrompt,
         });
         console.log(response);
 
-        // if (!response) {
-        //     const errorData = await response.json().catch(() => ({}));
-        //     console.error('API Error:', errorData);
-        //     throw new Error(`HTTP error! status: ${response.status}`);
-        // }
+        if (!response?.data?.[0]?.url) {
+            throw new Error("No image URL returned");
+        }
 
-        const duration = Date.now() - startTime;
-        const imageUrl = response?.data?.[0]?.url || '';
+        const imageUrl = response.data[0].url;
         const cf_url = await uploadToCloudflareImages(imageUrl);
         console.log('<----Response image URL : ' + imageUrl + '---->')
-        
-        // Log the request
-        const r2Url = await logApiRequest({
-            userId,
-            cardId,
-            cardType,
-            userInputs: otherParams,
-            promptVersion: 'grok-2-image',
-            responseContent: "",
-            r2Url: cf_url,
-            tokensUsed: 0, // No tokens for image generation
-            duration,
-            isError: !imageUrl,
-            errorMessage: imageUrl ? undefined : "No image URL returned"
-        });
 
-        // Return the image URL as r2Url and empty svgContent
         return {
-            r2Url: imageUrl || '',
-            cardId,
-            svgContent: ''
+            r2Url: cf_url || '',
+            svgContent: '',
+            model: 'grok-2-image',
+            tokensUsed: 0, // Image generation doesn't return token usage
+            duration: Date.now() - startTime
         };
 
     } catch (error) {
-        // Log error
-        await logApiRequest({
-            userId,
-            cardId,
-            cardType,
-            userInputs: otherParams,
-            promptVersion: 'grok-2-image',
-            responseContent: "error",
-            tokensUsed: 0,
-            r2Url: '',
-            duration: Date.now() - startTime,
-            isError: true,
-            errorMessage: error instanceof Error ? error.message : String(error)
-        });
-
         throw error;
     }
 }
-

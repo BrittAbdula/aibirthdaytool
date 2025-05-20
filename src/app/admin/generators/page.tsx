@@ -325,7 +325,18 @@ export default function AdminGeneratorsPage() {
                 className="col-span-3 min-h-[150px] font-mono text-sm"
               />
             </div>
-            
+
+            <div className="grid grid-cols-4 items-start gap-4">
+              <Label className="text-right pt-2">Advanced Fields</Label>
+              <Textarea
+                name="advancedFields"
+                value={typeof editedGenerator.advancedFields === 'object' 
+                  ? JSON.stringify(editedGenerator.advancedFields, null, 2) 
+                  : editedGenerator.advancedFields || ''}
+                onChange={(e) => handleJsonInputChange('advancedFields', e.target.value)}
+                className="col-span-3 min-h-[150px] font-mono text-sm"
+              />
+            </div>
             <div className="grid grid-cols-4 items-start gap-4">
               <Label className="text-right pt-2">Why</Label>
               <Textarea

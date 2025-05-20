@@ -1,25 +1,13 @@
 import { CardType } from './card-config';
 import { prisma } from './prisma';
 import { getTemplateByCardType } from './template-config';
-import { nanoid } from 'nanoid';
-import { uploadSvgToR2 } from './r2';
 import { defaultPrompt, generatePrompt } from './prompt';
-import { CARD_SIZES, CardSize } from './card-config';
+import { CARD_SIZES } from './card-config';
 
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
 const YOUR_SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'http://MewTruCard.COM';
 const YOUR_SITE_NAME = 'MewTruCard';
-
-// Helper function to escape content
-function escapeContent(content: string): string {
-    return content
-        .replace(/&(?!(amp|lt|gt|quot|apos);)/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&apos;');
-}
-
+const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY;
 // Helper function to extract SVG content
 function extractSvgContent(content: string): string | null {
     const svgMatch = content.match(/<svg[\s\S]*?<\/svg>/);
@@ -35,71 +23,6 @@ function extractSvgContent(content: string): string | null {
     return svgContent;
 }
 
-interface ApiLogParams {
-    userId?: string;
-    cardId: string;
-    cardType: CardType;
-    userInputs: Record<string, any>;
-    promptVersion: string;
-    responseContent: string;
-    tokensUsed: number;
-    duration: number;
-    isError?: boolean;
-    errorMessage?: string;
-    modificationFeedback?: string;
-}
-
-async function logApiRequest(params: ApiLogParams): Promise<string | undefined> {
-    try {
-        let r2Url: string = '';
-        const createdAt = new Date();
-
-        // Only attempt R2 upload for successful SVG responses
-        // if (!params.isError && params.responseContent.includes('<svg')) {
-        //     try {
-        //         r2Url = await uploadSvgToR2(params.responseContent, params.cardId, createdAt);
-        //         console.log('<----Uploaded to R2---->')
-        //     } catch (error) {
-        //         console.error("Error uploading to R2:", error);
-        //     }
-        // }
-
-        // Create API log entry
-        await prisma.apiLog.create({
-            data: {
-                ...(params.userId && { userId: params.userId }),
-                cardId: params.cardId,
-                cardType: params.cardType,
-                userInputs: params.userInputs,
-                promptVersion: params.promptVersion,
-                responseContent: params.responseContent,
-                tokensUsed: params.tokensUsed,
-                duration: params.duration,
-                isError: params.isError,
-                errorMessage: params.errorMessage ? params.errorMessage : undefined,
-                r2Url: r2Url,
-                timestamp: createdAt,
-                modificationFeedback: params.modificationFeedback
-            },
-        });
-        return r2Url;
-    } catch (error) {
-        console.error("Error logging API request to database:", error);
-    }
-}
-
-interface CardContentParams {
-    userId?: string;
-    cardType: CardType;
-    version?: string;
-    templateId?: string;
-    size?: string;
-    style?: string;
-    modificationFeedback?: string;
-    previousCardId?: string;
-    [key: string]: any;
-}
-
 function getRandomModel(userPlan: string): string {
     if (userPlan === 'Premium') {
         return 'anthropic/claude-3.7-sonnet';
@@ -108,7 +31,7 @@ function getRandomModel(userPlan: string): string {
     const models = [
         { name: "anthropic/claude-3.5-haiku", weight: 5 },
         { name: "anthropic/claude-3.7-sonnet", weight: 1 },
-        { name: "deepseek/deepseek-chat-v3-0324:free", weight: 20 }
+        { name: "deepseek/deepseek-chat-v3-0324:free", weight: 20 },
     ];
 
     const totalWeight = models.reduce((sum, model) => sum + model.weight, 0);
@@ -125,11 +48,22 @@ function getRandomModel(userPlan: string): string {
     return models[0].name; // Fallback, should not reach here
 }
 
-export async function generateCardContent(params: CardContentParams, userPlan: string): Promise<{ r2Url: string, cardId: string, svgContent: string }> {
-    const { userId, cardType, version, format, modelTier, variationIndex, size, modificationFeedback, previousCardId, ...otherParams } = params;
-    const cardId = nanoid(10);
-    const startTime = Date.now();
+interface CardContentParams {
+    userId?: string;
+    cardType: CardType;
+    version?: string;
+    templateId?: string;
+    size?: string;
+    style?: string;
+    modificationFeedback?: string;
+    previousCardId?: string;
+    [key: string]: any;
+}
 
+export async function generateCardContent(params: CardContentParams, userPlan: string): Promise<{ r2Url: string, svgContent: string, model: string, tokensUsed: number, duration: number }> {
+    const { userId, cardType, version, format, modelTier, variationIndex, size, modificationFeedback, previousCardId, ...otherParams } = params;
+
+    const startTime = Date.now();
     const model = getRandomModel(userPlan);
     console.log('<----Using model : ' + model + '---->')
     console.log('<----Using model tier : ' + modelTier + '---->')
@@ -151,7 +85,7 @@ export async function generateCardContent(params: CardContentParams, userPlan: s
         let previousSvgContent = '';
 
         if (modificationFeedback && previousCardId) {
-            // Get the previous card content
+            // Get the previous card content from the database
             try {
                 const previousCard = await prisma.apiLog.findUnique({
                     where: { cardId: previousCardId },
@@ -185,25 +119,11 @@ IMPORTANT: return SVG code only. Do not include any explanation, commentary, or 
             .join('\n');
 
         const userPrompt = userPromptPrefixText ? userPromptPrefixText : userPromptFields;
-        // console.log('<----System prompt : ' + systemPrompt + '---->')
         console.log('<----User prompt : ' + userPrompt + '---->')
 
         // Check prompt length
-        if (userPrompt.length >= 5000) {
-            await logApiRequest({
-                userId,
-                cardId,
-                cardType,
-                userInputs: otherParams,
-                promptVersion: model || '',
-                responseContent: 'userPrompt is too long',
-                tokensUsed: 0,
-                duration: Date.now() - startTime,
-                isError: true,
-                errorMessage: "User prompt too long",
-                modificationFeedback: modificationFeedback,
-            });
-            return { r2Url: '', cardId, svgContent: '' };
+        if (userPrompt.length >= 8000) {
+            throw new Error("User prompt too long");
         }
 
         // Make API request
@@ -250,6 +170,136 @@ IMPORTANT: return SVG code only. Do not include any explanation, commentary, or 
         }
 
         interface OpenRouterResponse {
+             choices: [{
+                 message: {
+                     content: string;
+                 }
+             }];
+             usage?: {
+                 total_tokens: number;
+             };
+         }
+
+        const data: OpenRouterResponse = await response.json();
+        const duration = Date.now() - startTime;
+        const content = data.choices[0].message.content;
+        const tokensUsed = data.usage?.total_tokens || 0;
+
+        console.log('<----Response content : ' + content + '---->')
+        const svgContent = extractSvgContent(content);
+
+        if (!svgContent) {
+            throw new Error("No valid SVG content found");
+        }
+
+        return {
+            r2Url: '',
+            svgContent,
+            model,
+            tokensUsed,
+            duration
+        };
+
+    } catch (error) {
+        throw error;
+    }
+}
+
+export async function generateCardContentWithDeepSeek(params: CardContentParams, userPlan: string): Promise<{ r2Url: string, svgContent: string, model: string, tokensUsed: number, duration: number }> {
+    const { userId, cardType, version, format, modelTier, variationIndex, size, modificationFeedback, previousCardId, ...otherParams } = params;
+
+    const startTime = Date.now();
+    const model = getRandomModel(userPlan);
+    console.log('<----Using model : ' + model + '---->')
+    console.log('<----Using model tier : ' + modelTier + '---->')
+    const formattedTime = new Date(startTime).toLocaleString(undefined, {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+    }).replace(/\//g, '-');
+
+    try {
+        // Get card size
+        const cardSize = CARD_SIZES[size || 'portrait'];
+
+        // Generate dynamic prompt
+        const systemPrompt = generatePrompt(cardType, cardSize);
+
+        // If this is a modification request, add the feedback to the user prompt
+        let userPromptPrefixText = '';
+        let previousSvgContent = '';
+
+        if (modificationFeedback && previousCardId) {
+            // Get the previous card content from the database
+            try {
+                const previousCard = await prisma.apiLog.findUnique({
+                    where: { cardId: previousCardId },
+                    select: { responseContent: true }
+                });
+
+                if (previousCard && previousCard.responseContent !== 'success' && previousCard.responseContent !== 'error') {
+                    previousSvgContent = previousCard.responseContent;
+                    userPromptPrefixText = `
+I want to modify the previous card design with this feedback: ${modificationFeedback}
+
+Here is the previous SVG content:
+${previousSvgContent}
+
+IMPORTANT: return SVG code only. Do not include any explanation, commentary, or other text.
+`;
+                }
+            } catch (error) {
+                console.error("Error fetching previous card content:", error);
+                // Continue without the previous content if there's an error
+            }
+        }
+
+        // Prepare user prompt
+        const userPromptFields = Object.entries({
+            ...otherParams,
+            currentTime: formattedTime
+        })
+            .filter(([_, value]) => value !== '' && value !== undefined)
+            .map(([key, value]) => `${key}: ${value}`)
+            .join('\n');
+
+        const userPrompt = userPromptPrefixText ? userPromptPrefixText : userPromptFields;
+        console.log('<----User prompt : ' + userPrompt + '---->')
+
+        // Check prompt length
+        if (userPrompt.length >= 8000) {
+            throw new Error("User prompt too long");
+        }
+
+        // Make API request
+        const response = await fetch("https://api.deepseek.com/v1/chat/completions", {
+            method: "POST",
+            headers: {
+                "Authorization": `Bearer ${DEEPSEEK_API_KEY}`,
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                "model": 'deepseek-reasoner',
+                "messages": [
+                    {
+                        "role": "system",
+                        "content": systemPrompt
+                    },
+                    {
+                        "role": "user",
+                        "content": userPrompt
+                    }
+                ]
+            })
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            console.error('API Error:', errorData);
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        interface DeepSeekResponse {
             choices: [{
                 message: {
                     content: string;
@@ -260,53 +310,27 @@ IMPORTANT: return SVG code only. Do not include any explanation, commentary, or 
             };
         }
 
-        const data: OpenRouterResponse = await response.json();
+        const data: DeepSeekResponse = await response.json();
         const duration = Date.now() - startTime;
         const content = data.choices[0].message.content;
+        const tokensUsed = data.usage?.total_tokens || 0;
+
         console.log('<----Response content : ' + content + '---->')
         const svgContent = extractSvgContent(content);
 
-        // Log the request
-        const r2Url = await logApiRequest({
-            userId,
-            cardId,
-            cardType,
-            userInputs: otherParams,
-            promptVersion: model || '',
-            responseContent: svgContent || content,
-            tokensUsed: data.usage?.total_tokens || 0,
-            duration,
-            isError: !svgContent,
-            errorMessage: svgContent ? undefined : "No valid SVG content found",
-            modificationFeedback: modificationFeedback
-        });
+        if (!svgContent) {
+            throw new Error("No valid SVG content found");
+        }
 
-        // Make sure to return the SVG content
         return {
-            r2Url: r2Url || '',
-            cardId,
-            svgContent: svgContent || ''
+            r2Url: '',
+            svgContent,
+            model,
+            tokensUsed,
+            duration
         };
 
     } catch (error) {
-        // Log error
-        await logApiRequest({
-            userId,
-            cardId,
-            cardType,
-            userInputs: otherParams,
-            promptVersion: model || '',
-            responseContent: "error",
-            tokensUsed: 0,
-            duration: Date.now() - startTime,
-            isError: true,
-            errorMessage: error instanceof Error ? error.message : String(error)
-        });
-
         throw error;
     }
 }
-
-const defaultSVG = `<svg width="400" height="600" xmlns="http://www.w3.org/2000/svg">
-  <!-- Error content -->
-</svg>`;

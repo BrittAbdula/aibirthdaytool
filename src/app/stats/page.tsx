@@ -28,6 +28,12 @@ interface ApiStatByVersion {
   count: number;
 }
 
+interface ApiFailureStatByVersion {
+  dt: string;
+  promptVersion: string | null;
+  count: number;
+}
+
 interface ApiCallStatByType {
   dt: string;
   cardType: string | null;
@@ -49,6 +55,7 @@ export default function StatsPage() {
 
   const [userActionStats, setUserActionStats] = useState<UserActionStat[]>([]);
   const [apiStatsByVersion, setApiStatsByVersion] = useState<ApiStatByVersion[]>([]);
+  const [apiFailureStatsByVersion, setApiFailureStatsByVersion] = useState<ApiFailureStatByVersion[]>([]);
   const [apiCallStatsByType, setApiCallStatsByType] = useState<ApiCallStatByType[]>([]);
   const [userCallVolumeStats, setUserCallVolumeStats] = useState<UserCallVolumeStat[]>([]);
 
@@ -61,9 +68,11 @@ export default function StatsPage() {
 
   const [processedUserActionChartData, setProcessedUserActionChartData] = useState<any[]>([]);
   const [processedApiErrorChartData, setProcessedApiErrorChartData] = useState<any[]>([]);
+  const [processedApiFailureChartData, setProcessedApiFailureChartData] = useState<any[]>([]);
   const [processedApiCallChartData, setProcessedApiCallChartData] = useState<any[]>([]);
   const [processedUserCallVolumeStats, setProcessedUserCallVolumeStats] = useState<UserCallVolumeStat[]>([]); 
   const [topPromptVersions, setTopPromptVersions] = useState<string[]>([]);
+  const [topFailurePromptVersions, setTopFailurePromptVersions] = useState<string[]>([]);
   const [topCardTypes, setTopCardTypes] = useState<string[]>([]);
 
   const fetchStats = async () => {
@@ -90,6 +99,7 @@ export default function StatsPage() {
 
       setUserActionStats(Array.isArray(data.userActionStats) ? data.userActionStats : []);
       setApiStatsByVersion(Array.isArray(data.apiStatsByVersion) ? data.apiStatsByVersion : []);
+      setApiFailureStatsByVersion(Array.isArray(data.apiFailureStatsByVersion) ? data.apiFailureStatsByVersion : []);
       setApiCallStatsByType(Array.isArray(data.apiCallStatsByType) ? data.apiCallStatsByType : []);
       
       const sortedStats = Array.isArray(data.userCallVolumeStats) 
@@ -102,6 +112,7 @@ export default function StatsPage() {
       setError(error instanceof Error ? error.message : 'Failed to fetch stats');
       setUserActionStats([]);
       setApiStatsByVersion([]);
+      setApiFailureStatsByVersion([]);
       setApiCallStatsByType([]);
       setUserCallVolumeStats([]);
     } finally {
@@ -133,7 +144,7 @@ export default function StatsPage() {
       );
       setProcessedUserActionChartData(processedData);
 
-      // API错误统计按版本分组，每个日期保留前5个
+      // API调用统计按版本分组，每个日期保留前5个
       const apiErrorGroupedByDate: Record<string, { dt: string; [key: string]: any }> = {};
       const versionCountsByDate: Record<string, { version: string; count: number }[]> = {};
       const allTopVersions = new Set<string>();
@@ -171,6 +182,45 @@ export default function StatsPage() {
       );
       setProcessedApiErrorChartData(processedErrorData);
       setTopPromptVersions(Array.from(allTopVersions));
+
+      // 处理API失败调用统计（按Prompt Version）- 使用新的API数据
+      const apiFailureGroupedByDate: Record<string, { dt: string; [key: string]: any }> = {};
+      const versionFailureCountsByDate: Record<string, { version: string; count: number }[]> = {};
+      const failureVersions = new Set<string>();
+
+      // 按日期和版本分组统计失败调用
+      apiFailureStatsByVersion.forEach(stat => {
+        const version = stat.promptVersion || 'unknown';
+        const date = stat.dt;
+        
+        if (!versionFailureCountsByDate[date]) {
+          versionFailureCountsByDate[date] = [];
+        }
+        
+        versionFailureCountsByDate[date].push({ 
+          version, 
+          count: stat.count 
+        });
+      });
+      
+      // 对每个日期的版本按计数排序，并只保留前5个
+      Object.keys(versionFailureCountsByDate).forEach(date => {
+        versionFailureCountsByDate[date].sort((a, b) => b.count - a.count);
+        
+        const topFive = versionFailureCountsByDate[date].slice(0, 5);
+        apiFailureGroupedByDate[date] = { dt: date };
+        
+        topFive.forEach(item => {
+          apiFailureGroupedByDate[date][item.version] = item.count;
+          failureVersions.add(item.version);
+        });
+      });
+      
+      const processedFailureData = Object.values(apiFailureGroupedByDate).sort((a, b) => 
+        new Date(a.dt).getTime() - new Date(b.dt).getTime()
+      );
+      setProcessedApiFailureChartData(processedFailureData);
+      setTopFailurePromptVersions(Array.from(failureVersions));
 
       // API调用按卡片类型分组，每个日期保留前5个
       const apiCallGroupedByDate: Record<string, { dt: string; [key: string]: any }> = {};
@@ -217,7 +267,7 @@ export default function StatsPage() {
     } catch (err) {
       console.error("Error processing chart data:", err);
     }
-  }, [userActionStats, apiStatsByVersion, apiCallStatsByType, userCallVolumeStats]);
+  }, [userActionStats, apiStatsByVersion, apiFailureStatsByVersion, apiCallStatsByType, userCallVolumeStats]);
 
   if (loading) {
     return (
@@ -275,7 +325,36 @@ export default function StatsPage() {
           </CardContent>
         </Card>
 
-        {/* 图表2: API调用统计 (Top 5 per date) */}
+        {/* 图表2: 失败API调用统计 (按Prompt Version) */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Daily Failed API Calls by Prompt Version (Top 5)</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="h-[300px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={processedApiFailureChartData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="dt" />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  {topFailurePromptVersions.map((version, index) => (
+                    <Bar 
+                      key={version} 
+                      dataKey={version} 
+                      stackId="failure" 
+                      fill={colors[index % colors.length]} 
+                      name={version === 'unknown' ? 'Unknown Version' : version} 
+                    />
+                  ))}
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* 图表3: API调用统计 (Top 5 per date) */}
         <Card>
           <CardHeader>
             <CardTitle>Daily API Calls by Prompt Version (Top 5)</CardTitle>
@@ -304,7 +383,7 @@ export default function StatsPage() {
           </CardContent>
         </Card>
 
-        {/* 图表3: 卡片类型API调用统计 (Top 5 per date) */}
+        {/* 图表4: 卡片类型API调用统计 (Top 5 per date) */}
         <Card>
           <CardHeader>
             <CardTitle>Daily API Calls by Card Type (Top 5)</CardTitle>
@@ -333,7 +412,7 @@ export default function StatsPage() {
           </CardContent>
         </Card>
 
-        {/* 图表4: 用户调用量分层统计 */}
+        {/* 图表5: 用户调用量分层统计 */}
         <Card>
           <CardHeader>
             <CardTitle>Daily User Call Volume by Tiers</CardTitle>

@@ -33,6 +33,7 @@ model ApiLog {
   r2Url           String?
   userId          String?      
   modificationFeedback String? @db.Text
+  status          String       @default("pending") // pending, processing, completed, failed
   user            User?        @relation(fields: [userId], references: [id])
   userActions     UserAction[]
   editedCards     EditedCard[] @relation("OriginalCard")
