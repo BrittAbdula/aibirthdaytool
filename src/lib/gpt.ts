@@ -29,10 +29,10 @@ function getRandomModel(userPlan: string): string {
     }
     
     const models = [
-        // { name: "anthropic/claude-3.5-haiku", weight: 5 },
-        // { name: "anthropic/claude-3.7-sonnet", weight: 1 },
-        // { name: "deepseek/deepseek-chat-v3-0324:free", weight: 20 },
-        { name: "deepseek/deepseek-chat", weight: 100 }
+        { name: "anthropic/claude-3.5-haiku", weight: 5 },
+        { name: "anthropic/claude-3.7-sonnet", weight: 1 },
+        { name: "deepseek/deepseek-chat-v3-0324:free", weight: 20 },
+        // { name: "deepseek/deepseek-chat", weight: 100 }
     ];
 
     const totalWeight = models.reduce((sum, model) => sum + model.weight, 0);
