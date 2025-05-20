@@ -7,7 +7,7 @@ import { CARD_SIZES } from './card-config';
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
 const YOUR_SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'http://MewTruCard.COM';
 const YOUR_SITE_NAME = 'MewTruCard';
-const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY;
+
 // Helper function to extract SVG content
 function extractSvgContent(content: string): string | null {
     const svgMatch = content.match(/<svg[\s\S]*?<\/svg>/);
@@ -29,9 +29,10 @@ function getRandomModel(userPlan: string): string {
     }
     
     const models = [
-        { name: "anthropic/claude-3.5-haiku", weight: 5 },
-        { name: "anthropic/claude-3.7-sonnet", weight: 1 },
-        { name: "deepseek/deepseek-chat-v3-0324:free", weight: 20 },
+        // { name: "anthropic/claude-3.5-haiku", weight: 5 },
+        // { name: "anthropic/claude-3.7-sonnet", weight: 1 },
+        // { name: "deepseek/deepseek-chat-v3-0324:free", weight: 20 },
+        { name: "deepseek/deepseek-chat", weight: 100 }
     ];
 
     const totalWeight = models.reduce((sum, model) => sum + model.weight, 0);
@@ -122,7 +123,7 @@ IMPORTANT: return SVG code only. Do not include any explanation, commentary, or 
         console.log('<----User prompt : ' + userPrompt + '---->')
 
         // Check prompt length
-        if (userPrompt.length >= 8000) {
+        if (userPrompt.length >= 5000) {
             throw new Error("User prompt too long");
         }
 
@@ -181,136 +182,6 @@ IMPORTANT: return SVG code only. Do not include any explanation, commentary, or 
          }
 
         const data: OpenRouterResponse = await response.json();
-        const duration = Date.now() - startTime;
-        const content = data.choices[0].message.content;
-        const tokensUsed = data.usage?.total_tokens || 0;
-
-        console.log('<----Response content : ' + content + '---->')
-        const svgContent = extractSvgContent(content);
-
-        if (!svgContent) {
-            throw new Error("No valid SVG content found");
-        }
-
-        return {
-            r2Url: '',
-            svgContent,
-            model,
-            tokensUsed,
-            duration
-        };
-
-    } catch (error) {
-        throw error;
-    }
-}
-
-export async function generateCardContentWithDeepSeek(params: CardContentParams, userPlan: string): Promise<{ r2Url: string, svgContent: string, model: string, tokensUsed: number, duration: number }> {
-    const { userId, cardType, version, format, modelTier, variationIndex, size, modificationFeedback, previousCardId, ...otherParams } = params;
-
-    const startTime = Date.now();
-    const model = getRandomModel(userPlan);
-    console.log('<----Using model : ' + model + '---->')
-    console.log('<----Using model tier : ' + modelTier + '---->')
-    const formattedTime = new Date(startTime).toLocaleString(undefined, {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit'
-    }).replace(/\//g, '-');
-
-    try {
-        // Get card size
-        const cardSize = CARD_SIZES[size || 'portrait'];
-
-        // Generate dynamic prompt
-        const systemPrompt = generatePrompt(cardType, cardSize);
-
-        // If this is a modification request, add the feedback to the user prompt
-        let userPromptPrefixText = '';
-        let previousSvgContent = '';
-
-        if (modificationFeedback && previousCardId) {
-            // Get the previous card content from the database
-            try {
-                const previousCard = await prisma.apiLog.findUnique({
-                    where: { cardId: previousCardId },
-                    select: { responseContent: true }
-                });
-
-                if (previousCard && previousCard.responseContent !== 'success' && previousCard.responseContent !== 'error') {
-                    previousSvgContent = previousCard.responseContent;
-                    userPromptPrefixText = `
-I want to modify the previous card design with this feedback: ${modificationFeedback}
-
-Here is the previous SVG content:
-${previousSvgContent}
-
-IMPORTANT: return SVG code only. Do not include any explanation, commentary, or other text.
-`;
-                }
-            } catch (error) {
-                console.error("Error fetching previous card content:", error);
-                // Continue without the previous content if there's an error
-            }
-        }
-
-        // Prepare user prompt
-        const userPromptFields = Object.entries({
-            ...otherParams,
-            currentTime: formattedTime
-        })
-            .filter(([_, value]) => value !== '' && value !== undefined)
-            .map(([key, value]) => `${key}: ${value}`)
-            .join('\n');
-
-        const userPrompt = userPromptPrefixText ? userPromptPrefixText : userPromptFields;
-        console.log('<----User prompt : ' + userPrompt + '---->')
-
-        // Check prompt length
-        if (userPrompt.length >= 8000) {
-            throw new Error("User prompt too long");
-        }
-
-        // Make API request
-        const response = await fetch("https://api.deepseek.com/v1/chat/completions", {
-            method: "POST",
-            headers: {
-                "Authorization": `Bearer ${DEEPSEEK_API_KEY}`,
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                "model": 'deepseek-reasoner',
-                "messages": [
-                    {
-                        "role": "system",
-                        "content": systemPrompt
-                    },
-                    {
-                        "role": "user",
-                        "content": userPrompt
-                    }
-                ]
-            })
-        });
-
-        if (!response.ok) {
-            const errorData = await response.json().catch(() => ({}));
-            console.error('API Error:', errorData);
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        interface DeepSeekResponse {
-            choices: [{
-                message: {
-                    content: string;
-                }
-            }];
-            usage?: {
-                total_tokens: number;
-            };
-        }
-
-        const data: DeepSeekResponse = await response.json();
         const duration = Date.now() - startTime;
         const content = data.choices[0].message.content;
         const tokensUsed = data.usage?.total_tokens || 0;

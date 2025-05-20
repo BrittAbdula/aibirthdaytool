@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { generateCardContentWithDeepSeek, generateCardContent } from '@/lib/gpt';
+import { generateCardContent } from '@/lib/gpt';
 import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
 import { generateCardImageWithOpenAI } from '@/lib/image';

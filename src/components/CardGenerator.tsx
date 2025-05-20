@@ -346,17 +346,15 @@ export default function CardGenerator({
       // Save previous form data for potential modifications
       setPreviousFormData({...formData});
 
-      // Reset image states for all images
-      const initialLoadingStates = Array(imageCount).fill(true);
-      const initialProgresses = Array(imageCount).fill(0);
-      setImageLoadingStates(initialLoadingStates);
-      setImageProgresses(initialProgresses);
-      setImgUrls(Array(imageCount).fill('')); // Clear previous images
-      setSvgContents(Array(imageCount).fill('')); // Clear previous svg contents
-      setCardIds(Array(imageCount).fill('')); // Clear previous card ids
-      
-      setIsLoading(true); // Overall loading indicator
+      // Reset image states
+      const newLoadingStates = Array(imageCount).fill(true);
+      setImageLoadingStates(newLoadingStates);
+      setImageProgresses(Array(imageCount).fill(10)); // Start at 10%
+      setIsLoading(true);
       setError(null);
+
+      // 存储轮询计时器的引用
+      const animationTimers: NodeJS.Timeout[] = [];
 
       // Create array to hold promises for parallel requests
       const generatePromises = Array.from({ length: imageCount }).map(async (_, index) => {
@@ -379,7 +377,6 @@ export default function CardGenerator({
           }
         }
 
-        let cardId = '';
         try {
           // Initial request to start generation
           const response = await fetch('/api/generate-card', {
@@ -389,7 +386,6 @@ export default function CardGenerator({
           });
 
           if (!response.ok) {
-            const errorData = await response.json().catch(() => ({}));
             if (response.status === 429) {
               setShowLimitDialog(true);
               return { success: false, error: 'rate_limit' };
@@ -405,182 +401,213 @@ export default function CardGenerator({
               setShowAuthDialog(true);
               return { success: false, error: 'auth' };
             }
-            throw new Error(errorData.error || 'Failed to start card generation');
+            throw new Error('Failed to start card generation');
           }
 
-          const data = await response.json();
-          cardId = data.cardId;
-          if (!cardId) {
-             throw new Error('No card ID returned from initial request');
-          }
+          const { cardId } = await response.json();
+
+          // 标记是否已完成，避免重复处理
+          let isCompleted = false;
+
+          // Start polling loop with animation
+          const startPollingTime = Date.now();
+          const maxPollingDuration = 60000; // 60 seconds max
           
-          setCardIds(prev => { // Update cardId immediately in state
-              const newIds = [...prev];
-              newIds[index] = cardId;
-              return newIds;
-          });
+          // 创建动态进度动画
+          const animationIntervalId = setInterval(() => {
+            if (isCompleted) return; // 如果已完成，不再更新进度
 
-          // Start polling for results
-          let attempts = 0;
-          const maxAttempts = 60; // Max 60 seconds timeout
-          const pollingInterval = 1000; // Poll every 1 second
-
-          while (attempts < maxAttempts) {
-            const statusResponse = await fetch(`/api/card-status?cardId=${cardId}`);
-            if (!statusResponse.ok) {
-               // Log error but continue polling unless it's a severe network issue
-               console.error(`Failed to check status for card ${cardId}: ${statusResponse.status}`);
-               // continue polling if not 404? Or maybe stop and mark failed?
-               // For now, let's just log and wait.
-               await new Promise(resolve => setTimeout(resolve, pollingInterval));
-               attempts++;
-               continue;
-            }
-
-            const statusData = await statusResponse.json();
-            
-            // Update progress based on status
             setImageProgresses(prev => {
               const newProgresses = [...prev];
-              switch (statusData.status) {
-                case 'pending':
-                  newProgresses[index] = 10;
-                  break;
-                case 'processing':
-                  // Increase progress gradually while processing
-                  newProgresses[index] = Math.min(prev[index] + 5, 90);
-                  break;
-                case 'completed':
-                  newProgresses[index] = 100;
-                  break;
-                case 'failed':
-                  newProgresses[index] = 0; // Or maybe a small error indicator like 5%?
-                  break;
+              
+              // 如果已经完成，保持100%
+              if (newProgresses[index] >= 100) {
+                return newProgresses;
+              }
+              
+              // 否则缓慢增加进度，但不超过85%
+              const currentProgress = newProgresses[index];
+              if (currentProgress < 30) {
+                newProgresses[index] = currentProgress + 3;
+              } else if (currentProgress < 50) {
+                newProgresses[index] = currentProgress + 2;
+              } else if (currentProgress < 85) {
+                newProgresses[index] = currentProgress + 0.5;
               }
               return newProgresses;
             });
+          }, 800);
+          
+          // 保存计时器引用，以便在组件卸载或出错时清除
+          animationTimers.push(animationIntervalId);
 
-            if (statusData.status === 'completed') {
-              // Update image states
-              setImgUrls(prev => {
-                const newUrls = [...prev];
-                // If we have r2Url use it, otherwise create data URL from SVG content
-                newUrls[index] = statusData.r2Url || 
-                  (statusData.responseContent ? `data:image/svg+xml;charset=utf-8,${encodeURIComponent(statusData.responseContent)}` : '');
-                return newUrls;
-              });
+          try {
+            // 开始轮询
+            while (Date.now() - startPollingTime < maxPollingDuration && !isCompleted) {
+              // 轮询延迟，开始时频繁，后续缓慢
+              const pollingDelay = Date.now() - startPollingTime < 10000 ? 1000 : 2000;
+              await new Promise(resolve => setTimeout(resolve, pollingDelay));
+              
+              if (isCompleted) break; // 再次检查是否已完成
+              
+              // 检查状态
+              const statusResponse = await fetch(`/api/card-status?cardId=${cardId}`);
+              if (!statusResponse.ok) {
+                // 保持轮询，不要中断动画
+                console.error('Failed to check card status, will retry');
+                continue;
+              }
 
-              setSvgContents(prev => {
-                const newContents = [...prev];
-                newContents[index] = statusData.responseContent || '';
-                return newContents;
-              });
+              const statusData = await statusResponse.json();
+              
+              // 根据状态更新进度条
+              switch (statusData.status) {
+                case 'pending':
+                  // 保持动画继续，但确保不低于30%
+                  setImageProgresses(prev => {
+                    const newProgresses = [...prev];
+                    if (newProgresses[index] < 30) {
+                      newProgresses[index] = 30;
+                    }
+                    return newProgresses;
+                  });
+                  break;
+                  
+                case 'processing':
+                  // 保持动画继续，但确保在50-85%范围
+                  setImageProgresses(prev => {
+                    const newProgresses = [...prev];
+                    if (newProgresses[index] < 50) {
+                      newProgresses[index] = 50;
+                    }
+                    return newProgresses;
+                  });
+                  break;
+                  
+                case 'completed':
+                  // 标记为已完成
+                  isCompleted = true;
+                  
+                  // 清除动画间隔
+                  clearInterval(animationIntervalId);
+                  
+                  // 设置进度为100%
+                  setImageProgresses(prev => {
+                    const newProgresses = [...prev];
+                    newProgresses[index] = 100;
+                    return newProgresses;
+                  });
+                  
+                  // 加载完成，更新图片URL和内容
+                  setImgUrls(prev => {
+                    const newUrls = [...prev];
+                    // 处理SVG内容，创建data URL
+                    if (statusData.r2Url) {
+                      newUrls[index] = statusData.r2Url;
+                    } else if (statusData.responseContent) {
+                      newUrls[index] = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(statusData.responseContent)}`;
+                    }
+                    return newUrls;
+                  });
 
-              setImageLoadingStates(prev => { // Mark as loaded
-                const newStates = [...prev];
-                newStates[index] = false;
-                return newStates;
-              });
+                  setSvgContents(prev => {
+                    const newContents = [...prev];
+                    newContents[index] = statusData.responseContent || '';
+                    return newContents;
+                  });
 
-              // Trigger confetti
-              setTimeout(() => {
-                triggerConfettiForImage(index);
-              }, 100);
+                  setCardIds(prev => {
+                    const newIds = [...prev];
+                    newIds[index] = cardId;
+                    return newIds;
+                  });
 
-              return { success: true, index };
+                  // 设置为非加载状态
+                  setImageLoadingStates(prev => {
+                    const newStates = [...prev];
+                    newStates[index] = false;
+                    return newStates;
+                  });
+
+                  // 触发彩花效果
+                  setTimeout(() => {
+                    triggerConfettiForImage(index);
+                  }, 200);
+
+                  return { success: true, index };
+                  
+                case 'failed':
+                  // 标记为已完成
+                  isCompleted = true;
+                  
+                  // 清除动画间隔
+                  clearInterval(animationIntervalId);
+                  
+                  // 设置进度为0，显示错误
+                  setImageProgresses(prev => {
+                    const newProgresses = [...prev];
+                    newProgresses[index] = 0;
+                    return newProgresses;
+                  });
+                  
+                  throw new Error(statusData.errorMessage || 'Card generation failed');
+              }
             }
-
-            if (statusData.status === 'failed') {
-              setImageLoadingStates(prev => { // Mark as failed
-                const newStates = [...prev];
-                newStates[index] = false;
-                return newStates;
-              });
-              throw new Error(statusData.errorMessage || 'Card generation failed');
+            
+            // 如果达到最大轮询时间但尚未收到完成状态
+            if (!isCompleted) {
+              // 继续显示加载状态，但设置错误
+              setError(`Card generation taking longer than expected, but still processing. Check back later.`);
+              return { success: false, error: 'timeout', index };
             }
-
-            // Wait before next attempt
-            await new Promise(resolve => setTimeout(resolve, pollingInterval));
-            attempts++;
+          } catch (innerError: any) {
+            // 只有在明确失败时才清除定时器
+            clearInterval(animationIntervalId);
+            throw innerError;
           }
-
-          // If loop finishes without completion/failure
-          setImageLoadingStates(prev => { // Mark as failed due to timeout
-             const newStates = [...prev];
-             newStates[index] = false;
-             return newStates;
-          });
-          throw new Error('Card generation timed out');
-
         } catch (error: any) {
-           // Handle errors specific to this image generation
-           setImageLoadingStates(prev => { // Ensure loading is false on error
-             const newStates = [...prev];
-             if(newStates[index] !== false) { // Only set to false if not already set by failed status
-                newStates[index] = false;
-             }
-             return newStates;
-           });
-           setImageProgresses(prev => { // Reset progress or show error indicator
-              const newProgresses = [...prev];
-              newProgresses[index] = 0; // Reset progress on error
-              return newProgresses;
-           });
-           console.error(`Error generating card ${cardId || index}:`, error);
-           return { success: false, error: error.message, index };
+          // 确保清理所有动画计时器
+          animationTimers.forEach(timer => clearInterval(timer));
+          return { success: false, error: error.message, index };
         }
       });
 
-      // Wait for all promises to resolve
-      const results = await Promise.all(generatePromises);
-      
-      // Check for any auth or rate limit errors that might have stopped the process early
-      const hasAuthError = results.some(result => !result.success && result.error === 'auth');
-      const hasRateLimitError = results.some(result => !result.success && result.error === 'rate_limit');
-      
-      if (hasAuthError || hasRateLimitError) {
-         // These errors are handled by showing dialogs, no need to set global error here
-         return; // Exit early if auth or rate limit error occurred
-      }
-
-      // Check for any other errors among individual image generations
-      const errors = results
-        .filter(result => !result.success)
-        .map(result => result.error);
-       
-      if (errors.length > 0) {
-        // Display the first error encountered, or a generic message
-        setError(errors[0] || 'Failed to generate one or more cards. Please try again.');
-      } else if (results.every(result => result.success)) {
-        // Only set submitted true and show feedback if ALL images succeeded
-        setSubmited(true);
-         // Show feedback mode after first successful batch generation
-        if (!feedbackMode) {
-          setFeedbackMode(true);
-        }
-        // Clear feedback after successful generation
-        if (feedbackMode) {
-          setModificationFeedback('');
-        }
-      } else {
-          // Some images failed, some succeeded. Show a generic error.
-          setError('Some cards failed to generate. Please check them individually.');
-           // Still show feedback mode if it was the first attempt
+      try {
+        // Wait for all promises to resolve
+        const results = await Promise.all(generatePromises);
+        
+        // Check for any auth or rate limit errors
+        const hasAuthError = results.some(result => result && !result.success && result.error === 'auth');
+        const hasRateLimitError = results.some(result => result && !result.success && result.error === 'rate_limit');
+        
+        if (!hasAuthError && !hasRateLimitError) {
+          // Get any other errors
+          const errors = results
+            .filter(result => result && !result.success && result.error !== 'auth' && result.error !== 'rate_limit' && result.error !== 'timeout')
+            .map(result => (result ? result.error : 'Unknown error'));
+              
+          if (errors.length > 0) {
+            setError(errors[0] || 'Failed to generate one or more cards. Please try again.');
+          }
+          
+          // Show feedback mode after first generation
           if (!feedbackMode) {
-             setFeedbackMode(true);
+            setFeedbackMode(true);
           }
-          // Clear feedback if it was a feedback attempt
+          
+          // Clear feedback after successful generation
           if (feedbackMode) {
-             setModificationFeedback('');
+            setModificationFeedback('');
           }
-      }
+        }
 
+        setSubmited(true);
+      } catch (outerError: any) {
+        setError(outerError.message || 'Failed to generate card. Please try again.');
+      }
     } catch (err: any) {
-      // This catch block handles errors that occur *before* the individual promises start
-      console.error('Error initiating card generation process:', err);
-      setError(err.message || 'Failed to initiate card generation. Please try again.');
+      setError(err.message || 'Failed to generate card. Please try again.');
     } finally {
-      // Always set overall loading to false once all individual promises are settled
       setIsLoading(false);
     }
   };
