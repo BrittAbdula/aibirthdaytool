@@ -179,58 +179,75 @@ Based on previous design with parameters: ${JSON.stringify(previousCard.userInpu
         const ai = new GoogleGenAI({ apiKey });
         console.log('<---- Initialized GoogleGenAI ---->')
 
+        // Log before making the API call
+        console.log('<---- About to call Gemini API ---->')
+        
         const contents = userPrompt;
 
-        const response = await ai.models.generateContent({
-            model: "gemini-2.0-flash-preview-image-generation",
-            contents,
-            config: {
-                responseModalities: [Modality.TEXT, Modality.IMAGE],
-            },
-        });
-        console.log('<---- About to call Gemini API ---->')
+        try {
+            const response = await ai.models.generateContent({
+                model: "gemini-2.0-flash-preview-image-generation",
+                contents,
+                config: {
+                    responseModalities: [Modality.TEXT, Modality.IMAGE],
+                },
+            });
+            
+            console.log('<---- Received Gemini API response ---->', JSON.stringify(response).substring(0, 200) + '...')
 
-
-        if (!response?.candidates?.[0]?.content?.parts) {
-            console.log('<----Response from Gemini API : ' + response + '---->')
-            throw new Error("Invalid response format from Gemini API");
-        }
-        console.log('<---- Received Gemini API response ---->', JSON.stringify(response).substring(0, 200) + '...')
-
-        // Process the response and save the image
-        let imageUrl = '';
-        for (const part of response.candidates[0].content.parts) {
-            if (part.text) {
-                console.log('----Gemini response text:', part.text);
-            } else if (part.inlineData?.data) {
-                console.log('----Gemini response image:')
-                const imageData = part.inlineData.data;
-                const imageMimeType = part.inlineData.mimeType!;
-                // Upload generated image data (base64) to Cloudinary using the utility class
-                 
-                const uploadResult = await uploadCloudinaryFromBase64(imageData, imageMimeType);
-
-                imageUrl = uploadResult.url; // Get the secure URL from the result
-
-                console.log('Uploaded generated image to Cloudinary', imageUrl);
-                break;
+            if (!response?.candidates?.[0]?.content?.parts) {
+                console.log('<----Response from Gemini API : ' + JSON.stringify(response) + '---->')
+                throw new Error("Invalid response format from Gemini API");
             }
+
+            // Process the response and save the image
+            let imageUrl = '';
+            for (const part of response.candidates[0].content.parts) {
+                if (part.text) {
+                    console.log('----Gemini response text:', part.text);
+                } else if (part.inlineData?.data) {
+                    console.log('----Found Gemini response image data')
+                    const imageData = part.inlineData.data;
+                    const imageMimeType = part.inlineData.mimeType || 'image/png';
+                    
+                    try {
+                        // Upload generated image data (base64) to Cloudinary
+                        console.log('----About to upload to Cloudinary')
+                        const uploadResult = await uploadCloudinaryFromBase64(imageData, imageMimeType);
+                        
+                        if (!uploadResult || !uploadResult.url) {
+                            throw new Error("Upload to Cloudinary failed - no URL returned");
+                        }
+                        
+                        imageUrl = uploadResult.url; // Update the outer variable
+                        console.log('----Uploaded generated image to Cloudinary', imageUrl);
+                        break;
+                    } catch (uploadError) {
+                        console.error('----Error uploading to Cloudinary:', uploadError);
+                        throw uploadError;
+                    }
+                }
+            }
+
+            if (!imageUrl) {
+                console.log('----No image parts found in response');
+                throw new Error("No image generated");
+            }
+
+            console.log('<----Response image URL : ' + imageUrl + '---->')
+
+            return {
+                r2Url: imageUrl,
+                svgContent: '',
+                model: 'gemini-2.0-flash-preview-image-generation',
+                tokensUsed: 0,
+                duration: Date.now() - startTime,
+                errorMessage: ''
+            };
+        } catch (apiError) {
+            console.error('<---- Error during Gemini API call ---->', apiError);
+            throw apiError;
         }
-
-        if (!imageUrl) {
-            throw new Error("No image generated");
-        }
-
-        console.log('<----Response image URL : ' + imageUrl + '---->')
-
-        return {
-            r2Url: imageUrl,
-            svgContent: '',
-            model: 'gemini-2.0-flash-preview-image-generation',
-            tokensUsed: 0,
-            duration: Date.now() - startTime,
-            errorMessage: ''
-        };
 
     } catch (error) {
         console.error('Error in generateCardImageWithGenAI:', error);
@@ -244,4 +261,3 @@ Based on previous design with parameters: ${JSON.stringify(previousCard.userInpu
         }
     }
 }
-
