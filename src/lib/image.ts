@@ -2,7 +2,8 @@ import { CardType } from './card-config';
 import { prisma } from './prisma';
 import { CARD_SIZES, CardSize } from './card-config';
 import OpenAI from 'openai';
-import { uploadToCloudflareImages } from '@/lib/r2';
+import { uploadToCloudflareImages, uploadBase64ToCloudflareImages } from '@/lib/r2';
+import { GoogleGenAI, Modality } from "@google/genai";
 
 interface CardContentParams {
     userId?: string;
@@ -16,8 +17,8 @@ interface CardContentParams {
     [key: string]: any;
 }
 
-export async function generateCardImageWithOpenAI(params: CardContentParams, userPlan: string): Promise<{ r2Url: string, svgContent: string, model: string, tokensUsed: number, duration: number }> {
-    const { userId, cardType, version, templateId, size, style, modificationFeedback, previousCardId, ...otherParams } = params;
+export async function generateCardImageWithGrok(params: CardContentParams, userPlan: string): Promise<{ r2Url: string, svgContent: string, model: string, tokensUsed: number, duration: number }> {
+    const { userId,modelTier,format, variationIndex, cardType, version, templateId, size, style, modificationFeedback, previousCardId, ...otherParams } = params;
 
     const startTime = Date.now();
     const formattedTime = new Date(startTime).toLocaleString(undefined, {
@@ -108,3 +109,116 @@ Based on previous design with parameters: ${JSON.stringify(previousCard.userInpu
         throw error;
     }
 }
+
+
+export async function generateCardImageWithGenAI(params: CardContentParams, userPlan: string): Promise<{ r2Url: string, svgContent: string, model: string, tokensUsed: number, duration: number }> {
+    const { userId,modelTier,format, variationIndex, cardType, version, templateId, size, style, modificationFeedback, previousCardId, ...otherParams } = params;
+
+    const startTime = Date.now();
+    const formattedTime = new Date(startTime).toLocaleString(undefined, {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+    }).replace(/\//g, '-');
+
+    try {
+        // Get card size
+        const cardSize = CARD_SIZES[size || 'portrait'];
+
+        // Prepare user prompt
+        let userPrompt = '';
+        
+        // If this is a modification request, add the feedback to the user prompt
+        if (modificationFeedback && previousCardId) {
+            try {
+                const previousCard = await prisma.apiLog.findUnique({
+                    where: { cardId: previousCardId },
+                    select: { userInputs: true }
+                });
+
+                if (previousCard) {
+                    userPrompt = `Create a ${cardType} card with these modifications: ${modificationFeedback}. 
+Based on previous design with parameters: ${JSON.stringify(previousCard.userInputs)}` +
+                `Design: Match the event tone with a fitting theme (e.g., magical for Elsa, safari for kids). Use a central illustration, cohesive colors, handwritten font for the main message, sans-serif for details, and small accents to frame. Be creative for a polished look.`;
+                }
+            } catch (error) {
+                console.error("Error fetching previous card content:", error);
+            }
+        }
+
+        if (!userPrompt) {
+            const userPromptFields = Object.entries({
+                ...otherParams,
+                cardType,
+                style,
+                currentTime: formattedTime
+            })
+                .filter(([_, value]) => value !== '' && value !== undefined)
+                .map(([key, value]) => `${key}: ${value}`)
+                .join('\n');
+
+            userPrompt = `Create a ${cardType} card that feels personal and festive, using these details to inspire a unique design:\n${userPromptFields}\n` +
+                `Card dimensions: ${cardSize.width}x${cardSize.height}\n\n` +
+                `Design: Match the event tone with a fitting theme (e.g., magical for Elsa, safari for kids). Use a central illustration, cohesive colors, handwritten font for the main message, sans-serif for details, and small accents to frame. Be creative for a polished look.`;
+        }
+
+        console.log('<----User prompt : ' + userPrompt + '---->')
+
+        if (userPrompt.length >= 5000) {
+            throw new Error("User prompt too long");
+        }
+
+        const apiKey = process.env.GEMINI_API_KEY;
+        if (!apiKey) {
+            throw new Error("GEMINI_API_KEY is not configured");
+        }
+
+        const ai = new GoogleGenAI({ apiKey });
+
+        const contents = [{ text: userPrompt }];
+
+        const response = await ai.models.generateContent({
+            model: "gemini-2.0-flash-preview-image-generation",
+            contents,
+            config: {
+                responseModalities: [Modality.TEXT, Modality.IMAGE],
+            },
+        });
+
+        if (!response?.candidates?.[0]?.content?.parts) {
+            throw new Error("Invalid response format from Gemini API");
+        }
+
+        // Process the response and save the image
+        let imageUrl = '';
+        for (const part of response.candidates[0].content.parts) {
+            if (part.text) {
+                console.log('Gemini response text:', part.text);
+            } else if (part.inlineData?.data) {
+                const imageData = part.inlineData.data;
+                // 直接上传 base64 数据到 Cloudflare Images
+                imageUrl = await uploadBase64ToCloudflareImages(imageData);
+                break;
+            }
+        }
+
+        if (!imageUrl) {
+            throw new Error("No image generated");
+        }
+
+        console.log('<----Response image URL : ' + imageUrl + '---->')
+
+        return {
+            r2Url: imageUrl,
+            svgContent: '',
+            model: 'gemini-2.0-flash-preview-image-generation',
+            tokensUsed: 0,
+            duration: Date.now() - startTime
+        };
+
+    } catch (error) {
+        console.error('Error in generateCardImageWithGenAI:', error);
+        throw error;
+    }
+}
+

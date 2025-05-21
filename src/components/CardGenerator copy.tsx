@@ -201,8 +201,10 @@ export default function CardGenerator({
   const [showLimitDialog, setShowLimitDialog] = useState(false)
   const [currentCardType, setCurrentCardType] = useState<CardType>(wishCardType)
   const [formData, setFormData] = useState<Record<string, any>>({})
-  const [imgUrl, setImgUrl] = useState<string>(`https://store.celeprime.com/${wishCardType}.svg`)
-  const [cardId, setCardId] = useState<string | null>(initialCardId)
+  const [imageCount, setImageCount] = useState<number>(1)
+  const [imgUrls, setImgUrls] = useState<string[]>([`https://store.celeprime.com/${wishCardType}.svg`])
+  const [cardIds, setCardIds] = useState<string[]>([initialCardId || ''])
+  const [svgContents, setSvgContents] = useState<string[]>([''])
   const [isLoading, setIsLoading] = useState(false)
   const [isAuthLoading, setIsAuthLoading] = useState(false)
   const [showAdvancedOptions, setShowAdvancedOptions] = useState(false)
@@ -213,7 +215,6 @@ export default function CardGenerator({
   const [progress, setProgress] = useState(0)
   const [customValues, setCustomValues] = useState<Record<string, string>>({})
   const [selectedSize, setSelectedSize] = useState(cardConfig.defaultSize || 'portrait')
-  const [svgContent, setSvgContent] = useState<string>('')
   const [modificationFeedback, setModificationFeedback] = useState<string>('')
   const [feedbackMode, setFeedbackMode] = useState<boolean>(false)
   const [previousFormData, setPreviousFormData] = useState<Record<string, any>>({})
@@ -229,20 +230,34 @@ export default function CardGenerator({
     modificationFeedback: string
   } | null>(null)
 
+  const [imageLoadingStates, setImageLoadingStates] = useState<boolean[]>([])
+  const [imageProgresses, setImageProgresses] = useState<number[]>([])
+  const imageRefs = useRef<Array<HTMLDivElement | null>>([])
+
   useEffect(() => {
     setCurrentCardType(wishCardType)
     // Reset form data and set default values
     const initialFormData: Record<string, any> = {};
+    
+    // Initialize arrays with the correct length based on imageCount
+    const defaultImgUrl = cardConfig.isSystem ? `https://store.celeprime.com/${wishCardType}.svg` : sampleCard
+    setImgUrls(Array(imageCount).fill(defaultImgUrl))
+    setCardIds(Array(imageCount).fill(initialCardId || ''))
+    setSvgContents(Array(imageCount).fill(''))
+    setImageLoadingStates(Array(imageCount).fill(false))
+    setImageProgresses(Array(imageCount).fill(0))
+    
     if (!cardConfig.isSystem) {
-      setImgUrl(sampleCard)
+      setImgUrls(Array(imageCount).fill(sampleCard))
     }
+    
     cardConfig.fields.forEach(field => {
       if (field.type === 'select' && !field.optional && field.defaultValue) {
         initialFormData[field.name] = field.defaultValue;
       }
     });
-    // Set default card style to 'classic'
-    initialFormData["style"] = "classic";
+    // Set default format to 'svg'
+    initialFormData["format"] = "svg";
     setFormData(initialFormData);
   }, [wishCardType, cardConfig])
 
@@ -297,9 +312,25 @@ export default function CardGenerator({
     router.push(`/${newCardType}/`)
   }
 
+  // Function to trigger confetti for a specific image
+  const triggerConfettiForImage = (index: number) => {
+    const imageRef = imageRefs.current[index];
+    if (imageRef) {
+      const rect = imageRef.getBoundingClientRect();
+      const x = (rect.left + rect.width / 2) / window.innerWidth;
+      const y = (rect.top + rect.height / 2) / window.innerHeight;
+      
+      confetti({
+        particleCount: 50,
+        spread: 50,
+        origin: { x, y: y - 0.1 },
+        zIndex: 9999
+      });
+    }
+  };
+
   const handleGenerateCard = async () => {
     if (!session) {
-      // Save current form data before authentication
       setSavedFormData({
         formData: {...formData},
         customValues: {...customValues},
@@ -312,88 +343,274 @@ export default function CardGenerator({
     }
 
     try {
-      setIsLoading(true)
-      setProgress(0)
-      setError(null)
-
       // Save previous form data for potential modifications
-      setPreviousFormData({...formData})
+      setPreviousFormData({...formData});
 
-      // Prepare payload with feedback if in feedback mode
-      const payload: Record<string, any> = {
-        cardType: currentCardType,
-        size: selectedSize,
-        ...formData
-      }
+      // Reset image states
+      const newLoadingStates = Array(imageCount).fill(true);
+      setImageLoadingStates(newLoadingStates);
+      setImageProgresses(Array(imageCount).fill(10)); // Start at 10%
+      setIsLoading(true);
+      setError(null);
 
-      if (feedbackMode && modificationFeedback) {
-        payload.modificationFeedback = modificationFeedback
-        payload.previousCardId = cardId
-        
-        // Add to feedback history
-        setFeedbackHistory([...feedbackHistory, modificationFeedback])
-      }
+      // 存储轮询计时器的引用
+      const animationTimers: NodeJS.Timeout[] = [];
 
-      const response = await fetch('/api/generate-card', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      })
+      // Create array to hold promises for parallel requests
+      const generatePromises = Array.from({ length: imageCount }).map(async (_, index) => {
+        // Prepare payload with feedback if in feedback mode
+        const payload: Record<string, any> = {
+          cardType: currentCardType,
+          size: selectedSize,
+          format: formData.format || 'svg',
+          modelTier: formData.modelTier || "Free",
+          ...formData,
+          variationIndex: index
+        };
 
-      const data = await response.json()
-
-      if (!response.ok) {
-        if (response.status === 429) {
-          setShowLimitDialog(true)
-          return
+        if (feedbackMode && modificationFeedback) {
+          payload.modificationFeedback = modificationFeedback;
+          payload.previousCardId = cardIds[0] || '';
+          
+          if (index === 0) {
+            setFeedbackHistory([...feedbackHistory, modificationFeedback]);
+          }
         }
-        if (response.status === 401) {
-          // Save form data again in case session expired
-          setSavedFormData({
-            formData: {...formData},
-            customValues: {...customValues},
-            selectedSize,
-            modificationFeedback
+
+        try {
+          // Initial request to start generation
+          const response = await fetch('/api/generate-card', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
           });
-          pendingAuthRef.current = true;
-          setShowAuthDialog(true);
-          return;
+
+          if (!response.ok) {
+            if (response.status === 429) {
+              setShowLimitDialog(true);
+              return { success: false, error: 'rate_limit' };
+            }
+            if (response.status === 401) {
+              setSavedFormData({
+                formData: {...formData},
+                customValues: {...customValues},
+                selectedSize,
+                modificationFeedback
+              });
+              pendingAuthRef.current = true;
+              setShowAuthDialog(true);
+              return { success: false, error: 'auth' };
+            }
+            throw new Error('Failed to start card generation');
+          }
+
+          const { cardId } = await response.json();
+
+          // 标记是否已完成，避免重复处理
+          let isCompleted = false;
+
+          // Start polling loop with animation
+          const startPollingTime = Date.now();
+          const maxPollingDuration = 60000; // 60 seconds max
+          
+          // 创建动态进度动画
+          const animationIntervalId = setInterval(() => {
+            if (isCompleted) return; // 如果已完成，不再更新进度
+
+            setImageProgresses(prev => {
+              const newProgresses = [...prev];
+              
+              // 如果已经完成，保持100%
+              if (newProgresses[index] >= 100) {
+                return newProgresses;
+              }
+              
+              // 否则缓慢增加进度，但不超过85%
+              const currentProgress = newProgresses[index];
+              if (currentProgress < 30) {
+                newProgresses[index] = currentProgress + 3;
+              } else if (currentProgress < 50) {
+                newProgresses[index] = currentProgress + 2;
+              } else if (currentProgress < 85) {
+                newProgresses[index] = currentProgress + 0.5;
+              }
+              return newProgresses;
+            });
+          }, 800);
+          
+          // 保存计时器引用，以便在组件卸载或出错时清除
+          animationTimers.push(animationIntervalId);
+
+          try {
+            // 开始轮询
+            while (Date.now() - startPollingTime < maxPollingDuration && !isCompleted) {
+              // 轮询延迟，开始时频繁，后续缓慢
+              const pollingDelay = Date.now() - startPollingTime < 10000 ? 1000 : 2000;
+              await new Promise(resolve => setTimeout(resolve, pollingDelay));
+              
+              if (isCompleted) break; // 再次检查是否已完成
+              
+              // 检查状态
+              const statusResponse = await fetch(`/api/card-status?cardId=${cardId}`);
+              if (!statusResponse.ok) {
+                // 保持轮询，不要中断动画
+                console.error('Failed to check card status, will retry');
+                continue;
+              }
+
+              const statusData = await statusResponse.json();
+              
+              // 根据状态更新进度条
+              switch (statusData.status) {
+                case 'pending':
+                  // 保持动画继续，但确保不低于30%
+                  setImageProgresses(prev => {
+                    const newProgresses = [...prev];
+                    if (newProgresses[index] < 30) {
+                      newProgresses[index] = 30;
+                    }
+                    return newProgresses;
+                  });
+                  break;
+                  
+                case 'processing':
+                  // 保持动画继续，但确保在50-85%范围
+                  setImageProgresses(prev => {
+                    const newProgresses = [...prev];
+                    if (newProgresses[index] < 50) {
+                      newProgresses[index] = 50;
+                    }
+                    return newProgresses;
+                  });
+                  break;
+                  
+                case 'completed':
+                  // 标记为已完成
+                  isCompleted = true;
+                  
+                  // 清除动画间隔
+                  clearInterval(animationIntervalId);
+                  
+                  // 设置进度为100%
+                  setImageProgresses(prev => {
+                    const newProgresses = [...prev];
+                    newProgresses[index] = 100;
+                    return newProgresses;
+                  });
+                  
+                  // 加载完成，更新图片URL和内容
+                  setImgUrls(prev => {
+                    const newUrls = [...prev];
+                    // 处理SVG内容，创建data URL
+                    if (statusData.r2Url) {
+                      newUrls[index] = statusData.r2Url;
+                    } else if (statusData.responseContent) {
+                      newUrls[index] = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(statusData.responseContent)}`;
+                    }
+                    return newUrls;
+                  });
+
+                  setSvgContents(prev => {
+                    const newContents = [...prev];
+                    newContents[index] = statusData.responseContent || '';
+                    return newContents;
+                  });
+
+                  setCardIds(prev => {
+                    const newIds = [...prev];
+                    newIds[index] = cardId;
+                    return newIds;
+                  });
+
+                  // 设置为非加载状态
+                  setImageLoadingStates(prev => {
+                    const newStates = [...prev];
+                    newStates[index] = false;
+                    return newStates;
+                  });
+
+                  // 触发彩花效果
+                  setTimeout(() => {
+                    triggerConfettiForImage(index);
+                  }, 200);
+
+                  return { success: true, index };
+                  
+                case 'failed':
+                  // 标记为已完成
+                  isCompleted = true;
+                  
+                  // 清除动画间隔
+                  clearInterval(animationIntervalId);
+                  
+                  // 设置进度为0，显示错误
+                  setImageProgresses(prev => {
+                    const newProgresses = [...prev];
+                    newProgresses[index] = 0;
+                    return newProgresses;
+                  });
+                  
+                  throw new Error(statusData.errorMessage || 'Card generation failed');
+              }
+            }
+            
+            // 如果达到最大轮询时间但尚未收到完成状态
+            if (!isCompleted) {
+              // 继续显示加载状态，但设置错误
+              setError(`Card generation taking longer than expected, but still processing. Check back later.`);
+              return { success: false, error: 'timeout', index };
+            }
+          } catch (innerError: any) {
+            // 只有在明确失败时才清除定时器
+            clearInterval(animationIntervalId);
+            throw innerError;
+          }
+        } catch (error: any) {
+          // 确保清理所有动画计时器
+          animationTimers.forEach(timer => clearInterval(timer));
+          return { success: false, error: error.message, index };
         }
-        throw new Error(data.error || 'Failed to generate card')
-      }
+      });
 
-      if (!data.svgContent) {
-        throw new Error('Failed to get SVG content')
-      }
+      try {
+        // Wait for all promises to resolve
+        const results = await Promise.all(generatePromises);
+        
+        // Check for any auth or rate limit errors
+        const hasAuthError = results.some(result => result && !result.success && result.error === 'auth');
+        const hasRateLimitError = results.some(result => result && !result.success && result.error === 'rate_limit');
+        
+        if (!hasAuthError && !hasRateLimitError) {
+          // Get any other errors
+          const errors = results
+            .filter(result => result && !result.success && result.error !== 'auth' && result.error !== 'rate_limit' && result.error !== 'timeout')
+            .map(result => (result ? result.error : 'Unknown error'));
+              
+          if (errors.length > 0) {
+            setError(errors[0] || 'Failed to generate one or more cards. Please try again.');
+          }
+          
+          // Show feedback mode after first generation
+          if (!feedbackMode) {
+            setFeedbackMode(true);
+          }
+          
+          // Clear feedback after successful generation
+          if (feedbackMode) {
+            setModificationFeedback('');
+          }
+        }
 
-      // Create a data URL from the SVG content
-      const svgDataUrl = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(data.svgContent)}`
-      setImgUrl(svgDataUrl)
-      setSvgContent(data.svgContent)
-      setCardId(data.cardId)
-      setSubmited(true)
-      
-      // Clear feedback after successful generation
-      if (feedbackMode) {
-        setModificationFeedback('')
+        setSubmited(true);
+      } catch (outerError: any) {
+        setError(outerError.message || 'Failed to generate card. Please try again.');
       }
-      
-      // Show feedback mode after first generation
-      if (!feedbackMode) {
-        setFeedbackMode(true)
-      }
-      
-      confetti({
-        particleCount: 100,
-        spread: 70,
-        origin: { y: 0.6 }
-      })
     } catch (err: any) {
-      setError(err.message || 'Failed to generate card. Please try again.')
+      setError(err.message || 'Failed to generate card. Please try again.');
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const handleLogin = async () => {
     try {
@@ -495,85 +712,87 @@ export default function CardGenerator({
             <CardContent className="space-y-4">
               {cardConfig.fields.map((field) => renderField(field))}
 
-              {/* Style Selection */}
-              <div key="card-style" className="space-y-2">
-                <Label htmlFor="card-style" className="flex justify-between items-center">
-                  <span>Style</span>
-                  <span className="text-xs text-gray-400">← Scroll →</span>
+              {/* Color Selection */}
+              <div key="card-color" className="space-y-2">
+                <Label htmlFor="card-color" className="flex justify-between items-center">
+                  <span>Color</span>
                 </Label>
-                <div className="relative">
-                  <div className="flex overflow-x-auto pb-2 -mx-1 px-1 scroll-smooth snap-x hide-scrollbar">
-                    {[
-                      { id: "classic", name: "Classic", color: "#FFD1DC", icon: "✨" },
-                      { id: "modern", name: "Modern", color: "#B4E4FF", icon: "🌟" },
-                      { id: "minimal", name: "Minimal", color: "#F8F9FA", icon: "⚪" },
-                      { id: "vintage", name: "Vintage", color: "#F5E8C7", icon: "🏺" },
-                      { id: "fairytale", name: "Fairy Tale", color: "#E0F4FF", icon: "🧚" },
-                      { id: "ghibli", name: "Ghibli", color: "#D4E7C5", icon: "🌿" },
-                      { id: "pastel", name: "Pastel", color: "#FFCEFE", icon: "🎀" },
-                    ].map((style) => (
+                <div className="grid grid-cols-8 gap-2 w-full">
+                  {[
+                    { id: "black", name: "Black", color: "#000000" },
+                    { id: "gray", name: "Gray", color: "#BDBDBD" },
+                    { id: "white", name: "White", color: "#FFFFFF", border: true },
+                    { id: "red", name: "Red", color: "#D32F2F" },
+                    { id: "purple", name: "Purple", color: "#7B1FA2" },
+                    { id: "pink", name: "Pink", color: "#FF80AB" },
+                    { id: "green", name: "Green", color: "#388E3C" },
+                    { id: "light-green", name: "Light Green", color: "#A5D6A7" },
+                    { id: "blue", name: "Blue", color: "#1976D2" },
+                    { id: "navy", name: "Navy", color: "#283593" },
+                    { id: "sky", name: "Sky Blue", color: "#B3E5FC" },
+                    { id: "gold", name: "Gold", color: "#D4AF37" },
+                    { id: "beige", name: "Beige", color: "#F5F5DC" },
+                    { id: "yellow", name: "Yellow", color: "#FFF176" },
+                    { id: "brown", name: "Brown", color: "#8D5524" },
+                    { id: "peach", name: "Peach", color: "#FFCC99" },
+                  ].map((color) => {
+                    const colorValue = `${color.id}`;
+                    const isSelected = formData["color"] === colorValue;
+                    return (
                       <button
-                        key={style.id}
+                        key={color.id}
                         type="button"
-                        onClick={() => handleInputChange("style", style.id)}
+                        onClick={() => handleInputChange("color", isSelected ? '' : colorValue)}
                         className={cn(
-                          "h-16 w-20 min-w-[5rem] rounded-md border transition-all duration-200 flex flex-col items-center justify-center gap-1 relative overflow-hidden mr-2 snap-start",
-                          formData["style"] === style.id
-                            ? "border-[#FFC0CB] ring-1 ring-[#FFC0CB] shadow-sm"
-                            : "border-gray-200 hover:border-[#FFC0CB]"
+                          "h-8 w-8 rounded-full border-2 flex items-center justify-center transition-all duration-200",
+                          isSelected
+                            ? "border-[#b19bff] ring-2 ring-[#b19bff]"
+                            : color.border ? "border-gray-300" : "border-transparent"
                         )}
-                        style={{ backgroundColor: style.color }}
+                        style={{ backgroundColor: color.color }}
+                        aria-label={color.name}
                       >
-                        <span className="text-base">{style.icon}</span>
-                        <span className="text-xs font-medium text-gray-800">{style.name}</span>
-                        {formData["style"] === style.id && (
-                          <div className="absolute top-1 right-1 w-3 h-3 bg-[#FFC0CB] rounded-full flex items-center justify-center">
-                            <span className="text-white text-[8px]">✓</span>
-                          </div>
+                        {isSelected && (
+                          <span className="block w-3 h-3 rounded-full border-2 border-white bg-white" />
                         )}
                       </button>
-                    ))}
-                  </div>
-                  <div className="absolute left-0 top-0 bottom-0 w-4 bg-gradient-to-r from-white to-transparent pointer-events-none"></div>
-                  <div className="absolute right-0 top-0 bottom-0 w-4 bg-gradient-to-l from-white to-transparent pointer-events-none"></div>
+                    );
+                  })}
                 </div>
-                
                 <button
                   type="button"
                   onClick={() => {
-                    // Toggle custom style input
                     setCustomValues(prev => ({ 
                       ...prev, 
-                      style: formData["style"] === "custom" ? "" : (prev.style || "")
+                      color: formData["color"] === "custom" ? "" : (prev.color || "")
                     }));
-                    handleInputChange("style", formData["style"] === "custom" ? "" : "custom");
+                    handleInputChange("color", formData["color"] === "custom" ? "" : "custom");
                   }}
                   className={cn(
                     "mt-1 w-full py-1.5 px-2 border rounded-md flex items-center justify-center gap-1 transition-all duration-200 text-sm",
-                    formData["style"] === "custom"
+                    formData["color"] === "custom"
                       ? "border-[#b19bff] bg-[#b19bff]/10"
                       : "border-gray-200 hover:border-[#b19bff] hover:bg-[#b19bff]/5"
                   )}
                 >
                   <span className="text-sm">✨</span>
-                  <span className={formData["style"] === "custom" ? "text-[#b19bff] font-medium" : "text-gray-600"}>
-                    Custom Style
+                  <span className={formData["color"] === "custom" ? "text-[#b19bff] font-medium" : "text-gray-600"}>
+                    Custom Color
                   </span>
                 </button>
-                
-                {formData["style"] === "custom" && (
+                {formData["color"] === "custom" && (
                   <div className="mt-1">
                     <Input
-                      value={customValues["style"] || ''}
+                      value={customValues["color"] || ''}
                       onChange={(e) => {
-                        setCustomValues(prev => ({ ...prev, style: e.target.value }));
-                        handleInputChange("style", "custom");
+                        setCustomValues(prev => ({ ...prev, color: e.target.value }));
+                        handleInputChange("color", "custom");
                       }}
-                      placeholder="Describe style: colors, animations, themes..."
+                      placeholder="Describe color: e.g. 'rose gold', 'gradient', 'rainbow'..."
                       className="border-[#b19bff] focus-visible:ring-[#b19bff] text-sm"
                     />
                     <p className="text-xs text-gray-500 mt-1">
-                      Try: &ldquo;watercolor&rdquo;, &ldquo;neon&rdquo;, &ldquo;3D&rdquo;, &ldquo;pastel&rdquo;, &ldquo;glitter&rdquo;, etc.
+                      Try: &ldquo;rose gold&rdquo;, &ldquo;gradient&rdquo;, &ldquo;rainbow&rdquo;, etc.
                     </p>
                   </div>
                 )}
@@ -602,6 +821,102 @@ export default function CardGenerator({
                 </p>
               </div>
 
+              {/* Image Count Selection */}
+              <div className="space-y-2">
+                <Label>Number of Cards</Label>
+                <div className="flex space-x-2">
+                  {[1, 2].map((count) => (
+                    <button
+                      key={count}
+                      type="button"
+                      onClick={() => {
+                        setImageCount(count);
+                        
+                        // 更新与图片数量相关的数组，但不重置表单数据
+                        const defaultImgUrl = cardConfig.isSystem 
+                          ? `https://store.celeprime.com/${wishCardType}.svg` 
+                          : sampleCard;
+                        
+                        setImgUrls(prev => {
+                          const newUrls = [...prev];
+                          while (newUrls.length < count) {
+                            newUrls.push(defaultImgUrl);
+                          }
+                          return newUrls.slice(0, count);
+                        });
+                        
+                        setCardIds(prev => {
+                          const newIds = [...prev];
+                          while (newIds.length < count) {
+                            newIds.push('');
+                          }
+                          return newIds.slice(0, count);
+                        });
+                        
+                        setSvgContents(prev => {
+                          const newContents = [...prev];
+                          while (newContents.length < count) {
+                            newContents.push('');
+                          }
+                          return newContents.slice(0, count);
+                        });
+                        
+                        setImageLoadingStates(Array(count).fill(false));
+                        setImageProgresses(Array(count).fill(0));
+                      }}
+                      className={cn(
+                        "flex-1 py-2 rounded-md transition-all duration-200",
+                        imageCount === count
+                          ? "bg-[#FFC0CB] text-white font-medium"
+                          : "bg-gray-100 text-gray-700 hover:bg-[#FFE5EB]"
+                      )}
+                    >
+                      {count}
+                    </button>
+                  ))}
+                </div>
+                <p className="text-xs text-gray-500">
+                  Generate {imageCount} {imageCount === 1 ? 'card' : 'cards'} with different variations
+                </p>
+              </div>
+
+              {/* Price / Model Selection */}
+              <div className="space-y-2">
+                <Label>Model</Label>
+                <div className="flex space-x-2">
+                  {["Free", "Premium"].map((option) => (
+                    <button
+                      key={option}
+                      type="button"
+                      onClick={() => handleInputChange("modelTier", option)}
+                      className={cn(
+                        "flex-1 py-2 rounded-md border transition-all duration-200 relative",
+                        (formData.modelTier === undefined && option === "Free") || 
+                        formData.modelTier === option
+                          ? option === "Premium" 
+                            ? "bg-gradient-to-r from-[#a786ff] to-[#FF6B94] text-white font-medium border-transparent" 
+                            : "bg-[#FFF5F6] text-[#4A4A4A] font-medium border-[#FFC0CB]"
+                          : "bg-white text-gray-700 border-gray-200 hover:border-[#FFC0CB]"
+                      )}
+                    >
+                      {option === "Premium" && (
+                        <div className="absolute -top-2 -right-2 z-10">
+                          <div className="animate-pulse flex items-center justify-center bg-gradient-to-r from-[#a786ff] to-[#FF6B94] text-white text-[9px] font-bold px-2 py-0.5 rounded-full shadow-sm border border-white">
+                            <span className="mr-0.5">💰</span>Coming Soon
+                          </div>
+                        </div>
+                      )}
+                      {option}
+                    </button>
+                  ))}
+                </div>
+                <p className="text-xs text-gray-500">
+                  {formData.modelTier === "Premium" 
+                    ? "Premium model provides higher quality and more creative effects" 
+                    : "Free model available for all users"}
+                </p>
+              </div>
+
               {showAdvancedOptions && cardConfig.advancedFields && (
                 <>
                   {cardConfig.advancedFields.map((field) => renderField(field))}
@@ -621,8 +936,55 @@ export default function CardGenerator({
                   </button>
                 </div>
               )}
+
+              {/* Card Format Selection */}
+              {/* <div className="w-full">
+                <Label htmlFor="card-format" className="mb-2 block flex items-center justify-between">
+                  <span>Card Format</span>
+                </Label>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setFormData(prev => ({ ...prev, format: 'svg' }))}
+                    className={cn(
+                      "flex flex-col items-center justify-center p-3 rounded-md border transition-all relative",
+                      formData.format !== 'image' 
+                        ? "border-[#FFC0CB] bg-[#FFF5F6] ring-1 ring-[#FFC0CB]" 
+                        : "border-gray-200 hover:border-[#FFC0CB]"
+                    )}
+                  >
+                    
+                    <div className="absolute -top-2 -right-2">
+                      <div className="animate-bounce flex items-center justify-center bg-[#FFC0CB] text-white text-[10px] px-1.5 py-0.5 rounded-full">
+                        <span className="mr-0.5">✨</span>Animated
+                      </div>
+                    </div>
+                    
+                    <span className="text-sm font-medium">Animated Card</span>
+                  </button>
+                  
+                  <button
+                    type="button"
+                    onClick={() => setFormData(prev => ({ ...prev, format: 'image' }))}
+                    className={cn(
+                      "flex flex-col items-center justify-center p-3 rounded-md border transition-all relative",
+                      formData.format === 'image' 
+                        ? "border-[#FFC0CB] bg-[#FFF5F6] ring-1 ring-[#FFC0CB]" 
+                        : "border-gray-200 hover:border-[#FFC0CB]"
+                    )}
+                  >
+                    
+                    <div className="absolute -top-2 -right-2 z-10">
+                      <div className="animate-pulse flex items-center justify-center bg-gradient-to-r from-[#a786ff] to-[#b19bff] text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full shadow-sm border border-white">
+                        <span className="mr-0.5 text-[8px]">✨</span>BETA
+                      </div>
+                    </div>
+                    <span className="text-sm font-medium">Image Card</span>
+                  </button>
+                </div>
+              </div> */}
             </CardContent>
-            <CardFooter>
+            <CardFooter className="flex flex-col space-y-4">
               <Button className="w-full bg-[#FFC0CB] text-[#4A4A4A] hover:bg-[#FFD1DC]" onClick={handleGenerateCard} disabled={isLoading}>
                 {isLoading ? 'Generating...' : 'Generate Card'}
               </Button>
@@ -636,22 +998,50 @@ export default function CardGenerator({
           </div>
 
           <div className="w-full max-w-md">
-            {isLoading && <ProgressBar progress={progress} />}
-            <div className="bg-white p-3 sm:p-5 rounded-lg shadow-lg flex items-center justify-center relative border border-[#FFC0CB] aspect-[2/3]">
-              {isLoading ? (
-                <FlickeringGrid />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center overflow-hidden">
-                  <ImageViewer 
-                    alt={currentCardType} 
-                    cardId={cardId || '1'} 
-                    cardType={currentCardType} 
-                    imgUrl={imgUrl} 
-                    isNewCard={true} 
-                    svgContent={svgContent}
-                  />
+            <div className={cn(
+              "grid gap-3", 
+              imageCount === 1 ? "grid-cols-1" : 
+              imageCount === 2 ? "grid-cols-2" : 
+              "grid-cols-2"
+            )}>
+              {Array.from({ length: imageCount }).map((_, index) => (
+                <div 
+                  key={index}
+                  ref={(el) => { imageRefs.current[index] = el }}
+                  className={cn(
+                    "bg-white p-2 sm:p-3 rounded-lg shadow-lg flex items-center justify-center relative border border-[#FFC0CB]",
+                    "aspect-[2/3]",
+                    imageCount > 2 && index >= 2 ? "col-span-1 row-start-2" : ""
+                  )}
+                >
+                  {imageLoadingStates[index] ? (
+                    <div className="w-full h-full flex flex-col items-center justify-center">
+                      <FlickeringGrid />
+                      <div className="absolute bottom-3 left-3 right-3">
+                        <div className="w-full bg-gray-300 rounded-full h-1.5">
+                          <div
+                            className="bg-[#FFC0CB] h-1.5 rounded-full"
+                            style={{ width: `${imageProgresses[index]}%` }}
+                          ></div>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center overflow-hidden">
+                      {imgUrls[index] && (
+                        <ImageViewer 
+                          alt={`${currentCardType}-${index}`} 
+                          cardId={cardIds[index] || `${index+1}`} 
+                          cardType={currentCardType} 
+                          imgUrl={imgUrls[index]} 
+                          isNewCard={true} 
+                          svgContent={svgContents[index] || ''}
+                        />
+                      )}
+                    </div>
+                  )}
                 </div>
-              )}
+              ))}
             </div>
           </div>
         </div>
@@ -787,40 +1177,42 @@ export default function CardGenerator({
             `}</style>
             
             {/* Previous feedback with enhanced styling */}
-          {feedbackHistory.length > 0 && (
+            {feedbackHistory.length > 0 && (
               <div className="mb-5 relative z-10">
                 <h4 className="text-sm font-medium text-gray-500 mb-2 flex items-center">
                   <span className="mr-2 w-4 h-4 bg-gradient-to-r from-[#FFB6C1] to-[#b19bff] rounded-full inline-block"></span>
                   Previous Feedback:
                 </h4>
-              <div className="space-y-2">
-                {feedbackHistory.map((feedback, index) => (
+                <div className="space-y-2">
+                  {feedbackHistory.map((feedback, index) => (
                     <div 
                       key={index} 
                       className="p-3 rounded-md text-sm text-gray-600 italic border border-[#FFB6C1]/30 shadow-sm bg-gradient-to-r from-white to-gray-50 hover:from-gray-50 hover:to-white transition-all duration-300"
                       style={{ animationDelay: `${index * 0.2}s` }}
                     >
-                    &ldquo;{feedback}&rdquo;
-                  </div>
-                ))}
+                      &ldquo;{feedback}&rdquo;
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
-          )}
+            )}
           
             {/* Enhanced textarea with gradient focus */}
-          <Textarea
-            value={modificationFeedback}
-            onChange={(e) => setModificationFeedback(e.target.value)}
-            placeholder="Describe what you'd like to change... (e.g., 'Make the background more colorful', 'Add a shining star', 'Add more decorations')"
+            <Textarea
+              value={modificationFeedback}
+              onChange={(e) => setModificationFeedback(e.target.value)}
+              placeholder={imageCount > 1 
+                ? "Describe what you'd like to change for all images... (e.g., 'Make all backgrounds more colorful', 'Add shining stars to all images')" 
+                : "Describe what you'd like to change... (e.g., 'Make the background more colorful', 'Add a shining star', 'Add more decorations')"}
               className="w-full border-2 border-[#FFC0CB] rounded-md focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[#b19bff] focus:shadow-[0_0_0_1px_rgba(177,155,255,0.4),0_0_0_4px_rgba(177,155,255,0.1)] transition-all duration-300 mb-4 relative z-10"
-            rows={3}
-          />
+              rows={3}
+            />
           
             {/* Enhanced buttons with animation */}
             <div className="flex space-x-4 relative z-10">
-            <Button 
-              onClick={handleGenerateCard} 
-              disabled={isLoading || !modificationFeedback.trim()} 
+              <Button 
+                onClick={handleGenerateCard} 
+                disabled={isLoading || !modificationFeedback.trim()} 
                 className="bg-gradient-to-r from-[#FFC0CB] to-[#FFB6C1] hover:from-[#FFD1DC] hover:to-[#FFC0CB] text-[#4A4A4A] transition-all duration-300 flex-1 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
               >
                 {isLoading ? (
@@ -831,18 +1223,18 @@ export default function CardGenerator({
                 ) : (
                   <>
                     <span className="mr-2">✨</span>
-                    Update Card
+                    Update {imageCount > 1 ? 'Images' : 'Card'}
                   </>
                 )}
-            </Button>
+              </Button>
             
-            <Button 
-              onClick={handleResetFeedback}
-              variant="outline" 
+              <Button 
+                onClick={handleResetFeedback}
+                variant="outline" 
                 className="border-[#FFC0CB] text-[#4A4A4A] hover:bg-[#FFF5F6] transition-all duration-300 shadow-sm hover:shadow-md transform hover:-translate-y-0.5"
-            >
-              Start Over
-            </Button>
+              >
+                Start Over
+              </Button>
             </div>
           </div>
         </div>
@@ -889,6 +1281,7 @@ export default function CardGenerator({
             <DialogTitle className="text-2xl font-semibold text-[#4A4A4A]">Daily Limit Reached</DialogTitle>
             <DialogDescription className="text-gray-600 mt-2 space-y-4">
               <p>You&apos;ve reached your daily limit for card generation. Free users can generate up to 3 cards per day.</p>
+              
               <div className="bg-[#FFF5F6] p-4 rounded-lg border border-[#FFC0CB]">
                 <p className="text-[#4A4A4A] font-medium">Don&apos;t worry! You can still create beautiful cards by:</p>
                 <ul className="list-disc list-inside mt-2 space-y-1 text-[#4A4A4A]">
@@ -896,6 +1289,23 @@ export default function CardGenerator({
                   <li>Customizing existing designs</li>
                   <li>Saving your favorites for later</li>
                 </ul>
+              </div>
+
+              <div className="mt-4 bg-[#f0f4ff] p-4 rounded-lg border border-[#a786ff]">
+                <p className="text-[#4A4A4A] font-medium flex items-center">
+                  <span className="text-lg mr-2">✨</span>
+                  Get 10 Extra Generations!
+                </p>
+                <div className="mt-2 space-y-2 text-[#4A4A4A]">
+                  <p className="text-sm">Share MewTruCard.com on your favorite platform:</p>
+                  <ol className="list-decimal list-inside text-sm space-y-1.5">
+                    <li>Share a link to mewtrucard.com on a forum, blog, or social media</li>
+                    <li>Email the shared URL and your account email to: 
+                      <span className="font-medium text-[#a786ff]"> support@mewtrucard.com</span>
+                    </li>
+                    <li>We&apos;ll add 10 extra generations to your account!</li>
+                  </ol>
+                </div>
               </div>
             </DialogDescription>
           </DialogHeader>

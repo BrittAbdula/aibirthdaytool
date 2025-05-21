@@ -18,6 +18,8 @@ import { useSession, signIn } from "next-auth/react"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Loader2 } from 'lucide-react'
 import { CARD_SIZES } from '@/lib/card-config'
+import { useCardGeneration } from '@/hooks/useCardGeneration'
+import { AlertCircle, Info } from 'lucide-react'
 
 const FlickeringGrid = () => {
   return (
@@ -197,59 +199,47 @@ export default function CardGenerator({
 }) {
   const { data: session, status } = useSession()
   const [usageCount, setUsageCount] = useState<number>(0)
-  const [showAuthDialog, setShowAuthDialog] = useState(false)
-  const [showLimitDialog, setShowLimitDialog] = useState(false)
   const [currentCardType, setCurrentCardType] = useState<CardType>(wishCardType)
   const [formData, setFormData] = useState<Record<string, any>>({})
   const [imageCount, setImageCount] = useState<number>(1)
-  const [imgUrls, setImgUrls] = useState<string[]>([`https://store.celeprime.com/${wishCardType}.svg`])
-  const [cardIds, setCardIds] = useState<string[]>([initialCardId || ''])
-  const [svgContents, setSvgContents] = useState<string[]>([''])
-  const [isLoading, setIsLoading] = useState(false)
-  const [isAuthLoading, setIsAuthLoading] = useState(false)
   const [showAdvancedOptions, setShowAdvancedOptions] = useState(false)
-  const [error, setError] = useState<string | null>(null)
   const router = useRouter()
   const sampleCard = `/card/goodluck.svg`
   const [submited, setSubmited] = useState(false)
-  const [progress, setProgress] = useState(0)
   const [customValues, setCustomValues] = useState<Record<string, string>>({})
   const [selectedSize, setSelectedSize] = useState(cardConfig.defaultSize || 'portrait')
   const [modificationFeedback, setModificationFeedback] = useState<string>('')
   const [feedbackMode, setFeedbackMode] = useState<boolean>(false)
   const [previousFormData, setPreviousFormData] = useState<Record<string, any>>({})
   const [feedbackHistory, setFeedbackHistory] = useState<string[]>([])
-  
-  // Add a ref to track if we're waiting for authentication
-  const pendingAuthRef = useRef<boolean>(false)
-  // Add a state to store form data before authentication
-  const [savedFormData, setSavedFormData] = useState<{
-    formData: Record<string, any>,
-    customValues: Record<string, string>,
-    selectedSize: string,
-    modificationFeedback: string
-  } | null>(null)
+  const [isAuthLoading, setIsAuthLoading] = useState(false)
+  const [errorToast, setErrorToast] = useState<{
+    title: string;
+    message: string;
+    type: 'error' | 'warning' | 'info';
+  } | null>(null);
 
-  const [imageLoadingStates, setImageLoadingStates] = useState<boolean[]>([])
-  const [imageProgresses, setImageProgresses] = useState<number[]>([])
-  const imageRefs = useRef<Array<HTMLDivElement | null>>([])
+  // Use the card generation hook
+  const {
+    generateCards,
+    imageStates,
+    globalLoading,
+    error: generationError,
+    showAuthDialog,
+    setShowAuthDialog,
+    showLimitDialog,
+    setShowLimitDialog,
+    imageRefs
+  } = useCardGeneration()
+
+  // Combine errors from both sources
+  const error = generationError || null;
+  const isLoading = globalLoading;
 
   useEffect(() => {
     setCurrentCardType(wishCardType)
     // Reset form data and set default values
     const initialFormData: Record<string, any> = {};
-    
-    // Initialize arrays with the correct length based on imageCount
-    const defaultImgUrl = cardConfig.isSystem ? `https://store.celeprime.com/${wishCardType}.svg` : sampleCard
-    setImgUrls(Array(imageCount).fill(defaultImgUrl))
-    setCardIds(Array(imageCount).fill(initialCardId || ''))
-    setSvgContents(Array(imageCount).fill(''))
-    setImageLoadingStates(Array(imageCount).fill(false))
-    setImageProgresses(Array(imageCount).fill(0))
-    
-    if (!cardConfig.isSystem) {
-      setImgUrls(Array(imageCount).fill(sampleCard))
-    }
     
     cardConfig.fields.forEach(field => {
       if (field.type === 'select' && !field.optional && field.defaultValue) {
@@ -265,45 +255,6 @@ export default function CardGenerator({
     fetchSvgContent(sampleCard)
   }, [])
 
-  // Add effect to watch for auth status changes
-  useEffect(() => {
-    // If we were waiting for auth and now the user is authenticated
-    if (pendingAuthRef.current && session && savedFormData) {
-      pendingAuthRef.current = false;
-      // Restore saved form data
-      setFormData(savedFormData.formData);
-      setCustomValues(savedFormData.customValues);
-      setSelectedSize(savedFormData.selectedSize);
-      if (savedFormData.modificationFeedback) {
-        setModificationFeedback(savedFormData.modificationFeedback);
-      }
-      
-      // Close the auth dialog
-      setShowAuthDialog(false);
-      
-      // Optionally, trigger card generation automatically
-      setTimeout(() => {
-        handleGenerateCard();
-      }, 500);
-    }
-  }, [session, savedFormData]);
-
-  useEffect(() => {
-    if (isLoading) {
-      const interval = setInterval(() => {
-        setProgress((prev) => {
-          if (prev >= 90) {
-            return 90;
-          }
-          return prev + 10;
-        });
-      }, 1000);
-      return () => clearInterval(interval);
-    } else {
-      setProgress(100);
-    }
-  }, [isLoading]);
-
   const handleInputChange = (name: string, value: string | number) => {
     setFormData(prev => ({ ...prev, [name]: value }))
   }
@@ -312,303 +263,75 @@ export default function CardGenerator({
     router.push(`/${newCardType}/`)
   }
 
-  // Function to trigger confetti for a specific image
-  const triggerConfettiForImage = (index: number) => {
-    const imageRef = imageRefs.current[index];
-    if (imageRef) {
-      const rect = imageRef.getBoundingClientRect();
-      const x = (rect.left + rect.width / 2) / window.innerWidth;
-      const y = (rect.top + rect.height / 2) / window.innerHeight;
-      
-      confetti({
-        particleCount: 50,
-        spread: 50,
-        origin: { x, y: y - 0.1 },
-        zIndex: 9999
-      });
-    }
+  const handleImageCountChange = (count: number) => {
+    setImageCount(count);
   };
 
   const handleGenerateCard = async () => {
-    if (!session) {
-      setSavedFormData({
-        formData: {...formData},
-        customValues: {...customValues},
-        selectedSize,
-        modificationFeedback
+    // Validate required fields
+    const requiredFields = cardConfig.fields.filter(field => !field.optional);
+    const missingFields = requiredFields.filter(field => !formData[field.name]);
+    
+    if (missingFields.length > 0) {
+      setErrorToast({
+        title: 'Required Fields Missing',
+        message: `Please fill in the following required fields: ${missingFields.map(f => f.label).join(', ')}`,
+        type: 'error'
       });
-      pendingAuthRef.current = true;
-      setShowAuthDialog(true);
       return;
     }
 
+    // Save previous form data for potential modifications
+    setPreviousFormData({...formData});
+
+    const options = {
+      cardType: currentCardType,
+      size: selectedSize,
+      format: formData.format || 'svg',
+      modelTier: formData.modelTier || "Free",
+      formData: { ...formData },
+      modificationFeedback: feedbackMode ? modificationFeedback : undefined,
+      previousCardId: feedbackMode ? imageStates[0]?.id : undefined,
+      imageCount
+    };
+
     try {
-      // Save previous form data for potential modifications
-      setPreviousFormData({...formData});
+      const result = await generateCards(options);
 
-      // Reset image states
-      const newLoadingStates = Array(imageCount).fill(true);
-      setImageLoadingStates(newLoadingStates);
-      setImageProgresses(Array(imageCount).fill(10)); // Start at 10%
-      setIsLoading(true);
-      setError(null);
-
-      // 存储轮询计时器的引用
-      const animationTimers: NodeJS.Timeout[] = [];
-
-      // Create array to hold promises for parallel requests
-      const generatePromises = Array.from({ length: imageCount }).map(async (_, index) => {
-        // Prepare payload with feedback if in feedback mode
-        const payload: Record<string, any> = {
-          cardType: currentCardType,
-          size: selectedSize,
-          format: formData.format || 'svg',
-          modelTier: formData.modelTier || "Free",
-          ...formData,
-          variationIndex: index
-        };
-
-        if (feedbackMode && modificationFeedback) {
-          payload.modificationFeedback = modificationFeedback;
-          payload.previousCardId = cardIds[0] || '';
-          
-          if (index === 0) {
-            setFeedbackHistory([...feedbackHistory, modificationFeedback]);
-          }
-        }
-
-        try {
-          // Initial request to start generation
-          const response = await fetch('/api/generate-card', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload),
-          });
-
-          if (!response.ok) {
-            if (response.status === 429) {
-              setShowLimitDialog(true);
-              return { success: false, error: 'rate_limit' };
-            }
-            if (response.status === 401) {
-              setSavedFormData({
-                formData: {...formData},
-                customValues: {...customValues},
-                selectedSize,
-                modificationFeedback
-              });
-              pendingAuthRef.current = true;
-              setShowAuthDialog(true);
-              return { success: false, error: 'auth' };
-            }
-            throw new Error('Failed to start card generation');
-          }
-
-          const { cardId } = await response.json();
-
-          // 标记是否已完成，避免重复处理
-          let isCompleted = false;
-
-          // Start polling loop with animation
-          const startPollingTime = Date.now();
-          const maxPollingDuration = 60000; // 60 seconds max
-          
-          // 创建动态进度动画
-          const animationIntervalId = setInterval(() => {
-            if (isCompleted) return; // 如果已完成，不再更新进度
-
-            setImageProgresses(prev => {
-              const newProgresses = [...prev];
-              
-              // 如果已经完成，保持100%
-              if (newProgresses[index] >= 100) {
-                return newProgresses;
-              }
-              
-              // 否则缓慢增加进度，但不超过85%
-              const currentProgress = newProgresses[index];
-              if (currentProgress < 30) {
-                newProgresses[index] = currentProgress + 3;
-              } else if (currentProgress < 50) {
-                newProgresses[index] = currentProgress + 2;
-              } else if (currentProgress < 85) {
-                newProgresses[index] = currentProgress + 0.5;
-              }
-              return newProgresses;
-            });
-          }, 800);
-          
-          // 保存计时器引用，以便在组件卸载或出错时清除
-          animationTimers.push(animationIntervalId);
-
-          try {
-            // 开始轮询
-            while (Date.now() - startPollingTime < maxPollingDuration && !isCompleted) {
-              // 轮询延迟，开始时频繁，后续缓慢
-              const pollingDelay = Date.now() - startPollingTime < 10000 ? 1000 : 2000;
-              await new Promise(resolve => setTimeout(resolve, pollingDelay));
-              
-              if (isCompleted) break; // 再次检查是否已完成
-              
-              // 检查状态
-              const statusResponse = await fetch(`/api/card-status?cardId=${cardId}`);
-              if (!statusResponse.ok) {
-                // 保持轮询，不要中断动画
-                console.error('Failed to check card status, will retry');
-                continue;
-              }
-
-              const statusData = await statusResponse.json();
-              
-              // 根据状态更新进度条
-              switch (statusData.status) {
-                case 'pending':
-                  // 保持动画继续，但确保不低于30%
-                  setImageProgresses(prev => {
-                    const newProgresses = [...prev];
-                    if (newProgresses[index] < 30) {
-                      newProgresses[index] = 30;
-                    }
-                    return newProgresses;
-                  });
-                  break;
-                  
-                case 'processing':
-                  // 保持动画继续，但确保在50-85%范围
-                  setImageProgresses(prev => {
-                    const newProgresses = [...prev];
-                    if (newProgresses[index] < 50) {
-                      newProgresses[index] = 50;
-                    }
-                    return newProgresses;
-                  });
-                  break;
-                  
-                case 'completed':
-                  // 标记为已完成
-                  isCompleted = true;
-                  
-                  // 清除动画间隔
-                  clearInterval(animationIntervalId);
-                  
-                  // 设置进度为100%
-                  setImageProgresses(prev => {
-                    const newProgresses = [...prev];
-                    newProgresses[index] = 100;
-                    return newProgresses;
-                  });
-                  
-                  // 加载完成，更新图片URL和内容
-                  setImgUrls(prev => {
-                    const newUrls = [...prev];
-                    // 处理SVG内容，创建data URL
-                    if (statusData.r2Url) {
-                      newUrls[index] = statusData.r2Url;
-                    } else if (statusData.responseContent) {
-                      newUrls[index] = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(statusData.responseContent)}`;
-                    }
-                    return newUrls;
-                  });
-
-                  setSvgContents(prev => {
-                    const newContents = [...prev];
-                    newContents[index] = statusData.responseContent || '';
-                    return newContents;
-                  });
-
-                  setCardIds(prev => {
-                    const newIds = [...prev];
-                    newIds[index] = cardId;
-                    return newIds;
-                  });
-
-                  // 设置为非加载状态
-                  setImageLoadingStates(prev => {
-                    const newStates = [...prev];
-                    newStates[index] = false;
-                    return newStates;
-                  });
-
-                  // 触发彩花效果
-                  setTimeout(() => {
-                    triggerConfettiForImage(index);
-                  }, 200);
-
-                  return { success: true, index };
-                  
-                case 'failed':
-                  // 标记为已完成
-                  isCompleted = true;
-                  
-                  // 清除动画间隔
-                  clearInterval(animationIntervalId);
-                  
-                  // 设置进度为0，显示错误
-                  setImageProgresses(prev => {
-                    const newProgresses = [...prev];
-                    newProgresses[index] = 0;
-                    return newProgresses;
-                  });
-                  
-                  throw new Error(statusData.errorMessage || 'Card generation failed');
-              }
-            }
-            
-            // 如果达到最大轮询时间但尚未收到完成状态
-            if (!isCompleted) {
-              // 继续显示加载状态，但设置错误
-              setError(`Card generation taking longer than expected, but still processing. Check back later.`);
-              return { success: false, error: 'timeout', index };
-            }
-          } catch (innerError: any) {
-            // 只有在明确失败时才清除定时器
-            clearInterval(animationIntervalId);
-            throw innerError;
-          }
-        } catch (error: any) {
-          // 确保清理所有动画计时器
-          animationTimers.forEach(timer => clearInterval(timer));
-          return { success: false, error: error.message, index };
-        }
-      });
-
-      try {
-        // Wait for all promises to resolve
-        const results = await Promise.all(generatePromises);
-        
-        // Check for any auth or rate limit errors
-        const hasAuthError = results.some(result => result && !result.success && result.error === 'auth');
-        const hasRateLimitError = results.some(result => result && !result.success && result.error === 'rate_limit');
-        
-        if (!hasAuthError && !hasRateLimitError) {
-          // Get any other errors
-          const errors = results
-            .filter(result => result && !result.success && result.error !== 'auth' && result.error !== 'rate_limit' && result.error !== 'timeout')
-            .map(result => (result ? result.error : 'Unknown error'));
-              
-          if (errors.length > 0) {
-            setError(errors[0] || 'Failed to generate one or more cards. Please try again.');
-          }
-          
-          // Show feedback mode after first generation
-          if (!feedbackMode) {
-            setFeedbackMode(true);
-          }
-          
-          // Clear feedback after successful generation
-          if (feedbackMode) {
-            setModificationFeedback('');
-          }
-        }
-
+      if (result.success) {
         setSubmited(true);
-      } catch (outerError: any) {
-        setError(outerError.message || 'Failed to generate card. Please try again.');
+        if (!feedbackMode) {
+          setFeedbackMode(true);
+        }
+        if (feedbackMode && modificationFeedback) {
+          setFeedbackHistory([...feedbackHistory, modificationFeedback]);
+          setModificationFeedback('');
+        }
+      } else if (result.error === 'rate_limit') {
+        setErrorToast({
+          title: 'Daily Limit Reached',
+          message: 'Free users can generate up to 3 cards per day. Please try again tomorrow or explore our Card Gallery.',
+          type: 'warning'
+        });
+      } else if (result.error === 'auth') {
+        setErrorToast({
+          title: 'Sign In Required',
+          message: 'Please sign in to continue generating cards.',
+          type: 'info'
+        });
+      } else {
+        setErrorToast({
+          title: 'Generation Failed',
+          message: result.error || 'An error occurred while generating your card. Please try again.',
+          type: 'error'
+        });
       }
-    } catch (err: any) {
-      setError(err.message || 'Failed to generate card. Please try again.');
-    } finally {
-      setIsLoading(false);
+    } catch (err) {
+      setErrorToast({
+        title: 'System Error',
+        message: 'Sorry, something went wrong. Please try again later.',
+        type: 'error'
+      });
     }
   };
 
@@ -695,13 +418,65 @@ export default function CardGenerator({
     );
   }
 
+  // Add error toast component
+  const ErrorToast = () => {
+    if (!errorToast) return null;
+
+    const icons = {
+      error: <AlertCircle className="h-5 w-5 text-red-500" />,
+      warning: <AlertCircle className="h-5 w-5 text-yellow-500" />,
+      info: <Info className="h-5 w-5 text-blue-500" />
+    };
+
+    const colors = {
+      error: 'bg-red-50 border-red-200',
+      warning: 'bg-yellow-50 border-yellow-200',
+      info: 'bg-blue-50 border-blue-200'
+    };
+
+    return (
+      <div className={cn(
+        "fixed top-4 right-4 z-50 w-96 p-4 rounded-lg border shadow-lg",
+        colors[errorToast.type]
+      )}>
+        <div className="flex items-start space-x-3">
+          {icons[errorToast.type]}
+          <div className="flex-1">
+            <h3 className="font-medium text-gray-900">{errorToast.title}</h3>
+            <p className="mt-1 text-sm text-gray-600">{errorToast.message}</p>
+          </div>
+          <button
+            onClick={() => setErrorToast(null)}
+            className="text-gray-400 hover:text-gray-500"
+          >
+            <span className="sr-only">Close</span>
+            <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+            </svg>
+          </button>
+        </div>
+      </div>
+    );
+  };
+
+  // Add auto-dismiss effect for error toast
+  useEffect(() => {
+    if (errorToast) {
+      const timer = setTimeout(() => {
+        setErrorToast(null);
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [errorToast]);
+
   if (!cardConfig) {
     return <div>Invalid card type</div>
   }
 
   return (
     <>
-      <main className=" mx-auto ">
+      <ErrorToast />
+      <main className="mx-auto">
         {error && (
           <Alert variant="destructive" className="mb-4">
             <AlertDescription>{error}</AlertDescription>
@@ -829,41 +604,7 @@ export default function CardGenerator({
                     <button
                       key={count}
                       type="button"
-                      onClick={() => {
-                        setImageCount(count);
-                        
-                        // 更新与图片数量相关的数组，但不重置表单数据
-                        const defaultImgUrl = cardConfig.isSystem 
-                          ? `https://store.celeprime.com/${wishCardType}.svg` 
-                          : sampleCard;
-                        
-                        setImgUrls(prev => {
-                          const newUrls = [...prev];
-                          while (newUrls.length < count) {
-                            newUrls.push(defaultImgUrl);
-                          }
-                          return newUrls.slice(0, count);
-                        });
-                        
-                        setCardIds(prev => {
-                          const newIds = [...prev];
-                          while (newIds.length < count) {
-                            newIds.push('');
-                          }
-                          return newIds.slice(0, count);
-                        });
-                        
-                        setSvgContents(prev => {
-                          const newContents = [...prev];
-                          while (newContents.length < count) {
-                            newContents.push('');
-                          }
-                          return newContents.slice(0, count);
-                        });
-                        
-                        setImageLoadingStates(Array(count).fill(false));
-                        setImageProgresses(Array(count).fill(0));
-                      }}
+                      onClick={() => handleImageCountChange(count)}
                       className={cn(
                         "flex-1 py-2 rounded-md transition-all duration-200",
                         imageCount === count
@@ -938,7 +679,7 @@ export default function CardGenerator({
               )}
 
               {/* Card Format Selection */}
-              {/* <div className="w-full">
+              <div className="w-full">
                 <Label htmlFor="card-format" className="mb-2 block flex items-center justify-between">
                   <span>Card Format</span>
                 </Label>
@@ -982,7 +723,7 @@ export default function CardGenerator({
                     <span className="text-sm font-medium">Image Card</span>
                   </button>
                 </div>
-              </div> */}
+              </div>
             </CardContent>
             <CardFooter className="flex flex-col space-y-4">
               <Button className="w-full bg-[#FFC0CB] text-[#4A4A4A] hover:bg-[#FFD1DC]" onClick={handleGenerateCard} disabled={isLoading}>
@@ -1004,7 +745,7 @@ export default function CardGenerator({
               imageCount === 2 ? "grid-cols-2" : 
               "grid-cols-2"
             )}>
-              {Array.from({ length: imageCount }).map((_, index) => (
+              {imageStates.map((imageState, index) => (
                 <div 
                   key={index}
                   ref={(el) => { imageRefs.current[index] = el }}
@@ -1014,28 +755,28 @@ export default function CardGenerator({
                     imageCount > 2 && index >= 2 ? "col-span-1 row-start-2" : ""
                   )}
                 >
-                  {imageLoadingStates[index] ? (
+                  {imageState.isLoading ? (
                     <div className="w-full h-full flex flex-col items-center justify-center">
                       <FlickeringGrid />
                       <div className="absolute bottom-3 left-3 right-3">
                         <div className="w-full bg-gray-300 rounded-full h-1.5">
                           <div
                             className="bg-[#FFC0CB] h-1.5 rounded-full"
-                            style={{ width: `${imageProgresses[index]}%` }}
+                            style={{ width: `${imageState.progress}%` }}
                           ></div>
                         </div>
                       </div>
                     </div>
                   ) : (
                     <div className="w-full h-full flex items-center justify-center overflow-hidden">
-                      {imgUrls[index] && (
+                      {imageState.url && (
                         <ImageViewer 
                           alt={`${currentCardType}-${index}`} 
-                          cardId={cardIds[index] || `${index+1}`} 
+                          cardId={imageState.id} 
                           cardType={currentCardType} 
-                          imgUrl={imgUrls[index]} 
+                          imgUrl={imageState.url} 
                           isNewCard={true} 
-                          svgContent={svgContents[index] || ''}
+                          svgContent={imageState.svgContent}
                         />
                       )}
                     </div>

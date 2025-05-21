@@ -110,3 +110,68 @@ export async function uploadToCloudflareImages(
       throw new Error(`Failed to upload to Cloudflare Images: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
+
+/**
+ * Uploads a base64 image to Cloudflare Images
+ * @param base64Data The base64 string of the image (without data:image prefix)
+ * @param metadata Optional metadata to attach to the image
+ * @param requireSignedURLs Whether the image requires signed URLs for access
+ * @returns The Cloudflare Images response with image ID and variant URLs
+ */
+export async function uploadBase64ToCloudflareImages(
+    base64Data: string,
+    metadata?: Record<string, any>,
+    requireSignedURLs = false
+  ): Promise<string> {
+    const CF_ACCOUNT_ID = process.env.CF_ACCOUNT_ID;
+    const CF_API_TOKEN = process.env.CF_API_TOKEN;
+    const CF_HASH_CODE = process.env.CF_HASH_CODE;
+  
+    if (!CF_ACCOUNT_ID || !CF_API_TOKEN) {
+      throw new Error('Missing required Cloudflare Images configuration environment variables');
+    }
+  
+    try {
+      // Convert base64 to blob
+      const byteCharacters = Buffer.from(base64Data, 'base64');
+      const blob = new Blob([byteCharacters], { type: 'image/png' });
+      
+      const formData = new FormData();
+      formData.append('file', blob, 'image.png');
+      
+      if (metadata) {
+        formData.append('metadata', JSON.stringify(metadata));
+      }
+      
+      formData.append('requireSignedURLs', String(requireSignedURLs));
+      
+      const response = await fetch(
+        `https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/images/v1`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${CF_API_TOKEN}`,
+          },
+          body: formData,
+        }
+      );
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ errors: [{ message: response.statusText }] }));
+        throw new Error(`Cloudflare Images API error: ${JSON.stringify(errorData.errors)}`);
+      }
+      
+      const data = await response.json();
+      
+      if (!data.success) {
+        throw new Error(`Cloudflare Images upload failed: ${JSON.stringify(data.errors)}`);
+      }
+
+      const cf_url = `https://store.celeprime.com/cdn-cgi/imagedelivery/${CF_HASH_CODE}/${data.result.id}/public`;
+      
+      return cf_url;
+    } catch (error) {
+      console.error('Cloudflare Images upload error:', error);
+      throw new Error(`Failed to upload to Cloudflare Images: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
