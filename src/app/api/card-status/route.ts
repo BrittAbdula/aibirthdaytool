@@ -6,10 +6,10 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(request: Request) {
   try {
-    // const session = await auth();
-    // if (!session?.user?.id) {
-    //   return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    // }
+    const session = await auth();
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
 
     // Get cardId from URL params
     const { searchParams } = new URL(request.url);
