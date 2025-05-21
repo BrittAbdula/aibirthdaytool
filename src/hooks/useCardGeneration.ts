@@ -138,7 +138,7 @@ export const useCardGeneration = () => {
           const { cardId } = await response.json();
           let isCompleted = false;
           const startPollingTime = Date.now();
-          const maxPollingDuration = 10000; // 10 seconds max
+          const maxPollingDuration = 100000; // 100 seconds max
 
           // Update the state with the generated cardId
           setImageStates(prev => {

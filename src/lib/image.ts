@@ -121,6 +121,7 @@ export async function generateCardImageWithGenAI(params: CardContentParams, user
         month: '2-digit',
         day: '2-digit'
     }).replace(/\//g, '-');
+    console.log('<----Using model : ' + 'Google Gemini' + '---->')
 
     try {
         // Get card size
@@ -176,7 +177,7 @@ Based on previous design with parameters: ${JSON.stringify(previousCard.userInpu
 
         const ai = new GoogleGenAI({ apiKey });
 
-        const contents = [{ text: userPrompt }];
+        const contents = userPrompt;
 
         const response = await ai.models.generateContent({
             model: "gemini-2.0-flash-preview-image-generation",
