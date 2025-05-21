@@ -18,7 +18,7 @@ interface CardContentParams {
     [key: string]: any;
 }
 
-export async function generateCardImageWithGrok(params: CardContentParams, userPlan: string): Promise<{ r2Url: string, svgContent: string, model: string, tokensUsed: number, duration: number }> {
+export async function generateCardImageWithGrok(params: CardContentParams, userPlan: string): Promise<{ r2Url: string, svgContent: string, model: string, tokensUsed: number, duration: number, errorMessage?: string }> {
     const { userId, modelTier, format, variationIndex, cardType, version, templateId, size, style, modificationFeedback, previousCardId, ...otherParams } = params;
 
     const startTime = Date.now();
@@ -103,7 +103,8 @@ Based on previous design with parameters: ${JSON.stringify(previousCard.userInpu
             svgContent: '',
             model: 'grok-2-image',
             tokensUsed: 0, // Image generation doesn't return token usage
-            duration: Date.now() - startTime
+            duration: Date.now() - startTime,
+            errorMessage: ''
         };
 
     } catch (error) {
@@ -112,7 +113,7 @@ Based on previous design with parameters: ${JSON.stringify(previousCard.userInpu
 }
 
 
-export async function generateCardImageWithGenAI(params: CardContentParams, userPlan: string): Promise<{ r2Url: string, svgContent: string, model: string, tokensUsed: number, duration: number }> {
+export async function generateCardImageWithGenAI(params: CardContentParams, userPlan: string): Promise<{ r2Url: string, svgContent: string, model: string, tokensUsed: number, duration: number, errorMessage?: string }> {
     const { userId, modelTier, format, variationIndex, cardType, version, templateId, size, style, modificationFeedback, previousCardId, ...otherParams } = params;
 
     const startTime = Date.now();
@@ -223,10 +224,19 @@ Based on previous design with parameters: ${JSON.stringify(previousCard.userInpu
             svgContent: '',
             model: 'gemini-2.0-flash-preview-image-generation',
             tokensUsed: 0,
-            duration: Date.now() - startTime
+            duration: Date.now() - startTime,
+            errorMessage: ''
         };
 
     } catch (error) {
+        return {
+            r2Url: '',
+            svgContent: '',
+            model: 'gemini-2.0-flash-preview-image-generation',
+            tokensUsed: 0,
+            duration: Date.now() - startTime,
+            errorMessage: error instanceof Error ? error.message : 'Unknown error'
+        }
         console.error('Error in generateCardImageWithGenAI:', error);
         throw error;
     }

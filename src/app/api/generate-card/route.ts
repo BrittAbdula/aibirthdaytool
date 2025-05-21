@@ -146,6 +146,7 @@ export async function POST(request: Request) {
             promptVersion: result.model,
             tokensUsed: result.tokensUsed,
             duration: result.duration,
+            errorMessage: result.errorMessage,
           },
         });
       } catch (error) {
