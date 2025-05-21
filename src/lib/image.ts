@@ -229,6 +229,7 @@ Based on previous design with parameters: ${JSON.stringify(previousCard.userInpu
         };
 
     } catch (error) {
+        console.error('Error in generateCardImageWithGenAI:', error);
         return {
             r2Url: '',
             svgContent: '',
@@ -237,8 +238,6 @@ Based on previous design with parameters: ${JSON.stringify(previousCard.userInpu
             duration: Date.now() - startTime,
             errorMessage: error instanceof Error ? error.message : 'Unknown error'
         }
-        console.error('Error in generateCardImageWithGenAI:', error);
-        throw error;
     }
 }
 
