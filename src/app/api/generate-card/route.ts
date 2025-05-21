@@ -107,29 +107,25 @@ export async function POST(request: Request) {
     });
 
     // Update usage count
-    if (!usage) {
-      await prisma.apiUsage.create({
-        data: {
+    const today = new Date(new Date().setHours(0, 0, 0, 0));
+    await prisma.apiUsage.upsert({
+      where: {
+        userId_date: {
           userId,
-          date: new Date(new Date().setHours(0, 0, 0, 0)),
-          count: 1,
+          date: today,
         },
-      });
-    } else {
-      await prisma.apiUsage.update({
-        where: {
-          userId_date: {
-            userId,
-            date: new Date(new Date().setHours(0, 0, 0, 0)),
-          },
+      },
+      create: {
+        userId,
+        date: today,
+        count: 1,
+      },
+      update: {
+        count: {
+          increment: 1,
         },
-        data: {
-          count: {
-            increment: 1,
-          },
-        },
-      });
-    }
+      },
+    });
 
     // Start async processing
     const cardData = {
