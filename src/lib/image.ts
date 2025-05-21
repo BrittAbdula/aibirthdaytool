@@ -177,6 +177,7 @@ Based on previous design with parameters: ${JSON.stringify(previousCard.userInpu
         }
 
         const ai = new GoogleGenAI({ apiKey });
+        console.log('<---- Initialized GoogleGenAI ---->')
 
         const contents = userPrompt;
 
@@ -187,11 +188,14 @@ Based on previous design with parameters: ${JSON.stringify(previousCard.userInpu
                 responseModalities: [Modality.TEXT, Modality.IMAGE],
             },
         });
+        console.log('<---- About to call Gemini API ---->')
+
 
         if (!response?.candidates?.[0]?.content?.parts) {
             console.log('<----Response from Gemini API : ' + response + '---->')
             throw new Error("Invalid response format from Gemini API");
         }
+        console.log('<---- Received Gemini API response ---->', JSON.stringify(response).substring(0, 200) + '...')
 
         // Process the response and save the image
         let imageUrl = '';
