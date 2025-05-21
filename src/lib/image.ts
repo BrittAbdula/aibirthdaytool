@@ -181,13 +181,11 @@ Based on previous design with parameters: ${JSON.stringify(previousCard.userInpu
 
         // Log before making the API call
         console.log('<---- About to call Gemini API ---->')
-        
-        const contents = userPrompt;
 
         try {
             const response = await ai.models.generateContent({
                 model: "gemini-2.0-flash-preview-image-generation",
-                contents,
+                contents: userPrompt,
                 config: {
                     responseModalities: [Modality.TEXT, Modality.IMAGE],
                 },
