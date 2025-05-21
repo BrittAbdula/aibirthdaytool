@@ -188,6 +188,7 @@ Based on previous design with parameters: ${JSON.stringify(previousCard.userInpu
         });
 
         if (!response?.candidates?.[0]?.content?.parts) {
+            console.log('<----Response from Gemini API : ' + response + '---->')
             throw new Error("Invalid response format from Gemini API");
         }
 
@@ -195,8 +196,9 @@ Based on previous design with parameters: ${JSON.stringify(previousCard.userInpu
         let imageUrl = '';
         for (const part of response.candidates[0].content.parts) {
             if (part.text) {
-                console.log('Gemini response text:', part.text);
+                console.log('----Gemini response text:', part.text);
             } else if (part.inlineData?.data) {
+                console.log('----Gemini response image:')
                 const imageData = part.inlineData.data;
                 const imageMimeType = part.inlineData.mimeType!;
                 // Upload generated image data (base64) to Cloudinary using the utility class
