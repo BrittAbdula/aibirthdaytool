@@ -97,7 +97,7 @@ export async function POST(request: Request) {
         cardId,
         cardType,
         userInputs: requestData,
-        promptVersion: format === 'image' ? 'grok-2-image' : 'pending',
+        promptVersion: format === 'image' ? 'image' : 'svg',
         responseContent: '',
         tokensUsed: 0,
         duration: 0,
@@ -157,7 +157,7 @@ export async function POST(request: Request) {
             status: 'failed',
             isError: true,
             errorMessage: error instanceof Error ? error.message : 'Unknown error',
-            promptVersion: format === 'image' ? 'grok-2-image' : 'unknown', // Fallback
+            promptVersion: format === 'image' ? 'image' : 'svg', // Fallback
             tokensUsed: 0,
             duration: Date.now() - startTime, // Need to capture startTime in the outer scope or recalculate
           },

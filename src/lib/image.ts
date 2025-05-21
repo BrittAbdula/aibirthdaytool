@@ -2,9 +2,10 @@ import { CardType } from './card-config';
 import { prisma } from './prisma';
 import { CARD_SIZES, CardSize } from './card-config';
 import OpenAI from 'openai';
-import { uploadToCloudflareImages, uploadBase64ToCloudflareImages } from '@/lib/r2';
+import { uploadToCloudflareImages, uploadBase64ToCloudflareImages, uploadCloudinaryFromBase64 } from '@/lib/r2';
 import { GoogleGenAI, Modality } from "@google/genai";
-
+import { nanoid } from 'nanoid';
+import { v2 as cloudinary } from 'cloudinary';
 interface CardContentParams {
     userId?: string;
     cardType: CardType;
@@ -18,7 +19,7 @@ interface CardContentParams {
 }
 
 export async function generateCardImageWithGrok(params: CardContentParams, userPlan: string): Promise<{ r2Url: string, svgContent: string, model: string, tokensUsed: number, duration: number }> {
-    const { userId,modelTier,format, variationIndex, cardType, version, templateId, size, style, modificationFeedback, previousCardId, ...otherParams } = params;
+    const { userId, modelTier, format, variationIndex, cardType, version, templateId, size, style, modificationFeedback, previousCardId, ...otherParams } = params;
 
     const startTime = Date.now();
     const formattedTime = new Date(startTime).toLocaleString(undefined, {
@@ -33,7 +34,7 @@ export async function generateCardImageWithGrok(params: CardContentParams, userP
 
         // Prepare user prompt
         let userPrompt = '';
-        
+
         // If this is a modification request, add the feedback to the user prompt
         if (modificationFeedback && previousCardId) {
             // Get the previous card content
@@ -46,7 +47,7 @@ export async function generateCardImageWithGrok(params: CardContentParams, userP
                 if (previousCard) {
                     userPrompt = `Create a ${cardType} card with these modifications: ${modificationFeedback}. 
 Based on previous design with parameters: ${JSON.stringify(previousCard.userInputs)}` +
-                `Design: Match the event tone with a fitting theme (e.g., magical for Elsa, safari for kids). Use a central illustration, cohesive colors, handwritten font for the main message, sans-serif for details, and small accents to frame. Be creative for a polished look.`;
+                        `Design: Match the event tone with a fitting theme (e.g., magical for Elsa, safari for kids). Use a central illustration, cohesive colors, handwritten font for the main message, sans-serif for details, and small accents to frame. Be creative for a polished look.`;
                 }
             } catch (error) {
                 console.error("Error fetching previous card content:", error);
@@ -66,7 +67,7 @@ Based on previous design with parameters: ${JSON.stringify(previousCard.userInpu
                 .map(([key, value]) => `${key}: ${value}`)
                 .join('\n');
 
-                userPrompt = `Create a ${cardType} card that feels personal and festive, using these details to inspire a unique design:\n${userPromptFields}\n` +
+            userPrompt = `Create a ${cardType} card that feels personal and festive, using these details to inspire a unique design:\n${userPromptFields}\n` +
                 `Card dimensions: ${cardSize.width}x${cardSize.height}\n\n` +
                 `Design: Match the event tone with a fitting theme (e.g., magical for Elsa, safari for kids). Use a central illustration, cohesive colors, handwritten font for the main message, sans-serif for details, and small accents to frame. Be creative for a polished look.`;
         }
@@ -112,7 +113,7 @@ Based on previous design with parameters: ${JSON.stringify(previousCard.userInpu
 
 
 export async function generateCardImageWithGenAI(params: CardContentParams, userPlan: string): Promise<{ r2Url: string, svgContent: string, model: string, tokensUsed: number, duration: number }> {
-    const { userId,modelTier,format, variationIndex, cardType, version, templateId, size, style, modificationFeedback, previousCardId, ...otherParams } = params;
+    const { userId, modelTier, format, variationIndex, cardType, version, templateId, size, style, modificationFeedback, previousCardId, ...otherParams } = params;
 
     const startTime = Date.now();
     const formattedTime = new Date(startTime).toLocaleString(undefined, {
@@ -127,7 +128,7 @@ export async function generateCardImageWithGenAI(params: CardContentParams, user
 
         // Prepare user prompt
         let userPrompt = '';
-        
+
         // If this is a modification request, add the feedback to the user prompt
         if (modificationFeedback && previousCardId) {
             try {
@@ -139,7 +140,7 @@ export async function generateCardImageWithGenAI(params: CardContentParams, user
                 if (previousCard) {
                     userPrompt = `Create a ${cardType} card with these modifications: ${modificationFeedback}. 
 Based on previous design with parameters: ${JSON.stringify(previousCard.userInputs)}` +
-                `Design: Match the event tone with a fitting theme (e.g., magical for Elsa, safari for kids). Use a central illustration, cohesive colors, handwritten font for the main message, sans-serif for details, and small accents to frame. Be creative for a polished look.`;
+                        `Design: Match the event tone with a fitting theme (e.g., magical for Elsa, safari for kids). Use a central illustration, cohesive colors, handwritten font for the main message, sans-serif for details, and small accents to frame. Be creative for a polished look.`;
                 }
             } catch (error) {
                 console.error("Error fetching previous card content:", error);
@@ -196,8 +197,14 @@ Based on previous design with parameters: ${JSON.stringify(previousCard.userInpu
                 console.log('Gemini response text:', part.text);
             } else if (part.inlineData?.data) {
                 const imageData = part.inlineData.data;
-                // 直接上传 base64 数据到 Cloudflare Images
-                imageUrl = await uploadBase64ToCloudflareImages(imageData);
+                const imageMimeType = part.inlineData.mimeType!;
+                // Upload generated image data (base64) to Cloudinary using the utility class
+                 
+                const uploadResult = await uploadCloudinaryFromBase64(imageData, imageMimeType);
+
+                const imageUrl = uploadResult.url; // Get the secure URL from the result
+
+                console.log('Uploaded generated image to Cloudinary', imageUrl);
                 break;
             }
         }

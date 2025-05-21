@@ -175,3 +175,85 @@ export async function uploadBase64ToCloudflareImages(
       throw new Error(`Failed to upload to Cloudflare Images: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
+
+
+
+  /**
+   * 通过Base64字符串上传图片
+   * @param base64Data 图片的Base64字符串 (不包含data:image/...;base64, 前缀)
+   * @param mimeType 图片的MIME类型 (e.g., 'image/png')
+   * @param metadata 元数据
+   * @param customId 自定义图片ID
+   * @returns 上传结果
+   */
+  export async function uploadCloudinaryFromBase64(base64Data: string, mimeType: string, metadata?: Record<string, string>, customId?: string): Promise<{ id: string; uploadedAt: string; url: string }> {
+    try {
+      console.log('CloudinaryImages: Starting image upload from Base64');
+      
+      const formData = new FormData();
+      // Cloudinary expects the data URI format for base64 uploads
+      formData.append('file', `data:${mimeType};base64,${base64Data}`);
+      formData.append('upload_preset', process.env.CLOUDINARY_UPLOAD_PRESET!);
+      
+      // Add API key and timestamp (if available)
+      if (process.env.CLOUDINARY_API_KEY) {
+        const timestamp = Math.round(new Date().getTime() / 1000);
+        formData.append('timestamp', timestamp.toString());
+        formData.append('api_key', process.env.CLOUDINARY_API_KEY); // Note: API Secret is needed for signing, but Cloudflare Workers often handle this differently or use unsigned uploads
+        // In a secure server environment, you would compute and append a signature:
+        // const signature = computeSignature({ public_id, timestamp, ...other_params }, this.CLOUDINARY_API_SECRET);
+        // formData.append('signature', signature);
+      }
+      
+      // If a custom ID is provided, add it to the request
+      if (customId) {
+        formData.append('public_id', customId);
+      }
+      
+      // Add metadata
+      if (metadata) {
+        // Cloudinary can use context parameter for metadata
+        const contextPairs = Object.entries(metadata)
+          .map(([key, value]) => `${key}=${value}`)
+          .join('|');
+        if (contextPairs) {
+          formData.append('context', contextPairs);
+        }
+        
+        // If metadata includes folder, handle separately
+        if (metadata.folder) {
+          formData.append('folder', metadata.folder);
+        }
+      }
+
+      const response = await fetch(`https://api.cloudinary.com/v1_1/${process.env.CLOUDINARY_CLOUD_NAME}/auto/upload`, {
+        method: 'POST',
+        body: formData
+      });
+
+      console.log(`CloudinaryImages: Base64 upload response status: ${response.status} ${response.statusText}`);
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('CloudinaryImages: Base64 upload failed', errorData);
+        throw new Error(`Failed to upload image from Base64: ${JSON.stringify(errorData)}`);
+      }
+
+      const result = await response.json() as { 
+        public_id: string; 
+        created_at: string;
+        secure_url: string;
+      };
+      
+      console.log(`CloudinaryImages: Base64 upload successful, image ID: ${result.public_id}`);
+      
+      return {
+        id: result.public_id,
+        uploadedAt: result.created_at,
+        url: result.secure_url
+      };
+    } catch (error) {
+      console.error('CloudinaryImages: Error during Base64 upload:', error);
+      throw error instanceof Error ? error : new Error('Unknown error during image Base64 upload');
+    }
+  }
