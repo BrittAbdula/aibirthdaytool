@@ -206,7 +206,7 @@ Based on previous design with parameters: ${JSON.stringify(previousCard.userInpu
                  
                 const uploadResult = await uploadCloudinaryFromBase64(imageData, imageMimeType);
 
-                const imageUrl = uploadResult.url; // Get the secure URL from the result
+                imageUrl = uploadResult.url; // Get the secure URL from the result
 
                 console.log('Uploaded generated image to Cloudinary', imageUrl);
                 break;
