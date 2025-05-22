@@ -39,6 +39,19 @@ export async function GET(request: Request) {
 
     if(card.promptVersion === 'gpt4o-image'){
       const data = await getGenerateStatus(card.taskId || '');
+      console.log('gpt4o-image-------data', data);
+      if(data?.status === 'SUCCESS'){
+        prisma.apiLog.update({
+          where: { cardId },
+          data: { status: 'completed', r2Url: data?.response?.resultUrls?.[0] || '' },
+        });
+      }else if(data?.status === 'GENERATE_FAILED'){
+        prisma.apiLog.update({
+          where: { cardId },
+          data: { status: 'failed', errorMessage: data?.errorMessage || '' },
+        });
+      }
+        
       return NextResponse.json({
         status: data?.status === 'SUCCESS' ? 'completed' : 'failed',
         r2Url: data?.response?.resultUrls?.[0] || '',
@@ -101,4 +114,4 @@ async function getGenerateStatus(taskId: string) {
     
     return data.data;
 
-} 
+}
