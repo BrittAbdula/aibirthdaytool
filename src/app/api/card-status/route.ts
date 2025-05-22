@@ -28,6 +28,8 @@ export async function GET(request: Request) {
         responseContent: true,
         isError: true,
         errorMessage: true,
+        promptVersion: true,
+        taskId: true,
       },
     });
 
@@ -35,6 +37,13 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'Card not found' }, { status: 404 });
     }
 
+    if(card.promptVersion === 'gpt4o-image'){
+      const data = await getGenerateStatus(card.taskId || '');
+      return NextResponse.json({
+        status: data?.status || 'pending',
+        r2Url: data?.response?.resultUrls?.[0] || '',
+      });
+    }
     return NextResponse.json({
       status: card.status,
       r2Url: card.r2Url || '',
@@ -46,4 +55,50 @@ export async function GET(request: Request) {
     console.error('Error checking card status:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
+}
+
+export const TASK_STATUS = {
+  PENDING: 'pending',
+  PROCESSING: 'processing',
+  COMPLETED: 'completed',
+  FAILED: 'failed'
+} as const;
+
+
+export interface KieAPIResponse<T> {
+  code: 200 | 401 | 402 | 404 | 422 | 429 | 455 | 500 | 505;
+  msg?: string;
+  data?: T;
+}
+
+export interface ImageDetailsData {
+  taskId: string;
+  paramJson: string;
+  completeTime: number;
+  response: {
+    resultUrls: string[];
+  };
+  successFlag: number;
+  status: 'GENERATING' | 'SUCCESS' | 'CREATE_TASK_FAILED' | 'GENERATE_FAILED';
+  errorCode?: number;
+  errorMessage?: string;
+  createTime: number;
+  progress: string;
+}
+
+// get generate status by taskId from 4o
+async function getGenerateStatus(taskId: string) {
+  
+    // Call external API to get status
+    const response = await fetch(`https://kieai.erweima.ai/api/v1/gpt4o-image/record-info?taskId=${taskId}`, {
+      headers: {
+        'Accept': 'application/json',
+        'Authorization': `Bearer ${process.env.KIE_API_KEY}`
+      }
+    });
+
+    const data = await response.json() as KieAPIResponse<ImageDetailsData>;
+    
+    return data.data;
+
 } 
