@@ -1,8 +1,27 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma'; // Adjust the import path if necessary
 
+// 处理预检请求
+export async function OPTIONS() {
+  return NextResponse.json({}, { 
+    status: 200,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+      'Access-Control-Allow-Credentials': 'true',
+    }
+  });
+}
+
 export async function GET(request: Request) {
-    return NextResponse.json({ message: 'Hello, world!' });
+    return NextResponse.json({ message: 'Hello, world!' }, {
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+      }
+    });
 }
 
 export async function POST(request: Request) {
@@ -12,13 +31,21 @@ export async function POST(request: Request) {
 
         if (!data || !data.taskId || !data.info) {
              console.error('Webhook received with invalid data structure:', body);
-            return NextResponse.json({ error: 'Invalid webhook payload' }, { status: 400 });
+            return NextResponse.json({ error: 'Invalid webhook payload' }, { 
+              status: 400,
+              headers: {
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+                'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+              }
+            });
         }
 
         const { taskId, info } = data;
         const { result_urls } = info;
 
         console.log(`<---- Webhook received for Task ID: ${taskId}, Status Code: ${code}, Message: ${msg} ---->`);
+        console.log('Full webhook payload:', JSON.stringify(body, null, 2)); // 详细记录完整的回调内容
 
         let status = 'processing'; // Default status
         let r2Url = null;
@@ -54,10 +81,24 @@ export async function POST(request: Request) {
 
         console.log(`<---- Database updated for Task ID: ${taskId}, New Status: ${status} ---->`);
 
-        return NextResponse.json({ success: true, updatedRecord });
+        return NextResponse.json({ success: true, updatedRecord }, {
+          headers: {
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+            'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+          }
+        });
 
     } catch (error: any) {
-        console.error('Error handling webhook:', error);
-        return NextResponse.json({ error: 'Internal Server Error', details: error.message }, { status: 500 });
+        console.error('Error handling webhook:', error.message);
+        console.error('Error stack:', error.stack);
+        return NextResponse.json({ error: 'Internal Server Error', details: error.message }, { 
+          status: 500,
+          headers: {
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+            'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+          }
+        });
     }
 }
