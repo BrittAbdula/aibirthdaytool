@@ -41,12 +41,12 @@ export async function GET(request: Request) {
       const data = await getGenerateStatus(card.taskId || '');
       console.log('gpt4o-image-------data', data);
       if(data?.status === 'SUCCESS'){
-        prisma.apiLog.update({
+        await prisma.apiLog.update({
           where: { cardId },
           data: { status: 'completed', r2Url: data?.response?.resultUrls?.[0] || '' },
         });
       }else if(data?.status === 'GENERATE_FAILED'){
-        prisma.apiLog.update({
+        await prisma.apiLog.update({
           where: { cardId },
           data: { status: 'failed', errorMessage: data?.errorMessage || '' },
         });
