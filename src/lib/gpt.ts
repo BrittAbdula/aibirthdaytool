@@ -61,7 +61,7 @@ interface CardContentParams {
     [key: string]: any;
 }
 
-export async function generateCardContent(params: CardContentParams, userPlan: string): Promise<{ r2Url: string, svgContent: string, model: string, tokensUsed: number, duration: number, errorMessage?: string }> {
+export async function generateCardContent(params: CardContentParams, userPlan: string): Promise<{ taskId: string, r2Url: string, svgContent: string, model: string, tokensUsed: number, duration: number, errorMessage?: string , status?: string }> {
     const { userId, cardType, version, format, modelTier, variationIndex, size, modificationFeedback, previousCardId, ...otherParams } = params;
 
     const startTime = Date.now();
@@ -194,6 +194,7 @@ IMPORTANT: return SVG code only. Do not include any explanation, commentary, or 
         }
 
         return {
+            taskId: '',
             r2Url: '',
             svgContent,
             model,
@@ -205,6 +206,7 @@ IMPORTANT: return SVG code only. Do not include any explanation, commentary, or 
     } catch (error) {
         console.error('Error in generateCardContent:', error);
         return {
+            taskId: '',
             r2Url: '',
             svgContent: '',
             model,

@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { generateCardContent } from '@/lib/gpt';
 import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
-import { generateCardImageWithGenAI } from '@/lib/image';
+import { generateCardImageWith4o } from '@/lib/image';
 import { nanoid } from 'nanoid';
 // 增加超时限制到最大值
 export const maxDuration = 60; // 增加到 60 秒
@@ -13,15 +13,15 @@ export const dynamic = 'force-dynamic';
 
 export async function POST(request: Request) {
   try {
-    const session = await auth();
+    // const session = await auth();
 
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    // if (!session?.user?.id) {
+    //   return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    // }
 
-    const userId = session.user.id;
+    // const userId = session.user.id;
 
-    // const userId = 'cm56ic66y000110jijyw2ir8r';
+    const userId = 'cm56ic66y000110jijyw2ir8r';
     const requestData = await request.json();
     const {
       cardType,
@@ -133,20 +133,21 @@ export async function POST(request: Request) {
 
         // Generate card
         const result = format === 'image'
-          ? await generateCardImageWithGenAI(cardData, planType)
+          ? await generateCardImageWith4o(cardData, planType)
           : await generateCardContent(cardData, planType);
 
         // Update status to completed with results
         await prisma.apiLog.update({
           where: { cardId },
           data: {
-            status: 'completed',
+            taskId: result.taskId,
             r2Url: result.r2Url,
             responseContent: result.svgContent,
             promptVersion: result.model,
             tokensUsed: result.tokensUsed,
             duration: result.duration,
             errorMessage: result.errorMessage,
+            status: result.status || 'completed',
           },
         });
       } catch (error) {

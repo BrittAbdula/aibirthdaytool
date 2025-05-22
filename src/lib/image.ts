@@ -19,7 +19,7 @@ interface CardContentParams {
     [key: string]: any;
 }
 
-export async function generateCardImageWithGrok(params: CardContentParams, userPlan: string): Promise<{ r2Url: string, svgContent: string, model: string, tokensUsed: number, duration: number, errorMessage?: string }> {
+export async function generateCardImageWithGrok(params: CardContentParams, userPlan: string): Promise<{ taskId: string, r2Url: string, svgContent: string, model: string, tokensUsed: number, duration: number, errorMessage?: string, status?: string  }> {
     const { userId, modelTier, format, variationIndex, cardType, version, templateId, size, style, modificationFeedback, previousCardId, ...otherParams } = params;
 
     const startTime = Date.now();
@@ -33,45 +33,21 @@ export async function generateCardImageWithGrok(params: CardContentParams, userP
         // Get card size
         const cardSize = CARD_SIZES[size || 'portrait'];
 
-        // Prepare user prompt
-        let userPrompt = '';
+        const userPromptFields = Object.entries({
+            ...otherParams,
+            cardType,
+            style,
+            currentTime: formattedTime
+        })
+            .filter(([_, value]) => value !== '' && value !== undefined)
+            .map(([key, value]) => `${key}: ${value}`)
+            .join('\n');
 
-        // If this is a modification request, add the feedback to the user prompt
-        if (modificationFeedback && previousCardId) {
-            // Get the previous card content
-            try {
-                const previousCard = await prisma.apiLog.findUnique({
-                    where: { cardId: previousCardId },
-                    select: { userInputs: true }
-                });
+        const userPrompt = `Create a ${cardType} card that feels personal and festive, using these details to inspire a unique design:\n${userPromptFields}\n` +
+            `Card dimensions: ${cardSize.width}x${cardSize.height}\n\n` +
+            `Design: Match the event tone with a fitting theme (e.g., magical for Elsa, safari for kids). Use a central illustration, cohesive colors, handwritten font for the main message, sans-serif for details, and small accents to frame. Be creative for a polished look.`;
 
-                if (previousCard) {
-                    userPrompt = `Create a ${cardType} card with these modifications: ${modificationFeedback}. 
-Based on previous design with parameters: ${JSON.stringify(previousCard.userInputs)}` +
-                        `Design: Match the event tone with a fitting theme (e.g., magical for Elsa, safari for kids). Use a central illustration, cohesive colors, handwritten font for the main message, sans-serif for details, and small accents to frame. Be creative for a polished look.`;
-                }
-            } catch (error) {
-                console.error("Error fetching previous card content:", error);
-                // Continue without the previous content if there's an error
-            }
-        }
 
-        // If not a modification or previous fetch failed, create standard prompt
-        if (!userPrompt) {
-            const userPromptFields = Object.entries({
-                ...otherParams,
-                cardType,
-                style,
-                currentTime: formattedTime
-            })
-                .filter(([_, value]) => value !== '' && value !== undefined)
-                .map(([key, value]) => `${key}: ${value}`)
-                .join('\n');
-
-            userPrompt = `Create a ${cardType} card that feels personal and festive, using these details to inspire a unique design:\n${userPromptFields}\n` +
-                `Card dimensions: ${cardSize.width}x${cardSize.height}\n\n` +
-                `Design: Match the event tone with a fitting theme (e.g., magical for Elsa, safari for kids). Use a central illustration, cohesive colors, handwritten font for the main message, sans-serif for details, and small accents to frame. Be creative for a polished look.`;
-        }
 
         console.log('<----User prompt : ' + userPrompt + '---->')
 
@@ -100,6 +76,7 @@ Based on previous design with parameters: ${JSON.stringify(previousCard.userInpu
         console.log('<----Response image URL : ' + imageUrl + '---->')
 
         return {
+            taskId: '',
             r2Url: cf_url || '',
             svgContent: '',
             model: 'grok-2-image',
@@ -114,7 +91,7 @@ Based on previous design with parameters: ${JSON.stringify(previousCard.userInpu
 }
 
 
-export async function generateCardImageWithGenAI(params: CardContentParams, userPlan: string): Promise<{ r2Url: string, svgContent: string, model: string, tokensUsed: number, duration: number, errorMessage?: string }> {
+export async function generateCardImageWithGenAI(params: CardContentParams, userPlan: string): Promise<{taskId: string, r2Url: string, svgContent: string, model: string, tokensUsed: number, duration: number, errorMessage?: string, status?: string  }> {
     const { userId, modelTier, format, variationIndex, cardType, version, templateId, size, style, modificationFeedback, previousCardId, ...otherParams } = params;
 
     const startTime = Date.now();
@@ -129,45 +106,20 @@ export async function generateCardImageWithGenAI(params: CardContentParams, user
         // Get card size
         const cardSize = CARD_SIZES[size || 'portrait'];
 
-        // Prepare user prompt
-        let userPrompt = '';
+        const userPromptFields = Object.entries({
+            ...otherParams,
+            cardType,
+            style,
+            currentTime: formattedTime
+        })
+            .filter(([_, value]) => value !== '' && value !== undefined)
+            .map(([key, value]) => `${key}: ${value}`)
+            .join('\n');
 
-        // If this is a modification request, add the feedback to the user prompt
-        if (modificationFeedback && previousCardId) {
-            // Get the previous card content
-            try {
-                const previousCard = await prisma.apiLog.findUnique({
-                    where: { cardId: previousCardId },
-                    select: { userInputs: true }
-                });
+        const userPrompt = `Create a ${cardType} card that feels personal and festive, using these details to inspire a unique design:\n${userPromptFields}\n` +
+            `Card dimensions: ${cardSize.width}x${cardSize.height} pixels (aspect ratio guidance).\n\n` +
+            `Design instructions: Match the event tone with a fitting theme (e.g., magical for Elsa, safari for kids). Use a central illustration, cohesive colors, handwritten font for the main message, sans-serif for details, and small accents to frame. Be creative for a polished look.`;
 
-                if (previousCard) {
-                    userPrompt = `Modify the previous design for a ${cardType} card based on these parameters: ${JSON.stringify(previousCard.userInputs)}. Apply these specific modifications: ${modificationFeedback}.` +
-                        `\nDesign instructions: Match the event tone with a fitting theme (e.g., magical for Elsa, safari for kids). Use a central illustration, cohesive colors, handwritten font for the main message, sans-serif for details, and small accents to frame. Be creative for a polished look.` +
-                        `\nCard dimensions: ${cardSize.width}x${cardSize.height} pixels (aspect ratio guidance).`;
-                }
-            } catch (error) {
-                console.error("Error fetching previous card content for Gemini:", error);
-                // Continue without the previous content if there's an error
-            }
-        }
-
-        // If not a modification or previous fetch failed, create standard prompt
-        if (!userPrompt) {
-            const userPromptFields = Object.entries({
-                ...otherParams,
-                cardType,
-                style,
-                currentTime: formattedTime
-            })
-                .filter(([_, value]) => value !== '' && value !== undefined)
-                .map(([key, value]) => `${key}: ${value}`)
-                .join('\n');
-
-            userPrompt = `Create a ${cardType} card that feels personal and festive, using these details to inspire a unique design:\n${userPromptFields}\n` +
-                `Card dimensions: ${cardSize.width}x${cardSize.height} pixels (aspect ratio guidance).\n\n` +
-                `Design instructions: Match the event tone with a fitting theme (e.g., magical for Elsa, safari for kids). Use a central illustration, cohesive colors, handwritten font for the main message, sans-serif for details, and small accents to frame. Be creative for a polished look.`;
-        }
 
         console.log('<----User prompt for Gemini: ' + userPrompt + '---->');
 
@@ -181,14 +133,14 @@ export async function generateCardImageWithGenAI(params: CardContentParams, user
         const response = await ai.models.generateContent({
             model: 'gemini-2.0-flash-001',
             contents: 'Why is the sky blue?',
-          });
-          console.log(response.text);
+        });
+        console.log(response.text);
 
         const imagePart = response.candidates?.[0]?.content?.parts?.find((part: any) => part.inlineData?.mimeType?.startsWith('image/')); // Added type 'any' to part
 
         if (!imagePart?.inlineData?.data) {
-             console.error('Gemini response:', JSON.stringify(response, null, 2)); // Log full response for debugging
-             throw new Error("No image data returned from Gemini");
+            console.error('Gemini response:', JSON.stringify(response, null, 2)); // Log full response for debugging
+            throw new Error("No image data returned from Gemini");
         }
 
         const base64Image = imagePart.inlineData.data;
@@ -199,6 +151,7 @@ export async function generateCardImageWithGenAI(params: CardContentParams, user
 
 
         return {
+            taskId: '',
             r2Url: cf_url || '',
             svgContent: '', // Gemini generates raster images, not SVG
             model: 'gemini-2.0-flash-preview-image-generation',
@@ -210,6 +163,7 @@ export async function generateCardImageWithGenAI(params: CardContentParams, user
     } catch (error: any) {
         console.error("Error generating image with Gemini:", error);
         return {
+            taskId: '',
             r2Url: '',
             svgContent: '',
             model: 'gemini-2.0-flash-preview-image-generation',
@@ -217,5 +171,102 @@ export async function generateCardImageWithGenAI(params: CardContentParams, user
             duration: Date.now() - startTime,
             errorMessage: error.message || "An unknown error occurred during Gemini image generation."
         };
+    }
+}
+
+export async function generateCardImageWith4o(params: CardContentParams, userPlan: string): Promise<{ taskId: string, r2Url: string, svgContent: string, model: string, tokensUsed: number, duration: number, errorMessage?: string, status?: string }> {
+    const { userId, modelTier, format, variationIndex, cardType, version, templateId, size, style, modificationFeedback, previousCardId, ...otherParams } = params;
+
+    const startTime = Date.now();
+    const formattedTime = new Date(startTime).toLocaleString(undefined, {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+    }).replace(/\//g, '-');
+    console.log('<----Using model : ' + 'GPT-4o Image' + '---->');
+
+    try {
+        // Get card size
+        const userPromptFields = Object.entries({
+            ...otherParams,
+            cardType,
+            style,
+            currentTime: formattedTime
+        })
+            .filter(([_, value]) => value !== '' && value !== undefined)
+            .map(([key, value]) => `${key}: ${value}`)
+            .join('\n');
+
+        const userPrompt = `Create a ${cardType} card that feels personal and festive, using these details to inspire a unique design:\n${userPromptFields}\n` +
+            `Design: Match the event tone with a fitting theme. Use a central illustration, cohesive colors, handwritten font for the main message, sans-serif for details, and small accents to frame. Be creative for a polished look.`;
+
+        console.log('<----User prompt : ' + userPrompt + '---->');
+
+        if (userPrompt.length >= 5000) {
+            throw new Error("User prompt too long");
+        }
+
+        const apiKey = process.env.KIE_API_KEY;
+        if (!apiKey) {
+            throw new Error("KIE_API_KEY is not configured");
+        }
+
+        // Step 1: Generate the image
+        console.log('<---- Initiating 4o Image generation ---->');
+
+        // Determine aspect ratio based on card size
+        const aspectRatio = size === 'portrait' || size === 'story' ? "2:3" :
+            size === 'landscape' ? "3:2" : "1:1";
+
+        const generateResponse = await fetch('https://kieai.erweima.ai/api/v1/gpt4o-image/generate', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${apiKey}`
+            },
+            body: JSON.stringify({
+                prompt: userPrompt,
+                n: 1,
+                size: aspectRatio,
+                uploadCn: false,
+                callBackUrl: process.env.NEXT_PUBLIC_BASE_URL + '/api/webhook/4o'
+            })
+        });
+
+        if (!generateResponse.ok) {
+            const errorData = await generateResponse.text();
+            throw new Error(`Failed to initiate image generation: ${generateResponse.status} ${errorData}`);
+        }
+
+        const generateData = await generateResponse.json();
+        const taskId = generateData.data?.taskId;
+
+        if (!taskId) {
+            throw new Error("No taskId returned from image generation request");
+        }
+
+        console.log(`<---- Image generation task initiated with ID: ${taskId} ---->`);
+
+        return {
+            taskId: taskId,
+            r2Url: '',
+            svgContent: '',
+            model: 'gpt4o-image',
+            tokensUsed: 0,
+            duration: Date.now() - startTime,
+            errorMessage: ''
+        };
+
+    } catch (error) {
+        console.error('Error in generateCardImageWith4o:', error);
+        return {
+            taskId: '',
+            r2Url: '',
+            svgContent: '',
+            model: 'gpt4o-image',
+            tokensUsed: 0,
+            duration: Date.now() - startTime,
+            errorMessage: error instanceof Error ? error.message : 'Unknown error'
+        }
     }
 }

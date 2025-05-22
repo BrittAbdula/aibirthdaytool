@@ -21,6 +21,7 @@ enum BillingPeriod {
 model ApiLog {
   id              Int          @id @default(autoincrement())
   cardId          String       @unique
+  taskId          String?      @unique
   cardType        String
   userInputs      Json
   promptVersion   String
@@ -38,7 +39,6 @@ model ApiLog {
   userActions     UserAction[]
   editedCards     EditedCard[] @relation("OriginalCard")
 }
-
 model Template {
   id             String   @id @default(cuid())
   cardId         String      @unique
