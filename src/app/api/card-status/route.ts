@@ -3,6 +3,7 @@ import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
 
 export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 export async function GET(request: Request) {
   try {
@@ -53,21 +54,41 @@ export async function GET(request: Request) {
         });
       }
       const status = data?.status === 'SUCCESS' ?  'completed' : data?.status === 'GENERATE_FAILED' ? 'failed' : 'processing';
-      return NextResponse.json({
+      
+      // 添加缓存控制头
+      const response = NextResponse.json({
         status: status,
         r2Url: data?.response?.resultUrls?.[0] || '',
       });
+      
+      response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+      response.headers.set('Pragma', 'no-cache');
+      response.headers.set('Expires', '0');
+      
+      return response;
     }
-    return NextResponse.json({
+    
+    // 同样为其他情况添加缓存控制头
+    const response = NextResponse.json({
       status: card.status,
       r2Url: card.r2Url || '',
       responseContent: card.responseContent || '',
       isError: card.isError,
       errorMessage: card.errorMessage,
     });
+    
+    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    response.headers.set('Pragma', 'no-cache');
+    response.headers.set('Expires', '0');
+    
+    return response;
   } catch (error) {
     console.error('Error checking card status:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    
+    const response = NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    
+    return response;
   }
 }
 
@@ -100,11 +121,12 @@ async function getGenerateStatus(taskId: string) {
       headers: {
         'Accept': 'application/json',
         'Authorization': `Bearer ${process.env.KIE_API_KEY}`
-      }
+      },
+      // 添加缓存控制
+      cache: 'no-store'
     });
 
     const data = await response.json() as KieAPIResponse<ImageDetailsData>;
     
     return data.data;
-
 }
