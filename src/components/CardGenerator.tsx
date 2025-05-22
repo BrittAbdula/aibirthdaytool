@@ -758,14 +758,13 @@ export default function CardGenerator({
                         : "border-gray-200 hover:border-[#FFC0CB]"
                     )}
                   >
-                    
                     <div className="absolute -top-2 -right-2">
                       <div className="animate-bounce flex items-center justify-center bg-[#FFC0CB] text-white text-[10px] px-1.5 py-0.5 rounded-full">
                         <span className="mr-0.5">✨</span>Animated
                       </div>
                     </div>
-                    
                     <span className="text-sm font-medium">Animated Card</span>
+                    <span className="text-xs text-gray-500 mt-1">~30s to generate</span>
                   </button>
                   
                   <button
@@ -778,13 +777,13 @@ export default function CardGenerator({
                         : "border-gray-200 hover:border-[#FFC0CB]"
                     )}
                   >
-                    
                     <div className="absolute -top-2 -right-2 z-10">
                       <div className="animate-pulse flex items-center justify-center bg-gradient-to-r from-[#a786ff] to-[#b19bff] text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full shadow-sm border border-white">
                         <span className="mr-0.5 text-[8px]">✨</span>BETA
                       </div>
                     </div>
                     <span className="text-sm font-medium">Image Card</span>
+                    <span className="text-xs text-gray-500 mt-1">~2min to generate</span>
                   </button>
                 </div>
               </div>
