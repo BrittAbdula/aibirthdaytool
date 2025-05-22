@@ -13,15 +13,15 @@ export const dynamic = 'force-dynamic';
 
 export async function POST(request: Request) {
   try {
-    // const session = await auth();
+    const session = await auth();
 
-    // if (!session?.user?.id) {
-    //   return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    // }
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
 
-    // const userId = session.user.id;
+    const userId = session.user.id;
 
-    const userId = 'cm56ic66y000110jijyw2ir8r';
+    // const userId = 'cm56ic66y000110jijyw2ir8r';
     const requestData = await request.json();
     const {
       cardType,
@@ -85,6 +85,11 @@ export async function POST(request: Request) {
       return NextResponse.json({
         error: "You've reached your daily limit. Please try again tomorrow or visit our Card Gallery."
       }, { status: 429 });
+    } else {
+      await prisma.apiUsage.update({
+        where: { id: usage.id },
+        data: { count: currentUsage + creditsUsed },
+      });
     }
 
     // Generate a new cardId
