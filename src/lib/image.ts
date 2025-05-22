@@ -7,8 +7,6 @@ import { GoogleGenAI, Modality } from "@google/genai";
 import { nanoid } from 'nanoid';
 import { v2 as cloudinary } from 'cloudinary';
 
-export const runtime = 'edge';
-
 interface CardContentParams {
     userId?: string;
     cardType: CardType;
@@ -125,7 +123,7 @@ export async function generateCardImageWithGenAI(params: CardContentParams, user
         month: '2-digit',
         day: '2-digit'
     }).replace(/\//g, '-');
-    console.log('<----Using model : ' + 'Google Gemini' + '---->')
+    console.log('<----Using model : ' + 'Google Gemini' + '---->');
 
     try {
         // Get card size
@@ -136,6 +134,7 @@ export async function generateCardImageWithGenAI(params: CardContentParams, user
 
         // If this is a modification request, add the feedback to the user prompt
         if (modificationFeedback && previousCardId) {
+            // Get the previous card content
             try {
                 const previousCard = await prisma.apiLog.findUnique({
                     where: { cardId: previousCardId },
@@ -143,15 +142,17 @@ export async function generateCardImageWithGenAI(params: CardContentParams, user
                 });
 
                 if (previousCard) {
-                    userPrompt = `Create a ${cardType} card with these modifications: ${modificationFeedback}. 
-Based on previous design with parameters: ${JSON.stringify(previousCard.userInputs)}` +
-                        `Design: Match the event tone with a fitting theme (e.g., magical for Elsa, safari for kids). Use a central illustration, cohesive colors, handwritten font for the main message, sans-serif for details, and small accents to frame. Be creative for a polished look.`;
+                    userPrompt = `Modify the previous design for a ${cardType} card based on these parameters: ${JSON.stringify(previousCard.userInputs)}. Apply these specific modifications: ${modificationFeedback}.` +
+                        `\nDesign instructions: Match the event tone with a fitting theme (e.g., magical for Elsa, safari for kids). Use a central illustration, cohesive colors, handwritten font for the main message, sans-serif for details, and small accents to frame. Be creative for a polished look.` +
+                        `\nCard dimensions: ${cardSize.width}x${cardSize.height} pixels (aspect ratio guidance).`;
                 }
             } catch (error) {
-                console.error("Error fetching previous card content:", error);
+                console.error("Error fetching previous card content for Gemini:", error);
+                // Continue without the previous content if there's an error
             }
         }
 
+        // If not a modification or previous fetch failed, create standard prompt
         if (!userPrompt) {
             const userPromptFields = Object.entries({
                 ...otherParams,
@@ -164,96 +165,74 @@ Based on previous design with parameters: ${JSON.stringify(previousCard.userInpu
                 .join('\n');
 
             userPrompt = `Create a ${cardType} card that feels personal and festive, using these details to inspire a unique design:\n${userPromptFields}\n` +
-                `Card dimensions: ${cardSize.width}x${cardSize.height}\n\n` +
-                `Design: Match the event tone with a fitting theme (e.g., magical for Elsa, safari for kids). Use a central illustration, cohesive colors, handwritten font for the main message, sans-serif for details, and small accents to frame. Be creative for a polished look.`;
+                `Card dimensions: ${cardSize.width}x${cardSize.height} pixels (aspect ratio guidance).\n\n` +
+                `Design instructions: Match the event tone with a fitting theme (e.g., magical for Elsa, safari for kids). Use a central illustration, cohesive colors, handwritten font for the main message, sans-serif for details, and small accents to frame. Be creative for a polished look.`;
         }
 
-        console.log('<----User prompt : ' + userPrompt + '---->')
+        console.log('<----User prompt for Gemini: ' + userPrompt + '---->');
 
+        // Check prompt length
         if (userPrompt.length >= 5000) {
-            throw new Error("User prompt too long");
+            throw new Error("User prompt too long for Gemini");
         }
 
-        // API key handling - using exactly the same approach as in Cloudflare
-        const apiKey = process.env.GEMINI_API_KEY;
-        if (!apiKey) {
-            throw new Error("GEMINI_API_KEY is not configured");
-        }
+        const genAI = new GoogleGenAI({ apiKey: process.env.GOOGLE_API_KEY });
 
-        const ai = new GoogleGenAI({ apiKey });
-        console.log(ai)
-        console.log('<---- Initialized GoogleGenAI ---->')
+        // Use the recommended Gemini model for image generation
+        // Reference: https://ai.google.dev/gemini-api/docs/image-generation
+        // const model = genAI.getGenerativeModel({ // Removed this line
+        //     model: "gemini-2.0-flash-preview-image-generation", // Removed this line
+        //     generationConfig: { // Removed this line
+        //         responseMimeType: "image/png", // Specify desired output format // Removed this line
+        //     }, // Removed this line
+        // }); // Removed this line
 
-        console.log('<---- About to call Gemini API ---->')
-        
-        // Use a more direct and streamlined approach like in your Cloudflare code
-        try {
-            const geminiResponse = await ai.models.generateContent({
-                model: "gemini-2.0-flash-preview-image-generation",
-                contents: userPrompt,
-                config: {
-                    responseModalities: [Modality.TEXT, Modality.IMAGE],
-                },
-            });
-            
-            console.log('<---- Received Gemini API response ---->')
-            
-            // Use the same find() approach as your Cloudflare code
-            const imagePart = geminiResponse.candidates?.[0]?.content?.parts?.find(
-                part => part.inlineData
-            );
-            
-            if (!imagePart || !imagePart.inlineData || typeof imagePart.inlineData.data !== 'string') {
-                // If no image part is found, but there is text output, log the text
-                const textPart = geminiResponse.candidates?.[0]?.content?.parts?.find(part => part.text);
-                const resultText = textPart ? textPart.text : JSON.stringify(geminiResponse);
-                
-                console.error('Gemini API response did not contain valid inline image data:', resultText);
-                throw new Error('Gemini API response did not contain valid inline image data');
+
+        const result = await genAI.models.generateContent({ // Modified this line
+            model: "gemini-2.0-flash-preview-image-generation", // Added model here
+            contents: [{
+                role: "user",
+                parts: [{ text: userPrompt }]
+            }],
+            config: { // Changed from generationConfig to config
+                 responseMimeType: "image/png", // Specify desired output format
+                 responseModalities: [Modality.TEXT, Modality.IMAGE], // Include image in response
             }
-            
-            const generatedImageData = imagePart.inlineData.data;
-            const generatedImageMimeType = imagePart.inlineData.mimeType || 'image/png';
-            
-            console.log('----Found image data in response, uploading to Cloudinary');
-            
-            try {
-                const uploadResult = await uploadCloudinaryFromBase64(generatedImageData, generatedImageMimeType);
-                
-                if (!uploadResult || !uploadResult.url) {
-                    throw new Error("Upload to Cloudinary failed - no URL returned");
-                }
-                
-                const imageUrl = uploadResult.url;
-                console.log('<----Uploaded generated image to Cloudinary---->', imageUrl);
-                
-                return {
-                    r2Url: imageUrl,
-                    svgContent: '',
-                    model: 'gemini-2.0-flash-preview-image-generation',
-                    tokensUsed: 0,
-                    duration: Date.now() - startTime,
-                    errorMessage: ''
-                };
-            } catch (uploadError) {
-                console.error('Error uploading to Cloudinary:', uploadError);
-                throw uploadError;
-            }
-            
-        } catch (apiError) {
-            console.error('<---- Error during Gemini API call ---->', apiError);
-            throw apiError;
+        });
+
+        const response = result; // Assigned result directly to response
+        const imagePart = response.candidates?.[0]?.content?.parts?.find((part: any) => part.inlineData?.mimeType?.startsWith('image/')); // Added type 'any' to part
+
+        if (!imagePart?.inlineData?.data) {
+             console.error('Gemini response:', JSON.stringify(response, null, 2)); // Log full response for debugging
+             throw new Error("No image data returned from Gemini");
         }
 
-    } catch (error) {
-        console.error('Error in generateCardImageWithGenAI:', error);
+        const base64Image = imagePart.inlineData.data;
+
+        // Upload base64 image to Cloudflare Images
+        const cf_url = await uploadBase64ToCloudflareImages(base64Image);
+        console.log('<----Gemini response image URL : ' + cf_url + '---->');
+
+
+        return {
+            r2Url: cf_url || '',
+            svgContent: '', // Gemini generates raster images, not SVG
+            model: 'gemini-2.0-flash-preview-image-generation',
+            tokensUsed: 0, // Gemini image generation doesn't return token usage directly in this manner
+            duration: Date.now() - startTime,
+            errorMessage: ''
+        };
+
+    } catch (error: any) {
+        console.error("Error generating image with Gemini:", error);
         return {
             r2Url: '',
             svgContent: '',
             model: 'gemini-2.0-flash-preview-image-generation',
             tokensUsed: 0,
             duration: Date.now() - startTime,
-            errorMessage: error instanceof Error ? error.message : 'Unknown error'
-        }
+            errorMessage: error.message || "An unknown error occurred during Gemini image generation."
+        };
     }
 }
