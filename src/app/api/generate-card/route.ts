@@ -61,6 +61,7 @@ export async function POST(request: Request) {
     // 获取用户计划类型
     const planType = user?.plan || 'FREE';
     const dailyLimit = planType === 'FREE' ? 10 : Infinity;
+    const creditsUsed = format === 'image' ? 6 : 1;
 
     // 处理用户使用情况
     let currentUsage = usage?.count || 0;
@@ -73,7 +74,7 @@ export async function POST(request: Request) {
             data: {
               userId,
               date: new Date(new Date().setHours(0, 0, 0, 0)),
-              count: 1,
+              count: creditsUsed,
             },
           });
         } catch (error) {
@@ -84,6 +85,11 @@ export async function POST(request: Request) {
       return NextResponse.json({
         error: "You've reached your daily limit. Please try again tomorrow or visit our Card Gallery."
       }, { status: 429 });
+    }else{
+      await prisma.apiUsage.update({
+        where: { id: usage.id },
+        data: { count: currentUsage + creditsUsed },
+      });
     }
 
     // Generate a new cardId
@@ -97,7 +103,7 @@ export async function POST(request: Request) {
         cardId,
         cardType,
         userInputs: requestData,
-        promptVersion: format === 'image' ? 'image' : 'svg',
+        promptVersion: format === 'image' ? 'gpt4o-image' : 'svg',
         responseContent: '',
         tokensUsed: 0,
         duration: 0,
@@ -159,7 +165,7 @@ export async function POST(request: Request) {
             status: 'failed',
             isError: true,
             errorMessage: error instanceof Error ? error.message : 'Unknown error',
-            promptVersion: format === 'image' ? 'image' : 'svg', // Fallback
+            promptVersion: format === 'image' ? 'gpt4o-image' : 'svg', // Fallback
             tokensUsed: 0,
             duration: Date.now() - startTime, // Need to capture startTime in the outer scope or recalculate
           },
