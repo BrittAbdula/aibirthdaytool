@@ -141,7 +141,9 @@ export async function POST(request: Request) {
         const result = format === 'image'
           ? await generateCardImageWith4o(cardData, planType)
           : await generateCardContent(cardData, planType);
-
+        
+        console.log('result', result);
+        
         // Update status to completed with results
         await prisma.apiLog.update({
           where: { cardId },
