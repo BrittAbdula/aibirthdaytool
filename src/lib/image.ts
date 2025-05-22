@@ -200,7 +200,7 @@ export async function generateCardImageWith4o(params: CardContentParams, userPla
         const userPrompt = `Create a ${cardType} card that feels personal and festive, using these details to inspire a unique design:\n${userPromptFields}\n` +
             `Design: Match the event tone with a fitting theme. Use a central illustration, cohesive colors, handwritten font for the main message, sans-serif for details, and small accents to frame. Be creative for a polished look.`;
 
-        console.log('<----User prompt : ' + userPrompt + '---->');
+        // console.log('<----User prompt : ' + userPrompt + '---->');
 
         if (userPrompt.length >= 5000) {
             throw new Error("User prompt too long");
@@ -230,13 +230,13 @@ export async function generateCardImageWith4o(params: CardContentParams, userPla
                 prompt: userPrompt,
                 n: 1,
                 size: aspectRatio,
-                uploadCn: false,
-                callBackUrl: callBackUrl
+                uploadCn: false
             })
         });
 
         if (!generateResponse.ok) {
             const errorData = await generateResponse.text();
+            console.error('Error in generateCardImageWith4o:', errorData);
             throw new Error(`Failed to initiate image generation: ${generateResponse.status} ${errorData}`);
         }
 
@@ -244,6 +244,7 @@ export async function generateCardImageWith4o(params: CardContentParams, userPla
         const taskId = generateData.data?.taskId;
 
         if (!taskId) {
+            console.error('No taskId returned from image generation request');
             throw new Error("No taskId returned from image generation request");
         }
 

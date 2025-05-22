@@ -68,12 +68,12 @@ export const useCardGeneration = () => {
   const generateCards = useCallback(async (options: CardGenerationOptions) => {
     const { imageCount, cardType, size, format, modelTier, formData, modificationFeedback, previousCardId } = options;
 
-    if (!session) {
-      setSavedAuthData(options);
-      pendingAuthRef.current = true;
-      setShowAuthDialog(true);
-      return { success: false, error: 'auth' }; 
-    }
+    // if (!session) {
+    //   setSavedAuthData(options);
+    //   pendingAuthRef.current = true;
+    //   setShowAuthDialog(true);
+    //   return { success: false, error: 'auth' }; 
+    // }
 
     setError(null);
     setGlobalLoading(true);
@@ -138,7 +138,7 @@ export const useCardGeneration = () => {
           const { cardId } = await response.json();
           let isCompleted = false;
           const startPollingTime = Date.now();
-          const maxPollingDuration = 100000; // 100 seconds max
+          const maxPollingDuration = 180000; // 180 seconds max
 
           // Update the state with the generated cardId
           setImageStates(prev => {

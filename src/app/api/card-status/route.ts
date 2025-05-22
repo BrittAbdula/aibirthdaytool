@@ -6,10 +6,10 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(request: Request) {
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    // const session = await auth();
+    // if (!session?.user?.id) {
+    //   return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    // }
 
     // Get cardId from URL params
     const { searchParams } = new URL(request.url);
@@ -36,10 +36,11 @@ export async function GET(request: Request) {
     if (!card) {
       return NextResponse.json({ error: 'Card not found' }, { status: 404 });
     }
+    // console.log('gpt4o-image-------card', card);
 
     if(card.promptVersion === 'gpt4o-image'){
       const data = await getGenerateStatus(card.taskId || '');
-      console.log('gpt4o-image-------data', data);
+      // console.log('gpt4o-image-------data', data);
       if(data?.status === 'SUCCESS'){
         await prisma.apiLog.update({
           where: { cardId },
@@ -51,9 +52,9 @@ export async function GET(request: Request) {
           data: { status: 'failed', errorMessage: data?.errorMessage || '' },
         });
       }
-        
+      const status = data?.status === 'SUCCESS' ?  'completed' : data?.status === 'GENERATE_FAILED' ? 'failed' : 'processing';
       return NextResponse.json({
-        status: data?.status === 'SUCCESS' ? 'completed' : 'failed',
+        status: status,
         r2Url: data?.response?.resultUrls?.[0] || '',
       });
     }

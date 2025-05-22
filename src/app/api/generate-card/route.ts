@@ -13,15 +13,15 @@ export const dynamic = 'force-dynamic';
 
 export async function POST(request: Request) {
   try {
-    const session = await auth();
+    // const session = await auth();
 
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    // if (!session?.user?.id) {
+    //   return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    // }
 
-    const userId = session.user.id;
+    // const userId = session.user.id;
 
-    // const userId = 'cm56ic66y000110jijyw2ir8r';
+    const userId = 'cm56ic66y000110jijyw2ir8r';
     const requestData = await request.json();
     const {
       cardType,
@@ -123,52 +123,43 @@ export async function POST(request: Request) {
       ...otherFields
     };
 
-    // Start async processing without awaiting
-    Promise.resolve().then(async () => {
-      try {
-        // Update status to processing
-        await prisma.apiLog.update({
-          where: { cardId },
-          data: { status: 'processing' },
-        });
+    try {
+      // Generate card
+      const result = format === 'image'
+        ? await generateCardImageWith4o(cardData, planType)
+        : await generateCardContent(cardData, planType);
 
-        // Generate card
-        const result = format === 'image'
-          ? await generateCardImageWith4o(cardData, planType)
-          : await generateCardContent(cardData, planType);
-        
-        console.log('result', result);
-        
-        // Update status to completed with results
-        await prisma.apiLog.update({
-          where: { cardId },
-          data: {
-            taskId: result.taskId,
-            r2Url: result.r2Url,
-            responseContent: result.svgContent,
-            promptVersion: result.model,
-            tokensUsed: result.tokensUsed,
-            duration: result.duration,
-            errorMessage: result.errorMessage,
-            status: result.status || 'completed',
-          },
-        });
-      } catch (error) {
-        console.error('Error in async card generation:', error);
-        // Update status to failed
-        await prisma.apiLog.update({
-          where: { cardId },
-          data: {
-            status: 'failed',
-            isError: true,
-            errorMessage: error instanceof Error ? error.message : 'Unknown error',
-            promptVersion: format === 'image' ? 'gpt4o-image' : 'svg', // Fallback
-            tokensUsed: 0,
-            duration: Date.now() - startTime, // Need to capture startTime in the outer scope or recalculate
-          },
-        });
-      }
-    });
+      // console.log('result', result);
+
+      // Update status to completed with results
+      await prisma.apiLog.update({
+        where: { cardId },
+        data: {
+          taskId: result.taskId,
+          r2Url: result.r2Url,
+          responseContent: result.svgContent,
+          promptVersion: result.model,
+          tokensUsed: result.tokensUsed,
+          duration: result.duration,
+          errorMessage: result.errorMessage,
+          status: result.status || 'completed',
+        },
+      });
+    } catch (error) {
+      console.error('Error in async card generation:', error);
+      // Update status to failed
+      await prisma.apiLog.update({
+        where: { cardId },
+        data: {
+          status: 'failed',
+          isError: true,
+          errorMessage: error instanceof Error ? error.message : 'Unknown error',
+          promptVersion: format === 'image' ? 'gpt4o-image' : 'svg', // Fallback
+          tokensUsed: 0,
+          duration: Date.now() - startTime, // Need to capture startTime in the outer scope or recalculate
+        },
+      });
+    }
 
     // Return immediately with cardId
     return NextResponse.json({ cardId });
