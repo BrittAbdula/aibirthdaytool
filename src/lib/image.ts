@@ -217,6 +217,8 @@ export async function generateCardImageWith4o(params: CardContentParams, userPla
         // Determine aspect ratio based on card size
         const aspectRatio = size === 'portrait' || size === 'story' ? "2:3" :
             size === 'landscape' ? "3:2" : "1:1";
+        const callBackUrl = process.env.NEXT_PUBLIC_BASE_URL + 'api/webhook/4o';
+        console.log('<---- CallBack URL : ' + callBackUrl + '---->');
 
         const generateResponse = await fetch('https://kieai.erweima.ai/api/v1/gpt4o-image/generate', {
             method: 'POST',
@@ -229,7 +231,7 @@ export async function generateCardImageWith4o(params: CardContentParams, userPla
                 n: 1,
                 size: aspectRatio,
                 uploadCn: false,
-                callBackUrl: process.env.NEXT_PUBLIC_BASE_URL + 'api/webhook/4o'
+                callBackUrl: callBackUrl
             })
         });
 
@@ -255,7 +257,7 @@ export async function generateCardImageWith4o(params: CardContentParams, userPla
             tokensUsed: 0,
             duration: Date.now() - startTime,
             errorMessage: '',
-            status: 'pending'
+            status: 'processing'
         };
 
     } catch (error) {
