@@ -16,23 +16,23 @@ export async function POST(request: Request) {
 
         console.log(`<---- Webhook received for Task ID: ${taskId}, Status Code: ${code}, Message: ${msg} ---->`);
 
-        let status = 'PROCESSING'; // Default status
+        let status = 'processing'; // Default status
         let r2Url = null;
         let errorMessage = null;
 
         if (code === 200) {
-            status = 'COMPLETED';
+            status = 'completed';
             if (result_urls && result_urls.length > 0) {
                  // Assuming the first URL in the list is the primary result
                 r2Url = result_urls[0];
             } else {
                  // Task completed successfully but no image URL returned (unexpected)
-                 status = 'FAILED';
+                 status = 'failed';
                  errorMessage = 'Task completed but no image URL provided.';
                  console.error(`Task ${taskId} completed with code 200 but no result_urls.`);
             }
         } else {
-            status = 'FAILED';
+            status = 'failed';
             errorMessage = msg || `Task failed with code ${code}`;
              console.error(`Task ${taskId} failed with code ${code}: ${errorMessage}`);
         }
@@ -42,7 +42,7 @@ export async function POST(request: Request) {
         const updatedRecord = await prisma.apiLog.update({
             where: { taskId: taskId }, // Assuming taskId is a unique field in ApiLog
             data: {
-                status: status === 'COMPLETED' ? 'completed' : 'failed',
+                status: status,
                 r2Url: r2Url,
                 errorMessage: errorMessage,
             },
