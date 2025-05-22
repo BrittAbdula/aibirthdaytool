@@ -176,7 +176,7 @@ export async function generateCardImageWithGenAI(params: CardContentParams, user
             throw new Error("User prompt too long for Gemini");
         }
 
-        const genAI = new GoogleGenAI({ apiKey: process.env.GOOGLE_API_KEY });
+        const genAI = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
         // Use the recommended Gemini model for image generation
         // Reference: https://ai.google.dev/gemini-api/docs/image-generation
