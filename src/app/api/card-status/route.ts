@@ -70,14 +70,6 @@ export async function GET(request: Request) {
   }
 }
 
-export const TASK_STATUS = {
-  PENDING: 'pending',
-  PROCESSING: 'processing',
-  COMPLETED: 'completed',
-  FAILED: 'failed'
-} as const;
-
-
 export interface KieAPIResponse<T> {
   code: 200 | 401 | 402 | 404 | 422 | 429 | 455 | 500 | 505;
   msg?: string;
