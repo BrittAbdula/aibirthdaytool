@@ -85,11 +85,6 @@ export async function POST(request: Request) {
       return NextResponse.json({
         error: "You've reached your daily limit. Please try again tomorrow or visit our Card Gallery."
       }, { status: 429 });
-    }else{
-      await prisma.apiUsage.update({
-        where: { id: usage.id },
-        data: { count: currentUsage + creditsUsed },
-      });
     }
 
     // Generate a new cardId
