@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
+import { uploadToCloudflareImages } from '@/lib/r2';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -43,10 +44,14 @@ export async function GET(request: Request) {
       const data = await getGenerateStatus(card.taskId || '');
       // console.log('gpt4o-image-------data', data);
       if(data?.status === 'SUCCESS'){
-        await prisma.apiLog.update({
-          where: { cardId },
-          data: { status: 'completed', r2Url: data?.response?.resultUrls?.[0] || '' },
-        });
+        const imageUrl = data?.response?.resultUrls?.[0];
+        if(imageUrl){
+          const r2Url = await uploadToCloudflareImages(imageUrl);
+          await prisma.apiLog.update({
+            where: { cardId },
+            data: { status: 'completed', r2Url: r2Url },
+          });
+        }
       }else if(data?.status === 'GENERATE_FAILED'){
         await prisma.apiLog.update({
           where: { cardId },
