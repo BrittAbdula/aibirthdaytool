@@ -227,11 +227,11 @@ export async function generateCardImageWith4o(params: CardContentParams, userPla
                 'Authorization': `Bearer ${apiKey}`
             },
             body: JSON.stringify({
-                prompt: userPrompt,
-                n: 1,
-                size: aspectRatio,
-                uploadCn: false,
-                callBackUrl: "https://mewtrucard.com/api/callback"
+                "prompt": userPrompt,
+                "nVariants":  1,
+                "size": aspectRatio,
+                "uploadCn": false,
+                "callBackUrl": "https://mewtrucard.com/api/callback"
             })
         });
 
