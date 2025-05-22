@@ -176,31 +176,14 @@ export async function generateCardImageWithGenAI(params: CardContentParams, user
             throw new Error("User prompt too long for Gemini");
         }
 
-        const genAI = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+        const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
-        // Use the recommended Gemini model for image generation
-        // Reference: https://ai.google.dev/gemini-api/docs/image-generation
-        // const model = genAI.getGenerativeModel({ // Removed this line
-        //     model: "gemini-2.0-flash-preview-image-generation", // Removed this line
-        //     generationConfig: { // Removed this line
-        //         responseMimeType: "image/png", // Specify desired output format // Removed this line
-        //     }, // Removed this line
-        // }); // Removed this line
+        const response = await ai.models.generateContent({
+            model: 'gemini-2.0-flash-001',
+            contents: 'Why is the sky blue?',
+          });
+          console.log(response.text);
 
-
-        const result = await genAI.models.generateContent({ // Modified this line
-            model: "gemini-2.0-flash-preview-image-generation", // Added model here
-            contents: [{
-                role: "user",
-                parts: [{ text: userPrompt }]
-            }],
-            config: { // Changed from generationConfig to config
-                 responseMimeType: "image/png", // Specify desired output format
-                 responseModalities: [Modality.TEXT, Modality.IMAGE], // Include image in response
-            }
-        });
-
-        const response = result; // Assigned result directly to response
         const imagePart = response.candidates?.[0]?.content?.parts?.find((part: any) => part.inlineData?.mimeType?.startsWith('image/')); // Added type 'any' to part
 
         if (!imagePart?.inlineData?.data) {
