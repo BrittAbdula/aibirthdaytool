@@ -6,6 +6,9 @@ import { uploadToCloudflareImages, uploadBase64ToCloudflareImages, uploadCloudin
 import { GoogleGenAI, Modality } from "@google/genai";
 import { nanoid } from 'nanoid';
 import { v2 as cloudinary } from 'cloudinary';
+
+export const runtime = 'edge';
+
 interface CardContentParams {
     userId?: string;
     cardType: CardType;
