@@ -7,7 +7,6 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select"
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card"
 import { ChevronDownIcon, ChevronUpIcon } from '@radix-ui/react-icons'
-import confetti from 'canvas-confetti'
 import { Slider } from "@/components/ui/slider"
 import { Textarea } from "@/components/ui/textarea"
 import { Alert, AlertDescription } from "@/components/ui/alert"
@@ -218,6 +217,16 @@ export default function CardGenerator({
     message: string;
     type: 'error' | 'warning' | 'info';
   } | null>(null);
+  
+  // Add ref to track if we're waiting for authentication
+  const pendingAuthRef = useRef<boolean>(false)
+  // Add state to store form data before authentication
+  const [savedFormData, setSavedFormData] = useState<{
+    formData: Record<string, any>,
+    customValues: Record<string, string>,
+    selectedSize: string,
+    modificationFeedback: string
+  } | null>(null)
 
   // Use the card generation hook
   const {
@@ -229,7 +238,8 @@ export default function CardGenerator({
     setShowAuthDialog,
     showLimitDialog,
     setShowLimitDialog,
-    imageRefs
+    imageRefs,
+    initializeImageStates
   } = useCardGeneration()
 
   // Combine errors from both sources
@@ -241,15 +251,47 @@ export default function CardGenerator({
     // Reset form data and set default values
     const initialFormData: Record<string, any> = {};
     
+    // Initialize with the correct default values based on card config
     cardConfig.fields.forEach(field => {
       if (field.type === 'select' && !field.optional && field.defaultValue) {
         initialFormData[field.name] = field.defaultValue;
       }
     });
+    
     // Set default format to 'svg'
     initialFormData["format"] = "svg";
     setFormData(initialFormData);
-  }, [wishCardType, cardConfig])
+    
+    // Set default image URL based on whether it's a system card
+    const defaultImgUrl = cardConfig.isSystem ? `https://store.celeprime.com/${wishCardType}.svg` : sampleCard;
+    
+    // Initialize image states with the default URL
+    initializeImageStates(imageCount, defaultImgUrl);
+    
+  }, [wishCardType, cardConfig, sampleCard, imageCount, initializeImageStates]);
+
+  // Add effect to watch for auth status changes
+  useEffect(() => {
+    // If we were waiting for auth and now the user is authenticated
+    if (pendingAuthRef.current && session && savedFormData) {
+      pendingAuthRef.current = false;
+      // Restore saved form data
+      setFormData(savedFormData.formData);
+      setCustomValues(savedFormData.customValues);
+      setSelectedSize(savedFormData.selectedSize);
+      if (savedFormData.modificationFeedback) {
+        setModificationFeedback(savedFormData.modificationFeedback);
+      }
+      
+      // Close the auth dialog
+      setShowAuthDialog(false);
+      
+      // Optionally, trigger card generation automatically
+      setTimeout(() => {
+        handleGenerateCard();
+      }, 500);
+    }
+  }, [session, savedFormData, setShowAuthDialog]);
 
   useEffect(() => {
     fetchSvgContent(sampleCard)
@@ -265,6 +307,15 @@ export default function CardGenerator({
 
   const handleImageCountChange = (count: number) => {
     setImageCount(count);
+    
+    // Update image-related arrays based on the new count
+    // This is needed to properly initialize the UI before the first generation
+    const defaultImgUrl = cardConfig.isSystem 
+      ? `https://store.celeprime.com/${wishCardType}.svg` 
+      : sampleCard;
+    
+    // Re-initialize image states with the new count
+    initializeImageStates(count, defaultImgUrl);
   };
 
   const handleGenerateCard = async () => {
@@ -278,6 +329,19 @@ export default function CardGenerator({
         message: `Please fill in the following required fields: ${missingFields.map(f => f.label).join(', ')}`,
         type: 'error'
       });
+      return;
+    }
+
+    // If user not authenticated, save form data and show auth dialog
+    if (!session) {
+      setSavedFormData({
+        formData: {...formData},
+        customValues: {...customValues},
+        selectedSize,
+        modificationFeedback
+      });
+      pendingAuthRef.current = true;
+      setShowAuthDialog(true);
       return;
     }
 

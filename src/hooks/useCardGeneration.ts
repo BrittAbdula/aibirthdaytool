@@ -36,6 +36,22 @@ export const useCardGeneration = () => {
 
   const imageRefs = useRef<Array<HTMLDivElement | null>>([]); // Pass this ref from parent
 
+  // Function to initialize image states with default values
+  const initializeImageStates = useCallback((count: number, defaultUrl: string) => {
+    if (imageStates.length > 0) return; // Don't re-initialize if states already exist
+    
+    const initialStates: ImageState[] = Array.from({ length: count }).map(() => ({
+      url: defaultUrl,
+      id: '',
+      svgContent: '',
+      isLoading: false,
+      progress: 0,
+      error: null
+    }));
+    
+    setImageStates(initialStates);
+  }, [imageStates.length]);
+
   const triggerConfettiForImage = useCallback((index: number) => {
     const imageRef = imageRefs.current[index];
     if (imageRef) {
@@ -68,12 +84,12 @@ export const useCardGeneration = () => {
   const generateCards = useCallback(async (options: CardGenerationOptions) => {
     const { imageCount, cardType, size, format, modelTier, formData, modificationFeedback, previousCardId } = options;
 
-    // if (!session) {
-    //   setSavedAuthData(options);
-    //   pendingAuthRef.current = true;
-    //   setShowAuthDialog(true);
-    //   return { success: false, error: 'auth' }; 
-    // }
+    if (!session) {
+      setSavedAuthData(options);
+      pendingAuthRef.current = true;
+      setShowAuthDialog(true);
+      return { success: false, error: 'auth' }; 
+    }
 
     setError(null);
     setGlobalLoading(true);
@@ -334,5 +350,6 @@ export const useCardGeneration = () => {
     showLimitDialog,
     setShowLimitDialog,
     imageRefs, // Return ref to attach in parent
+    initializeImageStates, // Add initialization function
   };
 };
