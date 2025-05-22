@@ -1,6 +1,10 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma'; // Adjust the import path if necessary
 
+export async function GET(request: Request) {
+    return NextResponse.json({ message: 'Hello, world!' });
+}
+
 export async function POST(request: Request) {
     try {
         const body = await request.json();

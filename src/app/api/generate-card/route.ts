@@ -5,7 +5,7 @@ import { prisma } from '@/lib/prisma';
 import { generateCardImageWith4o } from '@/lib/image';
 import { nanoid } from 'nanoid';
 // 增加超时限制到最大值
-export const maxDuration = 60; // 增加到 60 秒
+export const maxDuration = 180; // 增加到 60 秒
 
 // 使用边缘运行时，提高性能
 // export const runtime = 'edge';
