@@ -40,7 +40,7 @@ export async function GET(request: Request) {
     if(card.promptVersion === 'gpt4o-image'){
       const data = await getGenerateStatus(card.taskId || '');
       return NextResponse.json({
-        status: data?.status || 'pending',
+        status: data?.status === 'SUCCESS' ? 'completed' : 'failed',
         r2Url: data?.response?.resultUrls?.[0] || '',
       });
     }

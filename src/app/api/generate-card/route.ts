@@ -13,15 +13,15 @@ export const dynamic = 'force-dynamic';
 
 export async function POST(request: Request) {
   try {
-    // const session = await auth();
+    const session = await auth();
 
-    // if (!session?.user?.id) {
-    //   return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    // }
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
 
-    // const userId = session.user.id;
+    const userId = session.user.id;
 
-    const userId = 'cm56ic66y000110jijyw2ir8r';
+    // const userId = 'cm56ic66y000110jijyw2ir8r';
     const requestData = await request.json();
     const {
       cardType,
