@@ -229,7 +229,7 @@ export async function generateCardImageWith4o(params: CardContentParams, userPla
                 n: 1,
                 size: aspectRatio,
                 uploadCn: false,
-                callBackUrl: process.env.NEXT_PUBLIC_BASE_URL + '/api/webhook/4o'
+                callBackUrl: process.env.NEXT_PUBLIC_BASE_URL + 'api/webhook/4o'
             })
         });
 
@@ -254,7 +254,8 @@ export async function generateCardImageWith4o(params: CardContentParams, userPla
             model: 'gpt4o-image',
             tokensUsed: 0,
             duration: Date.now() - startTime,
-            errorMessage: ''
+            errorMessage: '',
+            status: 'pending'
         };
 
     } catch (error) {
@@ -266,7 +267,8 @@ export async function generateCardImageWith4o(params: CardContentParams, userPla
             model: 'gpt4o-image',
             tokensUsed: 0,
             duration: Date.now() - startTime,
-            errorMessage: error instanceof Error ? error.message : 'Unknown error'
+            errorMessage: error instanceof Error ? error.message : 'Unknown error',
+            status: 'failed'
         }
     }
 }
