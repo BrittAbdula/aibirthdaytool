@@ -181,6 +181,7 @@ Based on previous design with parameters: ${JSON.stringify(previousCard.userInpu
         }
 
         const ai = new GoogleGenAI({ apiKey });
+        console.log(ai)
         console.log('<---- Initialized GoogleGenAI ---->')
 
         console.log('<---- About to call Gemini API ---->')
