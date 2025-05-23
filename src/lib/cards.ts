@@ -89,7 +89,7 @@ async function fetchRecentCards(
         ec."createdAt",
         ec."originalCardId",
         -- Rank within each group to find the oldest (rn_asc = 1)
-        ROW_NUMBER() OVER (PARTITION BY ec."originalCardId" ORDER BY ec."createdAt" ASC) as rn_asc,
+        ROW_NUMBER() OVER (PARTITION BY ec."originalCardId" ORDER BY ec."createdAt" DESC) as rn_asc,
         -- Get the latest timestamp for each group for ordering the groups
         MAX(ec."createdAt") OVER (PARTITION BY ec."originalCardId") as max_createdAt_in_group
       FROM "EditedCard" ec
@@ -171,7 +171,7 @@ async function fetchPopularCards(
         ec.relationship,
         ec."r2Url",
         -- Rank within each group to find the oldest (rn_asc = 1)
-        ROW_NUMBER() OVER (PARTITION BY ec."originalCardId" ORDER BY ec."createdAt" ASC) as rn_asc,
+        ROW_NUMBER() OVER (PARTITION BY ec."originalCardId" ORDER BY ec."createdAt" DESC) as rn_asc,
         -- Count cards per group for popularity ranking
         COUNT(*) OVER (PARTITION BY ec."originalCardId") as group_count,
         -- Get the latest timestamp for tie-breaking in ordering

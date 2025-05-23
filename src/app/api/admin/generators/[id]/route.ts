@@ -2,7 +2,6 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { auth } from '@/auth'
 
-// 管理员用户ID
 const ADMIN_USER_ID = 'cm56ic66y000110jijyw2ir8r'
 
 // 权限检查函数
