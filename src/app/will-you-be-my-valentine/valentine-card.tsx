@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import confetti from "canvas-confetti";
 import Link from "next/link";
 
@@ -9,46 +9,132 @@ export default function ValentineCard() {
   const [noButtonPosition, setNoButtonPosition] = useState({ x: 0, y: 0 });
   const [showHeart, setShowHeart] = useState(false);
   const [shareTooltip, setShareTooltip] = useState(false);
+  const [lastTap, setLastTap] = useState(0);
+  const moveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const yesButtonSize = noCount * 20 + 16;
   
-  // Make the "No" button run away when mouse hovers over it
-  const handleNoButtonHover = () => {
-    if (noCount > 0) {
-      const newX = Math.random() * 200 - 100;
-      const newY = Math.random() * 200 - 100;
-      setNoButtonPosition({ x: newX, y: newY });
-    }
-  };
+  // Check if the device is mobile
+  const [isMobile, setIsMobile] = useState(false);
+  
+  useEffect(() => {
+    setIsMobile(/iPhone|iPad|iPod|Android/i.test(navigator.userAgent));
+  }, []);
 
-  const handleNoClick = () => {
-    setNoCount(noCount + 1);
-    // Change button position each time No is clicked
+  // Function to move the button
+  const moveButton = () => {
     const newX = Math.random() * 300 - 150;
     const newY = Math.random() * 300 - 150;
     setNoButtonPosition({ x: newX, y: newY });
+  };
 
-    // Show broken heart animation at higher levels
-    if (noCount > 5) {
-      setShowHeart(true);
-      setTimeout(() => setShowHeart(false), 1000);
+  // Function to handle button movement timing
+  const handleButtonMovement = () => {
+    if (moveTimeoutRef.current) {
+      clearTimeout(moveTimeoutRef.current);
+    }
+    
+    // Set a timeout to move the button if second tap doesn't happen quickly
+    moveTimeoutRef.current = setTimeout(() => {
+      moveButton();
+    }, 300); // Same timing as double tap detection
+  };
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (moveTimeoutRef.current) {
+        clearTimeout(moveTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  const handleNoButtonHover = () => {
+    if (!isMobile && noCount > 0) {
+      moveButton();
     }
   };
 
-  const handleYesClick = () => {
-    setYesPressed(true);
-    // Release confetti
-    confetti({
-      particleCount: 100,
-      spread: 70,
-      origin: { y: 0.6 }
-    });
+  const handleNoClick = (e: React.MouseEvent) => {
+    e.preventDefault();
     
-    // Play sound effect - updated to more cheerful sound
-    try {
-      const audio = new Audio("https://assets.mixkit.co/sfx/preview/mixkit-fairy-arcade-sparkle-866.mp3");
-      audio.play();
-    } catch (e) {
-      console.log("Failed to play audio");
+    const now = Date.now();
+    const DOUBLE_TAP_DELAY = 300;
+    
+    if (isMobile) {
+      if (now - lastTap < DOUBLE_TAP_DELAY) {
+        // Double tap detected - clear movement timeout and perform action
+        if (moveTimeoutRef.current) {
+          clearTimeout(moveTimeoutRef.current);
+        }
+        setNoCount(noCount + 1);
+        moveButton();
+
+        if (noCount > 5) {
+          setShowHeart(true);
+          setTimeout(() => setShowHeart(false), 1000);
+        }
+      } else if (noCount > 0) {
+        // First tap - start movement timeout
+        handleButtonMovement();
+      }
+      setLastTap(now);
+    } else {
+      // Desktop behavior remains the same
+      setNoCount(noCount + 1);
+      moveButton();
+
+      if (noCount > 5) {
+        setShowHeart(true);
+        setTimeout(() => setShowHeart(false), 1000);
+      }
+    }
+  };
+
+  const handleYesClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    
+    const now = Date.now();
+    const DOUBLE_TAP_DELAY = 300;
+    
+    if (isMobile) {
+      if (now - lastTap < DOUBLE_TAP_DELAY) {
+        // Double tap detected - trigger the yes action
+        if (moveTimeoutRef.current) {
+          clearTimeout(moveTimeoutRef.current);
+        }
+        setYesPressed(true);
+        confetti({
+          particleCount: 100,
+          spread: 70,
+          origin: { y: 0.6 }
+        });
+        
+        try {
+          const audio = new Audio("https://assets.mixkit.co/sfx/preview/mixkit-fairy-arcade-sparkle-866.mp3");
+          audio.play();
+        } catch (e) {
+          console.log("Failed to play audio");
+        }
+      } else {
+        // First tap - start movement timeout for the No button
+        handleButtonMovement();
+      }
+      setLastTap(now);
+    } else {
+      // Desktop behavior remains the same
+      setYesPressed(true);
+      confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.6 }
+      });
+      
+      try {
+        const audio = new Audio("https://assets.mixkit.co/sfx/preview/mixkit-fairy-arcade-sparkle-866.mp3");
+        audio.play();
+      } catch (e) {
+        console.log("Failed to play audio");
+      }
     }
   };
 
@@ -101,7 +187,7 @@ export default function ValentineCard() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center h-screen -mt-16 overflow-hidden">
+    <div className="flex flex-col items-center justify-center h-screen overflow-hidden">
       {yesPressed ? (
         <>
           <img src="https://store.celeprime.com/bear-kiss-bear-kisses.gif" alt="Bear kiss" className="h-[200px] sm:h-[300px] animate-bounce" />

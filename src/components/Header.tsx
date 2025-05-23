@@ -253,7 +253,7 @@ function Header() {
             <Link href="/" className="text-[#4A4A4A] hover:text-[#FFC0CB] font-serif">Home</Link>
 
             {/* Generators Dropdown */}
-            <DropdownMenu>
+            {/* <DropdownMenu>
               <DropdownMenuTrigger
                 className="text-[#4A4A4A] hover:text-[#FFC0CB] font-serif flex items-center"
                 onMouseEnter={() => !isMobile && setIsGeneratorMenuOpen(true)}
@@ -281,7 +281,9 @@ function Header() {
                   ))}
                 </div>
               </DropdownMenuContent>
-            </DropdownMenu>
+            </DropdownMenu> */}
+
+            <Link href="/cards/" className="text-[#4A4A4A] hover:text-[#FFC0CB] font-serif">Generators</Link>
 
             {/* Gallery Link */}
             <Link href="/card-gallery/" className="text-[#4A4A4A] hover:text-[#FFC0CB] font-serif">Gallery</Link>
@@ -575,7 +577,7 @@ function Header() {
             <Link href="/" className="block py-2.5 px-4 w-full text-right text-[#4A4A4A] hover:text-[#FFC0CB] hover:bg-gray-50 font-serif">Home</Link>
 
             {/* Generators Section - Mobile */}
-            <div className="border-y border-purple-100/50 my-2 bg-purple-50/30">
+            {/* <div className="border-y border-purple-100/50 my-2 bg-purple-50/30">
               <div className="py-2 px-4">
                 <div className="text-right font-serif text-[#4A4A4A] mb-2">Generators</div>
                 <div className="grid grid-cols-2 gap-2">
@@ -594,7 +596,8 @@ function Header() {
                   ))}
                 </div>
               </div>
-            </div>
+            </div> */}
+            <Link href="/cards/" className="block py-2.5 px-4 w-full text-right text-[#4A4A4A] hover:text-[#FFC0CB] hover:bg-gray-50 font-serif">Generators</Link>
 
             {/* Gallery Link - Mobile */}
             <Link href="/card-gallery/" className="block py-2.5 px-4 w-full text-right text-[#4A4A4A] hover:text-[#FFC0CB] hover:bg-gray-50 font-serif">Gallery</Link>
