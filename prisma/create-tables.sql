@@ -48,11 +48,27 @@ CREATE TABLE IF NOT EXISTS "EditedCard" (
     "editedContent" TEXT NOT NULL,
     "spotifyTrackId" TEXT,
     "r2Url" TEXT,
+    "userId" TEXT NOT NULL,
     "message" TEXT,
+    "deleted" BOOLEAN NOT NULL DEFAULT false,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL
 );
 CREATE INDEX IF NOT EXISTS "EditedCard_originalCardId_idx" ON "EditedCard"("originalCardId");
+ALTER TABLE "EditedCard" ADD COLUMN "deleted" BOOLEAN NOT NULL DEFAULT false;
+
+-- create DeletedCard table
+CREATE TABLE IF NOT EXISTS "DeletedCard" (
+    "id" TEXT PRIMARY KEY,
+    "editedCardId" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "originalCardId" TEXT NOT NULL,
+    "cardType" TEXT NOT NULL,
+    "relationship" TEXT,
+    "r2Url" TEXT,
+    "fileDeleted" BOOLEAN NOT NULL DEFAULT false,
+    "deletedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
 
 -- Create SpotifyMusic table
 DROP TABLE IF EXISTS "SpotifyMusic";

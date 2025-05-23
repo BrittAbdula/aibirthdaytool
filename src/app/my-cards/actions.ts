@@ -3,6 +3,7 @@
 import { prisma } from '@/lib/prisma'
 import { auth } from '@/auth'
 import { revalidatePath } from 'next/cache'
+import { Prisma } from '@prisma/client';
 
 interface ActionResponse {
   success: boolean;
@@ -33,6 +34,38 @@ export async function deleteSentCards(prevState: ActionResponse | null, formData
   }
 
   try {
+    // insert deleted card ids and information into deletedCard table
+    const deletedCards = await prisma.editedCard.findMany({
+      where: {
+        id: {
+          in: cardIds,
+        },
+        userId: session.user.id,
+      },
+      select: {
+        id: true,
+        cardType: true,
+        relationship: true,
+        editedContent: true,
+        spotifyTrackId: true,
+        r2Url: true,
+        originalCardId: true,
+      },
+    })
+
+    // insert the deleted cards into the deletedCard table
+    await prisma.deletedCard.createMany({
+      data: deletedCards.map(card => ({
+        editedCardId: card.id,
+        userId: session.user.id,
+        originalCardId: card.originalCardId,
+        cardType: card.cardType,
+        relationship: card.relationship,
+        r2Url: card.r2Url,
+      })),
+    })
+
+    // delete the edited cards from the editedCard table
     await prisma.editedCard.deleteMany({
       where: {
         id: {

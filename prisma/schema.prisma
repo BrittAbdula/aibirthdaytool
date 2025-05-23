@@ -77,6 +77,7 @@ model EditedCard {
   userId         String?
   customUrl      String?
   message        String?
+  deleted        Boolean  @default(false)
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
   originalCard   ApiLog   @relation("OriginalCard", fields: [originalCardId], references: [cardId], onDelete: NoAction, onUpdate: NoAction)
@@ -85,6 +86,19 @@ model EditedCard {
   @@index([originalCardId])
   @@index([userId])
 }
+
+model DeletedCard {
+  id             String   @id @default(cuid())
+  editedCardId   String
+  userId         String
+  originalCardId String
+  cardType       String
+  relationship   String?
+  r2Url          String?
+  fileDeleted    Boolean  @default(false)
+  deletedAt      DateTime @default(now())
+}
+
 
 model SpotifyMusic {
   id           String   @id @default(cuid())
