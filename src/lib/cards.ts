@@ -8,11 +8,12 @@ export interface Card {
   relationship: string | null;
   // editedContent: string;
   r2Url: string | null;
+  like_count?: number;
   // createdAt: Date; // Add createdAt for sorting
   // originalCardId: string; // Add originalCardId for grouping
 }
 
-export type TabType = 'recent' | 'popular';
+export type TabType = 'recent' | 'popular' | 'liked';
 
 // 服务端渲染使用的函数，带有缓存 - 最新卡片
 export const getRecentCardsServer = unstable_cache(
@@ -192,6 +193,84 @@ async function fetchPopularCards(
   `;
 
   // Query for total distinct groups (same as recent)
+  const totalGroupsQuery = Prisma.sql`
+    SELECT COUNT(DISTINCT "originalCardId")::integer as count
+    FROM "EditedCard"
+    ${whereClause};
+  `;
+
+  // Execute queries concurrently
+  const [cardsResult, totalResult] = await Promise.all([
+    prisma.$queryRaw<Card[]>(cardsQuery),
+    prisma.$queryRaw<{ count: number }[]>(totalGroupsQuery)
+  ]);
+
+  const totalGroupsCount = totalResult[0]?.count ?? 0;
+  const totalPages = Math.ceil(totalGroupsCount / pageSize);
+
+  return { cards: cardsResult, totalPages };
+}
+
+export async function getLikedCardsServer(
+  page: number,
+  pageSize: number,
+  wishCardType: string | null = null,
+  relationship: string | null = null
+): Promise<{ cards: Card[]; totalPages: number }> {
+  const offset = (page - 1) * pageSize;
+
+  // Base WHERE conditions
+  const whereConditions: Prisma.Sql[] = [
+    Prisma.sql`"createdAt" >= NOW() - INTERVAL '7 days'`
+  ];
+  if (wishCardType) {
+    whereConditions.push(Prisma.sql`"cardType" = ${wishCardType}`);
+  }
+  if (relationship) {
+    whereConditions.push(Prisma.sql`relationship = ${relationship}`);
+  }
+  
+
+  const whereClause = whereConditions.length > 0 
+    ? Prisma.sql`WHERE ${Prisma.join(whereConditions, ' AND ')}`
+    : Prisma.sql``;
+
+  // Main query using ROW_NUMBER() to find the oldest card per group,
+  // and COUNT() OVER to order groups by their size (popularity).
+  const cardsQuery = Prisma.sql`
+    WITH RankedCards AS (
+      SELECT
+        ec.id,
+        ec."cardType",
+        ec.relationship,
+        ec."r2Url",
+        -- Rank within each group to find the oldest (rn_asc = 1)
+        ROW_NUMBER() OVER (PARTITION BY ec."originalCardId" ORDER BY ec."createdAt" ASC) as rn_asc,
+        -- Count cards per group for popularity ranking
+        COUNT(*) OVER (PARTITION BY ec."originalCardId") as group_count,
+        -- Get the latest timestamp for tie-breaking in ordering
+        MAX(ec."createdAt") OVER (PARTITION BY ec."originalCardId") as max_createdAt_in_group,
+        -- Count user actions with 'up' for each group
+        COUNT(ua.id) OVER (PARTITION BY ec."originalCardId")::integer as like_count
+      FROM "EditedCard" ec
+      LEFT JOIN "UserAction" ua ON ua."cardId" = ec."id" AND ua.action = 'up'
+      ${whereClause}
+    )
+    SELECT
+      id,
+      "cardType",
+      relationship,
+      "r2Url",
+      like_count
+    FROM RankedCards
+    WHERE rn_asc = 1 -- Select only the oldest card from each group
+    ORDER BY
+      like_count DESC,        -- Order groups by number of likes
+      max_createdAt_in_group DESC -- Tie-breaker: newest first
+    LIMIT ${pageSize} OFFSET ${offset};
+  `;
+
+  // Query for total distinct groups
   const totalGroupsQuery = Prisma.sql`
     SELECT COUNT(DISTINCT "originalCardId")::integer as count
     FROM "EditedCard"

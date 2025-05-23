@@ -103,6 +103,16 @@ export default function TypeGalleryContent({
             >
               Popular
             </button>
+            <button
+              onClick={() => handleTabChange('liked')}
+              className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${
+                currentTab === 'liked'
+                  ? 'bg-purple-500 text-white shadow-sm'
+                  : 'text-gray-600 hover:bg-purple-50'
+              }`}
+            >
+              Most Liked
+            </button>
           </div>
         </div>
       </div>

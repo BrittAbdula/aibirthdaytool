@@ -2,7 +2,7 @@ import { Metadata } from 'next'
 import { Suspense } from 'react'
 import RelationshipGalleryContent from './RelationshipGalleryContent'
 import { ScrollToTop } from '@/components/ScrollToTop'
-import { getRecentCardsServer, getPopularCardsServer, TabType } from '@/lib/cards'
+import { getRecentCardsServer, getPopularCardsServer, getLikedCardsServer, TabType } from '@/lib/cards'
 import { CardType } from '@/lib/card-config'
 
 interface Props {
@@ -75,9 +75,20 @@ export default async function RelationshipPage({ params, searchParams }: Props) 
   // Fetch all card data at build time or during revalidation
   const recentCardsData = await getRecentCardsServer(1, 24, cardType, relationship)
   const popularCardsData = await getPopularCardsServer(1, 24, cardType, relationship)
+  const likedCardsData = await getLikedCardsServer(1, 24, cardType, relationship)
   
   // Select the appropriate data based on active tab
-  const initialCardsData = activeTab === 'recent' ? recentCardsData : popularCardsData
+  let initialCardsData;
+  switch (activeTab) {
+    case 'popular':
+      initialCardsData = popularCardsData;
+      break;
+    case 'liked':
+      initialCardsData = likedCardsData;
+      break;
+    default:
+      initialCardsData = recentCardsData;
+  }
 
   return (
     <article className="min-h-screen bg-gradient-to-br from-white via-purple-50 to-pink-50">
