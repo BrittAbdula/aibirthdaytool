@@ -13,7 +13,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { ImageViewer } from '@/components/ImageViewer'
 import { cn, fetchSvgContent } from '@/lib/utils'
-import { CardType, getCardConfig, getAllCardTypes, CardConfig } from '@/lib/card-config'
+import { CardType, CardConfig } from '@/lib/card-config'
 import { useSession, signIn } from "next-auth/react"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Loader2 } from 'lucide-react'

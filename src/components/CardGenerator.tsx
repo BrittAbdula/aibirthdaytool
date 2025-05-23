@@ -12,7 +12,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { ImageViewer } from '@/components/ImageViewer'
 import { cn, fetchSvgContent } from '@/lib/utils'
-import { CardType, getCardConfig, getAllCardTypes, CardConfig } from '@/lib/card-config'
+import { CardType, CardConfig } from '@/lib/card-config'
 import { useSession, signIn } from "next-auth/react"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Loader2 } from 'lucide-react'
@@ -145,7 +145,7 @@ const CustomSelect = ({
             <SelectValue placeholder={placeholder} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="custom" className="text-[#b19bff]">✨ Custom {label} (Any keywords)</SelectItem>
+            <SelectItem value="custom" className="text-[#b19bff]">✨ Custom </SelectItem>
             {options.map((option) => (
               <SelectItem key={option} value={option}>{option}</SelectItem>
             ))}
@@ -301,10 +301,6 @@ export default function CardGenerator({
     setFormData(prev => ({ ...prev, [name]: value }))
   }
 
-  const handleCardTypeChange = (newCardType: CardType) => {
-    router.push(`/${newCardType}/`)
-  }
-
   const handleImageCountChange = (count: number) => {
     setImageCount(count);
     
@@ -326,7 +322,7 @@ export default function CardGenerator({
     if (missingFields.length > 0) {
       setErrorToast({
         title: 'Required Fields Missing',
-        message: `Please fill in the following required fields: ${missingFields.map(f => f.label).join(', ')}`,
+        message: `Please fill in the following required fields: ${missingFields.map(f => f.label || f.placeholder).join(', ')}`,
         type: 'error'
       });
       return;
@@ -476,7 +472,7 @@ export default function CardGenerator({
 
     return (
       <div key={field.name} className="space-y-2">
-        <Label htmlFor={field.name} className={labelClass}>{field.label}</Label>
+        {field.label && <Label htmlFor={field.name} className={labelClass}>{field.label}</Label>}
         {inputComponent}
       </div>
     );
@@ -552,90 +548,90 @@ export default function CardGenerator({
               {cardConfig.fields.map((field) => renderField(field))}
 
               {/* Color Selection */}
-              <div key="card-color" className="space-y-2">
-                <Label htmlFor="card-color" className="flex justify-between items-center">
-                  <span>Color</span>
-                </Label>
-                <div className="grid grid-cols-8 gap-2 w-full">
-                  {[
-                    { id: "black", name: "Black", color: "#000000" },
-                    { id: "gray", name: "Gray", color: "#BDBDBD" },
-                    { id: "white", name: "White", color: "#FFFFFF", border: true },
-                    { id: "red", name: "Red", color: "#D32F2F" },
-                    { id: "purple", name: "Purple", color: "#7B1FA2" },
-                    { id: "pink", name: "Pink", color: "#FF80AB" },
-                    { id: "green", name: "Green", color: "#388E3C" },
-                    { id: "light-green", name: "Light Green", color: "#A5D6A7" },
-                    { id: "blue", name: "Blue", color: "#1976D2" },
-                    { id: "navy", name: "Navy", color: "#283593" },
-                    { id: "sky", name: "Sky Blue", color: "#B3E5FC" },
-                    { id: "gold", name: "Gold", color: "#D4AF37" },
-                    { id: "beige", name: "Beige", color: "#F5F5DC" },
-                    { id: "yellow", name: "Yellow", color: "#FFF176" },
-                    { id: "brown", name: "Brown", color: "#8D5524" },
-                    { id: "peach", name: "Peach", color: "#FFCC99" },
-                  ].map((color) => {
-                    const colorValue = `${color.id}`;
-                    const isSelected = formData["color"] === colorValue;
-                    return (
-                      <button
-                        key={color.id}
-                        type="button"
-                        onClick={() => handleInputChange("color", isSelected ? '' : colorValue)}
-                        className={cn(
-                          "h-8 w-8 rounded-full border-2 flex items-center justify-center transition-all duration-200",
-                          isSelected
-                            ? "border-[#b19bff] ring-2 ring-[#b19bff]"
-                            : color.border ? "border-gray-300" : "border-transparent"
-                        )}
-                        style={{ backgroundColor: color.color }}
-                        aria-label={color.name}
-                      >
-                        {isSelected && (
-                          <span className="block w-3 h-3 rounded-full border-2 border-white bg-white" />
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setCustomValues(prev => ({ 
-                      ...prev, 
-                      color: formData["color"] === "custom" ? "" : (prev.color || "")
-                    }));
-                    handleInputChange("color", formData["color"] === "custom" ? "" : "custom");
-                  }}
-                  className={cn(
-                    "mt-1 w-full py-1.5 px-2 border rounded-md flex items-center justify-center gap-1 transition-all duration-200 text-sm",
-                    formData["color"] === "custom"
-                      ? "border-[#b19bff] bg-[#b19bff]/10"
-                      : "border-gray-200 hover:border-[#b19bff] hover:bg-[#b19bff]/5"
-                  )}
-                >
-                  <span className="text-sm">✨</span>
-                  <span className={formData["color"] === "custom" ? "text-[#b19bff] font-medium" : "text-gray-600"}>
-                    Custom Color
-                  </span>
-                </button>
-                {formData["color"] === "custom" && (
-                  <div className="mt-1">
-                    <Input
-                      value={customValues["color"] || ''}
-                      onChange={(e) => {
-                        setCustomValues(prev => ({ ...prev, color: e.target.value }));
-                        handleInputChange("color", "custom");
-                      }}
-                      placeholder="Describe color: e.g. 'rose gold', 'gradient', 'rainbow'..."
-                      className="border-[#b19bff] focus-visible:ring-[#b19bff] text-sm"
-                    />
-                    <p className="text-xs text-gray-500 mt-1">
-                      Try: &ldquo;rose gold&rdquo;, &ldquo;gradient&rdquo;, &ldquo;rainbow&rdquo;, etc.
-                    </p>
-                  </div>
-                )}
-              </div>
+              <div key="card-design" className="space-y-2">
+  <Label htmlFor="card-design" className="flex justify-between items-center">
+    <span>Design</span>
+  </Label>
+  <div className="grid grid-cols-8 gap-2 w-full">
+    {[
+      { id: "black", name: "Black", color: "#000000" },
+      { id: "gray", name: "Gray", color: "#BDBDBD" },
+      { id: "white", name: "White", color: "#FFFFFF", border: true },
+      { id: "red", name: "Red", color: "#D32F2F" },
+      { id: "purple", name: "Purple", color: "#7B1FA2" },
+      { id: "pink", name: "Pink", color: "#FF80AB" },
+      { id: "green", name: "Green", color: "#388E3C" },
+      { id: "light-green", name: "Light Green", color: "#A5D6A7" },
+      { id: "blue", name: "Blue", color: "#1976D2" },
+      { id: "navy", name: "Navy", color: "#283593" },
+      { id: "sky", name: "Sky Blue", color: "#B3E5FC" },
+      { id: "gold", name: "Gold", color: "#D4AF37" },
+      { id: "beige", name: "Beige", color: "#F5F5DC" },
+      { id: "yellow", name: "Yellow", color: "#FFF176" },
+      { id: "brown", name: "Brown", color: "#8D5524" },
+      { id: "peach", name: "Peach", color: "#FFCC99" },
+    ].map((color) => {
+      const colorValue = `${color.id}`;
+      const isSelected = formData["design"] === colorValue;
+      return (
+        <button
+          key={color.id}
+          type="button"
+          onClick={() => handleInputChange("design", isSelected ? '' : colorValue)}
+          className={cn(
+            "h-8 w-8 rounded-full border-2 flex items-center justify-center transition-all duration-200",
+            isSelected
+              ? "border-[#b19bff] ring-2 ring-[#b19bff]"
+              : color.border ? "border-gray-300" : "border-transparent"
+          )}
+          style={{ backgroundColor: color.color }}
+          aria-label={color.name}
+        >
+          {isSelected && (
+            <span className="block w-3 h-3 rounded-full border-2 border-white bg-white" />
+          )}
+        </button>
+      );
+    })}
+  </div>
+  <button
+    type="button"
+    onClick={() => {
+      setCustomValues(prev => ({ 
+        ...prev, 
+        design: formData["design"] === "custom" ? "" : (prev.design || "")
+      }));
+      handleInputChange("design", formData["design"] === "custom" ? "" : "custom");
+    }}
+    className={cn(
+      "mt-1 w-full py-1.5 px-2 border rounded-md flex items-center justify-center gap-1 transition-all duration-200 text-sm",
+      formData["design"] === "custom"
+        ? "border-[#b19bff] bg-[#b19bff]/10"
+        : "border-gray-200 hover:border-[#b19bff] hover:bg-[#b19bff]/5"
+    )}
+  >
+    <span className="text-sm">✨</span>
+    <span className={formData["design"] === "custom" ? "text-[#b19bff] font-medium" : "text-gray-600"}>
+      Custom Design
+    </span>
+  </button>
+  {formData["design"] === "custom" && (
+    <div className="mt-1">
+      <Input
+        value={customValues["design"] || ''}
+        onChange={(e) => {
+          setCustomValues(prev => ({ ...prev, design: e.target.value }));
+          handleInputChange("design", "custom");
+        }}
+        placeholder="Describe any design you want: colors, patterns, style, layout..."
+        className="border-[#b19bff] focus-visible:ring-[#b19bff] text-sm"
+      />
+      <p className="text-xs text-gray-500 mt-1">
+        Examples: &ldquo;pastel watercolor with flowers&rdquo;, &ldquo;modern minimalist&rdquo;, &ldquo;hand-drawn cartoon style&rdquo;
+      </p>
+    </div>
+  )}
+</div>
 
               {/* Size Selection */}
               <div className="space-y-2">

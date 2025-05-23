@@ -25,12 +25,13 @@ function extractSvgContent(content: string): string | null {
 
 function getRandomModel(userPlan: string): string {
     if (userPlan === 'Premium') {
-        return 'anthropic/claude-3.7-sonnet';
+        return 'anthropic/claude-sonnet-4';
     }
     
     const models = [
         { name: "anthropic/claude-3.5-haiku", weight: 5 },
-        { name: "anthropic/claude-3.7-sonnet", weight: 1 },
+        // { name: "anthropic/claude-3.7-sonnet", weight: 1 },
+        { name: "anthropic/claude-sonnet-4", weight: 1 },
         { name: "deepseek/deepseek-chat-v3-0324:free", weight: 20 },
         // { name: "deepseek/deepseek-chat", weight: 100 }
     ];
@@ -50,29 +51,20 @@ function getRandomModel(userPlan: string): string {
 }
 
 interface CardContentParams {
-    userId?: string;
     cardType: CardType;
-    version?: string;
-    templateId?: string;
-    size?: string;
-    style?: string;
+    size: string;
+    userPrompt: string;
     modificationFeedback?: string;
     previousCardId?: string;
-    [key: string]: any;
 }
 
 export async function generateCardContent(params: CardContentParams, userPlan: string): Promise<{ taskId: string, r2Url: string, svgContent: string, model: string, tokensUsed: number, duration: number, errorMessage?: string , status?: string }> {
-    const { userId, cardType, version, format, modelTier, variationIndex, size, modificationFeedback, previousCardId, ...otherParams } = params;
+    const { cardType, size, userPrompt, modificationFeedback, previousCardId } = params;
 
     const startTime = Date.now();
     const model = getRandomModel(userPlan);
     console.log('<----Using model : ' + model + '---->')
-    console.log('<----Using model tier : ' + modelTier + '---->')
-    const formattedTime = new Date(startTime).toLocaleString(undefined, {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit'
-    }).replace(/\//g, '-');
+    console.log('<----userPlan : ' + userPlan + '---->')
 
     try {
         // Get card size
@@ -93,7 +85,7 @@ export async function generateCardContent(params: CardContentParams, userPlan: s
                     select: { responseContent: true }
                 });
 
-                if (previousCard && previousCard.responseContent !== 'success' && previousCard.responseContent !== 'error') {
+                if (previousCard) {
                     previousSvgContent = previousCard.responseContent;
                     userPromptPrefixText = `
 I want to modify the previous card design with this feedback: ${modificationFeedback}
@@ -110,20 +102,12 @@ IMPORTANT: return SVG code only. Do not include any explanation, commentary, or 
             }
         }
 
-        // Prepare user prompt
-        const userPromptFields = Object.entries({
-            ...otherParams,
-            currentTime: formattedTime
-        })
-            .filter(([_, value]) => value !== '' && value !== undefined)
-            .map(([key, value]) => `${key}: ${value}`)
-            .join('\n');
 
-        const userPrompt = userPromptPrefixText ? userPromptPrefixText : userPromptFields;
-        console.log('<----User prompt : ' + userPrompt + '---->')
+        const finalUserPrompt = userPromptPrefixText ? userPromptPrefixText : userPrompt;
+        console.log('<----User prompt : ' + finalUserPrompt + '---->')
 
         // Check prompt length
-        if (userPrompt.length >= 5000) {
+        if (finalUserPrompt.length >= 5000) {
             throw new Error("User prompt too long");
         }
 
@@ -148,7 +132,7 @@ IMPORTANT: return SVG code only. Do not include any explanation, commentary, or 
                         "content": [
                             {
                                 "type": "text",
-                                "text": userPrompt
+                                "text": finalUserPrompt
                             }
                         ]
                     }
@@ -216,3 +200,5 @@ IMPORTANT: return SVG code only. Do not include any explanation, commentary, or 
         };
     }
 }
+
+  

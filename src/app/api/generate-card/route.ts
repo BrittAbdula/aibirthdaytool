@@ -24,18 +24,13 @@ export async function POST(request: Request) {
     // const userId = 'cm56ic66y000110jijyw2ir8r';
     const requestData = await request.json();
     const {
-      cardType,
-      recipientName,
-      sender,
-      senderName,
-      message,
       modificationFeedback,
       previousCardId,
       format = 'svg', // Default to svg if not specified
-      ...otherFields
+      ...defaultFields
     } = requestData;
 
-    if (!cardType) {
+    if (!defaultFields.cardType) {
       return NextResponse.json({ error: 'Missing required field: cardType' }, { status: 400 });
     }
 
@@ -101,7 +96,7 @@ export async function POST(request: Request) {
       data: {
         userId,
         cardId,
-        cardType,
+        cardType: defaultFields.cardType,
         userInputs: requestData,
         promptVersion: format === 'image' ? 'gpt4o-image' : 'svg',
         responseContent: '',
@@ -112,27 +107,24 @@ export async function POST(request: Request) {
       },
     });
 
-    // Start async processing
-    const cardData = {
-      userId,
-      cardType,
-      recipientName,
-      sender,
-      senderName,
-      message,
-      format,
+    // Before generating card, create the proper params object
+    const cardParams = {
+      cardType: defaultFields.cardType,
+      size: defaultFields.size || 'portrait', // Add a default size if not provided
+      userPrompt: isModification ? modificationFeedback : createNaturalPrompt(requestData, defaultFields.cardType),
+      // Only include these if it's a modification request
       ...(isModification && {
         modificationFeedback,
         previousCardId
-      }),
-      ...otherFields
+      })
     };
 
+    // Start async processing
     try {
-      // Generate card
+      // Then use the params object when calling generateCardContent
       const result = format === 'image'
-        ? await generateCardImageWith4o(cardData, planType)
-        : await generateCardContent(cardData, planType);
+        ? await generateCardImageWith4o(cardParams, planType)
+        : await generateCardContent(cardParams, planType);
 
       // console.log('result', result);
 
@@ -176,3 +168,71 @@ export async function POST(request: Request) {
     }, { status: 500 });
   }
 }
+
+
+
+const createNaturalPrompt = (formData: any, cardType: string) => {
+  const { to, recipientName, message, signed, design, yearsTogether, age,tone } = formData;
+
+  let prompt = '';
+
+  // 主句
+  if (to && recipientName) {
+    const relationship = to.toLowerCase() === 'myself' ? 'myself' : `my ${to.toLowerCase()}`;
+    prompt += `Create a ${cardType} card to ${relationship} ${recipientName}. `;
+  }
+
+  // 根据卡片类型动态添加消息描述
+  if (message) {
+    const messageContext = {
+      'sorry': 'Reason for apology',
+      'birthday': 'Birthday message',
+      'thank-you': 'Reason for gratitude',
+      'congratulations': 'Celebration reason',
+      'love': 'Love message',
+      'get-well': 'Get well wishes',
+      'graduation': 'Graduation message',
+      'wedding': 'Wedding wishes',
+      'holiday': 'Holiday message',
+      'anniversary': 'Anniversary message',
+      'baby': 'Baby shower message'
+    };
+
+    const context = messageContext[cardType as keyof typeof messageContext] || 'Message';
+    prompt += `${context}: "${message}". `;
+  }
+
+  // 签名
+  if (signed) {
+    prompt += `Signed by: ${signed}. `;
+  }
+
+  if (yearsTogether) {
+    prompt += `Years together: ${yearsTogether}. `;
+  }
+
+  if(age){
+    prompt += `Age: ${age}. `;
+  }
+
+  if(tone){
+    prompt += `Tone: ${tone}. `;
+  }
+
+  // 设计要求
+  if (design) {
+    if (design === 'custom') {
+      // 如果是自定义设计，需要获取用户的自定义输入
+      const customDesign = formData.customDesign || formData.design_custom;
+      if (customDesign) {
+        prompt += `Design requirements: ${customDesign}. `;
+      }
+    } else {
+      // 预设颜色
+      prompt += `Color scheme: ${design}. `;
+    }
+  }
+
+
+  return prompt.trim();
+};
