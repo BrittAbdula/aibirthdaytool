@@ -2,86 +2,100 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
-import { useRef } from 'react'
+import { useRef, useState, useEffect } from 'react'
 
 interface TrendingCard {
-  image: string
+  images: string[]
   title: string
   link: string
 }
 
 const trendingCards: TrendingCard[] = [
-    {
-      image: '/card/love.svg',
-      title: 'Love Card',
-      link: '/love/'
-    },
-    {
-      image: '/card/sorry.svg',
-      title: 'Sorry Card',
-      link: '/sorry/'
-    },
-    {
-      image: '/card/anniversary.svg',
-      title: 'Anniversary Card',
-      link: '/anniversary/'
-    },
-    {
-      image: '/card/christmas.svg',
-      title: 'Christmas Card',
-      link: '/christmas/'
-    },
-    {
-      image: '/card/newyear.svg',
-      title: 'New Year Card',
-      link: '/newyear/'
-    },
-    {
-      image: '/card/birthday.svg',
-      title: 'Birthday Card',
-      link: '/birthday/'
-    },
-    {
-      image: '/card/thankyou.svg',
-      title: 'Thank You Card',
-      link: '/thankyou/'
-    },
-    {
-      image: '/card/congratulations.svg',
-      title: 'Congratulations Card',
-      link: '/congratulations/'
-    },
-    {
-      image: '/card/holiday.svg',
-      title: 'Holiday Card',
-      link: '/holiday/'
-    },
-    {
-      image: '/card/teacher.svg',
-      title: 'Teacher Card',
-      link: '/teacher/'
-    },
-    {
-      image: '/card/graduation.svg',
-      title: 'Graduation Card',
-      link: '/graduation/'
-    },
-    {
-      image: '/card/goodluck.svg',
-      title: 'Good Luck Card',
-      link: '/goodluck/'
-    },
-    {
-      image: '/card/goodmorning.svg',
-      title: 'Good Morning Card',
-      link: '/goodmorning/'
-    },
-    {
-      image: '/card/goodnight.svg',
-      title: 'Good Night Card',
-      link: '/goodnight/'
-    }
+  {
+    images: ['/card/birthday.svg', '/card/birthday_1.png', '/card/birthday_2.png', '/card/birthday_3.png', '/card/birthday_4.png'],
+    title: 'Birthday Card',
+    link: '/birthday/'
+  },
+  {
+    images: ['/card/sorry.svg','https://store.celeprime.com/cards/2025/05/23/29bb5a93-fd90-45e2-8af6-4bec972a38b2.svg','https://store.celeprime.com/cards/2025/05/20/3b97f9b0-8baa-4c4f-a32f-a0edc342746c.svg'],
+    title: 'Sorry Card',
+    link: '/sorry/'
+  },
+  {
+    images: ['/card/anniversary.svg'],
+    title: 'Anniversary Card',
+    link: '/anniversary/'
+  },
+  {
+    images: ['/card/christmas.svg'],
+    title: 'Christmas Card',
+    link: '/christmas/'
+  },
+  {
+    images: ['/card/newyear.svg'],
+    title: 'New Year Card',
+    link: '/newyear/'
+  },
+  {
+    images: ['/card/love.svg'],
+    title: 'Love Card',
+    link: '/love/'
+  },
+  {
+    images: ['/card/thankyou.svg'],
+    title: 'Thank You Card',
+    link: '/thankyou/'
+  },
+  {
+    images: ['/card/congratulations.svg'],
+    title: 'Congratulations Card',
+    link: '/congratulations/'
+  },
+  {
+    images: ['/card/holiday.svg'],
+    title: 'Holiday Card',
+    link: '/holiday/'
+  }
 ]
+
+const CardImage = ({ images, title }: { images: string[], title: string }) => {
+  const [currentImageIndex, setCurrentImageIndex] = useState(0)
+  const [isTransitioning, setIsTransitioning] = useState(false)
+
+  useEffect(() => {
+    if (images.length <= 1) return
+
+    const interval = setInterval(() => {
+      setIsTransitioning(true)
+      
+      setTimeout(() => {
+        setCurrentImageIndex((prevIndex) => (prevIndex + 1) % images.length)
+        setIsTransitioning(false)
+      }, 50)
+    }, 1000)
+
+    return () => clearInterval(interval)
+  }, [images.length])
+
+  return (
+    <div className="relative w-full pb-[133.33%] mb-4">
+      <div className={`absolute inset-0 transition-all duration-300 ease-in-out group-hover:scale-105 z-10 ${
+        isTransitioning ? 'opacity-0' : 'opacity-100'
+      }`}>
+        <Image
+          src={images[currentImageIndex]}
+          alt={title}
+          fill
+          className="rounded-md object-contain"
+        />
+      </div>
+      {/* Flicker effect overlay */}
+      <div className={`absolute inset-0 bg-white rounded-md transition-opacity duration-150 z-20 pointer-events-none ${
+        isTransitioning ? 'opacity-20' : 'opacity-0'
+      }`} />
+    </div>
+  )
+}
 
 export const TrendingCards = () => {
   const scrollContainerRef = useRef<HTMLDivElement>(null)
@@ -130,16 +144,7 @@ export const TrendingCards = () => {
             {trendingCards.map((card, index) => (
               <Link href={card.link} key={index} className="group flex-shrink-0 w-64 md:w-72">
                 <div className="bg-purple-100 rounded-lg p-4 transition-all duration-300 group-hover:shadow-lg h-full">
-                  <div className="relative w-full pb-[133.33%] mb-4">
-                    <div className="absolute inset-0 transition-transform duration-300 ease-in-out group-hover:scale-105 z-10">
-                      <Image
-                        src={card.image}
-                        alt={card.title}
-                        fill
-                        className="rounded-md object-contain"
-                      />
-                    </div>
-                  </div>
+                  <CardImage images={card.images} title={card.title} />
                   <p className="text-center font-medium">AI {card.title} Generator</p>
                 </div>
               </Link>

@@ -86,6 +86,11 @@ export default async function Home() {
 
         {/* Main content */}
         <div className="relative">
+          <div className="mb-16 items-center flex justify-center">
+            <a href="https://www.producthunt.com/posts/mewtrucard?embed=true&utm_source=badge-featured&utm_medium=badge&utm_source=badge-mewtrucard" target="_blank">
+              <img src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=969395&theme=light&t=1748048449150" alt="MewtruCard - AI&#0032;Greeting&#0032;Cards&#0032;That&#0032;Move&#0044;&#0032;Inspire&#0044;&#0032;and&#0032;Soon&#0032;Speak | Product Hunt" width="250" height="54" />
+            </a>
+          </div>
           <h1 className="text-4xl sm:text-6xl font-serif font-bold text-center mb-4 text-[#4A4A4A] tracking-tight">
             <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-pink-600">
               Free AI Greeting Card Generator
