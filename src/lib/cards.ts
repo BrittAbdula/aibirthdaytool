@@ -115,7 +115,7 @@ async function fetchRecentCards(
   // Query for total distinct groups matching the criteria
   const totalGroupsQuery = Prisma.sql`
     SELECT COUNT(DISTINCT "originalCardId")::integer as count
-    FROM "EditedCard"
+    FROM "EditedCard" ec
     ${whereClause};
   `;
   // Alternatively, use Prisma's count if simpler and efficient enough:
@@ -202,7 +202,7 @@ async function fetchPopularCards(
   // Query for total distinct groups (same as recent)
   const totalGroupsQuery = Prisma.sql`
     SELECT COUNT(DISTINCT "originalCardId")::integer as count
-    FROM "EditedCard"
+    FROM "EditedCard" ec
     ${whereClause};
   `;
 
@@ -283,7 +283,7 @@ export async function getLikedCardsServer(
   // Query for total distinct groups
   const totalGroupsQuery = Prisma.sql`
     SELECT COUNT(DISTINCT "originalCardId")::integer as count
-    FROM "EditedCard"
+    FROM "EditedCard" ec
     ${whereClause};
   `;
 
