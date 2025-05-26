@@ -9,6 +9,7 @@ export interface Card {
   // editedContent: string;
   r2Url: string | null;
   like_count?: number;
+  premium?: boolean;
   // createdAt: Date; // Add createdAt for sorting
   // originalCardId: string; // Add originalCardId for grouping
 }
@@ -66,10 +67,10 @@ async function fetchRecentCards(
   // Base WHERE conditions
   const whereConditions: Prisma.Sql[] = [];
   if (wishCardType) {
-    whereConditions.push(Prisma.sql`"cardType" = ${wishCardType}`);
+    whereConditions.push(Prisma.sql`ec."cardType" = ${wishCardType}`);
   }
   if (relationship) {
-    whereConditions.push(Prisma.sql`relationship = ${relationship}`);
+    whereConditions.push(Prisma.sql`ec.relationship = ${relationship}`);
   }
 
   // Combine WHERE conditions
@@ -88,11 +89,13 @@ async function fetchRecentCards(
         ec."r2Url",
         ec."createdAt",
         ec."originalCardId",
+        case when al."promptVersion" in ('gpt4o-image', 'anthropic/claude-sonnet-4','anthropic/claude-3.7-sonnet') then true else false end as premium,
         -- Rank within each group to find the oldest (rn_asc = 1)
         ROW_NUMBER() OVER (PARTITION BY ec."originalCardId" ORDER BY ec."createdAt" DESC) as rn_asc,
         -- Get the latest timestamp for each group for ordering the groups
         MAX(ec."createdAt") OVER (PARTITION BY ec."originalCardId") as max_createdAt_in_group
       FROM "EditedCard" ec
+      left join "ApiLog" al on al."cardId" = ec."originalCardId"
       ${whereClause}
     )
     SELECT
@@ -101,7 +104,8 @@ async function fetchRecentCards(
       relationship,
       "r2Url",
       "createdAt",
-      "originalCardId"
+      "originalCardId",
+      premium
     FROM RankedCards
     WHERE rn_asc = 1 -- Select only the oldest card from each group
     ORDER BY max_createdAt_in_group DESC -- Order groups by the newest card within them
@@ -151,10 +155,10 @@ async function fetchPopularCards(
   // Base WHERE conditions (same as recent)
   const whereConditions: Prisma.Sql[] = [];
   if (wishCardType) {
-    whereConditions.push(Prisma.sql`"cardType" = ${wishCardType}`);
+    whereConditions.push(Prisma.sql`ec."cardType" = ${wishCardType}`);
   }
   if (relationship) {
-    whereConditions.push(Prisma.sql`relationship = ${relationship}`);
+    whereConditions.push(Prisma.sql`ec.relationship = ${relationship}`);
   }
 
   const whereClause = whereConditions.length > 0 
@@ -170,6 +174,7 @@ async function fetchPopularCards(
         ec."cardType",
         ec.relationship,
         ec."r2Url",
+        case when al."promptVersion" in ('gpt4o-image', 'anthropic/claude-sonnet-4','anthropic/claude-3.7-sonnet') then true else false end as premium,
         -- Rank within each group to find the oldest (rn_asc = 1)
         ROW_NUMBER() OVER (PARTITION BY ec."originalCardId" ORDER BY ec."createdAt" DESC) as rn_asc,
         -- Count cards per group for popularity ranking
@@ -177,13 +182,15 @@ async function fetchPopularCards(
         -- Get the latest timestamp for tie-breaking in ordering
         MAX(ec."createdAt") OVER (PARTITION BY ec."originalCardId") as max_createdAt_in_group
       FROM "EditedCard" ec
+      left join "ApiLog" al on al."cardId" = ec."originalCardId"
       ${whereClause}
     )
     SELECT
       id,
       "cardType",
       relationship,
-      "r2Url"
+      "r2Url",
+      premium
     FROM RankedCards
     WHERE rn_asc = 1 -- Select only the oldest card from each group
     ORDER BY
@@ -224,10 +231,10 @@ export async function getLikedCardsServer(
     Prisma.sql`"createdAt" >= NOW() - INTERVAL '7 days'`
   ];
   if (wishCardType) {
-    whereConditions.push(Prisma.sql`"cardType" = ${wishCardType}`);
+    whereConditions.push(Prisma.sql`ec."cardType" = ${wishCardType}`);
   }
   if (relationship) {
-    whereConditions.push(Prisma.sql`relationship = ${relationship}`);
+    whereConditions.push(Prisma.sql`ec.relationship = ${relationship}`);
   }
   
 
@@ -244,6 +251,7 @@ export async function getLikedCardsServer(
         ec."cardType",
         ec.relationship,
         ec."r2Url",
+        case when al."promptVersion" in ('gpt4o-image', 'anthropic/claude-sonnet-4','anthropic/claude-3.7-sonnet') then true else false end as premium,
         -- Rank within each group to find the oldest (rn_asc = 1)
         ROW_NUMBER() OVER (PARTITION BY ec."originalCardId" ORDER BY ec."createdAt" ASC) as rn_asc,
         -- Count cards per group for popularity ranking
@@ -254,6 +262,7 @@ export async function getLikedCardsServer(
         COUNT(ua.id) OVER (PARTITION BY ec."originalCardId")::integer as like_count
       FROM "EditedCard" ec
       LEFT JOIN "UserAction" ua ON ua."cardId" = ec."id" AND ua.action = 'up'
+      LEFT JOIN "ApiLog" al on al."cardId" = ec."originalCardId"
       ${whereClause}
     )
     SELECT
@@ -261,7 +270,8 @@ export async function getLikedCardsServer(
       "cardType",
       relationship,
       "r2Url",
-      like_count
+      like_count,
+      premium
     FROM RankedCards
     WHERE rn_asc = 1 -- Select only the oldest card from each group
     ORDER BY

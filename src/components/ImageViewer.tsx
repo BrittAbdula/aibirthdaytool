@@ -8,7 +8,8 @@ import { isMobile } from 'react-device-detect'
 import { recordUserAction } from '@/lib/action'
 import { useRouter } from 'next/navigation'
 import CardDisplay from './CardDisplay'
-import { ThumbsUpIcon } from 'lucide-react'
+import { ThumbsUpIcon, Crown } from 'lucide-react'
+import { PremiumModal } from '@/components/PremiumModal'
 
 interface ImageViewerProps {
   alt: string
@@ -17,14 +18,17 @@ interface ImageViewerProps {
   isNewCard: boolean
   imgUrl?: string
   svgContent?: string
+  premium?: boolean
+  isPremiumUser?: boolean
 }
 
-export function ImageViewer({ alt, cardId, cardType, imgUrl, isNewCard, svgContent }: ImageViewerProps) {
+export function ImageViewer({ alt, cardId, cardType, imgUrl, isNewCard, svgContent, premium, isPremiumUser }: ImageViewerProps) {
   const [open, setOpen] = useState(false)
   const router = useRouter()
   const [showPreview, setShowPreview] = useState(false)
   const [isLiked, setIsLiked] = useState(false)
   const [animateLike, setAnimateLike] = useState(false)
+  const [isPremiumModalOpen, setIsPremiumModalOpen] = useState(false)
 
   useEffect(() => {
     const likedCards = JSON.parse(localStorage.getItem('likedCards') || '{}');
@@ -56,6 +60,10 @@ export function ImageViewer({ alt, cardId, cardType, imgUrl, isNewCard, svgConte
     localStorage.setItem('likedCards', JSON.stringify(likedCards));
   };
 
+  const handlePremiumClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsPremiumModalOpen(true);
+  };
 
   function CardImage({ src, alt, isLarge = false }: { src?: string, alt: string, isLarge?: boolean }) {
     return (
@@ -70,7 +78,6 @@ export function ImageViewer({ alt, cardId, cardType, imgUrl, isNewCard, svgConte
     )
   }
 
-
   return (
     <>
       <Dialog open={open} onOpenChange={setOpen}>
@@ -78,6 +85,18 @@ export function ImageViewer({ alt, cardId, cardType, imgUrl, isNewCard, svgConte
           <div className="relative w-full flex items-center justify-center cursor-pointer group overflow-hidden">
             <CardImage src={imgUrl} alt={alt} />
             <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all duration-300"></div>
+            
+            {/* Premium Icon - 与 up icon 大小一致 */}
+            {premium && (
+              <div 
+                className="absolute top-4 left-4 p-2 bg-gradient-to-r from-purple-600 to-purple-700 rounded-full cursor-pointer transition-all duration-300 hover:scale-110 shadow-lg z-10"
+                onClick={handlePremiumClick}
+              >
+                <Crown className="h-5 w-5 text-white" />
+              </div>
+            )}
+            
+            {/* Like Button */}
             <div
               className={
                 `absolute bottom-4 right-4 p-2 rounded-full cursor-pointer transition-all duration-300
@@ -97,9 +116,19 @@ export function ImageViewer({ alt, cardId, cardType, imgUrl, isNewCard, svgConte
             {!showPreview ? (
               <div className="relative w-full h-[calc(100vh-200px)] overflow-auto flex items-center justify-center p-4">
                 <CardImage src={imgUrl} alt={alt} isLarge />
+                
+                {/* Premium Icon in Dialog - 保持 icon */}
+                {premium && (
+                  <div 
+                  className="absolute top-4 left-4 p-2 bg-gradient-to-r from-purple-600 to-purple-700 rounded-full cursor-pointer transition-all duration-300 hover:scale-110 shadow-lg z-10"
+                  onClick={handlePremiumClick}
+                  >
+                    <Crown className="h-5 w-5 text-white" />
+                  </div>
+                )}
               </div>
             ) : (
-              <div className="w-full h-[calc(100vh-200px)] overflow-auto flex items-center justify-center">
+              <div className="relative w-full h-[calc(100vh-200px)] overflow-auto flex items-center justify-center">
                 <CardDisplay
                   card={{
                     cardId: cardId,
@@ -108,6 +137,16 @@ export function ImageViewer({ alt, cardId, cardType, imgUrl, isNewCard, svgConte
                     svgContent: svgContent
                   }}
                 />
+                
+                {/* Premium Icon in Preview Mode */}
+                {premium && (
+                  <div 
+                  className="absolute top-4 left-4 p-2 bg-gradient-to-r from-purple-600 to-purple-700 rounded-full cursor-pointer transition-all duration-300 hover:scale-110 shadow-lg z-10"
+                  onClick={handlePremiumClick}
+                  >
+                    <Crown className="h-5 w-5 text-white" />
+                  </div>
+                )}
               </div>
             )}
             <div className="flex justify-between p-4 bg-white w-full border-t border-[#ada9a9]">
@@ -152,6 +191,11 @@ export function ImageViewer({ alt, cardId, cardType, imgUrl, isNewCard, svgConte
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* PremiumModal - 直接使用 Modal 组件 */}
+      {!isPremiumUser && (
+        <PremiumModal isOpen={isPremiumModalOpen} onOpenChange={setIsPremiumModalOpen} />
+      )}
     </>
   )
 }

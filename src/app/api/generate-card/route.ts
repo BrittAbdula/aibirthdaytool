@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { generateCardContent } from '@/lib/gpt';
 import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
-import { generateCardImageWith4o, generateCardImageGeminiFlash } from '@/lib/image';
+import { generateCardImageWith4o, generateCardImageGeminiFlash, generateCardImage } from '@/lib/image';
 import { nanoid } from 'nanoid';
 // 增加超时限制到最大值
 export const maxDuration = 180; // 增加到 60 秒
@@ -27,6 +27,7 @@ export async function POST(request: Request) {
       modificationFeedback,
       previousCardId,
       format = 'svg', // Default to svg if not specified
+      modelTier,
       ...defaultFields
     } = requestData;
 
@@ -57,6 +58,7 @@ export async function POST(request: Request) {
     const planType = user?.plan || 'FREE';
     const dailyLimit = planType === 'FREE' ? 10 : Infinity;
     const creditsUsed = format === 'image' ? 6 : 1;
+    const modelLevel = modelTier === 'Premium' && planType === 'PREMIUM' ? 'PREMIUM' : 'FREE';
 
     // 处理用户使用情况
     let currentUsage = usage?.count || 0;
@@ -123,8 +125,8 @@ export async function POST(request: Request) {
     try {
       // Then use the params object when calling generateCardContent
       const result = format === 'image'
-        ? await generateCardImageGeminiFlash(cardParams, planType)
-        : await generateCardContent(cardParams, planType);
+        ? await generateCardImage(cardParams, modelLevel)
+        : await generateCardContent(cardParams, modelLevel);
 
       // console.log('result', result);
 

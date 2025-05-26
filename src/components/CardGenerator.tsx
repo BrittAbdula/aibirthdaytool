@@ -19,6 +19,7 @@ import { Loader2 } from 'lucide-react'
 import { CARD_SIZES } from '@/lib/card-config'
 import { useCardGeneration } from '@/hooks/useCardGeneration'
 import { AlertCircle, Info } from 'lucide-react'
+import { PremiumModal } from '@/components/PremiumModal'
 
 const FlickeringGrid = () => {
   return (
@@ -212,6 +213,8 @@ export default function CardGenerator({
   const [previousFormData, setPreviousFormData] = useState<Record<string, any>>({})
   const [feedbackHistory, setFeedbackHistory] = useState<string[]>([])
   const [isAuthLoading, setIsAuthLoading] = useState(false)
+  const [isPremiumModalOpen, setIsPremiumModalOpen] = useState(false)
+  const [isPremiumUser, setIsPremiumUser] = useState(false)
   const [errorToast, setErrorToast] = useState<{
     title: string;
     message: string;
@@ -299,6 +302,7 @@ export default function CardGenerator({
 
   const handleInputChange = (name: string, value: string | number) => {
     setFormData(prev => ({ ...prev, [name]: value }))
+    console.log('formData', formData)
   }
 
   const handleImageCountChange = (count: number) => {
@@ -337,6 +341,7 @@ export default function CardGenerator({
         modificationFeedback
       });
       pendingAuthRef.current = true;
+      setIsPremiumUser((session as any).user?.plan === 'PREMIUM')
       setShowAuthDialog(true);
       return;
     }
@@ -657,7 +662,7 @@ export default function CardGenerator({
               </div>
 
               {/* Image Count Selection */}
-              <div className="space-y-2">
+              {/* <div className="space-y-2">
                 <Label>Number of Cards</Label>
                 <div className="flex space-x-2">
                   {[1, 2].map((count) => (
@@ -679,44 +684,44 @@ export default function CardGenerator({
                 <p className="text-xs text-gray-500">
                   Generate {imageCount} {imageCount === 1 ? 'card' : 'cards'} with different variations
                 </p>
-              </div>
+              </div> */}
 
               {/* Price / Model Selection */}
               <div className="space-y-2">
-                <Label>Model</Label>
-                <div className="flex space-x-2">
-                  {["Free", "Premium"].map((option) => (
-                    <button
-                      key={option}
-                      type="button"
-                      onClick={() => handleInputChange("modelTier", option)}
-                      className={cn(
-                        "flex-1 py-2 rounded-md border transition-all duration-200 relative",
-                        (formData.modelTier === undefined && option === "Free") || 
-                        formData.modelTier === option
-                          ? option === "Premium" 
-                            ? "bg-gradient-to-r from-[#a786ff] to-[#FF6B94] text-white font-medium border-transparent" 
-                            : "bg-[#FFF5F6] text-[#4A4A4A] font-medium border-[#FFC0CB]"
-                          : "bg-white text-gray-700 border-gray-200 hover:border-[#FFC0CB]"
-                      )}
-                    >
-                      {option === "Premium" && (
-                        <div className="absolute -top-2 -right-2 z-10">
-                          <div className="animate-pulse flex items-center justify-center bg-gradient-to-r from-[#a786ff] to-[#FF6B94] text-white text-[9px] font-bold px-2 py-0.5 rounded-full shadow-sm border border-white">
-                            <span className="mr-0.5">💰</span>Coming Soon
-                          </div>
-                        </div>
-                      )}
-                      {option}
-                    </button>
-                  ))}
-                </div>
-                <p className="text-xs text-gray-500">
-                  {formData.modelTier === "Premium" 
-                    ? "Premium model provides higher quality and more creative effects" 
-                    : "Free model available for all users"}
-                </p>
-              </div>
+  <Label>Model</Label>
+  <div className="flex space-x-2">
+    {["Free", "Premium"].map((option) => (
+      <button
+        key={option}
+        type="button"
+        onClick={() => {
+          if (option === "Premium" && !isPremiumUser) {
+            // 如果点击 Premium 且不是 Premium 用户，弹出升级提示
+            setIsPremiumModalOpen(true);
+          } else {
+            handleInputChange("modelTier", option);
+          }
+        }}
+        className={cn(
+          "flex-1 py-2 rounded-md border transition-all duration-200",
+          (formData.modelTier === undefined && option === "Free") ||
+          formData.modelTier === option
+            ? option === "Premium"
+              ? "bg-gradient-to-r from-[#a786ff] to-[#FF6B94] text-white font-medium border-transparent"
+              : "bg-[#FFF5F6] text-[#4A4A4A] font-medium border-[#FFC0CB]"
+            : "bg-white text-gray-700 border-gray-200 hover:border-[#FFC0CB]"
+        )}
+      >
+        {option}
+      </button>
+    ))}
+  </div>
+  <p className="text-xs text-gray-500">
+    {formData.modelTier === "Premium"
+      ? "Premium model provides higher quality and more creative effects"
+      : "Free model available for all users"}
+  </p>
+</div>
 
               {showAdvancedOptions && cardConfig.advancedFields && (
                 <>
@@ -760,7 +765,6 @@ export default function CardGenerator({
                       </div>
                     </div>
                     <span className="text-sm font-medium">Animated Card</span>
-                    <span className="text-xs text-gray-500 mt-1">~30s to generate</span>
                   </button>
                   
                   <button
@@ -779,7 +783,6 @@ export default function CardGenerator({
                       </div>
                     </div>
                     <span className="text-sm font-medium">Image Card</span>
-                    <span className="text-xs text-gray-500 mt-1">~2min to generate</span>
                   </button>
                 </div>
               </div>
@@ -1122,6 +1125,10 @@ export default function CardGenerator({
           </div>
         </DialogContent>
       </Dialog>
+
+      {!isPremiumUser && (
+        <PremiumModal isOpen={isPremiumModalOpen} onOpenChange={setIsPremiumModalOpen} />
+      )}
     </>
   )
 }

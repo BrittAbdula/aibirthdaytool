@@ -15,7 +15,16 @@ interface CardContentParams {
     previousCardId?: string;
 }
 
-export async function generateCardImageWith4o(params: CardContentParams, userPlan: string): Promise<{ taskId: string, r2Url: string, svgContent: string, model: string, tokensUsed: number, duration: number, errorMessage?: string, status?: string }> {
+export async function generateCardImage(params: CardContentParams, modelLevel: string): Promise<{ taskId: string, r2Url: string, svgContent: string, model: string, tokensUsed: number, duration: number, errorMessage?: string, status?: string }> {
+    if (modelLevel === 'PREMIUM') {
+        return await generateCardImageWith4o(params);
+    } else {
+        return await generateCardImageGeminiFlash(params);
+    }
+}
+
+
+export async function generateCardImageWith4o(params: CardContentParams): Promise<{ taskId: string, r2Url: string, svgContent: string, model: string, tokensUsed: number, duration: number, errorMessage?: string, status?: string }> {
     const { cardType, size, userPrompt, modificationFeedback, previousCardId } = params;
 
     const startTime = Date.now();
@@ -104,7 +113,7 @@ export async function generateCardImageWith4o(params: CardContentParams, userPla
     }
 }
 
-export async function generateCardImageGeminiFlash(params: CardContentParams, userPlan: string): Promise<{ taskId: string, r2Url: string, svgContent: string, model: string, tokensUsed: number, duration: number, errorMessage?: string, status?: string }> {
+export async function generateCardImageGeminiFlash(params: CardContentParams): Promise<{ taskId: string, r2Url: string, svgContent: string, model: string, tokensUsed: number, duration: number, errorMessage?: string, status?: string }> {
     const { cardType, size, userPrompt, modificationFeedback, previousCardId } = params;
     const startTime = Date.now();
     

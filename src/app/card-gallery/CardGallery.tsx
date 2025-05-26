@@ -148,6 +148,7 @@ export default function CardGallery({ initialCardsData, wishCardType, tabType }:
                     cardType={card.cardType}
                     isNewCard={false}
                     imgUrl={card.r2Url || ''}
+                    premium={card.premium}
                   />
                 </div>
               </motion.div>

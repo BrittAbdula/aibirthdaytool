@@ -23,8 +23,8 @@ function extractSvgContent(content: string): string | null {
     return svgContent;
 }
 
-function getRandomModel(userPlan: string): string {
-    if (userPlan === 'Premium') {
+function getRandomModel(modelLevel: string): string {
+    if (modelLevel === 'PREMIUM') {
         return 'anthropic/claude-sonnet-4';
     }
     
@@ -58,13 +58,13 @@ interface CardContentParams {
     previousCardId?: string;
 }
 
-export async function generateCardContent(params: CardContentParams, userPlan: string): Promise<{ taskId: string, r2Url: string, svgContent: string, model: string, tokensUsed: number, duration: number, errorMessage?: string , status?: string }> {
+export async function generateCardContent(params: CardContentParams, modelLevel: string): Promise<{ taskId: string, r2Url: string, svgContent: string, model: string, tokensUsed: number, duration: number, errorMessage?: string , status?: string }> {
     const { cardType, size, userPrompt, modificationFeedback, previousCardId } = params;
 
     const startTime = Date.now();
-    const model = getRandomModel(userPlan);
+    const model = getRandomModel(modelLevel);
     console.log('<----Using model : ' + model + '---->')
-    console.log('<----userPlan : ' + userPlan + '---->')
+    console.log('<----modelLevel : ' + modelLevel + '---->')
 
     try {
         // Get card size
