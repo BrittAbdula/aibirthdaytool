@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { generateCardContent } from '@/lib/gpt';
 import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
-import { generateCardImageWith4o } from '@/lib/image';
+import { generateCardImageWith4o, generateCardImageGeminiFlash } from '@/lib/image';
 import { nanoid } from 'nanoid';
 // 增加超时限制到最大值
 export const maxDuration = 180; // 增加到 60 秒
@@ -98,7 +98,7 @@ export async function POST(request: Request) {
         cardId,
         cardType: defaultFields.cardType,
         userInputs: requestData,
-        promptVersion: format === 'image' ? 'gpt4o-image' : 'svg',
+        promptVersion: format === 'image' ? 'image' : 'svg',
         responseContent: '',
         tokensUsed: 0,
         duration: 0,
@@ -123,7 +123,7 @@ export async function POST(request: Request) {
     try {
       // Then use the params object when calling generateCardContent
       const result = format === 'image'
-        ? await generateCardImageWith4o(cardParams, planType)
+        ? await generateCardImageGeminiFlash(cardParams, planType)
         : await generateCardContent(cardParams, planType);
 
       // console.log('result', result);
@@ -151,7 +151,7 @@ export async function POST(request: Request) {
           status: 'failed',
           isError: true,
           errorMessage: error instanceof Error ? error.message : 'Unknown error',
-          promptVersion: format === 'image' ? 'gpt4o-image' : 'svg', // Fallback
+          promptVersion: format === 'image' ? 'image' : 'svg', // Fallback
           tokensUsed: 0,
           duration: Date.now() - startTime, // Need to capture startTime in the outer scope or recalculate
         },
