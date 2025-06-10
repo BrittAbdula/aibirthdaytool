@@ -393,7 +393,7 @@ export function MyCardsClient({ initialGeneratedCards, initialSentCards, initial
               cardId={String(card.id)} // ApiLog.id (number) converted to string for SelectableImageViewer
               cardType={card.cardType}
               isNewCard={false}
-              imgUrl={card.r2Url || ''}
+              imgUrl={card.r2Url ? card.r2Url : `data:image/svg+xml;charset=utf-8,${encodeURIComponent(card.responseContent)}`}
               svgContent={card.responseContent}
               isSelected={selectedGeneratedCardIds.includes(card.id)}
               onSelectedChange={handleGeneratedCardSelect}
