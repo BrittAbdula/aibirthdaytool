@@ -174,7 +174,7 @@ export async function POST(request: Request) {
 
 
 const createNaturalPrompt = (formData: any, cardType: string) => {
-  const { to, recipientName, message, signed, design, yearsTogether, age,tone } = formData;
+  const { to, recipientName, message, signed, design, yearsTogether, age,tone, requirements } = formData;
 
   let prompt = '';
 
@@ -219,6 +219,10 @@ const createNaturalPrompt = (formData: any, cardType: string) => {
 
   if(tone){
     prompt += `Tone: ${tone}. `;
+  }
+
+  if(requirements){
+    prompt += `Requirements: ${requirements}. `;
   }
 
   // 设计要求

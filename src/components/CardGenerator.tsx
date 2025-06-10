@@ -21,19 +21,87 @@ import { useCardGeneration } from '@/hooks/useCardGeneration'
 import { AlertCircle, Info } from 'lucide-react'
 import { PremiumModal } from '@/components/PremiumModal'
 
-const FlickeringGrid = () => {
+const MagicalCardCreation = () => {
   return (
-    <div className="w-full h-full grid grid-cols-10 grid-rows-15 gap-1">
-      {[...Array(150)].map((_, i) => (
+    <div className="w-full h-full relative overflow-hidden bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50">
+      {/* Floating sparkles with dance animation */}
+      {[...Array(10)].map((_, i) => (
         <div
-          key={i}
-          className="bg-[#FFC0CB] opacity-0 animate-flicker"
+          key={`sparkle-${i}`}
+          className="absolute animate-sparkle-dance"
           style={{
-            animationDelay: `${Math.random() * 2}s`,
-            animationDuration: `${0.5 + Math.random() * 0.5}s`,
+            left: `${15 + (i * 8)}%`,
+            top: `${20 + Math.sin(i) * 25}%`,
+            animationDelay: `${i * 0.4}s`,
+          }}
+        >
+          <span className="text-yellow-400 text-base drop-shadow-sm">✨</span>
+        </div>
+      ))}
+      
+      {/* Floating hearts with gentle movement */}
+      {[...Array(6)].map((_, i) => (
+        <div
+          key={`heart-${i}`}
+          className="absolute animate-float-gentle"
+          style={{
+            left: `${25 + (i * 12)}%`,
+            top: `${30 + Math.cos(i) * 20}%`,
+            animationDelay: `${i * 0.6}s`,
+          }}
+        >
+          <span className="text-pink-400 text-sm drop-shadow-sm">💕</span>
+        </div>
+      ))}
+      
+      {/* Magic creation canvas */}
+      <div className="absolute inset-0 flex items-center justify-center">
+        <div className="relative">
+          <div className="w-32 h-40 border-2 border-dashed border-pink-300 rounded-lg animate-magic-glow">
+            <div className="absolute inset-3 bg-gradient-to-br from-pink-100 via-purple-100 to-blue-100 rounded opacity-60 animate-pulse"></div>
+            
+            {/* Card elements appearing */}
+            <div className="absolute inset-4 flex flex-col justify-center items-center space-y-2">
+              <div className="w-16 h-2 bg-gradient-to-r from-pink-300 to-purple-300 rounded animate-pulse" style={{ animationDelay: '0.5s' }}></div>
+              <div className="w-12 h-1 bg-gradient-to-r from-blue-300 to-green-300 rounded animate-pulse" style={{ animationDelay: '1s' }}></div>
+              <div className="w-8 h-8 bg-gradient-to-br from-yellow-300 to-orange-300 rounded-full animate-bounce" style={{ animationDelay: '1.5s' }}></div>
+              <div className="w-14 h-1 bg-gradient-to-r from-purple-300 to-pink-300 rounded animate-pulse" style={{ animationDelay: '2s' }}></div>
+            </div>
+          </div>
+          
+          {/* Magic wand with wave animation */}
+          <div className="absolute -top-6 -right-6 animate-wand-wave">
+            <div className="w-10 h-1.5 bg-gradient-to-r from-yellow-400 via-orange-400 to-pink-400 rounded-full shadow-md"></div>
+            <div className="absolute -top-0.5 -right-0.5 animate-sparkle-dance">
+              <span className="text-yellow-300 text-xs">⭐</span>
+            </div>
+            {/* Magic trail */}
+            <div className="absolute -left-8 top-0 w-8 h-0.5 bg-gradient-to-l from-yellow-300 to-transparent rounded animate-pulse opacity-60"></div>
+          </div>
+        </div>
+      </div>
+      
+      {/* Magical particles */}
+      {[...Array(8)].map((_, i) => (
+        <div
+          key={`particle-${i}`}
+          className="absolute w-2 h-2 rounded-full animate-float-gentle"
+          style={{
+            left: `${20 + (i * 8)}%`,
+            top: `${35 + Math.sin(i * 1.5) * 20}%`,
+            backgroundColor: ['#FFE4E1', '#E6E6FA', '#F0F8FF', '#F5FFFA', '#FFF8DC', '#F0FFF0', '#FFE4E1', '#E0FFFF'][i],
+            animationDelay: `${i * 0.3}s`,
+            boxShadow: '0 0 4px rgba(255, 255, 255, 0.8)'
           }}
         />
       ))}
+      
+      {/* Mystical circles with improved animation */}
+      <div className="absolute inset-0 flex items-center justify-center">
+        <div className="absolute w-48 h-48 border border-pink-200/40 rounded-full animate-spin opacity-20" style={{ animationDuration: '12s' }}></div>
+        <div className="absolute w-36 h-36 border border-purple-200/50 rounded-full animate-spin opacity-25" style={{ animationDuration: '8s', animationDirection: 'reverse' }}></div>
+        <div className="absolute w-24 h-24 border border-blue-200/60 rounded-full animate-spin opacity-30" style={{ animationDuration: '6s' }}></div>
+      </div>
     </div>
   )
 }
@@ -208,10 +276,7 @@ export default function CardGenerator({
   const [submited, setSubmited] = useState(false)
   const [customValues, setCustomValues] = useState<Record<string, string>>({})
   const [selectedSize, setSelectedSize] = useState(cardConfig.defaultSize || 'portrait')
-  const [modificationFeedback, setModificationFeedback] = useState<string>('')
-  const [feedbackMode, setFeedbackMode] = useState<boolean>(false)
-  const [previousFormData, setPreviousFormData] = useState<Record<string, any>>({})
-  const [feedbackHistory, setFeedbackHistory] = useState<string[]>([])
+  const [cardRequirements, setCardRequirements] = useState<string>('')
   const [isAuthLoading, setIsAuthLoading] = useState(false)
   const [isPremiumModalOpen, setIsPremiumModalOpen] = useState(false)
   const [isPremiumUser, setIsPremiumUser] = useState(false)
@@ -228,7 +293,7 @@ export default function CardGenerator({
     formData: Record<string, any>,
     customValues: Record<string, string>,
     selectedSize: string,
-    modificationFeedback: string
+    cardRequirements: string
   } | null>(null)
 
   // Use the card generation hook
@@ -282,8 +347,8 @@ export default function CardGenerator({
       setFormData(savedFormData.formData);
       setCustomValues(savedFormData.customValues);
       setSelectedSize(savedFormData.selectedSize);
-      if (savedFormData.modificationFeedback) {
-        setModificationFeedback(savedFormData.modificationFeedback);
+      if (savedFormData.cardRequirements) {
+        setCardRequirements(savedFormData.cardRequirements);
       }
 
       // Close the auth dialog
@@ -311,7 +376,6 @@ export default function CardGenerator({
 
   const handleInputChange = (name: string, value: string | number) => {
     setFormData(prev => ({ ...prev, [name]: value }))
-    console.log('formData', formData)
   }
 
   const handleImageCountChange = (count: number) => {
@@ -347,7 +411,7 @@ export default function CardGenerator({
         formData: { ...formData },
         customValues: { ...customValues },
         selectedSize,
-        modificationFeedback
+        cardRequirements
       });
       pendingAuthRef.current = true;
       setIsPremiumUser(false) // User is not logged in, so definitely not premium
@@ -355,17 +419,12 @@ export default function CardGenerator({
       return;
     }
 
-    // Save previous form data for potential modifications
-    setPreviousFormData({ ...formData });
-
     const options = {
       cardType: currentCardType,
       size: selectedSize,
       format: formData.format || 'svg',
       modelTier: formData.modelTier || "Free",
-      formData: { ...formData },
-      modificationFeedback: feedbackMode ? modificationFeedback : undefined,
-      previousCardId: feedbackMode ? imageStates[0]?.id : undefined,
+      formData: { ...formData, cardRequirements },
       imageCount
     };
 
@@ -374,13 +433,8 @@ export default function CardGenerator({
 
       if (result.success) {
         setSubmited(true);
-        if (!feedbackMode) {
-          setFeedbackMode(true);
-        }
-        if (feedbackMode && modificationFeedback) {
-          setFeedbackHistory([...feedbackHistory, modificationFeedback]);
-          setModificationFeedback('');
-        }
+        // Clear card requirements after successful generation
+        setCardRequirements('');
       } else if (result.error === 'rate_limit') {
         setErrorToast({
           title: 'Daily Limit Reached',
@@ -419,12 +473,7 @@ export default function CardGenerator({
     }
   }
 
-  const handleResetFeedback = () => {
-    setFeedbackMode(false)
-    setModificationFeedback('')
-    setFeedbackHistory([])
-    setFormData(previousFormData)
-  }
+
 
   const renderField = (field: CardConfig['fields'][0]) => {
     const isRequired = !field.optional;
@@ -550,7 +599,7 @@ export default function CardGenerator({
   return (
     <>
       <ErrorToast />
-      <main className="mx-auto">
+      <main className="mx-auto pb-32">
         {error && (
           <Alert variant="destructive" className="mb-4">
             <AlertDescription>{error}</AlertDescription>
@@ -730,7 +779,7 @@ export default function CardGenerator({
               </div>
 
               {/* Image Count Selection */}
-              <div className="w-full">
+              {/* <div className="w-full">
                 <Label htmlFor="image-count" className="mb-2 block flex items-center justify-between">
                   <span>Number of Images</span>
                   <span className="text-xs text-gray-500">{imageCount} image{imageCount > 1 ? 's' : ''}</span>
@@ -762,13 +811,8 @@ export default function CardGenerator({
                 <p className="text-xs text-gray-500 mt-2">
                   Generate multiple variations at once to compare different styles
                 </p>
-              </div>
+              </div> */}
             </CardContent>
-            <CardFooter className="flex flex-col space-y-4">
-              <Button className="w-full bg-[#FFC0CB] text-[#4A4A4A] hover:bg-[#FFD1DC]" onClick={handleGenerateCard} disabled={isLoading}>
-                {isLoading ? 'Generating...' : `Generate ${imageCount > 1 ? `${imageCount} Cards` : 'Card'}`}
-              </Button>
-            </CardFooter>
           </Card>
 
           <div className="flex flex-col lg:flex-row items-center justify-center my-4 lg:my-0">
@@ -797,14 +841,23 @@ export default function CardGenerator({
                   )}
                 >
                   {imageState.isLoading ? (
-                    <div className="w-full h-full flex flex-col items-center justify-center">
-                      <FlickeringGrid />
-                      <div className="absolute bottom-3 left-3 right-3">
-                        <div className="w-full bg-gray-300 rounded-full h-1.5">
+                    <div className="w-full h-full relative">
+                      <MagicalCardCreation />
+                      <div className="absolute bottom-3 left-3 right-3 z-10">
+                        <div className="w-full bg-white/30 backdrop-blur-sm rounded-full h-2 border border-pink-200">
                           <div
-                            className="bg-[#FFC0CB] h-1.5 rounded-full"
+                            className="bg-gradient-to-r from-pink-400 via-purple-400 to-blue-400 h-full rounded-full transition-all duration-500 ease-out shadow-sm"
                             style={{ width: `${imageState.progress}%` }}
                           ></div>
+                        </div>
+                        <div className="mt-1 text-center">
+                          <span className="text-xs text-purple-600 font-medium bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full shadow-sm border border-purple-100">
+                            {imageState.progress < 20 ? '🎨 Sketching ideas...' : 
+                             imageState.progress < 40 ? '🌈 Mixing colors...' :
+                             imageState.progress < 60 ? '✨ Sprinkling magic...' : 
+                             imageState.progress < 80 ? '🎭 Adding personality...' :
+                             imageState.progress < 95 ? '🌟 Final touches...' : '🎉 Masterpiece ready!'}
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -829,198 +882,85 @@ export default function CardGenerator({
         </div>
       </main>
 
-      {/* Feedback Section - Add after the main card generation UI */}
-      {submited && feedbackMode && (
-        <div className="mt-12 max-w-3xl mx-auto relative">
-          {/* Magical shimmering outer border with stars */}
-          <div className="absolute -inset-3 bg-gradient-to-r from-[#FFB6C1] via-[#b19bff] to-[#87CEFA] rounded-xl opacity-75 blur-md"
-            style={{
-              backgroundSize: "200% 200%",
-              animation: "gradient-x 6s ease infinite"
-            }}
-          />
+      {/* Custom animations for magical card creation */}
+      <style jsx global>{`
+        @keyframes float-gentle {
+          0%, 100% { transform: translateY(0px) translateX(0px) rotate(0deg); }
+          33% { transform: translateY(-8px) translateX(2px) rotate(2deg); }
+          66% { transform: translateY(4px) translateX(-2px) rotate(-1deg); }
+        }
+        
+        @keyframes sparkle-dance {
+          0%, 100% { transform: scale(1) rotate(0deg); opacity: 1; }
+          25% { transform: scale(1.2) rotate(90deg); opacity: 0.8; }
+          50% { transform: scale(0.8) rotate(180deg); opacity: 1; }
+          75% { transform: scale(1.1) rotate(270deg); opacity: 0.9; }
+        }
+        
+        @keyframes magic-glow {
+          0%, 100% { box-shadow: 0 0 5px rgba(255, 182, 193, 0.3); }
+          50% { box-shadow: 0 0 20px rgba(255, 182, 193, 0.8), 0 0 30px rgba(221, 160, 221, 0.4); }
+        }
+        
+        @keyframes wand-wave {
+          0% { transform: rotate(45deg) translateY(0px); }
+          50% { transform: rotate(55deg) translateY(-3px); }
+          100% { transform: rotate(45deg) translateY(0px); }
+        }
+        
+        .animate-float-gentle { animation: float-gentle 3s ease-in-out infinite; }
+        .animate-sparkle-dance { animation: sparkle-dance 2s ease-in-out infinite; }
+        .animate-magic-glow { animation: magic-glow 2s ease-in-out infinite; }
+        .animate-wand-wave { animation: wand-wave 1.5s ease-in-out infinite; }
+      `}</style>
 
-          {/* Animated stars around the border */}
-          <div className="absolute -top-4 -left-4 w-8 h-8 text-2xl animate-spin-slow">✨</div>
-          <div className="absolute -bottom-4 -right-4 w-8 h-8 text-2xl animate-spin-slow-reverse">✨</div>
-          <div className="absolute -top-4 -right-4 w-8 h-8 text-2xl animate-bounce-gentle">⭐</div>
-          <div className="absolute -bottom-4 -left-4 w-8 h-8 text-2xl animate-bounce-gentle">⭐</div>
-
-          {/* Sparkle border points */}
-          {[...Array(20)].map((_, i) => (
-            <div
-              key={i}
-              className="absolute w-2 h-2 rounded-full bg-white animate-twinkle-star"
-              style={{
-                top: `${Math.sin(i / 3.14) * 100 + 50}%`,
-                left: `${Math.cos(i / 3.14) * 100 + 50}%`,
-                transformOrigin: 'center',
-                animationDelay: `${i * 0.2}s`,
-                boxShadow: '0 0 5px 2px rgba(255, 255, 255, 0.7)'
-              }}
-            />
-          ))}
-
-          {/* Main content container */}
-          <div className="p-6 bg-white rounded-lg shadow-lg relative z-10 border-2 border-transparent">
-            {/* Inner glow effect */}
-            <div className="absolute inset-0 rounded-lg overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-r from-[#FFB6C1]/10 via-[#b19bff]/10 to-[#87CEFA]/10"
-                style={{
-                  backgroundSize: "200% 200%",
-                  animation: "gradient-x-reverse 8s ease infinite"
+      {/* Floating Card Requirements Input */}
+      <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50 w-full max-w-2xl px-2">
+        <div className="bg-white/95 backdrop-blur-sm rounded-xl shadow-2xl border-2 border-[#FFC0CB] p-4 transition-all duration-300 hover:shadow-3xl">
+          <div className="flex items-center space-x-3">
+            <div className="flex-shrink-0">
+              <div className="w-8 h-8 bg-gradient-to-r from-[#FFC0CB] to-[#b19bff] rounded-full flex items-center justify-center animate-pulse">
+                <span className="text-white text-sm">✨</span>
+              </div>
+            </div>
+            <div className="flex-1">
+              <input
+                type="text"
+                value={cardRequirements}
+                onChange={(e) => setCardRequirements(e.target.value)}
+                placeholder={imageCount > 1 
+                  ? "Describe your special requirements for the card... (e.g. 'Add more decorations', 'Use warm colors')"
+                  : "Describe your special requirements for the card... (e.g. 'Add shiny stars', 'Use pink theme')"}
+                className="w-full px-4 py-2 border-0 focus:outline-none focus:ring-0 text-sm placeholder-gray-400 bg-transparent resize-none"
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter') {
+                    handleGenerateCard();
+                  }
                 }}
               />
             </div>
-
-            {/* Floating decorative elements */}
-            <div className="absolute top-8 right-8 w-6 h-6 rounded-full bg-[#FFB6C1] opacity-40 animate-float-slow"
-              style={{ animationDelay: "0s" }} />
-            <div className="absolute bottom-16 left-12 w-4 h-4 rounded-full bg-[#b19bff] opacity-40 animate-float-slow"
-              style={{ animationDelay: "1.5s" }} />
-            <div className="absolute top-1/2 right-16 w-5 h-5 rounded-full bg-[#87CEFA] opacity-40 animate-float-slow"
-              style={{ animationDelay: "0.8s" }} />
-            <div className="absolute bottom-12 right-24 w-3 h-3 rounded-full bg-[#FFB6C1] opacity-40 animate-float-slow"
-              style={{ animationDelay: "2.2s" }} />
-
-            {/* Animated title */}
-            <h3 className="text-xl font-semibold mb-6 text-transparent bg-clip-text bg-gradient-to-br from-[#FF6B94] via-[#8B5CF6] to-[#3B82F6] animate-text-shimmer flex items-center justify-center relative">
-              <span className="mr-2 inline-block animate-bounce-gentle" style={{ animationDelay: "0s" }}>✨</span>
-              <span className="inline-block transition-all hover:scale-105">Not</span>
-              <span className="mx-1 inline-block transition-all hover:scale-105">quite</span>
-              <span className="mx-1 inline-block transition-all hover:scale-105">right?</span>
-              <span className="mx-1 inline-block transition-all hover:scale-105">Let</span>
-              <span className="mx-1 inline-block transition-all hover:scale-105">us</span>
-              <span className="mx-1 inline-block transition-all hover:scale-105">improve</span>
-              <span className="mx-1 inline-block transition-all hover:scale-105">it!</span>
-              <span className="ml-2 inline-block animate-bounce-gentle" style={{ animationDelay: "0.5s" }}>✨</span>
-            </h3>
-
-            {/* Custom styles for animations */}
-            <style jsx>{`
-              @keyframes gradient-x {
-                0%, 100% { background-position: 0% 50%; }
-                50% { background-position: 100% 50%; }
-              }
-              @keyframes gradient-x-reverse {
-                0%, 100% { background-position: 100% 50%; }
-                50% { background-position: 0% 50%; }
-              }
-              @keyframes float-slow {
-                0%, 100% { transform: translateY(0) translateX(0); }
-                50% { transform: translateY(-10px) translateX(5px); }
-              }
-              @keyframes bounce-gentle {
-                0%, 100% { transform: translateY(0); }
-                50% { transform: translateY(-5px); }
-              }
-              @keyframes text-shimmer {
-                0%, 100% { background-position: 0% 50%; }
-                50% { background-position: 100% 50%; }
-              }
-              @keyframes spin-slow {
-                0% { transform: rotate(0deg); }
-                100% { transform: rotate(360deg); }
-              }
-              @keyframes spin-slow-reverse {
-                0% { transform: rotate(0deg); }
-                100% { transform: rotate(-360deg); }
-              }
-              @keyframes twinkle-star {
-                0%, 100% { opacity: 0.2; transform: scale(0.8); }
-                50% { opacity: 1; transform: scale(1.2); }
-              }
-              .animate-text-shimmer {
-                background-size: 200% auto;
-                animation: text-shimmer 4s ease infinite;
-              }
-              .animate-bounce-gentle {
-                animation: bounce-gentle 2s infinite;
-              }
-              .animate-float-slow {
-                animation: float-slow 6s ease-in-out infinite;
-              }
-              .animate-spin-slow {
-                animation: spin-slow 12s linear infinite;
-              }
-              .animate-spin-slow-reverse {
-                animation: spin-slow-reverse 10s linear infinite;
-              }
-              .animate-twinkle-star {
-                animation: twinkle-star 3s ease-in-out infinite;
-              }
-              .hide-scrollbar::-webkit-scrollbar {
-                display: none;
-              }
-              .hide-scrollbar {
-                -ms-overflow-style: none;
-                scrollbar-width: none;
-              }
-            `}</style>
-
-            {/* Previous feedback with enhanced styling */}
-            {feedbackHistory.length > 0 && (
-              <div className="mb-5 relative z-10">
-                <h4 className="text-sm font-medium text-gray-500 mb-2 flex items-center">
-                  <span className="mr-2 w-4 h-4 bg-gradient-to-r from-[#FFB6C1] to-[#b19bff] rounded-full inline-block"></span>
-                  Previous Feedback:
-                </h4>
-                <div className="space-y-2">
-                  {feedbackHistory.map((feedback, index) => (
-                    <div
-                      key={index}
-                      className="p-3 rounded-md text-sm text-gray-600 italic border border-[#FFB6C1]/30 shadow-sm bg-gradient-to-r from-white to-gray-50 hover:from-gray-50 hover:to-white transition-all duration-300"
-                      style={{ animationDelay: `${index * 0.2}s` }}
-                    >
-                      &ldquo;{feedback}&rdquo;
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Enhanced textarea with gradient focus */}
-            <Textarea
-              value={modificationFeedback}
-              onChange={(e) => setModificationFeedback(e.target.value)}
-              placeholder={imageCount > 1
-                ? "Describe what you'd like to change for all images... (e.g., 'Make all backgrounds more colorful', 'Add shining stars to all images')"
-                : "Describe what you'd like to change... (e.g., 'Make the background more colorful', 'Add a shining star', 'Add more decorations')"}
-              className="w-full border-2 border-[#FFC0CB] rounded-md focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[#b19bff] focus:shadow-[0_0_0_1px_rgba(177,155,255,0.4),0_0_0_4px_rgba(177,155,255,0.1)] transition-all duration-300 mb-4 relative z-10"
-              rows={3}
-            />
-
-            {/* Enhanced buttons with animation */}
-            <div className="flex space-x-4 relative z-10">
+            <div className="flex-shrink-0">
               <Button
                 onClick={handleGenerateCard}
-                disabled={isLoading || !modificationFeedback.trim()}
-                className="bg-gradient-to-r from-[#FFC0CB] to-[#FFB6C1] hover:from-[#FFD1DC] hover:to-[#FFC0CB] text-[#4A4A4A] transition-all duration-300 flex-1 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+                disabled={isLoading}
+                className="bg-gradient-to-r from-[#FFC0CB] to-[#FFB6C1] hover:from-[#FFD1DC] hover:to-[#FFC0CB] text-[#4A4A4A] text-sm px-4 py-2 h-auto transition-all duration-200 hover:scale-105"
               >
                 {isLoading ? (
                   <>
-                    <span className="animate-pulse mr-2">✨</span>
-                    Updating...
+                    <span className="animate-spin mr-1">✨</span>
+                    Generating...
                   </>
                 ) : (
                   <>
-                    <span className="mr-2">✨</span>
-                    Update {imageCount > 1 ? 'Images' : 'Card'}
+                    <span className="mr-1">🎨</span>
+                    Generate
                   </>
                 )}
-              </Button>
-
-              <Button
-                onClick={handleResetFeedback}
-                variant="outline"
-                className="border-[#FFC0CB] text-[#4A4A4A] hover:bg-[#FFF5F6] transition-all duration-300 shadow-sm hover:shadow-md transform hover:-translate-y-0.5"
-              >
-                Start Over
               </Button>
             </div>
           </div>
         </div>
-      )}
+      </div>
 
       <Dialog open={showAuthDialog} onOpenChange={setShowAuthDialog}>
         <DialogContent className="border border-[#FFC0CB] shadow-lg">
