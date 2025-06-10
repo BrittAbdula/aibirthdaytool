@@ -81,8 +81,8 @@ export default function EditCardClient({ params }: { params: { cardId: string, c
           setOriginalContent(content)
           setOriginalCardId(data.originalCardId)
           setRelationship(data.relationship)
-          setRecipientName(data.to)
-          setSenderName(data.signed)
+          setRecipientName(data.recipientName)
+          setSenderName(data.senderName)
           setMessage(data.message)
           setEditableFields(extractEditableFields(content))
           if (content) {

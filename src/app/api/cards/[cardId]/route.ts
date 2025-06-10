@@ -32,14 +32,18 @@ export async function GET(
         // Since userInputs is stored as a Record<string, any> and not an array
         let relationshipValue = "";
         let messageValue = "";
+        let recipientName = "";
+        let senderName = "";
 
         // Check if userInputs is an object with direct key-value pairs
         if (userInputs) {
           relationshipValue =
             (userInputs.relationship as string) ||
-            (userInputs.sender as string) ||
+            (userInputs.to as string) ||
             "";
           messageValue = (userInputs.message as string) || "";
+          recipientName = (userInputs.to as string) || "";
+          senderName = (userInputs.signed as string) || "";
         }
 
         return NextResponse.json({
@@ -49,7 +53,9 @@ export async function GET(
           cardType: originalCard.cardType,
           r2Url: originalCard.r2Url,
           relationship: relationshipValue,
-          message: messageValue
+          message: messageValue,
+          recipientName: relationshipValue,
+          senderName: relationshipValue
         })
       } else {
         const responseContent = await fetchSvgContent(`https://store.celeprime.com/${cardType}.svg`)
