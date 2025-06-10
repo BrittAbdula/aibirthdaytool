@@ -174,14 +174,14 @@ export async function POST(request: Request) {
 
 
 const createNaturalPrompt = (formData: any, cardType: string) => {
-  const { to, recipientName, message, signed, design, yearsTogether, age,tone, requirements } = formData;
+  const { to, recipientName, message, signed, design, yearsTogether, age,tone, cardRequirements } = formData;
 
   let prompt = '';
 
   // 主句
   if (to && recipientName) {
     const relationship = to.toLowerCase() === 'myself' ? 'myself' : `my ${to.toLowerCase()}`;
-    prompt += `Create a ${cardType} card to ${relationship} ${recipientName}. `;
+    prompt += `A ${cardType} card to ${relationship} ${recipientName}. `;
   }
 
   // 根据卡片类型动态添加消息描述
@@ -221,10 +221,6 @@ const createNaturalPrompt = (formData: any, cardType: string) => {
     prompt += `Tone: ${tone}. `;
   }
 
-  if(requirements){
-    prompt += `Requirements: ${requirements}. `;
-  }
-
   // 设计要求
   if (design) {
     if (design === 'custom') {
@@ -239,6 +235,10 @@ const createNaturalPrompt = (formData: any, cardType: string) => {
     }
   }
 
+
+  if(cardRequirements){
+    prompt += `Requirements: ${cardRequirements}. `;
+  }
 
   return prompt.trim();
 };
