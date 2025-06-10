@@ -245,7 +245,7 @@ export function MyCardsClient({ initialGeneratedCards, initialSentCards, initial
                           </p>
                           {recipient.senderName && (
                             <p className="text-sm text-gray-500">
-                              From: {recipient.senderName}
+                              Signed by: {recipient.senderName}
                             </p>
                           )}
                         </div>
