@@ -4,6 +4,7 @@ export interface ApiLogEntry {
   cardType: string;
   responseContent: string;
   timestamp: Date;
+  r2Url: string | null;
   // Add other fields from ApiLog if used in the component
 }
 

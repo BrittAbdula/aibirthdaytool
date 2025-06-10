@@ -17,6 +17,7 @@ interface ApiLogEntry {
   cardType: string;
   responseContent: string;
   timestamp: Date;
+  r2Url: string | null;
 }
 
 interface EditedCardEntry {
@@ -76,6 +77,7 @@ export default async function MyCardsPage() {
         cardType: true,
         responseContent: true,
         timestamp: true,
+        r2Url: true,
       }
     }),
     prisma.editedCard.findMany({
@@ -119,7 +121,7 @@ export default async function MyCardsPage() {
     })
   ])
 
-  const generatedCards: ApiLogEntry[] = generatedCardsData.map(card => ({ ...card, id: Number(card.id), timestamp: card.timestamp }))
+  const generatedCards: ApiLogEntry[] = generatedCardsData.map(card => ({ ...card, id: Number(card.id), timestamp: card.timestamp, r2Url: card.r2Url }))
   const sentCards: EditedCardEntry[] = sentCardsData.map(card => ({ 
     ...card, 
     createdAt: card.createdAt,
