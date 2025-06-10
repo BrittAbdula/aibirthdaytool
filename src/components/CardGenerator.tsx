@@ -220,7 +220,7 @@ export default function CardGenerator({
     message: string;
     type: 'error' | 'warning' | 'info';
   } | null>(null);
-  
+
   // Add ref to track if we're waiting for authentication
   const pendingAuthRef = useRef<boolean>(false)
   // Add state to store form data before authentication
@@ -253,24 +253,24 @@ export default function CardGenerator({
     setCurrentCardType(wishCardType)
     // Reset form data and set default values
     const initialFormData: Record<string, any> = {};
-    
+
     // Initialize with the correct default values based on card config
     cardConfig.fields.forEach(field => {
       if (field.type === 'select' && !field.optional && field.defaultValue) {
         initialFormData[field.name] = field.defaultValue;
       }
     });
-    
+
     // Set default format to 'svg'
     initialFormData["format"] = "svg";
     setFormData(initialFormData);
-    
+
     // Set default image URL based on whether it's a system card
     const defaultImgUrl = cardConfig.isSystem ? `https://store.celeprime.com/${wishCardType}.svg` : sampleCard;
-    
+
     // Initialize image states with the default URL
     initializeImageStates(imageCount, defaultImgUrl);
-    
+
   }, [wishCardType, cardConfig, sampleCard, imageCount, initializeImageStates]);
 
   // Add effect to watch for auth status changes
@@ -285,16 +285,25 @@ export default function CardGenerator({
       if (savedFormData.modificationFeedback) {
         setModificationFeedback(savedFormData.modificationFeedback);
       }
-      
+
       // Close the auth dialog
       setShowAuthDialog(false);
-      
+
       // Optionally, trigger card generation automatically
       setTimeout(() => {
         handleGenerateCard();
       }, 500);
     }
   }, [session, savedFormData, setShowAuthDialog]);
+
+  // Add effect to set premium status when session changes
+  useEffect(() => {
+    if (session?.user) {
+      setIsPremiumUser((session as any).user?.plan === 'PREMIUM');
+    } else {
+      setIsPremiumUser(false);
+    }
+  }, [session]);
 
   useEffect(() => {
     fetchSvgContent(sampleCard)
@@ -307,13 +316,13 @@ export default function CardGenerator({
 
   const handleImageCountChange = (count: number) => {
     setImageCount(count);
-    
+
     // Update image-related arrays based on the new count
     // This is needed to properly initialize the UI before the first generation
-    const defaultImgUrl = cardConfig.isSystem 
-      ? `https://store.celeprime.com/${wishCardType}.svg` 
+    const defaultImgUrl = cardConfig.isSystem
+      ? `https://store.celeprime.com/${wishCardType}.svg`
       : sampleCard;
-    
+
     // Re-initialize image states with the new count
     initializeImageStates(count, defaultImgUrl);
   };
@@ -322,7 +331,7 @@ export default function CardGenerator({
     // Validate required fields
     const requiredFields = cardConfig.fields.filter(field => !field.optional);
     const missingFields = requiredFields.filter(field => !formData[field.name]);
-    
+
     if (missingFields.length > 0) {
       setErrorToast({
         title: 'Required Fields Missing',
@@ -335,19 +344,19 @@ export default function CardGenerator({
     // If user not authenticated, save form data and show auth dialog
     if (!session) {
       setSavedFormData({
-        formData: {...formData},
-        customValues: {...customValues},
+        formData: { ...formData },
+        customValues: { ...customValues },
         selectedSize,
         modificationFeedback
       });
       pendingAuthRef.current = true;
-      setIsPremiumUser((session as any).user?.plan === 'PREMIUM')
+      setIsPremiumUser(false) // User is not logged in, so definitely not premium
       setShowAuthDialog(true);
       return;
     }
 
     // Save previous form data for potential modifications
-    setPreviousFormData({...formData});
+    setPreviousFormData({ ...formData });
 
     const options = {
       cardType: currentCardType,
@@ -554,194 +563,127 @@ export default function CardGenerator({
 
               {/* Color Selection */}
               <div key="card-design" className="space-y-2">
-  <Label htmlFor="card-design" className="flex justify-between items-center">
-    <span>Design</span>
-  </Label>
-  <div className="grid grid-cols-8 gap-2 w-full">
-    {[
-      { id: "black", name: "Black", color: "#000000" },
-      { id: "gray", name: "Gray", color: "#BDBDBD" },
-      { id: "white", name: "White", color: "#FFFFFF", border: true },
-      { id: "red", name: "Red", color: "#D32F2F" },
-      { id: "purple", name: "Purple", color: "#7B1FA2" },
-      { id: "pink", name: "Pink", color: "#FF80AB" },
-      { id: "green", name: "Green", color: "#388E3C" },
-      { id: "light-green", name: "Light Green", color: "#A5D6A7" },
-      { id: "blue", name: "Blue", color: "#1976D2" },
-      { id: "navy", name: "Navy", color: "#283593" },
-      { id: "sky", name: "Sky Blue", color: "#B3E5FC" },
-      { id: "gold", name: "Gold", color: "#D4AF37" },
-      { id: "beige", name: "Beige", color: "#F5F5DC" },
-      { id: "yellow", name: "Yellow", color: "#FFF176" },
-      { id: "brown", name: "Brown", color: "#8D5524" },
-      { id: "peach", name: "Peach", color: "#FFCC99" },
-    ].map((color) => {
-      const colorValue = `${color.id}`;
-      const isSelected = formData["design"] === colorValue;
-      return (
-        <button
-          key={color.id}
-          type="button"
-          onClick={() => handleInputChange("design", isSelected ? '' : colorValue)}
-          className={cn(
-            "h-8 w-8 rounded-full border-2 flex items-center justify-center transition-all duration-200",
-            isSelected
-              ? "border-[#b19bff] ring-2 ring-[#b19bff]"
-              : color.border ? "border-gray-300" : "border-transparent"
-          )}
-          style={{ backgroundColor: color.color }}
-          aria-label={color.name}
-        >
-          {isSelected && (
-            <span className="block w-3 h-3 rounded-full border-2 border-white bg-white" />
-          )}
-        </button>
-      );
-    })}
-  </div>
-  <button
-    type="button"
-    onClick={() => {
-      setCustomValues(prev => ({ 
-        ...prev, 
-        design: formData["design"] === "custom" ? "" : (prev.design || "")
-      }));
-      handleInputChange("design", formData["design"] === "custom" ? "" : "custom");
-    }}
-    className={cn(
-      "mt-1 w-full py-1.5 px-2 border rounded-md flex items-center justify-center gap-1 transition-all duration-200 text-sm",
-      formData["design"] === "custom"
-        ? "border-[#b19bff] bg-[#b19bff]/10"
-        : "border-gray-200 hover:border-[#b19bff] hover:bg-[#b19bff]/5"
-    )}
-  >
-    <span className="text-sm">✨</span>
-    <span className={formData["design"] === "custom" ? "text-[#b19bff] font-medium" : "text-gray-600"}>
-      Custom Design
-    </span>
-  </button>
-  {formData["design"] === "custom" && (
-    <div className="mt-1">
-      <Input
-        value={customValues["design"] || ''}
-        onChange={(e) => {
-          setCustomValues(prev => ({ ...prev, design: e.target.value }));
-          handleInputChange("design", "custom");
-        }}
-        placeholder="Describe any design you want: colors, patterns, style, layout..."
-        className="border-[#b19bff] focus-visible:ring-[#b19bff] text-sm"
-      />
-      <p className="text-xs text-gray-500 mt-1">
-        Examples: &ldquo;pastel watercolor with flowers&rdquo;, &ldquo;modern minimalist&rdquo;, &ldquo;hand-drawn cartoon style&rdquo;
-      </p>
-    </div>
-  )}
-</div>
-
-              {/* Size Selection */}
-              <div className="space-y-2">
-                <Label>Card Size</Label>
-                <Select
-                  value={selectedSize}
-                  onValueChange={setSelectedSize}
+                <Label htmlFor="card-design" className="flex justify-between items-center">
+                  <span>Design</span>
+                </Label>
+                <div className="grid grid-cols-8 gap-2 w-full">
+                  {[
+                    { id: "black", name: "Black", color: "#000000" },
+                    { id: "gray", name: "Gray", color: "#BDBDBD" },
+                    { id: "white", name: "White", color: "#FFFFFF", border: true },
+                    { id: "red", name: "Red", color: "#D32F2F" },
+                    { id: "purple", name: "Purple", color: "#7B1FA2" },
+                    { id: "pink", name: "Pink", color: "#FF80AB" },
+                    { id: "green", name: "Green", color: "#388E3C" },
+                    { id: "light-green", name: "Light Green", color: "#A5D6A7" },
+                    { id: "blue", name: "Blue", color: "#1976D2" },
+                    { id: "navy", name: "Navy", color: "#283593" },
+                    { id: "sky", name: "Sky Blue", color: "#B3E5FC" },
+                    { id: "gold", name: "Gold", color: "#D4AF37" },
+                    { id: "beige", name: "Beige", color: "#F5F5DC" },
+                    { id: "yellow", name: "Yellow", color: "#FFF176" },
+                    { id: "brown", name: "Brown", color: "#8D5524" },
+                    { id: "peach", name: "Peach", color: "#FFCC99" },
+                  ].map((color) => {
+                    const colorValue = `${color.id}`;
+                    const isSelected = formData["design"] === colorValue;
+                    return (
+                      <button
+                        key={color.id}
+                        type="button"
+                        onClick={() => handleInputChange("design", isSelected ? '' : colorValue)}
+                        className={cn(
+                          "h-8 w-8 rounded-full border-2 flex items-center justify-center transition-all duration-200",
+                          isSelected
+                            ? "border-[#b19bff] ring-2 ring-[#b19bff]"
+                            : color.border ? "border-gray-300" : "border-transparent"
+                        )}
+                        style={{ backgroundColor: color.color }}
+                        aria-label={color.name}
+                      >
+                        {isSelected && (
+                          <span className="block w-3 h-3 rounded-full border-2 border-white bg-white" />
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCustomValues(prev => ({
+                      ...prev,
+                      design: formData["design"] === "custom" ? "" : (prev.design || "")
+                    }));
+                    handleInputChange("design", formData["design"] === "custom" ? "" : "custom");
+                  }}
+                  className={cn(
+                    "mt-1 w-full py-1.5 px-2 border rounded-md flex items-center justify-center gap-1 transition-all duration-200 text-sm",
+                    formData["design"] === "custom"
+                      ? "border-[#b19bff] bg-[#b19bff]/10"
+                      : "border-gray-200 hover:border-[#b19bff] hover:bg-[#b19bff]/5"
+                  )}
                 >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select card size" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {Object.entries(CARD_SIZES).map(([id, size]) => (
-                      <SelectItem key={id} value={id}>
-                        {size.name} ({size.width}x{size.height})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <p className="text-xs text-gray-500">
-                  {CARD_SIZES[selectedSize].orientation} orientation
-                </p>
+                  <span className="text-sm">✨</span>
+                  <span className={formData["design"] === "custom" ? "text-[#b19bff] font-medium" : "text-gray-600"}>
+                    Custom Design
+                  </span>
+                </button>
+                {formData["design"] === "custom" && (
+                  <div className="mt-1">
+                    <Input
+                      value={customValues["design"] || ''}
+                      onChange={(e) => {
+                        setCustomValues(prev => ({ ...prev, design: e.target.value }));
+                        handleInputChange("design", "custom");
+                      }}
+                      placeholder="Describe any design you want: colors, patterns, style, layout..."
+                      className="border-[#b19bff] focus-visible:ring-[#b19bff] text-sm"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Examples: &ldquo;pastel watercolor with flowers&rdquo;, &ldquo;modern minimalist&rdquo;, &ldquo;hand-drawn cartoon style&rdquo;
+                    </p>
+                  </div>
+                )}
               </div>
-
-              {/* Image Count Selection */}
-              {/* <div className="space-y-2">
-                <Label>Number of Cards</Label>
+              {/* Price / Model Selection */}
+              <div className="space-y-2">
+                <Label>Model</Label>
                 <div className="flex space-x-2">
-                  {[1, 2].map((count) => (
+                  {["Free", "Premium"].map((option) => (
                     <button
-                      key={count}
+                      key={option}
                       type="button"
-                      onClick={() => handleImageCountChange(count)}
+                      onClick={() => {
+                        if (option === "Premium" && !isPremiumUser) {
+                          // 如果点击 Premium 且不是 Premium 用户，弹出升级提示
+                          setIsPremiumModalOpen(true);
+                        } else {
+                          handleInputChange("modelTier", option);
+                        }
+                      }}
                       className={cn(
-                        "flex-1 py-2 rounded-md transition-all duration-200",
-                        imageCount === count
-                          ? "bg-[#FFC0CB] text-white font-medium"
-                          : "bg-gray-100 text-gray-700 hover:bg-[#FFE5EB]"
+                        "flex-1 py-2 rounded-md border transition-all duration-200",
+                        (formData.modelTier === undefined && option === "Free") ||
+                          formData.modelTier === option
+                          ? option === "Premium"
+                            ? "bg-gradient-to-r from-[#a786ff] to-[#FF6B94] text-white font-medium border-transparent"
+                            : "bg-[#FFF5F6] text-[#4A4A4A] font-medium border-[#FFC0CB]"
+                          : "bg-white text-gray-700 border-gray-200 hover:border-[#FFC0CB]"
                       )}
                     >
-                      {count}
+                      {option}
                     </button>
                   ))}
                 </div>
                 <p className="text-xs text-gray-500">
-                  Generate {imageCount} {imageCount === 1 ? 'card' : 'cards'} with different variations
+                  {formData.modelTier === "Premium"
+                    ? "Premium model provides higher quality and more creative effects"
+                    : "Free model available for all users"}
                 </p>
-              </div> */}
+              </div>
 
-              {/* Price / Model Selection */}
-              <div className="space-y-2">
-  <Label>Model</Label>
-  <div className="flex space-x-2">
-    {["Free", "Premium"].map((option) => (
-      <button
-        key={option}
-        type="button"
-        onClick={() => {
-          if (option === "Premium" && !isPremiumUser) {
-            // 如果点击 Premium 且不是 Premium 用户，弹出升级提示
-            setIsPremiumModalOpen(true);
-          } else {
-            handleInputChange("modelTier", option);
-          }
-        }}
-        className={cn(
-          "flex-1 py-2 rounded-md border transition-all duration-200",
-          (formData.modelTier === undefined && option === "Free") ||
-          formData.modelTier === option
-            ? option === "Premium"
-              ? "bg-gradient-to-r from-[#a786ff] to-[#FF6B94] text-white font-medium border-transparent"
-              : "bg-[#FFF5F6] text-[#4A4A4A] font-medium border-[#FFC0CB]"
-            : "bg-white text-gray-700 border-gray-200 hover:border-[#FFC0CB]"
-        )}
-      >
-        {option}
-      </button>
-    ))}
-  </div>
-  <p className="text-xs text-gray-500">
-    {formData.modelTier === "Premium"
-      ? "Premium model provides higher quality and more creative effects"
-      : "Free model available for all users"}
-  </p>
-</div>
-
-              {showAdvancedOptions && cardConfig.advancedFields && (
-                <>
-                  {cardConfig.advancedFields.map((field) => renderField(field))}
-                </>
-              )}
-              {cardConfig.advancedFields && cardConfig.advancedFields.length > 0 && (
-                <div className="flex justify-end">
-                  <button
-                    className="text-[#FFC0CB] hover:text-[#FFD1DC] focus:outline-none"
-                    onClick={() => setShowAdvancedOptions(!showAdvancedOptions)}
-                  >
-                    {showAdvancedOptions ? (
-                      <ChevronUpIcon className="w-6 h-6" />
-                    ) : (
-                      <ChevronDownIcon className="w-6 h-6" />
-                    )}
-                  </button>
-                </div>
-              )}
+              
 
               {/* Card Format Selection */}
               <div className="w-full">
@@ -754,8 +696,8 @@ export default function CardGenerator({
                     onClick={() => setFormData(prev => ({ ...prev, format: 'svg' }))}
                     className={cn(
                       "flex flex-col items-center justify-center p-3 rounded-md border transition-all relative",
-                      formData.format !== 'image' 
-                        ? "border-[#FFC0CB] bg-[#FFF5F6] ring-1 ring-[#FFC0CB]" 
+                      formData.format !== 'image'
+                        ? "border-[#FFC0CB] bg-[#FFF5F6] ring-1 ring-[#FFC0CB]"
                         : "border-gray-200 hover:border-[#FFC0CB]"
                     )}
                   >
@@ -766,14 +708,14 @@ export default function CardGenerator({
                     </div>
                     <span className="text-sm font-medium">Animated Card</span>
                   </button>
-                  
+
                   <button
                     type="button"
                     onClick={() => setFormData(prev => ({ ...prev, format: 'image' }))}
                     className={cn(
                       "flex flex-col items-center justify-center p-3 rounded-md border transition-all relative",
-                      formData.format === 'image' 
-                        ? "border-[#FFC0CB] bg-[#FFF5F6] ring-1 ring-[#FFC0CB]" 
+                      formData.format === 'image'
+                        ? "border-[#FFC0CB] bg-[#FFF5F6] ring-1 ring-[#FFC0CB]"
                         : "border-gray-200 hover:border-[#FFC0CB]"
                     )}
                   >
@@ -786,10 +728,45 @@ export default function CardGenerator({
                   </button>
                 </div>
               </div>
+
+              {/* Image Count Selection */}
+              <div className="w-full">
+                <Label htmlFor="image-count" className="mb-2 block flex items-center justify-between">
+                  <span>Number of Images</span>
+                  <span className="text-xs text-gray-500">{imageCount} image{imageCount > 1 ? 's' : ''}</span>
+                </Label>
+                <div className="grid grid-cols-4 gap-2">
+                  {[1, 2, 3, 4].map((count) => (
+                    <button
+                      key={count}
+                      type="button"
+                      onClick={() => handleImageCountChange(count)}
+                      className={cn(
+                        "flex flex-col items-center justify-center p-3 rounded-md border transition-all relative text-sm font-medium",
+                        imageCount === count
+                          ? "border-[#FFC0CB] bg-[#FFF5F6] ring-1 ring-[#FFC0CB] text-[#4A4A4A]"
+                          : "border-gray-200 hover:border-[#FFC0CB] text-gray-700"
+                      )}
+                    >
+                      {count}
+                      {count > 1 && (
+                        <div className="absolute -top-1 -right-1">
+                          <div className="flex items-center justify-center bg-gradient-to-r from-[#a786ff] to-[#b19bff] text-white text-[8px] font-bold px-1 py-0.5 rounded-full">
+                            ✨
+                          </div>
+                        </div>
+                      )}
+                    </button>
+                  ))}
+                </div>
+                <p className="text-xs text-gray-500 mt-2">
+                  Generate multiple variations at once to compare different styles
+                </p>
+              </div>
             </CardContent>
             <CardFooter className="flex flex-col space-y-4">
               <Button className="w-full bg-[#FFC0CB] text-[#4A4A4A] hover:bg-[#FFD1DC]" onClick={handleGenerateCard} disabled={isLoading}>
-                {isLoading ? 'Generating...' : 'Generate Card'}
+                {isLoading ? 'Generating...' : `Generate ${imageCount > 1 ? `${imageCount} Cards` : 'Card'}`}
               </Button>
             </CardFooter>
           </Card>
@@ -802,19 +779,21 @@ export default function CardGenerator({
 
           <div className="w-full max-w-md">
             <div className={cn(
-              "grid gap-3", 
-              imageCount === 1 ? "grid-cols-1" : 
-              imageCount === 2 ? "grid-cols-2" : 
-              "grid-cols-2"
+              "grid gap-3",
+              imageCount === 1 ? "grid-cols-1" :
+                imageCount === 2 ? "grid-cols-2" :
+                imageCount === 3 ? "grid-cols-2" :
+                  "grid-cols-2"
             )}>
               {imageStates.map((imageState, index) => (
-                <div 
+                <div
                   key={index}
                   ref={(el) => { imageRefs.current[index] = el }}
                   className={cn(
                     "bg-white p-2 sm:p-3 rounded-lg shadow-lg flex items-center justify-center relative border border-[#FFC0CB]",
                     "aspect-[2/3]",
-                    imageCount > 2 && index >= 2 ? "col-span-1 row-start-2" : ""
+                    imageCount === 3 && index === 2 ? "col-span-2" : "",
+                    imageCount === 4 && index >= 2 ? "col-span-1" : ""
                   )}
                 >
                   {imageState.isLoading ? (
@@ -832,12 +811,12 @@ export default function CardGenerator({
                   ) : (
                     <div className="w-full h-full flex items-center justify-center overflow-hidden">
                       {imageState.url && (
-                        <ImageViewer 
-                          alt={`${currentCardType}-${index}`} 
-                          cardId={imageState.id} 
-                          cardType={currentCardType} 
-                          imgUrl={imageState.url} 
-                          isNewCard={true} 
+                        <ImageViewer
+                          alt={`${currentCardType}-${index}`}
+                          cardId={imageState.id}
+                          cardType={currentCardType}
+                          imgUrl={imageState.url}
+                          isNewCard={true}
                           svgContent={imageState.svgContent}
                         />
                       )}
@@ -855,22 +834,22 @@ export default function CardGenerator({
         <div className="mt-12 max-w-3xl mx-auto relative">
           {/* Magical shimmering outer border with stars */}
           <div className="absolute -inset-3 bg-gradient-to-r from-[#FFB6C1] via-[#b19bff] to-[#87CEFA] rounded-xl opacity-75 blur-md"
-               style={{
-                 backgroundSize: "200% 200%",
-                 animation: "gradient-x 6s ease infinite"
-               }}
+            style={{
+              backgroundSize: "200% 200%",
+              animation: "gradient-x 6s ease infinite"
+            }}
           />
-          
+
           {/* Animated stars around the border */}
           <div className="absolute -top-4 -left-4 w-8 h-8 text-2xl animate-spin-slow">✨</div>
           <div className="absolute -bottom-4 -right-4 w-8 h-8 text-2xl animate-spin-slow-reverse">✨</div>
           <div className="absolute -top-4 -right-4 w-8 h-8 text-2xl animate-bounce-gentle">⭐</div>
           <div className="absolute -bottom-4 -left-4 w-8 h-8 text-2xl animate-bounce-gentle">⭐</div>
-          
+
           {/* Sparkle border points */}
           {[...Array(20)].map((_, i) => (
-            <div 
-              key={i} 
+            <div
+              key={i}
               className="absolute w-2 h-2 rounded-full bg-white animate-twinkle-star"
               style={{
                 top: `${Math.sin(i / 3.14) * 100 + 50}%`,
@@ -881,29 +860,29 @@ export default function CardGenerator({
               }}
             />
           ))}
-          
+
           {/* Main content container */}
           <div className="p-6 bg-white rounded-lg shadow-lg relative z-10 border-2 border-transparent">
             {/* Inner glow effect */}
             <div className="absolute inset-0 rounded-lg overflow-hidden">
               <div className="absolute inset-0 bg-gradient-to-r from-[#FFB6C1]/10 via-[#b19bff]/10 to-[#87CEFA]/10"
-                   style={{ 
-                     backgroundSize: "200% 200%",
-                     animation: "gradient-x-reverse 8s ease infinite"
-                   }}
+                style={{
+                  backgroundSize: "200% 200%",
+                  animation: "gradient-x-reverse 8s ease infinite"
+                }}
               />
             </div>
-            
+
             {/* Floating decorative elements */}
-            <div className="absolute top-8 right-8 w-6 h-6 rounded-full bg-[#FFB6C1] opacity-40 animate-float-slow" 
-                 style={{ animationDelay: "0s" }} />
-            <div className="absolute bottom-16 left-12 w-4 h-4 rounded-full bg-[#b19bff] opacity-40 animate-float-slow" 
-                 style={{ animationDelay: "1.5s" }} />
-            <div className="absolute top-1/2 right-16 w-5 h-5 rounded-full bg-[#87CEFA] opacity-40 animate-float-slow" 
-                 style={{ animationDelay: "0.8s" }} />
-            <div className="absolute bottom-12 right-24 w-3 h-3 rounded-full bg-[#FFB6C1] opacity-40 animate-float-slow" 
-                 style={{ animationDelay: "2.2s" }} />
-            
+            <div className="absolute top-8 right-8 w-6 h-6 rounded-full bg-[#FFB6C1] opacity-40 animate-float-slow"
+              style={{ animationDelay: "0s" }} />
+            <div className="absolute bottom-16 left-12 w-4 h-4 rounded-full bg-[#b19bff] opacity-40 animate-float-slow"
+              style={{ animationDelay: "1.5s" }} />
+            <div className="absolute top-1/2 right-16 w-5 h-5 rounded-full bg-[#87CEFA] opacity-40 animate-float-slow"
+              style={{ animationDelay: "0.8s" }} />
+            <div className="absolute bottom-12 right-24 w-3 h-3 rounded-full bg-[#FFB6C1] opacity-40 animate-float-slow"
+              style={{ animationDelay: "2.2s" }} />
+
             {/* Animated title */}
             <h3 className="text-xl font-semibold mb-6 text-transparent bg-clip-text bg-gradient-to-br from-[#FF6B94] via-[#8B5CF6] to-[#3B82F6] animate-text-shimmer flex items-center justify-center relative">
               <span className="mr-2 inline-block animate-bounce-gentle" style={{ animationDelay: "0s" }}>✨</span>
@@ -916,7 +895,7 @@ export default function CardGenerator({
               <span className="mx-1 inline-block transition-all hover:scale-105">it!</span>
               <span className="ml-2 inline-block animate-bounce-gentle" style={{ animationDelay: "0.5s" }}>✨</span>
             </h3>
-            
+
             {/* Custom styles for animations */}
             <style jsx>{`
               @keyframes gradient-x {
@@ -978,7 +957,7 @@ export default function CardGenerator({
                 scrollbar-width: none;
               }
             `}</style>
-            
+
             {/* Previous feedback with enhanced styling */}
             {feedbackHistory.length > 0 && (
               <div className="mb-5 relative z-10">
@@ -988,8 +967,8 @@ export default function CardGenerator({
                 </h4>
                 <div className="space-y-2">
                   {feedbackHistory.map((feedback, index) => (
-                    <div 
-                      key={index} 
+                    <div
+                      key={index}
                       className="p-3 rounded-md text-sm text-gray-600 italic border border-[#FFB6C1]/30 shadow-sm bg-gradient-to-r from-white to-gray-50 hover:from-gray-50 hover:to-white transition-all duration-300"
                       style={{ animationDelay: `${index * 0.2}s` }}
                     >
@@ -999,23 +978,23 @@ export default function CardGenerator({
                 </div>
               </div>
             )}
-          
+
             {/* Enhanced textarea with gradient focus */}
             <Textarea
               value={modificationFeedback}
               onChange={(e) => setModificationFeedback(e.target.value)}
-              placeholder={imageCount > 1 
-                ? "Describe what you'd like to change for all images... (e.g., 'Make all backgrounds more colorful', 'Add shining stars to all images')" 
+              placeholder={imageCount > 1
+                ? "Describe what you'd like to change for all images... (e.g., 'Make all backgrounds more colorful', 'Add shining stars to all images')"
                 : "Describe what you'd like to change... (e.g., 'Make the background more colorful', 'Add a shining star', 'Add more decorations')"}
               className="w-full border-2 border-[#FFC0CB] rounded-md focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[#b19bff] focus:shadow-[0_0_0_1px_rgba(177,155,255,0.4),0_0_0_4px_rgba(177,155,255,0.1)] transition-all duration-300 mb-4 relative z-10"
               rows={3}
             />
-          
+
             {/* Enhanced buttons with animation */}
             <div className="flex space-x-4 relative z-10">
-              <Button 
-                onClick={handleGenerateCard} 
-                disabled={isLoading || !modificationFeedback.trim()} 
+              <Button
+                onClick={handleGenerateCard}
+                disabled={isLoading || !modificationFeedback.trim()}
                 className="bg-gradient-to-r from-[#FFC0CB] to-[#FFB6C1] hover:from-[#FFD1DC] hover:to-[#FFC0CB] text-[#4A4A4A] transition-all duration-300 flex-1 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
               >
                 {isLoading ? (
@@ -1030,10 +1009,10 @@ export default function CardGenerator({
                   </>
                 )}
               </Button>
-            
-              <Button 
+
+              <Button
                 onClick={handleResetFeedback}
-                variant="outline" 
+                variant="outline"
                 className="border-[#FFC0CB] text-[#4A4A4A] hover:bg-[#FFF5F6] transition-all duration-300 shadow-sm hover:shadow-md transform hover:-translate-y-0.5"
               >
                 Start Over
@@ -1084,7 +1063,7 @@ export default function CardGenerator({
             <DialogTitle className="text-2xl font-semibold text-[#4A4A4A]">Daily Limit Reached</DialogTitle>
             <DialogDescription className="text-gray-600 mt-2 space-y-4">
               <p>You&apos;ve reached your daily limit for card generation. Free users can generate up to 3 cards per day.</p>
-              
+
               <div className="bg-[#FFF5F6] p-4 rounded-lg border border-[#FFC0CB]">
                 <p className="text-[#4A4A4A] font-medium">Don&apos;t worry! You can still create beautiful cards by:</p>
                 <ul className="list-disc list-inside mt-2 space-y-1 text-[#4A4A4A]">
@@ -1103,7 +1082,7 @@ export default function CardGenerator({
                   <p className="text-sm">Share MewTruCard.com on your favorite platform:</p>
                   <ol className="list-decimal list-inside text-sm space-y-1.5">
                     <li>Share a link to mewtrucard.com on a forum, blog, or social media</li>
-                    <li>Email the shared URL and your account email to: 
+                    <li>Email the shared URL and your account email to:
                       <span className="font-medium text-[#a786ff]"> support@mewtrucard.com</span>
                     </li>
                     <li>We&apos;ll add 10 extra generations to your account!</li>
