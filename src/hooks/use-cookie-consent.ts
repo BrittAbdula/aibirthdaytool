@@ -10,11 +10,12 @@ export type CookieConsent = {
   timestamp: number;
 }
 
+// Default to accept all cookies
 const defaultConsent: CookieConsent = {
   essential: true, // Essential cookies are always required
-  performance: false,
-  functional: false,
-  targeting: false,
+  performance: true, // Accept performance cookies by default
+  functional: true, // Accept functional cookies by default
+  targeting: true, // Accept targeting cookies by default
   timestamp: 0
 }
 
@@ -28,6 +29,10 @@ export function useCookieConsent() {
       const storedConsent = localStorage.getItem('cookie-consent')
       if (storedConsent) {
         setConsent(JSON.parse(storedConsent))
+      } else {
+        // If no stored consent, use default (accept all) and save it
+        localStorage.setItem('cookie-consent', JSON.stringify(defaultConsent))
+        applyConsentSettings(defaultConsent)
       }
     } catch (error) {
       console.error('Failed to load cookie consent from localStorage:', error)

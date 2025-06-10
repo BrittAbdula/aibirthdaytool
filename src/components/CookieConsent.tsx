@@ -24,40 +24,43 @@ type CookieConsent = {
   timestamp: number;
 }
 
+// Default to accept all cookies
 const defaultConsent: CookieConsent = {
-  essential: true, // Essential cookies are always required
-  performance: false,
-  functional: false,
-  targeting: false,
+  essential: true,
+  performance: true,
+  functional: true,
+  targeting: true,
   timestamp: 0
 }
 
 export function CookieConsent() {
   const { consent, updateConsent } = useCookieConsent()
-  const [isOpen, setIsOpen] = useState(false)
   const [showPreferences, setShowPreferences] = useState(false)
   const [tempConsent, setTempConsent] = useState<ConsentType>(consent)
 
-  // Check if consent exists on component mount
+  // Auto-accept all cookies on first visit
   useEffect(() => {
     const storedConsent = localStorage.getItem('cookie-consent')
     if (!storedConsent) {
-      setIsOpen(true)
-    } else {
-      try {
-        const parsedConsent = JSON.parse(storedConsent)
-        
-        // Check if consent is older than 6 months (180 days)
-        const sixMonthsInMs = 180 * 24 * 60 * 60 * 1000
-        if (Date.now() - parsedConsent.timestamp > sixMonthsInMs) {
-          setIsOpen(true)
-        }
-      } catch (error) {
-        console.error('Failed to parse stored consent:', error)
-        setIsOpen(true)
+      // Auto-accept all cookies for new users
+      const autoAcceptConsent = updateConsent({
+        essential: true,
+        performance: true,
+        functional: true,
+        targeting: true
+      })
+      
+      // Call gtag consent update
+      if (window.gtag) {
+        window.gtag('consent', 'update', {
+          'ad_storage': 'granted',
+          'analytics_storage': 'granted',
+          'functionality_storage': 'granted',
+          'personalization_storage': 'granted',
+        });
       }
     }
-  }, [])
+  }, [updateConsent])
 
   // Update tempConsent when consent changes
   useEffect(() => {
@@ -77,10 +80,10 @@ export function CookieConsent() {
         'ad_storage': updatedConsent.targeting ? 'granted' : 'denied',
         'analytics_storage': updatedConsent.performance ? 'granted' : 'denied',
         'functionality_storage': updatedConsent.functional ? 'granted' : 'denied',
-        'personalization_storage': updatedConsent.functional ? 'granted' : 'denied', // Assuming functional implies personalization
+        'personalization_storage': updatedConsent.functional ? 'granted' : 'denied',
       });
     }
-    setIsOpen(false)
+    setShowPreferences(false)
     toast({ description: "All cookies accepted" })
   }
 
@@ -97,10 +100,10 @@ export function CookieConsent() {
         'ad_storage': updatedConsent.targeting ? 'granted' : 'denied',
         'analytics_storage': updatedConsent.performance ? 'granted' : 'denied',
         'functionality_storage': updatedConsent.functional ? 'granted' : 'denied',
-        'personalization_storage': updatedConsent.functional ? 'granted' : 'denied', // Assuming functional implies personalization
+        'personalization_storage': updatedConsent.functional ? 'granted' : 'denied',
       });
     }
-    setIsOpen(false)
+    setShowPreferences(false)
     toast({ description: "Only essential cookies accepted" })
   }
 
@@ -108,7 +111,6 @@ export function CookieConsent() {
   const openPreferences = () => {
     setTempConsent(consent); // Sync temp consent with current global consent
     setShowPreferences(true);
-    setIsOpen(false); // Close initial dialog if open
   };
 
   // Save preferences from preferences dialog
@@ -120,7 +122,7 @@ export function CookieConsent() {
         'ad_storage': updatedConsent.targeting ? 'granted' : 'denied',
         'analytics_storage': updatedConsent.performance ? 'granted' : 'denied',
         'functionality_storage': updatedConsent.functional ? 'granted' : 'denied',
-        'personalization_storage': updatedConsent.functional ? 'granted' : 'denied', // Assuming functional implies personalization
+        'personalization_storage': updatedConsent.functional ? 'granted' : 'denied',
       });
     }
     setShowPreferences(false);
@@ -129,60 +131,15 @@ export function CookieConsent() {
 
   return (
     <>
-      {/* Main Cookie Consent Dialog */}
-      <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle className="text-xl">Cookie Consent</DialogTitle>
-            <DialogDescription>
-              We use cookies to enhance your browsing experience, serve personalized ads or content, and analyze our traffic. By clicking &quot;Accept All&quot;, you consent to our use of cookies.
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="space-y-4 py-4 text-sm text-muted-foreground">
-            <p>
-              This website uses cookies to ensure you get the best experience on our website. Read our{' '}
-              <a href="/privacy-policy" className="text-pink-500 hover:underline">
-                privacy policy
-              </a>{' '}
-              to learn more.
-            </p>
-          </div>
-          
-          <DialogFooter className="flex flex-col sm:flex-row gap-2">
-            <Button 
-              variant="outline" 
-              onClick={openPreferences}
-              className="sm:order-first"
-            >
-              Preferences
-            </Button>
-            <Button 
-              variant="outline" 
-              onClick={handleAcceptEssential}
-              className="sm:order-2"
-            >
-              Essential Only
-            </Button>
-            <Button 
-              onClick={handleAcceptAll}
-              className="bg-pink-500 hover:bg-pink-600 text-white sm:order-3"
-            >
-              Accept All
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Cookie Settings Button - always visible */}
+      {/* Cookie Settings Button - positioned in bottom left */}
       <div className="fixed bottom-4 left-4 z-50">
         <Button 
           variant="outline" 
           size="sm" 
           onClick={openPreferences}
-          className="text-xs bg-white/80 backdrop-blur-sm shadow-md hover:bg-white"
+          className="text-xs bg-white/90 backdrop-blur-sm shadow-lg hover:bg-white border-gray-200 hover:shadow-xl transition-all duration-200"
         >
-          Cookie Settings
+          🍪 Cookie Settings
         </Button>
       </div>
 
@@ -198,92 +155,102 @@ export function CookieConsent() {
           
           <div className="space-y-4 py-2">
             <div className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-              <Checkbox 
-                id="essential-settings" 
-                checked={tempConsent.essential} 
-                disabled 
+              <Checkbox
+                id="essential"
+                checked={true}
+                disabled={true}
+                className="mt-1"
               />
               <div className="space-y-1 leading-none">
-                <Label
-                  htmlFor="essential-settings"
-                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                >
+                <Label htmlFor="essential" className="text-sm font-medium">
                   Essential Cookies
                 </Label>
-                <p className="text-sm text-muted-foreground">
-                  These cookies are necessary for the website to function and cannot be disabled.
+                <p className="text-xs text-muted-foreground">
+                  Required for basic website functionality. Cannot be disabled.
                 </p>
               </div>
             </div>
-            
+
             <div className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-              <Checkbox 
-                id="performance-settings" 
+              <Checkbox
+                id="performance"
                 checked={tempConsent.performance}
-                onCheckedChange={(checked) => 
-                  setTempConsent({...tempConsent, performance: checked === true})
-                }
+                onCheckedChange={(checked) => setTempConsent(prev => ({ ...prev, performance: !!checked }))}
+                className="mt-1"
               />
               <div className="space-y-1 leading-none">
-                <Label
-                  htmlFor="performance-settings"
-                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                >
+                <Label htmlFor="performance" className="text-sm font-medium">
                   Performance Cookies
                 </Label>
-                <p className="text-sm text-muted-foreground">
-                  These cookies help us understand how visitors interact with our website, helping us improve our site and services.
+                <p className="text-xs text-muted-foreground">
+                  Help us analyze website usage and improve performance.
                 </p>
               </div>
             </div>
-            
+
             <div className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-              <Checkbox 
-                id="functional-settings" 
+              <Checkbox
+                id="functional"
                 checked={tempConsent.functional}
-                onCheckedChange={(checked) => 
-                  setTempConsent({...tempConsent, functional: checked === true})
-                }
+                onCheckedChange={(checked) => setTempConsent(prev => ({ ...prev, functional: !!checked }))}
+                className="mt-1"
               />
               <div className="space-y-1 leading-none">
-                <Label
-                  htmlFor="functional-settings"
-                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                >
+                <Label htmlFor="functional" className="text-sm font-medium">
                   Functional Cookies
                 </Label>
-                <p className="text-sm text-muted-foreground">
-                  These cookies enable website functionality, such as saving your preferences and providing personalized features.
+                <p className="text-xs text-muted-foreground">
+                  Enable enhanced functionality and personalization.
                 </p>
               </div>
             </div>
-            
+
             <div className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-              <Checkbox 
-                id="targeting-settings" 
+              <Checkbox
+                id="targeting"
                 checked={tempConsent.targeting}
-                onCheckedChange={(checked) => 
-                  setTempConsent({...tempConsent, targeting: checked === true})
-                }
+                onCheckedChange={(checked) => setTempConsent(prev => ({ ...prev, targeting: !!checked }))}
+                className="mt-1"
               />
               <div className="space-y-1 leading-none">
-                <Label
-                  htmlFor="targeting-settings"
-                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                >
+                <Label htmlFor="targeting" className="text-sm font-medium">
                   Targeting Cookies
                 </Label>
-                <p className="text-sm text-muted-foreground">
-                  These cookies are used to deliver personalized ads and content based on your interests.
+                <p className="text-xs text-muted-foreground">
+                  Used to deliver personalized advertisements.
                 </p>
               </div>
             </div>
           </div>
+
+          <div className="text-xs text-muted-foreground py-2">
+            <p>
+              Read our{' '}
+              <a href="/privacy-policy" className="text-pink-500 hover:underline">
+                privacy policy
+              </a>{' '}
+              to learn more about how we use cookies.
+            </p>
+          </div>
           
-          <DialogFooter>
+          <DialogFooter className="flex flex-col sm:flex-row gap-2">
+            <Button 
+              variant="outline" 
+              onClick={handleAcceptEssential}
+              className="sm:order-first"
+            >
+              Essential Only
+            </Button>
+            <Button 
+              onClick={handleAcceptAll}
+              className="bg-pink-500 hover:bg-pink-600 text-white sm:order-2"
+            >
+              Accept All
+            </Button>
             <Button 
               onClick={handleSavePreferences}
-              className="bg-pink-500 hover:bg-pink-600 text-white"
+              variant="outline"
+              className="sm:order-3"
             >
               Save Preferences
             </Button>
