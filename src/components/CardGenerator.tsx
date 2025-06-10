@@ -608,6 +608,7 @@ export default function CardGenerator({
         <div className="flex flex-col lg:flex-row justify-center items-center gap-8 lg:gap-16">
           <Card className="p-4 sm:p-6 bg-white border border-[#FFC0CB] shadow-md w-full max-w-md relative">
             <CardContent className="space-y-4">
+              
               {cardConfig.fields.map((field) => renderField(field))}
 
               {/* Color Selection */}

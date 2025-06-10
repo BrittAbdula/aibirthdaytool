@@ -40,6 +40,8 @@ export default function EditCardClient({ params }: { params: { cardId: string, c
   const [customUrl, setCustomUrl] = useState('')
   const [isCopied, setIsCopied] = useState(false)
   const [relationship, setRelationship] = useState('')
+  const [recipientName, setRecipientName] = useState('')
+  const [senderName, setSenderName] = useState('')
   const [message, setMessage] = useState('')
   useEffect(() => {
     const fetchCardData = async () => {
@@ -79,6 +81,8 @@ export default function EditCardClient({ params }: { params: { cardId: string, c
           setOriginalContent(content)
           setOriginalCardId(data.originalCardId)
           setRelationship(data.relationship)
+          setRecipientName(data.recipientName)
+          setSenderName(data.senderName)
           setMessage(data.message)
           setEditableFields(extractEditableFields(content))
           if (content) {
@@ -229,6 +233,8 @@ export default function EditCardClient({ params }: { params: { cardId: string, c
           spotifyTrackId: enableMusic ? selectedMusic?.id : null,
           customUrl: enableCustomUrl ? customUrl : null,
           relationship: relationship,
+          recipientName: recipientName,
+          senderName: senderName,
           message: message,
         }),
       })

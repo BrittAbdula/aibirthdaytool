@@ -70,6 +70,8 @@ model EditedCard {
   originalCardId String
   cardType       String
   relationship   String?
+  recipientName  String?
+  senderName     String?
   editedContent  String
   spotifyTrackId String?
   r2Url          String?

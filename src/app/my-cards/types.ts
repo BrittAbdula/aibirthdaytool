@@ -14,4 +14,12 @@ export interface EditedCardEntry {
   editedContent: string | null;
   createdAt: Date;
   // Add other fields from EditedCard if used in the component
+}
+
+export interface RecipientRelationship {
+  relationship: string;
+  recipientName: string;
+  senderName: string | null;
+  lastSentDate: Date;
+  cardCount: number;
 } 

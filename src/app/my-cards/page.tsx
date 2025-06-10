@@ -27,6 +27,14 @@ interface EditedCardEntry {
   createdAt: Date;
 }
 
+interface RecipientRelationship {
+  relationship: string;
+  recipientName: string;
+  senderName: string | null;
+  lastSentDate: Date;
+  cardCount: number;
+}
+
 export default async function MyCardsPage() {
   const session = await auth()
 
@@ -50,7 +58,7 @@ export default async function MyCardsPage() {
     )
   }
 
-  const [generatedCardsData, sentCardsData] = await Promise.all([
+  const [generatedCardsData, sentCardsData, recipientRelationshipsData] = await Promise.all([
     prisma.apiLog.findMany({
       where: {
         userId: session.user.id
@@ -82,11 +90,60 @@ export default async function MyCardsPage() {
         editedContent: true,
         createdAt: true,
       }
+    }),
+    prisma.editedCard.findMany({
+      where: {
+        userId: session.user.id,
+        relationship: {
+          not: null
+        },
+        recipientName: {
+          not: null
+        }
+      },
+      select: {
+        relationship: true,
+        recipientName: true,
+        senderName: true,
+        createdAt: true
+      },
+      orderBy: {
+        createdAt: 'desc'
+      }
     })
   ])
 
   const generatedCards: ApiLogEntry[] = generatedCardsData.map(card => ({ ...card, id: Number(card.id), timestamp: card.timestamp }))
   const sentCards: EditedCardEntry[] = sentCardsData.map(card => ({ ...card, createdAt: card.createdAt }))
+  
+  // 处理关系和收件人数据 - 在应用层分组
+  const recipientMap = new Map<string, RecipientRelationship>()
+  
+  recipientRelationshipsData.forEach(item => {
+    if (item.relationship && item.recipientName) {
+      const key = `${item.relationship}-${item.recipientName}`
+      
+      if (recipientMap.has(key)) {
+        const existing = recipientMap.get(key)!
+        existing.cardCount += 1
+        if (item.createdAt > existing.lastSentDate) {
+          existing.lastSentDate = item.createdAt
+          existing.senderName = item.senderName
+        }
+      } else {
+        recipientMap.set(key, {
+          relationship: item.relationship,
+          recipientName: item.recipientName,
+          senderName: item.senderName,
+          lastSentDate: item.createdAt,
+          cardCount: 1
+        })
+      }
+    }
+  })
+  
+  const recipientRelationships: RecipientRelationship[] = Array.from(recipientMap.values())
+    .sort((a, b) => b.lastSentDate.getTime() - a.lastSentDate.getTime())
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-white via-purple-50 to-white py-8">
@@ -95,6 +152,7 @@ export default async function MyCardsPage() {
         <MyCardsClient 
           initialGeneratedCards={generatedCards}
           initialSentCards={sentCards}
+          initialRecipientRelationships={recipientRelationships}
           userId={session.user.id}
         />
       </div>

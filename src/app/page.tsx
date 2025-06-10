@@ -98,10 +98,10 @@ export default async function Home() {
             </span>
           </h1>
           <p className="text-center text-gray-600 text-lg max-w-2xl mx-auto font-light">
-            Design personalized digital cards with our smart AI card creator - perfect for birthdays, holidays, and special moments! 
+            Design personalized digital cards with MewTruCard&apos;s smart AI card creator - perfect for birthdays, holidays, and special moments! 
           </p>
           <p className="text-center text-gray-600 mb-12 text-lg max-w-2xl mx-auto font-light">
-            30000+ Templates Instant Download or Share Online.
+            MewTruCard offers 30000+ Templates for Instant Download or Share Online.
           </p>
 
           <div className="mb-16 items-center flex justify-center space-x-4">
@@ -186,19 +186,19 @@ const Features: React.FC = () => (
   <section className="py-16 bg-white">
     <div className="max-w-6xl mx-auto px-4">
       <h2 className="text-3xl font-serif font-semibold mb-4 text-center text-[#4A4A4A]">
-        Why Our AI Greeting Card Maker Is Awesome
+        Why MewTruCard AI Greeting Card Maker Is Awesome
       </h2>
       <p className="text-center text-[#666] mb-12 max-w-2xl mx-auto">
-        No design skills needed - our virtual card generator does all the work for you
+        No design skills needed - MewTruCard virtual card generator does all the work for you
       </p>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         <FeatureCard
           title="Quick AI Card Creation"
-          description="Design a custom e-card in seconds"
+          description="Design a custom e-card in seconds with MewTruCard"
           icon="✨"
           benefits={[
             "Simple inputs for perfect cards",
-            "AI generates heartfelt messages",
+            "MewTruCard AI generates heartfelt messages",
             "Instant digital card preview"
           ]}
         />
@@ -257,20 +257,20 @@ const HowToUse: React.FC = () => (
   <section className="pt-16 bg-gradient-to-r from-purple-50 to-pink-50">
     <div className="max-w-6xl mx-auto px-4">
       <h2 className="text-3xl font-serif font-semibold mb-4 text-center text-[#4A4A4A]">
-        Create Digital Cards With Our Virtual Card Designer
+        Create Digital Cards With MewTruCard Virtual Card Designer
       </h2>
       <p className="text-center text-[#666] mb-12 max-w-2xl mx-auto">
-        Two easy methods to make the perfect AI greeting cards online - totally free!
+        Two easy methods to make the perfect MewTruCard AI greeting cards online - totally free!
       </p>
 
       <div className="flex flex-col md:flex-row mb-16">
         <div className="md:w-1/2 p-4">
           <div className="text-center mb-8">
             <h3 className="text-xl font-serif font-semibold mb-2 text-pink-600">
-              Method 1: AI-Generated Custom Cards
+              Method 1: MewTruCard AI-Generated Custom Cards
             </h3>
             <p className="text-[#666] text-sm">
-              Let our smart card generator create a personalized digital greeting card
+              Let MewTruCard smart card generator create a personalized digital greeting card
             </p>
           </div>
 
@@ -294,26 +294,26 @@ const HowToUse: React.FC = () => (
             <StepCard
               number="2"
               title="Customize Your E-Card"
-              description="Tell our AI about your recipient"
+              description="Tell MewTruCard AI about your recipient"
               icon="✨"
               details={[
                 "Specify your relationship",
                 "Describe the special occasion",
                 "Add your personalized message",
-                "Choose sentiment for your e-card"
+                "Choose sentiment for your MewTruCard e-card"
               ]}
             />
 
             <StepCard
               number="3"
               title="Generate & Share Your Card"
-              description="Our AI creates your perfect digital greeting"
+              description="MewTruCard AI creates your perfect digital greeting"
               icon="🎁"
               details={[
-                "One-click AI card generation",
+                "One-click MewTruCard AI card generation",
                 "Edit your virtual card design",
                 "Download high-quality e-card",
-                "Share your digital card online"
+                "Share your MewTruCard digital card online"
               ]}
             />
           </div>
@@ -322,10 +322,10 @@ const HowToUse: React.FC = () => (
         <div className="md:w-1/2 p-4 mt-12 md:mt-0">
           <div className="text-center mb-8">
             <h3 className="text-xl font-serif font-semibold mb-2 text-purple-600">
-              Method 2: Browse Pre-Made AI Cards
+              Method 2: Browse MewTruCard Pre-Made AI Cards
             </h3>
             <p className="text-[#666] text-sm">
-              Choose from our gallery of AI-designed greeting card templates
+              Choose from MewTruCard gallery of AI-designed greeting card templates
             </p>
           </div>
 
@@ -335,13 +335,13 @@ const HowToUse: React.FC = () => (
             <StepCard
               number="1"
               title="Explore E-Card Templates"
-              description="Browse our AI greeting card collection"
+              description="Browse MewTruCard AI greeting card collection"
               icon="🔍"
               details={[
-                "Curated digital card designs",
+                "Curated MewTruCard digital card designs",
                 "Filter by card occasion or style",
                 "Preview AI-generated templates",
-                "Find popular e-card designs"
+                "Find popular MewTruCard e-card designs"
               ]}
             />
 
@@ -407,7 +407,7 @@ const faqs = [
     question: "What is MewTruCard's AI Greeting Card Generator?",
     answer: (
       <span>
-        MewTruCard offers a next-gen AI card maker that helps you create digital greeting cards for any occasion. Our virtual card creator uses artificial intelligence to transform your thoughts into beautifully designed e-cards. What makes our online greeting card generator special is how it combines emotional messaging with stunning designs - just tell us your feelings and our AI does the rest!
+        MewTruCard offers a next-gen AI card maker that helps you create digital greeting cards for any occasion. MewTruCard virtual card creator uses artificial intelligence to transform your thoughts into beautifully designed e-cards. What makes MewTruCard online greeting card generator special is how it combines emotional messaging with stunning designs - just tell us your feelings and MewTruCard AI does the rest!
       </span>
     ),
   },
@@ -415,26 +415,26 @@ const faqs = [
     question: "How do I create digital cards with MewTruCard's tool?",
     answer: (
       <span>
-        Making e-cards with our AI greeting card generator is super easy:
+        Making e-cards with MewTruCard AI greeting card generator is super easy:
         <ol className="mt-2 space-y-1">
-          <li>1. Browse our digital card templates and pick your favorite style</li>
+          <li>1. Browse MewTruCard digital card templates and pick your favorite style</li>
           <li>2. Enter details about who the virtual card is for</li>
-          <li>3. Let our AI card maker generate your perfect online greeting</li>
+          <li>3. Let MewTruCard AI card maker generate your perfect online greeting</li>
         </ol>
-        The whole e-card creation process takes less than a minute!
+        The whole MewTruCard e-card creation process takes less than a minute!
       </span>
     ),
   },
   {
-    question: "What sharing options does your digital card maker provide?",
+    question: "What sharing options does MewTruCard digital card maker provide?",
     answer: (
       <span>
-        Our AI greeting card generator offers multiple ways to share your virtual cards:
+        MewTruCard AI greeting card generator offers multiple ways to share your virtual cards:
         <ul className="mt-2 space-y-1">
-          <li>• Each digital card gets its own unique sharing link</li>
-          <li>• Download your AI-created cards in high resolution</li>
+          <li>• Each MewTruCard digital card gets its own unique sharing link</li>
+          <li>• Download your MewTruCard AI-created cards in high resolution</li>
           <li>• Share your e-cards directly to social platforms</li>
-          <li>• Send your digital greetings via email</li>
+          <li>• Send your MewTruCard digital greetings via email</li>
         </ul>
       </span>
     ),
@@ -443,51 +443,51 @@ const faqs = [
     question: "What makes MewTruCard's AI-generated designs unique?",
     answer: (
       <span>
-        Our digital greeting card maker stands out because:
+        MewTruCard digital greeting card maker stands out because:
         <ul className="mt-2 space-y-1">
-          <li>• Every AI card features clean, modern aesthetics</li>
-          <li>• Our virtual card designs have professional-grade layouts</li>
-          <li>• The AI greeting card generator perfectly captures emotions</li>
+          <li>• Every MewTruCard AI card features clean, modern aesthetics</li>
+          <li>• MewTruCard virtual card designs have professional-grade layouts</li>
+          <li>• The MewTruCard AI greeting card generator perfectly captures emotions</li>
         </ul>
       </span>
     ),
   },
   {
-    question: "Can I customize cards from your online greeting card maker?",
+    question: "Can I customize cards from MewTruCard online greeting card maker?",
     answer: (
       <span>
-        Our AI card creator gives you complete creative control:
+        MewTruCard AI card creator gives you complete creative control:
         <ul className="mt-2 space-y-1">
-          <li>• Personalize your digital greeting card message</li>
-          <li>• Access exclusive fonts for your virtual cards</li>
-          <li>• Adjust color themes in your e-card design</li>
-          <li>• Add personal touches to make the digital card yours</li>
+          <li>• Personalize your MewTruCard digital greeting card message</li>
+          <li>• Access exclusive fonts for your MewTruCard virtual cards</li>
+          <li>• Adjust color themes in your MewTruCard e-card design</li>
+          <li>• Add personal touches to make the MewTruCard digital card yours</li>
         </ul>
       </span>
     ),
   },
   {
-    question: "Is your AI greeting card generator free to use?",
+    question: "Is MewTruCard AI greeting card generator free to use?",
     answer: (
       <span>
-        We believe in flexible options for our online card maker:
+        We believe in flexible options for MewTruCard online card maker:
         <ul className="mt-2 space-y-1">
-          <li>• Create basic digital greeting cards completely free</li>
-          <li>• Unlock premium virtual card features with subscription</li>
-          <li>• Adjust your e-card creation plan anytime</li>
+          <li>• Create basic MewTruCard digital greeting cards completely free</li>
+          <li>• Unlock premium MewTruCard virtual card features with subscription</li>
+          <li>• Adjust your MewTruCard e-card creation plan anytime</li>
         </ul>
       </span>
     ),
   },
   {
-    question: "Can I use your AI card generator on my phone?",
+    question: "Can I use MewTruCard AI card generator on my phone?",
     answer: (
       <span>
-        Our digital greeting card maker is totally mobile-friendly:
+        MewTruCard digital greeting card maker is totally mobile-friendly:
         <ul className="mt-2 space-y-1">
-          <li>• Create e-cards on any device</li>
-          <li>• Design virtual cards with easy touch controls</li>
-          <li>• Make AI greeting cards wherever you are</li>
+          <li>• Create MewTruCard e-cards on any device</li>
+          <li>• Design MewTruCard virtual cards with easy touch controls</li>
+          <li>• Make MewTruCard AI greeting cards wherever you are</li>
         </ul>
       </span>
     ),
@@ -503,7 +503,7 @@ const FAQ: React.FC = () => (
         </span>
       </h2>
       <p className="text-lg sm:text-xl text-gray-600 max-w-2xl mx-auto px-4">
-        Common questions about our digital card maker and online greeting card tool ✨
+        Common questions about MewTruCard digital card maker and online greeting card tool ✨
       </p>
     </div>
 
@@ -532,9 +532,9 @@ const FAQ: React.FC = () => (
 
     <div className="mt-12 text-center">
       <p className="text-lg text-gray-600">
-        Have more questions about our AI card generator?{" "}
+        Have more questions about MewTruCard AI card generator?{" "}
         <a href="mailto:support@mewtrucard.com" className="text-purple-600 hover:text-purple-700 underline font-medium">
-          Contact our support team
+          Contact MewTruCard support team
         </a>
       </p>
     </div>
