@@ -161,11 +161,11 @@ function QuickSendButton({ recipient }: QuickSendButtonProps) {
     // 构建URL参数，预填充收件人信息
     const params = new URLSearchParams({
       recipientName: recipient.recipientName,
-      relationship: recipient.relationship,
+      to: recipient.relationship,
     })
     
     if (recipient.senderName) {
-      params.set('senderName', recipient.senderName)
+      params.set('signed', recipient.senderName)
     }
 
     // 跳转到对应的卡片制作页面

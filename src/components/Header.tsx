@@ -22,6 +22,7 @@ import { cn } from '@/lib/utils'
 // 定义生成器类型
 const GENERATORS = [
   { slug: 'birthday', label: 'Birthday' },
+  { slug: 'eidmubarak', label: 'Eid Mubarak' },
   { slug: 'mothersday', label: 'Mother\'s Day' },
   { slug: 'anniversary', label: 'Anniversary' },
   { slug: 'love', label: 'Love' },
