@@ -38,7 +38,7 @@ function SubmitButton({ pendingText, children }: { pendingText: string, children
   )
 }
 
-// New wrapper component for individual card with selection capability
+// New wrapper component for individual card with selection capability and recipient info
 interface SelectableImageViewerProps {
   cardId: string; // String ID for consistency with ImageViewer and selection handling
   cardType: string;
@@ -48,6 +48,13 @@ interface SelectableImageViewerProps {
   isNewCard: boolean;
   isSelected: boolean;
   onSelectedChange: (cardId: string, isSelected: boolean) => void;
+}
+
+interface SelectableImageViewerWithRecipientProps extends SelectableImageViewerProps {
+  recipientName?: string | null;
+  customUrl?: string | null;
+  message?: string | null;
+  showRecipient?: boolean;
 }
 
 function SelectableImageViewer({ 
@@ -70,6 +77,61 @@ function SelectableImageViewer({
         alt={alt}
         isNewCard={isNewCard}
       />
+    </div>
+  );
+}
+
+function SelectableImageViewerWithRecipient({ 
+  cardId, cardType, imgUrl, svgContent, alt, isNewCard, 
+  isSelected, onSelectedChange, recipientName, customUrl, message, showRecipient = false
+}: SelectableImageViewerWithRecipientProps) {
+  const cardUrl = customUrl ? `/to/${customUrl}` : `/to/${cardId}`
+
+  return (
+    <div className="relative group">
+      <Checkbox
+        checked={isSelected}
+        onCheckedChange={(checked) => onSelectedChange(cardId, !!checked)}
+        className="absolute top-2 left-2 z-10 bg-white data-[state=checked]:bg-purple-600 data-[state=checked]:text-white group-hover:opacity-100 transition-opacity duration-200"
+        aria-label={`Select card ${alt}`}
+      />
+      <div className="space-y-2">
+        <ImageViewer
+          cardId={cardId}
+          cardType={cardType}
+          imgUrl={imgUrl}
+          svgContent={svgContent}
+          alt={alt}
+          isNewCard={isNewCard}
+        />
+        {showRecipient && recipientName && (
+          <div className="px-2 py-1.5 bg-gray-50 rounded-md border space-y-1">
+            <div className="flex items-center justify-between">
+              <p className="text-xs text-gray-600">Sent to:</p>
+              <Link 
+                href={cardUrl}
+                target="_blank"
+                className="inline-flex items-center gap-1 text-xs text-purple-600 hover:text-purple-700 hover:underline"
+              >
+                <span>View</span>
+                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                </svg>
+              </Link>
+            </div>
+            <p className="text-sm font-medium text-gray-800 truncate">
+              {recipientName}
+            </p>
+            {message && (
+              <div className="pt-1">
+                <p className="text-xs text-gray-500 italic leading-relaxed line-clamp-2">
+                  &ldquo;{message.length > 80 ? `${message.substring(0, 80)}...` : message}&rdquo;
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -287,7 +349,7 @@ export function MyCardsClient({ initialGeneratedCards, initialSentCards, initial
         )}
         <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {sentCards.map((card) => (
-            <SelectableImageViewer
+            <SelectableImageViewerWithRecipient
               key={card.id}
               alt="Sent Card"
               cardId={card.id} // EditedCard.id is string
@@ -297,6 +359,10 @@ export function MyCardsClient({ initialGeneratedCards, initialSentCards, initial
               svgContent={card.editedContent || ''}
               isSelected={selectedSentCardIds.includes(card.id)}
               onSelectedChange={handleSentCardSelect}
+              recipientName={card.recipientName}
+              customUrl={card.customUrl}
+              message={card.message}
+              showRecipient={true}
             />
           ))}
         </div>

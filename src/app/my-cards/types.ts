@@ -12,6 +12,9 @@ export interface EditedCardEntry {
   cardType: string | null;
   r2Url: string | null;
   editedContent: string | null;
+  recipientName: string | null;
+  customUrl: string | null;
+  message: string | null;
   createdAt: Date;
   // Add other fields from EditedCard if used in the component
 }

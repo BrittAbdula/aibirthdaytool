@@ -24,6 +24,9 @@ interface EditedCardEntry {
   cardType: string | null;
   r2Url: string | null;
   editedContent: string | null;
+  recipientName: string | null;
+  customUrl: string | null;
+  message: string | null;
   createdAt: Date;
 }
 
@@ -88,6 +91,9 @@ export default async function MyCardsPage() {
         cardType: true,
         r2Url: true,
         editedContent: true,
+        recipientName: true,
+        customUrl: true,
+        message: true,
         createdAt: true,
       }
     }),
@@ -114,7 +120,13 @@ export default async function MyCardsPage() {
   ])
 
   const generatedCards: ApiLogEntry[] = generatedCardsData.map(card => ({ ...card, id: Number(card.id), timestamp: card.timestamp }))
-  const sentCards: EditedCardEntry[] = sentCardsData.map(card => ({ ...card, createdAt: card.createdAt }))
+  const sentCards: EditedCardEntry[] = sentCardsData.map(card => ({ 
+    ...card, 
+    createdAt: card.createdAt,
+    recipientName: card.recipientName,
+    customUrl: card.customUrl,
+    message: card.message
+  }))
   
   // 处理关系和收件人数据 - 在应用层分组
   const recipientMap = new Map<string, RecipientRelationship>()
