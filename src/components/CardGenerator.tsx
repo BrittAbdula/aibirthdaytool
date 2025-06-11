@@ -20,6 +20,7 @@ import { CARD_SIZES } from '@/lib/card-config'
 import { useCardGeneration } from '@/hooks/useCardGeneration'
 import { AlertCircle, Info } from 'lucide-react'
 import { PremiumModal } from '@/components/PremiumModal'
+import { modelConfigs, type ModelConfig } from '@/lib/model-config'
 
 const MagicalCardCreation = () => {
   return (
@@ -277,6 +278,9 @@ export default function CardGenerator({
   const [customValues, setCustomValues] = useState<Record<string, string>>({})
   const [selectedSize, setSelectedSize] = useState(cardConfig.defaultSize || 'portrait')
   const [cardRequirements, setCardRequirements] = useState<string>('')
+  const [selectedModel, setSelectedModel] = useState<ModelConfig>(modelConfigs[0]) // Default to first model
+  const [showModelSelector, setShowModelSelector] = useState(false)
+  const [showReferenceImageModal, setShowReferenceImageModal] = useState(false)
   const [isAuthLoading, setIsAuthLoading] = useState(false)
   const [isPremiumModalOpen, setIsPremiumModalOpen] = useState(false)
   const [isPremiumUser, setIsPremiumUser] = useState(false)
@@ -293,7 +297,8 @@ export default function CardGenerator({
     formData: Record<string, any>,
     customValues: Record<string, string>,
     selectedSize: string,
-    cardRequirements: string
+    cardRequirements: string,
+    selectedModel: ModelConfig
   } | null>(null)
 
   // Use the card generation hook
@@ -326,8 +331,6 @@ export default function CardGenerator({
       }
     });
 
-    // Set default format to 'svg'
-    initialFormData["format"] = "svg";
     setFormData(initialFormData);
 
     // Set default image URL based on whether it's a system card
@@ -349,6 +352,9 @@ export default function CardGenerator({
       setSelectedSize(savedFormData.selectedSize);
       if (savedFormData.cardRequirements) {
         setCardRequirements(savedFormData.cardRequirements);
+      }
+      if (savedFormData.selectedModel) {
+        setSelectedModel(savedFormData.selectedModel);
       }
 
       // Close the auth dialog
@@ -411,7 +417,8 @@ export default function CardGenerator({
         formData: { ...formData },
         customValues: { ...customValues },
         selectedSize,
-        cardRequirements
+        cardRequirements,
+        selectedModel
       });
       pendingAuthRef.current = true;
       setIsPremiumUser(false) // User is not logged in, so definitely not premium
@@ -422,8 +429,7 @@ export default function CardGenerator({
     const options = {
       cardType: currentCardType,
       size: selectedSize,
-      format: formData.format || 'svg',
-      modelTier: formData.modelTier || "Free",
+      modelId: selectedModel.id, // 只传递模型ID
       formData: { ...formData, cardRequirements },
       imageCount
     };
@@ -696,88 +702,7 @@ export default function CardGenerator({
                   </div>
                 )}
               </div>
-              {/* Price / Model Selection */}
-              <div className="space-y-2">
-                <Label>Model</Label>
-                <div className="flex space-x-2">
-                  {["Free", "Premium"].map((option) => (
-                    <button
-                      key={option}
-                      type="button"
-                      onClick={() => {
-                        if (option === "Premium" && !isPremiumUser) {
-                          // 如果点击 Premium 且不是 Premium 用户，弹出升级提示
-                          setIsPremiumModalOpen(true);
-                        } else {
-                          handleInputChange("modelTier", option);
-                        }
-                      }}
-                      className={cn(
-                        "flex-1 py-2 rounded-md border transition-all duration-200",
-                        (formData.modelTier === undefined && option === "Free") ||
-                          formData.modelTier === option
-                          ? option === "Premium"
-                            ? "bg-gradient-to-r from-[#a786ff] to-[#FF6B94] text-white font-medium border-transparent"
-                            : "bg-[#FFF5F6] text-[#4A4A4A] font-medium border-[#FFC0CB]"
-                          : "bg-white text-gray-700 border-gray-200 hover:border-[#FFC0CB]"
-                      )}
-                    >
-                      {option}
-                    </button>
-                  ))}
-                </div>
-                <p className="text-xs text-gray-500">
-                  {formData.modelTier === "Premium"
-                    ? "Premium model provides higher quality and more creative effects"
-                    : "Free model available for all users"}
-                </p>
-              </div>
 
-              
-
-              {/* Card Format Selection */}
-              <div className="w-full">
-                <Label htmlFor="card-format" className="mb-2 block flex items-center justify-between">
-                  <span>Card Format</span>
-                </Label>
-                <div className="grid grid-cols-2 gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setFormData(prev => ({ ...prev, format: 'svg' }))}
-                    className={cn(
-                      "flex flex-col items-center justify-center p-3 rounded-md border transition-all relative",
-                      formData.format !== 'image'
-                        ? "border-[#FFC0CB] bg-[#FFF5F6] ring-1 ring-[#FFC0CB]"
-                        : "border-gray-200 hover:border-[#FFC0CB]"
-                    )}
-                  >
-                    <div className="absolute -top-2 -right-2">
-                      <div className="animate-bounce flex items-center justify-center bg-[#FFC0CB] text-white text-[10px] px-1.5 py-0.5 rounded-full">
-                        <span className="mr-0.5">✨</span>Animated
-                      </div>
-                    </div>
-                    <span className="text-sm font-medium">Animated Card</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setFormData(prev => ({ ...prev, format: 'image' }))}
-                    className={cn(
-                      "flex flex-col items-center justify-center p-3 rounded-md border transition-all relative",
-                      formData.format === 'image'
-                        ? "border-[#FFC0CB] bg-[#FFF5F6] ring-1 ring-[#FFC0CB]"
-                        : "border-gray-200 hover:border-[#FFC0CB]"
-                    )}
-                  >
-                    <div className="absolute -top-2 -right-2 z-10">
-                      <div className="animate-pulse flex items-center justify-center bg-gradient-to-r from-[#a786ff] to-[#b19bff] text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full shadow-sm border border-white">
-                        <span className="mr-0.5 text-[8px]">✨</span>BETA
-                      </div>
-                    </div>
-                    <span className="text-sm font-medium">Image Card</span>
-                  </button>
-                </div>
-              </div>
 
               {/* Image Count Selection */}
               {/* <div className="w-full">
@@ -915,49 +840,157 @@ export default function CardGenerator({
         .animate-wand-wave { animation: wand-wave 1.5s ease-in-out infinite; }
       `}</style>
 
-      {/* Floating Card Requirements Input */}
-      <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50 w-full max-w-2xl px-2">
-        <div className="bg-white/95 backdrop-blur-sm rounded-xl shadow-2xl border-2 border-[#FFC0CB] p-4 transition-all duration-300 hover:shadow-3xl">
-          <div className="flex items-center space-x-3">
-            <div className="flex-shrink-0">
-              <div className="w-8 h-8 bg-gradient-to-r from-[#FFC0CB] to-[#b19bff] rounded-full flex items-center justify-center animate-pulse">
-                <span className="text-white text-sm">✨</span>
+      {/* Model Selection Dropdown */}
+      {showModelSelector && (
+        <div 
+          className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40" 
+          onClick={(e) => {
+            if (e.currentTarget === e.target) {
+              setShowModelSelector(false);
+            }
+          }}
+        >
+          <div className="fixed bottom-44 left-1/2 transform -translate-x-1/2 w-full max-w-2xl px-4">
+            <div className="bg-white rounded-xl shadow-2xl border border-gray-200 max-h-[calc(100vh-12rem)] overflow-y-auto">
+              <div className="p-3 border-b bg-gray-50 rounded-t-xl">
+                <h3 className="font-medium text-gray-900">Choose Generation Model</h3>
+                <p className="text-xs text-gray-500 mt-1">Select the perfect model for your card creation needs</p>
+              </div>
+              <div className="p-3 pb-4">
+                {modelConfigs.map((model) => (
+                  <button
+                    key={model.id}
+                    onClick={() => {
+                      if (model.tier === 'Premium' && !isPremiumUser) {
+                        setIsPremiumModalOpen(true);
+                      } else {
+                        setSelectedModel(model);
+                        setShowModelSelector(false);
+                      }
+                    }}
+                    className={cn(
+                      "w-full p-4 rounded-lg border-2 transition-all duration-200 mb-3 text-left relative",
+                      selectedModel.id === model.id
+                        ? "border-[#FFC0CB] bg-[#FFF5F6] shadow-sm"
+                        : "border-gray-100 hover:border-[#FFC0CB] hover:bg-gray-50"
+                    )}
+                  >
+                    <div className="flex items-start space-x-3">
+                      <div className="flex-shrink-0">
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-pink-100 to-purple-100 flex items-center justify-center text-lg">
+                          {model.icon}
+                        </div>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center space-x-2 mb-2">
+                          <h4 className="font-medium text-gray-900 text-base">{model.name}</h4>
+                          {model.badge && (
+                            <span className={cn(
+                              "text-xs px-2 py-0.5 rounded-full font-medium",
+                              model.badge === 'Premium' 
+                                ? "bg-gradient-to-r from-[#a786ff] to-[#FF6B94] text-white"
+                                : "bg-blue-100 text-blue-700"
+                            )}>
+                              {model.badge}
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-sm text-gray-600 mb-3">{model.description}</p>
+                        <div className="flex items-center flex-wrap gap-3 text-xs text-gray-500">
+                          <div className="flex items-center space-x-1">
+                            <span>⏱️</span>
+                            <span>{model.time}</span>
+                          </div>
+                          <div className="flex items-center space-x-1">
+                            <span>{model.format === 'svg' ? '🎞️' : '🖼️'}</span>
+                            <span>{model.format === 'svg' ? 'Animated' : 'Static'}</span>
+                          </div>
+                          <div className="flex items-center space-x-1">
+                            <span>💳</span>
+                            <span>{model.credits} credit{model.credits > 1 ? 's' : ''}</span>
+                          </div>
+                        </div>
+                      </div>
+                      {selectedModel.id === model.id && (
+                        <div className="flex-shrink-0 text-[#FFC0CB]">
+                          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                          </svg>
+                        </div>
+                      )}
+                    </div>
+                  </button>
+                ))}
               </div>
             </div>
-            <div className="flex-1">
-              <input
-                type="text"
+          </div>
+        </div>
+      )}
+
+      {/* Floating Card Requirements Input */}
+      <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50 w-full max-w-2xl px-4">
+        <div className="bg-white/95 backdrop-blur-sm rounded-xl shadow-2xl border-2 border-[#FFC0CB] transition-all duration-300 hover:shadow-3xl">
+
+
+                    {/* Input Section */}
+          <div className="p-4">
+            {/* Two-line Input Area */}
+            <div className="space-y-3">
+              <textarea
                 value={cardRequirements}
                 onChange={(e) => setCardRequirements(e.target.value)}
-                placeholder={imageCount > 1 
-                  ? "Describe your special requirements for the card... (e.g. 'Add more decorations', 'Use warm colors')"
-                  : "Describe your special requirements for the card... (e.g. 'Add shiny stars', 'Use pink theme')"}
-                className="w-full px-4 py-2 border-0 focus:outline-none focus:ring-0 text-sm placeholder-gray-400 bg-transparent resize-none"
+                placeholder="Please enter your design requirements"
+                className="w-full px-4 py-3 border-0 focus:outline-none focus:ring-0 text-sm placeholder-gray-400 bg-transparent resize-none h-16"
                 onKeyPress={(e) => {
-                  if (e.key === 'Enter') {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
                     handleGenerateCard();
                   }
                 }}
+                rows={2}
               />
-            </div>
-            <div className="flex-shrink-0">
-              <Button
-                onClick={handleGenerateCard}
-                disabled={isLoading}
-                className="bg-gradient-to-r from-[#FFC0CB] to-[#FFB6C1] hover:from-[#FFD1DC] hover:to-[#FFC0CB] text-[#4A4A4A] text-sm px-4 py-2 h-auto transition-all duration-200 hover:scale-105"
-              >
-                {isLoading ? (
-                  <>
-                    <span className="animate-spin mr-1">✨</span>
-                    Generating...
-                  </>
-                ) : (
-                  <>
-                    <span className="mr-1">🎨</span>
-                    Generate
-                  </>
-                )}
-              </Button>
+              
+              {/* Bottom Button Row */}
+              <div className="flex items-center justify-between">
+                {/* Left Buttons */}
+                <div className="flex items-center space-x-3">
+                  {/* Model Selection Button */}
+                  <button
+                    onClick={() => setShowModelSelector(!showModelSelector)}
+                    className="w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors"
+                    title="Select Model"
+                  >
+                    <span className="text-lg">{selectedModel.icon}</span>
+                  </button>
+                  
+                  {/* Reference Image Button */}
+                  <button
+                    onClick={() => setShowReferenceImageModal(true)}
+                    className="w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors relative"
+                    title="Upload Reference Image"
+                  >
+                    <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                  </button>
+                </div>
+                
+                {/* Right Generate Button */}
+                <button
+                  onClick={handleGenerateCard}
+                  disabled={isLoading}
+                  className="w-10 h-10 rounded-full bg-gradient-to-r from-[#FFC0CB] to-[#b19bff] hover:from-[#FFD1DC] hover:to-[#FFB6C1] flex items-center justify-center transition-all duration-200 hover:scale-105 shadow-lg"
+                  title="Generate Card"
+                >
+                  {isLoading ? (
+                    <span className="animate-spin text-white text-sm">✨</span>
+                  ) : (
+                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                  )}
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -1049,6 +1082,73 @@ export default function CardGenerator({
       {!isPremiumUser && (
         <PremiumModal isOpen={isPremiumModalOpen} onOpenChange={setIsPremiumModalOpen} />
       )}
+
+      {/* Reference Image Upload Modal */}
+      <Dialog open={showReferenceImageModal} onOpenChange={setShowReferenceImageModal}>
+        <DialogContent className="border border-[#FFC0CB] shadow-lg max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-semibold text-[#4A4A4A] flex items-center space-x-2">
+              <span>📸</span>
+              <span>Reference Image Upload</span>
+              <span className="bg-gradient-to-r from-orange-400 to-orange-500 text-white text-xs font-bold px-2 py-1 rounded-full">
+                COMING SOON
+              </span>
+            </DialogTitle>
+            <DialogDescription className="text-gray-600 mt-3 space-y-4">
+              <div className="bg-gradient-to-br from-blue-50 to-purple-50 p-4 rounded-lg border border-blue-200">
+                <h3 className="font-medium text-gray-900 mb-2 flex items-center">
+                  <span className="text-lg mr-2">🎯</span>
+                  Exciting Feature Coming Soon!
+                </h3>
+                <p className="text-sm text-gray-700 mb-3">
+                  Upload reference images to help our AI understand your style preferences and create cards that match your vision perfectly.
+                </p>
+                
+                <div className="space-y-2 text-sm text-gray-600">
+                  <div className="flex items-center space-x-2">
+                    <span className="w-2 h-2 bg-green-400 rounded-full"></span>
+                    <span>Upload up to 2 reference images</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <span className="w-2 h-2 bg-green-400 rounded-full"></span>
+                    <span>Support for JPG, PNG, WebP formats</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <span className="w-2 h-2 bg-green-400 rounded-full"></span>
+                    <span>AI-powered style matching</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <span className="w-2 h-2 bg-green-400 rounded-full"></span>
+                    <span>Enhanced card personalization</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
+                <div className="flex items-start space-x-3">
+                  <span className="text-yellow-500 text-lg">💡</span>
+                  <div>
+                    <h4 className="font-medium text-gray-900 mb-1">In the meantime...</h4>
+                    <p className="text-sm text-gray-700">
+                      You can describe your desired style in the text input above. For example: 
+                      &ldquo;watercolor style&rdquo;, &ldquo;minimalist design&rdquo;, &ldquo;vintage look&rdquo;, etc.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="mt-6 flex justify-center">
+            <Button
+              onClick={() => setShowReferenceImageModal(false)}
+              className="bg-gradient-to-r from-[#FFC0CB] to-[#FFB6C1] hover:from-[#FFD1DC] hover:to-[#FFC0CB] text-[#4A4A4A] transition-colors px-6"
+            >
+              Got it!
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   )
 }

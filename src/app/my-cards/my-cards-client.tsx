@@ -273,10 +273,10 @@ export function MyCardsClient({ initialGeneratedCards, initialSentCards, initial
           Recipients ({recipientRelationships.length})
         </TabsTrigger>
         <TabsTrigger value="sent" className="text-sm sm:text-base">
-          Sent Cards ({sentCards.length})
+          Sent ({sentCards.length})
         </TabsTrigger>
         <TabsTrigger value="generated" className="text-sm sm:text-base">
-          Generated Cards ({generatedCards.length})
+          Generated ({generatedCards.length})
         </TabsTrigger>
       </TabsList>
 

@@ -4,6 +4,7 @@ import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
 import { generateCardImageWith4o, generateCardImageGeminiFlash, generateCardImage } from '@/lib/image';
 import { nanoid } from 'nanoid';
+import { getModelConfig, createModelTierMap } from '@/lib/model-config';
 // 增加超时限制到最大值
 export const maxDuration = 60; // 增加到 60 秒
 
@@ -26,8 +27,7 @@ export async function POST(request: Request) {
     const {
       modificationFeedback,
       previousCardId,
-      format = 'svg', // Default to svg if not specified
-      modelTier,
+      modelId = 'Free_SVG', // Default to Free_SVG if not specified
       ...defaultFields
     } = requestData;
 
@@ -54,10 +54,19 @@ export async function POST(request: Request) {
       })
     ]);
 
+    // 从modelId解析模型配置
+    const modelConfig = getModelConfig(modelId);
+    if (!modelConfig) {
+      return NextResponse.json({ error: 'Invalid model ID' }, { status: 400 });
+    }
+
+    const format = modelConfig.format;
+    const modelTier = modelConfig.tier;
+
     // 获取用户计划类型
     const planType = user?.plan || 'FREE';
     const dailyLimit = planType === 'FREE' ? 10 : Infinity;
-    const creditsUsed = format === 'image' ? 6 : 1;
+    const creditsUsed = modelConfig.credits;
     const modelLevel = modelTier === 'Premium' && planType === 'PREMIUM' ? 'PREMIUM' : 'FREE';
 
     // 处理用户使用情况

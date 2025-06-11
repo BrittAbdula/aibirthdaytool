@@ -6,8 +6,7 @@ import { useSession, signIn } from 'next-auth/react';
 interface CardGenerationOptions {
   cardType: string;
   size: string;
-  format: string;
-  modelTier: string;
+  modelId: string;
   formData: Record<string, any>;
   modificationFeedback?: string;
   previousCardId?: string;
@@ -82,7 +81,7 @@ export const useCardGeneration = () => {
   }, []);
 
   const generateCards = useCallback(async (options: CardGenerationOptions) => {
-    const { imageCount, cardType, size, format, modelTier, formData, modificationFeedback, previousCardId } = options;
+    const { imageCount, cardType, size, modelId, formData, modificationFeedback, previousCardId } = options;
 
     if (!session) {
       setSavedAuthData(options);
@@ -133,7 +132,7 @@ export const useCardGeneration = () => {
     try {
       const generatePromises = initialImageStates.map(async (initialState, index) => {
         const payload: Record<string, any> = {
-          cardType, size, format, modelTier, ...formData, variationIndex: index
+          cardType, size, modelId, ...formData, variationIndex: index
         };
         if (modificationFeedback) {
           payload.modificationFeedback = modificationFeedback;
