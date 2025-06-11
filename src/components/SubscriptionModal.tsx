@@ -293,7 +293,7 @@ export function SubscriptionModal({ isOpen, onOpenChange }: SubscriptionModalPro
               
               <p className="text-xs text-gray-500 text-center">
                 Canceling will stop your subscription at the end of the current billing period. 
-                You won't be charged for the next period.
+                You won&apos;t be charged for the next period.
               </p>
             </div>
           </div>
