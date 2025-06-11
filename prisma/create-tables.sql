@@ -10,6 +10,7 @@ CREATE TABLE IF NOT EXISTS "ApiLog" (
     "duration" INTEGER NOT NULL,
     "timestamp" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "isError" BOOLEAN NOT NULL DEFAULT false,
+    "isPublic" BOOLEAN NOT NULL DEFAULT false,
     "errorMessage" TEXT,
     "r2Url" TEXT,
     "userId" TEXT,
@@ -50,12 +51,13 @@ CREATE TABLE IF NOT EXISTS "EditedCard" (
     "r2Url" TEXT,
     "userId" TEXT NOT NULL,
     "message" TEXT,
+    "requirements" TEXT,
+    "isPublic" BOOLEAN NOT NULL DEFAULT false,
     "deleted" BOOLEAN NOT NULL DEFAULT false,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL
 );
 CREATE INDEX IF NOT EXISTS "EditedCard_originalCardId_idx" ON "EditedCard"("originalCardId");
-ALTER TABLE "EditedCard" ADD COLUMN "deleted" BOOLEAN NOT NULL DEFAULT false;
 
 -- create DeletedCard table
 CREATE TABLE IF NOT EXISTS "DeletedCard" (

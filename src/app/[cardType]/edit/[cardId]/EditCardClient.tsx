@@ -18,6 +18,9 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { RecommendedCards } from '@/components/RecommendedCards'
+import { useSession } from 'next-auth/react'
+import { PremiumModal } from '@/components/PremiumModal'
+import { Crown } from "lucide-react"
 
 const IsMobileWrapper = dynamic(() => import('@/components/IsMobileWrapper'), { ssr: false })
 
@@ -43,12 +46,36 @@ export default function EditCardClient({ params }: { params: { cardId: string, c
   const [recipientName, setRecipientName] = useState('')
   const [senderName, setSenderName] = useState('')
   const [message, setMessage] = useState('')
+  const [requirements, setRequirements] = useState('')
+  const [isPublic, setIsPublic] = useState(true)
+  const [isPremiumModalOpen, setIsPremiumModalOpen] = useState(false)
+  const [showPremiumTooltip, setShowPremiumTooltip] = useState(false)
+  const { data: session } = useSession()
+  const [isPremiumUser, setIsPremiumUser] = useState(false)
+
+  useEffect(() => {
+    if (session?.user) {
+      setIsPremiumUser((session as any).user?.plan === 'PREMIUM')
+    } else {
+      setIsPremiumUser(false)
+    }
+  }, [session])
+
+  useEffect(() => {
+    if (showPremiumTooltip) {
+      const timer = setTimeout(() => {
+        setShowPremiumTooltip(false)
+      }, 3000)
+      return () => clearTimeout(timer)
+    }
+  }, [showPremiumTooltip])
+
   useEffect(() => {
     const fetchCardData = async () => {
       if (cardId === '1') {
         setIsLoading(true)
         try {
-          const content = await fetchSvgContent('https://store.celeprime.com/'+cardType+'.svg')
+          const content = await fetchSvgContent('https://store.celeprime.com/' + cardType + '.svg')
           if (content) {
             setSvgContent(content)
             setOriginalContent(content)
@@ -84,6 +111,8 @@ export default function EditCardClient({ params }: { params: { cardId: string, c
           setRecipientName(data.recipientName)
           setSenderName(data.senderName)
           setMessage(data.message)
+          setRequirements(data.requirements)
+          setIsPublic(data.isPublic)
           setEditableFields(extractEditableFields(content))
           if (content) {
             updateImageSrc(content)
@@ -211,8 +240,8 @@ export default function EditCardClient({ params }: { params: { cardId: string, c
     setIsSending(true)
     try {
       if (svgContent === originalContent && editedCardId && !customUrl) {
-        const shareUrl = editedCardId ? 
-          `${window.location.origin}/to/${customUrl || editedCardId}` : 
+        const shareUrl = editedCardId ?
+          `${window.location.origin}/to/${customUrl || editedCardId}` :
           `${window.location.origin}/`
         setShareLink(shareUrl)
         setIsModalOpen(true)
@@ -236,6 +265,8 @@ export default function EditCardClient({ params }: { params: { cardId: string, c
           recipientName: recipientName,
           senderName: senderName,
           message: message,
+          requirements: requirements,
+          isPublic: isPublic,
         }),
       })
 
@@ -249,8 +280,8 @@ export default function EditCardClient({ params }: { params: { cardId: string, c
         await recordUserAction(cardId, 'send')
 
         toast({
-          description: responseCustomUrl ? 
-            `Card created with custom URL: ${responseCustomUrl}` : 
+          description: responseCustomUrl ?
+            `Card created with custom URL: ${responseCustomUrl}` :
             "Card created successfully",
         })
       } else {
@@ -290,6 +321,18 @@ export default function EditCardClient({ params }: { params: { cardId: string, c
     window.open(url, '_blank')
   }
 
+  const handlePublicToggle = (checked: boolean) => {
+    if (!checked && !isPremiumUser) {
+      // User is trying to set to private but is not premium
+      setShowPremiumTooltip(true)
+      setTimeout(() => {
+        setIsPremiumModalOpen(true)
+      }, 300)
+      return
+    }
+    setIsPublic(checked)
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#FFF9F0] via-[#FFF5F7] to-[#FFF0F5] py-6 sm:py-8">
       <div className="container mx-auto max-w-5xl">
@@ -304,6 +347,144 @@ export default function EditCardClient({ params }: { params: { cardId: string, c
         </header>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
+
+          {/* Edit Section */}
+          <div className="bg-white/90 backdrop-blur p-4 sm:p-6 rounded-2xl shadow-lg">
+            <h2 className="text-2xl font-semibold mb-6 text-[#4A4A4A] text-center flex items-center justify-center gap-2">
+              <span className="text-pink-400">✏️</span>
+              Customize Your Card
+              <span className="text-pink-400">✏️</span>
+            </h2>
+            <div className="space-y-5">
+              {Object.entries(editableFields).map(([fieldName, value]) => (
+                <div key={fieldName} className="group transition-all duration-300">
+                  <label
+                    htmlFor={fieldName}
+                    className="block mb-2 font-medium text-[#4A4A4A] group-hover:text-pink-500 transition-colors"
+                  >
+                    {fieldName.replace(/_/g, ' ')}
+                  </label>
+                  <Textarea
+                    id={fieldName}
+                    value={value}
+                    onChange={(e) => handleFieldChange(fieldName, e.target.value)}
+                    className="w-full bg-white/50 border-2 border-pink-100 rounded-xl focus:ring-pink-200 focus:border-pink-300 transition-all duration-300"
+                    rows={value.split('\n').length}
+                    placeholder={`Enter your message here...`}
+                  />
+                </div>
+              ))}
+
+              {/* Custom URL Section */}
+              <div className="mt-8 pt-4 border-t border-pink-100">
+                <div className="flex items-center justify-between mb-2">
+                  <Label className="text-sm font-medium text-[#4A4A4A]">
+                    Custom URL
+                  </Label>
+                  <div className="flex items-center space-x-2">
+                    <Label className="text-sm text-muted-foreground">
+                      Enable custom URL
+                    </Label>
+                    <Switch
+                      checked={enableCustomUrl}
+                      onCheckedChange={setEnableCustomUrl}
+                      className="data-[state=checked]:bg-pink-400"
+                    />
+                  </div>
+                </div>
+
+                {enableCustomUrl && (
+                  <div className="mt-2 space-y-2">
+                    <div className="flex items-center space-x-2">
+                      <span className="text-sm text-gray-500">
+                        {window.location.origin}/to/
+                      </span>
+                      <Input
+                        value={customUrl}
+                        onChange={(e) => setCustomUrl(e.target.value)}
+                        placeholder="your-custom-url"
+                        className="flex-1 bg-white/50 border-2 border-pink-100 rounded-xl focus:ring-pink-200 focus:border-pink-300"
+                      />
+                    </div>
+                    <p className="text-xs text-gray-500 italic">
+                      Only letters, numbers, and hyphens are allowed. Custom URLs are not permanently reserved and may be overwritten if used by others.
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* Public Visibility Section */}
+              <div className="mt-8 pt-4 border-t border-pink-100">
+                <div className="flex items-center justify-between relative">
+                  <div className="flex items-center space-x-2">
+                    <Label className="text-sm font-medium text-[#4A4A4A]">
+                      Public Visibility
+                    </Label>
+                    {!isPremiumUser && (
+                      <div className="relative">
+                        <Crown className="h-4 w-4 text-amber-500" />
+                        {showPremiumTooltip && (
+                          <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-800 text-white text-xs rounded-lg shadow-lg whitespace-nowrap z-10 animate-in fade-in-0 zoom-in-95 duration-200">
+                            This is a premium feature. Please upgrade to a premium plan to access it.
+                            <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-800"></div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Label className="text-sm text-muted-foreground">
+                      {isPublic ? "Public" : "Private"}
+                    </Label>
+                    <Switch
+                      checked={isPublic}
+                      onCheckedChange={handlePublicToggle}
+                      className="data-[state=checked]:bg-pink-400"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Action Buttons (Desktop/Large only) */}
+            <div className="flex-col gap-3 mt-8 hidden lg:flex sm:flex-row">
+              <Button
+                onClick={handleCopy}
+                className="flex-1 bg-gradient-to-r from-pink-400 to-pink-500 text-white hover:opacity-90 shadow-md hover:shadow-lg transition-all duration-300"
+              >
+                <CopyIcon className="mr-2 h-4 w-4" />
+                Copy
+              </Button>
+              <IsMobileWrapper>
+                {(isMobile) => (
+                  <Button
+                    onClick={() => handleDownload(isMobile)}
+                    className="flex-1 bg-gradient-to-r from-pink-500 to-pink-600 text-white hover:opacity-90 shadow-md hover:shadow-lg transition-all duration-300"
+                  >
+                    <DownloadIcon className="mr-2 h-4 w-4" />
+                    {isMobile ? "Save" : "Download"}
+                  </Button>
+                )}
+              </IsMobileWrapper>
+              <Button
+                onClick={handleSend}
+                disabled={isSending}
+                className={cn(
+                  "flex-1 text-white shadow-md hover:shadow-lg transition-all duration-300",
+                  isSending
+                    ? "bg-pink-800 cursor-wait"
+                    : "bg-gradient-to-r from-pink-600 to-pink-700 hover:opacity-90"
+                )}
+              >
+                <PaperPlaneIcon className={cn(
+                  "mr-2 h-4 w-4",
+                  isSending && "animate-spin"
+                )} />
+                {isSending ? "Sending..." : "Send"}
+              </Button>
+            </div>
+          </div>
+
           {/* Preview Section */}
           <div className="bg-white/90 backdrop-blur p-4 sm:p-6 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300">
             <h2 className="text-2xl font-semibold mb-4 text-[#4A4A4A] text-center flex items-center justify-center gap-2">
@@ -360,7 +541,7 @@ export default function EditCardClient({ params }: { params: { cardId: string, c
                 </div>
               </div>
               {enableMusic && (
-                <SpotifySearch 
+                <SpotifySearch
                   cardType={cardType}
                   onSelect={async (song) => {
                     console.log('Selected song:', song)
@@ -410,113 +591,8 @@ export default function EditCardClient({ params }: { params: { cardId: string, c
                 disabled={isSending}
                 className={cn(
                   "flex-1 text-white shadow-md hover:shadow-lg transition-all duration-300",
-                  isSending 
-                    ? "bg-pink-800 cursor-wait" 
-                    : "bg-gradient-to-r from-pink-600 to-pink-700 hover:opacity-90"
-                )}
-              >
-                <PaperPlaneIcon className={cn(
-                  "mr-2 h-4 w-4",
-                  isSending && "animate-spin"
-                )} />
-                {isSending ? "Sending..." : "Send"}
-              </Button>
-            </div>
-          </div>
-
-          {/* Edit Section */}
-          <div className="bg-white/90 backdrop-blur p-4 sm:p-6 rounded-2xl shadow-lg">
-            <h2 className="text-2xl font-semibold mb-6 text-[#4A4A4A] text-center flex items-center justify-center gap-2">
-              <span className="text-pink-400">✏️</span>
-              Customize Your Card
-              <span className="text-pink-400">✏️</span>
-            </h2>
-            <div className="space-y-5">
-              {Object.entries(editableFields).map(([fieldName, value]) => (
-                <div key={fieldName} className="group transition-all duration-300">
-                  <label 
-                    htmlFor={fieldName} 
-                    className="block mb-2 font-medium text-[#4A4A4A] group-hover:text-pink-500 transition-colors"
-                  >
-                    {fieldName.replace(/_/g, ' ')}
-                  </label>
-                  <Textarea
-                    id={fieldName}
-                    value={value}
-                    onChange={(e) => handleFieldChange(fieldName, e.target.value)}
-                    className="w-full bg-white/50 border-2 border-pink-100 rounded-xl focus:ring-pink-200 focus:border-pink-300 transition-all duration-300"
-                    rows={value.split('\n').length}
-                    placeholder={`Enter your message here...`}
-                  />
-                </div>
-              ))}
-
-              {/* Custom URL Section */}
-              <div className="mt-8 pt-4 border-t border-pink-100">
-                <div className="flex items-center justify-between mb-2">
-                  <Label className="text-sm font-medium text-[#4A4A4A]">
-                    Custom URL
-                  </Label>
-                  <div className="flex items-center space-x-2">
-                    <Label className="text-sm text-muted-foreground">
-                      Enable custom URL
-                    </Label>
-                    <Switch
-                      checked={enableCustomUrl}
-                      onCheckedChange={setEnableCustomUrl}
-                      className="data-[state=checked]:bg-pink-400"
-                    />
-                  </div>
-                </div>
-
-                {enableCustomUrl && (
-                  <div className="mt-2 space-y-2">
-                    <div className="flex items-center space-x-2">
-                      <span className="text-sm text-gray-500">
-                        {window.location.origin}/to/
-                      </span>
-                      <Input
-                        value={customUrl}
-                        onChange={(e) => setCustomUrl(e.target.value)}
-                        placeholder="your-custom-url"
-                        className="flex-1 bg-white/50 border-2 border-pink-100 rounded-xl focus:ring-pink-200 focus:border-pink-300"
-                      />
-                    </div>
-                    <p className="text-xs text-gray-500 italic">
-                      Only letters, numbers, and hyphens are allowed. Custom URLs are not permanently reserved and may be overwritten if used by others.
-                    </p>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Action Buttons (Desktop/Large only) */}
-            <div className="flex-col gap-3 mt-8 hidden lg:flex sm:flex-row">
-              <Button
-                onClick={handleCopy}
-                className="flex-1 bg-gradient-to-r from-pink-400 to-pink-500 text-white hover:opacity-90 shadow-md hover:shadow-lg transition-all duration-300"
-              >
-                <CopyIcon className="mr-2 h-4 w-4" />
-                Copy
-              </Button>
-              <IsMobileWrapper>
-                {(isMobile) => (
-                  <Button
-                    onClick={() => handleDownload(isMobile)}
-                    className="flex-1 bg-gradient-to-r from-pink-500 to-pink-600 text-white hover:opacity-90 shadow-md hover:shadow-lg transition-all duration-300"
-                  >
-                    <DownloadIcon className="mr-2 h-4 w-4" />
-                    {isMobile ? "Save" : "Download"}
-                  </Button>
-                )}
-              </IsMobileWrapper>
-              <Button
-                onClick={handleSend}
-                disabled={isSending}
-                className={cn(
-                  "flex-1 text-white shadow-md hover:shadow-lg transition-all duration-300",
-                  isSending 
-                    ? "bg-pink-800 cursor-wait" 
+                  isSending
+                    ? "bg-pink-800 cursor-wait"
                     : "bg-gradient-to-r from-pink-600 to-pink-700 hover:opacity-90"
                 )}
               >
@@ -590,6 +666,12 @@ export default function EditCardClient({ params }: { params: { cardId: string, c
             </div>
           </DialogContent>
         </Dialog>
+
+        {/* Premium Modal */}
+        <PremiumModal
+          isOpen={isPremiumModalOpen}
+          onOpenChange={setIsPremiumModalOpen}
+        />
       </div>
     </div>
   )

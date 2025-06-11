@@ -29,6 +29,7 @@ model ApiLog {
   duration        Int
   timestamp       DateTime     @default(now())
   isError         Boolean      @default(false)
+  isPublic        Boolean      @default(false)
   errorMessage    String?      @db.Text
   r2Url           String?
   userId          String?      
@@ -78,6 +79,8 @@ model EditedCard {
   userId         String?
   customUrl      String?
   message        String?
+  requirements   String?
+  isPublic       Boolean  @default(false)
   deleted        Boolean  @default(false)
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt

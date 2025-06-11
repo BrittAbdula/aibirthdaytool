@@ -34,7 +34,8 @@ export async function GET(
         let messageValue = "";
         let recipientName = "";
         let senderName = "";
-
+        let requirements = "";
+        let isPublic = true;
         // Check if userInputs is an object with direct key-value pairs
         if (userInputs) {
           relationshipValue =
@@ -44,6 +45,8 @@ export async function GET(
           messageValue = (userInputs.message as string) || "";
           recipientName = (userInputs.to as string) || "";
           senderName = (userInputs.signed as string) || "";
+          requirements = (userInputs.requirements as string) || "";
+          isPublic = (userInputs.isPublic as boolean) || true;
         }
 
         return NextResponse.json({
@@ -55,7 +58,9 @@ export async function GET(
           relationship: relationshipValue,
           message: messageValue,
           recipientName: relationshipValue,
-          senderName: relationshipValue
+          senderName: relationshipValue,
+          requirements: requirements,
+          isPublic: isPublic
         })
       } else {
         const responseContent = await fetchSvgContent(`https://store.celeprime.com/${cardType}.svg`)

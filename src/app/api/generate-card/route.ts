@@ -236,7 +236,7 @@ const createNaturalPrompt = (formData: any, cardType: string) => {
       // 如果是自定义设计，需要获取用户的自定义输入
       const customDesign = formData.customDesign || formData.design_custom;
       if (customDesign) {
-        prompt += `Design requirements: ${customDesign}. `;
+        prompt += `Color scheme: ${customDesign}. `;
       }
     } else {
       // 预设颜色
@@ -246,7 +246,7 @@ const createNaturalPrompt = (formData: any, cardType: string) => {
 
 
   if(cardRequirements){
-    prompt += `Requirements: ${cardRequirements}. `;
+    prompt += `Other requirements: ${cardRequirements}. `;
   }
 
   return prompt.trim();

@@ -152,15 +152,6 @@ const AgeSelector = ({ age, setAge }: { age: number | null, setAge: (age: number
   )
 }
 
-const ProgressBar = ({ progress }: { progress: number }) => (
-  <div className="w-full bg-gray-300 rounded-full h-2.5">
-    <div
-      className="bg-[#FFC0CB] h-2.5 rounded-full"
-      style={{ width: `${progress}%` }}
-    ></div>
-  </div>
-);
-
 const CustomSelect = ({
   value,
   onValueChange,
@@ -271,7 +262,6 @@ export default function CardGenerator({
   const [currentCardType, setCurrentCardType] = useState<CardType>(wishCardType)
   const [formData, setFormData] = useState<Record<string, any>>({})
   const [imageCount, setImageCount] = useState<number>(1)
-  const [showAdvancedOptions, setShowAdvancedOptions] = useState(false)
   const router = useRouter()
   const sampleCard = `/card/goodluck.svg`
   const [submited, setSubmited] = useState(false)
@@ -439,8 +429,6 @@ export default function CardGenerator({
 
       if (result.success) {
         setSubmited(true);
-        // Clear card requirements after successful generation
-        setCardRequirements('');
       } else if (result.error === 'rate_limit') {
         setErrorToast({
           title: 'Daily Limit Reached',
@@ -620,7 +608,7 @@ export default function CardGenerator({
               {/* Color Selection */}
               <div key="card-design" className="space-y-2">
                 <Label htmlFor="card-design" className="flex justify-between items-center">
-                  <span>Design</span>
+                  <span>Color</span>
                 </Label>
                 <div className="grid grid-cols-8 gap-2 w-full">
                   {[
@@ -792,7 +780,7 @@ export default function CardGenerator({
                       {imageState.url && (
                         <ImageViewer
                           alt={`${currentCardType}-${index}`}
-                          cardId={imageState.id}
+                          cardId={imageState.id || '1'}
                           cardType={currentCardType}
                           imgUrl={imageState.url}
                           isNewCard={true}
@@ -940,7 +928,7 @@ export default function CardGenerator({
                 value={cardRequirements}
                 onChange={(e) => setCardRequirements(e.target.value)}
                 placeholder="Please enter your design requirements"
-                className="w-full px-4 py-3 border-0 focus:outline-none focus:ring-0 text-sm placeholder-gray-400 bg-transparent resize-none h-16"
+                className="w-full px-4 py-3 border-0 focus:outline-none focus:ring-0 text-base placeholder-gray-400 bg-transparent resize-none h-16"
                 onKeyPress={(e) => {
                   if (e.key === 'Enter' && !e.shiftKey) {
                     e.preventDefault();
