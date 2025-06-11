@@ -17,6 +17,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { CardTypeOption } from '@/lib/card-constants'
 import { PremiumButton } from '@/components/PremiumModal'
+import { SubscriptionButton } from '@/components/SubscriptionModal'
 import { cn } from '@/lib/utils'
 
 // 定义生成器类型
@@ -391,6 +392,9 @@ function Header() {
 
             {/* Premium Button - Only show for non-premium users */}
             {!isPremiumUser && <PremiumButton />}
+            
+            {/* Subscription Management - Only show for premium users */}
+            {isPremiumUser && <SubscriptionButton />}
 
             {status === 'authenticated' && session ? (
               <DropdownMenu>
@@ -660,6 +664,11 @@ function Header() {
                   {/* Premium Button - Mobile (only if not premium) */}
                   {!isPremiumUser && (
                     <PremiumButton />
+                  )}
+                  
+                  {/* Subscription Management - Mobile (only if premium) */}
+                  {isPremiumUser && (
+                    <SubscriptionButton />
                   )}
                 </div>
               </div>
