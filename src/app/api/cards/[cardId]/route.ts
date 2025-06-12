@@ -45,7 +45,7 @@ export async function GET(
           messageValue = (userInputs.message as string) || "";
           recipientName = (userInputs.to as string) || "";
           senderName = (userInputs.signed as string) || "";
-          requirements = (userInputs.requirements as string) || "";
+          requirements = (userInputs.cardRequirements as string) || "";
           isPublic = (userInputs.isPublic as boolean) || true;
         }
 

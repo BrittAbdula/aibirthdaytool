@@ -190,7 +190,7 @@ const createNaturalPrompt = (formData: any, cardType: string) => {
   // 主句
   if (to && recipientName) {
     const relationship = to.toLowerCase() === 'myself' ? 'myself' : `my ${to.toLowerCase()}`;
-    prompt += `A ${cardType} card to ${relationship} ${recipientName}. `;
+    prompt += `Create a ${cardType} card to ${relationship} ${recipientName}. `;
   }
 
   // 根据卡片类型动态添加消息描述
