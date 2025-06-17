@@ -3,6 +3,7 @@
 import { useState } from "react"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
+import { useSession, signIn } from "next-auth/react"
 import { Crown, Check, CreditCard, X } from "lucide-react"
 import { 
   Dialog, 
@@ -24,10 +25,24 @@ export function PremiumModal({ isOpen, onOpenChange }: PremiumPlanProps) {
   const [selectedPlan, setSelectedPlan] = useState<"monthly" | "yearly">("yearly")
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
+  const { data: session, status } = useSession()
 
   const handleContinue = async () => {
     try {
       setIsLoading(true)
+      
+      // Check if user is logged in first
+      if (status === "loading") {
+        setIsLoading(false)
+        return
+      }
+      
+      if (!session) {
+        setIsLoading(false)
+        // Redirect to login page
+        signIn()
+        return
+      }
       
       // Call API to create Stripe checkout session
       const response = await fetch('/api/create-checkout-session', {
