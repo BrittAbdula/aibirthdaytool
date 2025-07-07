@@ -75,6 +75,35 @@ export async function uploadImageToR2(imageBuffer: Buffer, taskId: string): Prom
   }
 }
 
+// upload video to r2
+export async function uploadVideoToR2(url: string, taskId: string): Promise<string> {
+  try {
+    const now = new Date();
+    const year = now.getUTCFullYear();
+    const month = String(now.getUTCMonth() + 1).padStart(2, '0');
+    const day = String(now.getUTCDate()).padStart(2, '0');
+
+    const key = `videos/${year}/${month}/${day}/${taskId}.mp4`;
+
+    const response = await fetch(url);
+    const videoBuffer = Buffer.from(await response.arrayBuffer());
+
+    await r2Client.send(
+        new PutObjectCommand({
+            Bucket: R2_BUCKET_NAME,
+            Key: key,
+            Body: videoBuffer,
+            ContentType: 'video/mp4',
+        })
+    );
+    
+    return `https://store.celeprime.com/${key}`;
+  } catch (error) {
+    console.error('R2 video upload error:', error);
+    throw new Error(`Failed to upload video to R2: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
+}
+
 /**
  * Uploads an image directly to Cloudflare Images via URL
  * @param imageUrl The URL of the image to upload

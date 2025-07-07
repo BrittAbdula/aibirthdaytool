@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
-import { uploadToCloudflareImages } from '@/lib/r2';
+import { uploadVideoToR2, uploadToCloudflareImages } from '@/lib/r2';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -72,6 +72,44 @@ export async function GET(request: Request) {
       
       return response;
     }
+
+    // Handle HM video generation status
+    if(card.promptVersion === 'video'){
+      const videoData = await getHMVideoStatus(card.taskId || '');
+      
+      if(videoData?.code === 'success'){
+        const videoUrl = videoData?.data?.video_url;
+        if(videoUrl){
+          // For videos, we might want to store the URL directly or upload to R2
+          const r2Url = await uploadVideoToR2(videoUrl, card.taskId || '');
+          await prisma.apiLog.update({
+            where: { cardId },
+            data: { status: 'completed', r2Url: r2Url },
+          });
+        }
+      } else if(videoData?.code === 'failed' || videoData?.message?.includes('failed')){
+        await prisma.apiLog.update({
+          where: { cardId },
+          data: { status: 'failed', errorMessage: videoData?.message || 'Video generation failed' },
+        });
+      }
+      
+      const videoStatus = videoData?.code === 'success' ? 'completed' : 
+                         videoData?.code === 'failed' ? 'failed' : 'processing';
+      
+      // 添加缓存控制头
+      const response = NextResponse.json({
+        status: videoStatus,
+        r2Url: videoData?.data?.video_url || '',
+        responseContent: '', // Videos don't have SVG content
+      });
+      
+      response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+      response.headers.set('Pragma', 'no-cache');
+      response.headers.set('Expires', '0');
+      
+      return response;
+    }
     
     // 同样为其他情况添加缓存控制头
     const response = NextResponse.json({
@@ -134,4 +172,77 @@ async function getGenerateStatus(taskId: string) {
     const data = await response.json() as KieAPIResponse<ImageDetailsData>;
     
     return data.data;
+}
+
+// HM Video status response interface
+export interface HMVideoStatusResponse {
+  code: 'success' | 'failed' | 'processing';
+  message?: string;
+  data?: {
+    video_url?: string;
+    status?: string;
+    progress?: number;
+  };
+}
+
+// get video generation status by taskId from HM API
+async function getHMVideoStatus(taskId: string): Promise<HMVideoStatusResponse | null> {
+  try {
+    const baseUrl = process.env.HM_BASE_URL;
+    const apiKey = process.env.HM_API_KEY;
+    
+    if (!baseUrl || !apiKey) {
+      console.error('HM API credentials not configured');
+      return null;
+    }
+
+    // Call HM API to get video status
+    const response = await fetch(`${baseUrl}/google/v1/models/veo/videos/${taskId}`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json'
+      },
+      cache: 'no-store'
+    });
+
+    if (!response.ok) {
+      console.error(`HM video status API error: ${response.status}`);
+      return {
+        code: 'failed',
+        message: `API request failed with status ${response.status}`
+      };
+    }
+
+    const data = await response.json();
+    
+    // Map HM API response to our standard format
+    if (data.code === 'success' && data.data) {
+      return {
+        code: 'success',
+        data: {
+          video_url: data.data.video_url || data.data.url,
+          status: data.data.status,
+          progress: data.data.progress
+        }
+      };
+    } else if (data.code === 'failed' || data.message?.includes('failed')) {
+      return {
+        code: 'failed',
+        message: data.message || 'Video generation failed'
+      };
+    } else {
+      return {
+        code: 'processing',
+        message: data.message || 'Video is being generated'
+      };
+    }
+    
+  } catch (error) {
+    console.error('Error checking HM video status:', error);
+    return {
+      code: 'failed',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    };
+  }
 }

@@ -4,7 +4,7 @@ export interface ModelConfig {
   name: string;
   description: string;
   time: string;
-  format: 'svg' | 'image';
+  format: 'svg' | 'image' | 'video';
   tier: 'Free' | 'Premium';
   credits: number;
   icon: string;
@@ -60,6 +60,30 @@ export const modelConfigs: ModelConfig[] = [
     icon: '💎',
     badge: 'Premium',
     features: ['Premium quality', 'Advanced styling', 'High resolution']
+  },
+  {
+    id: 'Premium_Video_Fast',
+    name: 'Pro Video Fast',
+    description: 'Dynamic video cards with smooth animations and effects',
+    time: '45 sec',
+    format: 'video',
+    tier: 'Premium',
+    credits: 15,
+    icon: '🎬',
+    badge: 'Premium',
+    features: ['HD video output', 'Dynamic animations', 'Professional effects']
+  },
+  {
+    id: 'Premium_Video_Pro',
+    name: 'Pro Video Ultimate',
+    description: 'Ultra-premium video cards with cinematic quality',
+    time: '90 sec',
+    format: 'video',
+    tier: 'Premium',
+    credits: 25,
+    icon: '🎥',
+    badge: 'Premium',
+    features: ['4K video output', 'Cinematic effects', 'Ultimate quality']
   }
 ];
 

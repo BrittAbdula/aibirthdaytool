@@ -20,6 +20,7 @@ interface ImageState {
   isLoading: boolean;
   progress: number;
   error: string | null;
+  format?: 'svg' | 'image' | 'video'; // Add format tracking
   animationTimer?: NodeJS.Timeout; // Store timer ID here
 }
 
@@ -93,6 +94,10 @@ export const useCardGeneration = () => {
     setError(null);
     setGlobalLoading(true);
     
+    // Get model config to determine format
+    const modelConfig = await import('@/lib/model-config').then(m => m.getModelConfig(modelId));
+    const isVideoMode = modelConfig?.format === 'video';
+    
     // Initialize states with animation timer
     const initialImageStates: ImageState[] = Array.from({ length: imageCount }).map((_, index) => {
       const animationIntervalId = setInterval(() => {
@@ -105,11 +110,12 @@ export const useCardGeneration = () => {
             return prev;
           }
           
-          // Dynamic progress update
+          // Dynamic progress update - slower for video
           const currentProgress = currentState.progress;
-          let progressIncrement = 0.5;
-          if (currentProgress < 30) progressIncrement = 3;
-          else if (currentProgress < 50) progressIncrement = 2;
+          const isVideo = currentState.format === 'video';
+          let progressIncrement = isVideo ? 0.3 : 0.5;
+          if (currentProgress < 30) progressIncrement = isVideo ? 1.5 : 3;
+          else if (currentProgress < 50) progressIncrement = isVideo ? 1 : 2;
           
           newStates[index] = { ...currentState, progress: Math.min(95, currentProgress + progressIncrement) }; // Cap animation progress
           return newStates;
@@ -123,6 +129,7 @@ export const useCardGeneration = () => {
         isLoading: true,
         progress: 10, // Start at 10%
         error: null,
+        format: modelConfig?.format || 'image',
         animationTimer: animationIntervalId, // Store timer ID
       };
     });
@@ -153,7 +160,7 @@ export const useCardGeneration = () => {
           const { cardId } = await response.json();
           let isCompleted = false;
           const startPollingTime = Date.now();
-          const maxPollingDuration = 180000; // 180 seconds max
+          const maxPollingDuration = isVideoMode ? 300000 : 180000; // 300 seconds for video, 180 for image/svg
 
           // Update the state with the generated cardId
           setImageStates(prev => {

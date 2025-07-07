@@ -3,6 +3,7 @@ import { generateCardContent } from '@/lib/gpt';
 import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
 import { generateCardImageWith4o, generateCardImageGeminiFlash, generateCardImage } from '@/lib/image';
+import { generateCardVideo } from '@/lib/image-and-video';
 import { nanoid } from 'nanoid';
 import { getModelConfig, createModelTierMap } from '@/lib/model-config';
 // 增加超时限制到最大值
@@ -109,7 +110,7 @@ export async function POST(request: Request) {
         cardId,
         cardType: defaultFields.cardType,
         userInputs: requestData,
-        promptVersion: format === 'image' ? 'image' : 'svg',
+        promptVersion: format === 'image' ? 'image' : format === 'video' ? 'video' : 'svg',
         responseContent: '',
         tokensUsed: 0,
         duration: 0,
@@ -132,10 +133,15 @@ export async function POST(request: Request) {
 
     // Start async processing
     try {
-      // Then use the params object when calling generateCardContent
-      const result = format === 'image'
-        ? await generateCardImage(cardParams, modelLevel)
-        : await generateCardContent(cardParams, modelLevel);
+      // Select generation function based on format
+      let result;
+      if (format === 'image') {
+        result = await generateCardImage(cardParams, modelLevel);
+      } else if (format === 'video') {
+        result = await generateCardVideo(cardParams, modelLevel);
+      } else {
+        result = await generateCardContent(cardParams, modelLevel);
+      }
 
       // console.log('result', result);
 
@@ -162,7 +168,7 @@ export async function POST(request: Request) {
           status: 'failed',
           isError: true,
           errorMessage: error instanceof Error ? error.message : 'Unknown error',
-          promptVersion: format === 'image' ? 'image' : 'svg', // Fallback
+          promptVersion: format === 'image' ? 'image' : format === 'video' ? 'video' : 'svg', // Fallback
           tokensUsed: 0,
           duration: Date.now() - startTime, // Need to capture startTime in the outer scope or recalculate
         },

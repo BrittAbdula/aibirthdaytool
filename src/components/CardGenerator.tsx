@@ -279,6 +279,7 @@ export default function CardGenerator({
     message: string;
     type: 'error' | 'warning' | 'info';
   } | null>(null);
+  const [isVideoMode, setIsVideoMode] = useState(false);
 
   // Add ref to track if we're waiting for authentication
   const pendingAuthRef = useRef<boolean>(false)
@@ -365,6 +366,18 @@ export default function CardGenerator({
       setIsPremiumUser(false);
     }
   }, [session]);
+
+  // Sync video mode with selected model format
+  useEffect(() => {
+    const currentFormat = selectedModel.format;
+    
+    // Update video mode based on selected model format
+    if (currentFormat === 'video' && !isVideoMode) {
+      setIsVideoMode(true);
+    } else if (currentFormat !== 'video' && isVideoMode) {
+      setIsVideoMode(false);
+    }
+  }, [selectedModel.format, isVideoMode]);
 
   useEffect(() => {
     fetchSvgContent(sampleCard)
@@ -466,8 +479,6 @@ export default function CardGenerator({
       setIsAuthLoading(false)
     }
   }
-
-
 
   const renderField = (field: CardConfig['fields'][0]) => {
     const isRequired = !field.optional;
@@ -831,84 +842,176 @@ export default function CardGenerator({
       {/* Model Selection Dropdown */}
       {showModelSelector && (
         <div 
-          className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40" 
+          className="fixed inset-0 bg-black/20 backdrop-blur-sm z-50" 
           onClick={(e) => {
             if (e.currentTarget === e.target) {
               setShowModelSelector(false);
             }
           }}
         >
-          <div className="fixed bottom-44 left-1/2 transform -translate-x-1/2 w-full max-w-2xl px-4">
+          <div className="fixed bottom-44 left-1/2 transform -translate-x-1/2 w-full max-w-4xl px-4">
             <div className="bg-white rounded-xl shadow-2xl border border-gray-200 max-h-[calc(100vh-12rem)] overflow-y-auto">
-              <div className="p-3 border-b bg-gray-50 rounded-t-xl">
-                <h3 className="font-medium text-gray-900">Choose Generation Model</h3>
-                <p className="text-xs text-gray-500 mt-1">Select the perfect model for your card creation needs</p>
+              <div className="p-4 border-b bg-gray-50 rounded-t-xl">
+                <div className="flex items-center justify-between mb-1">
+                  <h3 className="font-medium text-gray-900">Choose Generation Model</h3>
+                  <div className="flex items-center space-x-2">
+                    <span className="text-lg">{selectedModel.icon}</span>
+                    <span className="text-sm font-medium text-gray-700">{selectedModel.name}</span>
+                  </div>
+                </div>
+                <p className="text-xs text-gray-500">Select the perfect model for your card creation needs</p>
               </div>
-              <div className="p-3 pb-4">
-                {modelConfigs.map((model) => (
-                  <button
-                    key={model.id}
-                    onClick={() => {
-                      if (model.tier === 'Premium' && !isPremiumUser) {
-                        setIsPremiumModalOpen(true);
-                      } else {
-                        setSelectedModel(model);
-                        setShowModelSelector(false);
-                      }
-                    }}
-                    className={cn(
-                      "w-full p-4 rounded-lg border-2 transition-all duration-200 mb-3 text-left relative",
-                      selectedModel.id === model.id
-                        ? "border-[#FFC0CB] bg-[#FFF5F6] shadow-sm"
-                        : "border-gray-100 hover:border-[#FFC0CB] hover:bg-gray-50"
-                    )}
-                  >
-                    <div className="flex items-start space-x-3">
-                      <div className="flex-shrink-0">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-pink-100 to-purple-100 flex items-center justify-center text-lg">
-                          {model.icon}
-                        </div>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center space-x-2 mb-2">
-                          <h4 className="font-medium text-gray-900 text-base">{model.name}</h4>
-                          {model.badge && (
-                            <span className={cn(
-                              "text-xs px-2 py-0.5 rounded-full font-medium",
-                              model.badge === 'Premium' 
-                                ? "bg-gradient-to-r from-[#a786ff] to-[#FF6B94] text-white"
-                                : "bg-blue-100 text-blue-700"
-                            )}>
-                              {model.badge}
-                            </span>
+              
+              <div className="p-4">
+                {/* Image & Animation Models */}
+                <div className="mb-6">
+                  <div className="flex items-center mb-3">
+                    <span className="text-lg mr-2">🎨</span>
+                    <h4 className="font-medium text-gray-800">Image & Animation Models</h4>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {modelConfigs
+                      .filter(model => model.format === 'svg' || model.format === 'image')
+                      .map((model) => (
+                      <button
+                        key={model.id}
+                        onClick={() => {
+                          if (model.tier === 'Premium' && !isPremiumUser) {
+                            setIsPremiumModalOpen(true);
+                          } else {
+                            setSelectedModel(model);
+                            setIsVideoMode(false); // Ensure we're in image mode
+                            setShowModelSelector(false);
+                          }
+                        }}
+                        disabled={false} // Always allow clicking
+                        className={cn(
+                          "p-4 rounded-lg border-2 transition-all duration-200 text-left relative",
+                          model.tier === 'Premium' && !isPremiumUser 
+                            ? "border-gray-200 bg-gray-50 cursor-pointer" // Changed from cursor-not-allowed to cursor-pointer
+                            : selectedModel.id === model.id && !isVideoMode
+                            ? "border-[#FFC0CB] bg-[#FFF5F6] shadow-sm"
+                            : "border-gray-100 hover:border-[#FFC0CB] hover:bg-gray-50"
+                        )}
+                      >
+                        <div className="flex items-start space-x-3">
+                          <div className="flex-shrink-0">
+                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-pink-100 to-purple-100 flex items-center justify-center text-lg">
+                              {model.icon}
+                            </div>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center space-x-2 mb-2">
+                              <h4 className="font-medium text-gray-900 text-sm">{model.name}</h4>
+                              {model.badge && (
+                                <span className="bg-gradient-to-r from-[#a786ff] to-[#FF6B94] text-white text-xs px-2 py-0.5 rounded-full font-medium">
+                                  {model.badge}
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-xs text-gray-600 mb-2">{model.description}</p>
+                            <div className="flex items-center flex-wrap gap-2 text-xs text-gray-500">
+                              <div className="flex items-center space-x-1">
+                                <span>⏱️</span>
+                                <span>{model.time}</span>
+                              </div>
+                              <div className="flex items-center space-x-1">
+                                <span>{model.format === 'svg' ? '🎞️' : '🖼️'}</span>
+                                <span>{model.format === 'svg' ? 'Animated' : 'Static'}</span>
+                              </div>
+                              <div className="flex items-center space-x-1">
+                                <span>💳</span>
+                                <span>{model.credits} credit{model.credits > 1 ? 's' : ''}</span>
+                              </div>
+                            </div>
+                          </div>
+                          {selectedModel.id === model.id && !isVideoMode && (model.tier !== 'Premium' || isPremiumUser) && (
+                            <div className="flex-shrink-0 text-[#FFC0CB]">
+                              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                              </svg>
+                            </div>
                           )}
                         </div>
-                        <p className="text-sm text-gray-600 mb-3">{model.description}</p>
-                        <div className="flex items-center flex-wrap gap-3 text-xs text-gray-500">
-                          <div className="flex items-center space-x-1">
-                            <span>⏱️</span>
-                            <span>{model.time}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Video Models */}
+                <div>
+                  <div className="flex items-center mb-3">
+                    <span className="text-lg mr-2">🎬</span>
+                    <h4 className="font-medium text-gray-800">Video Models</h4>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {modelConfigs
+                      .filter(model => model.format === 'video')
+                      .map((model) => (
+                      <button
+                        key={model.id}
+                        onClick={() => {
+                          if (model.tier === 'Premium' && !isPremiumUser) {
+                            setIsPremiumModalOpen(true);
+                          } else {
+                            setSelectedModel(model);
+                            setIsVideoMode(true); // Ensure we're in video mode
+                            setShowModelSelector(false);
+                          }
+                        }}
+                        disabled={false} // Always allow clicking
+                        className={cn(
+                          "p-4 rounded-lg border-2 transition-all duration-200 text-left relative",
+                          model.tier === 'Premium' && !isPremiumUser 
+                            ? "border-gray-200 bg-gray-50 cursor-pointer" // Changed to match other Premium models
+                            : selectedModel.id === model.id && isVideoMode
+                            ? "border-[#FFC0CB] bg-[#FFF5F6] shadow-sm"
+                            : "border-gray-100 hover:border-[#FFC0CB] hover:bg-gray-50"
+                        )}
+                      >
+                        <div className="flex items-start space-x-3">
+                          <div className="flex-shrink-0">
+                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-100 to-pink-100 flex items-center justify-center text-lg">
+                              {model.icon}
+                            </div>
                           </div>
-                          <div className="flex items-center space-x-1">
-                            <span>{model.format === 'svg' ? '🎞️' : '🖼️'}</span>
-                            <span>{model.format === 'svg' ? 'Animated' : 'Static'}</span>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center space-x-2 mb-2">
+                              <h4 className="font-medium text-gray-900 text-sm">{model.name}</h4>
+                              {model.badge && (
+                                <span className="bg-gradient-to-r from-[#a786ff] to-[#FF6B94] text-white text-xs px-2 py-0.5 rounded-full font-medium">
+                                  {model.badge}
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-xs text-gray-600 mb-2">{model.description}</p>
+                            <div className="flex items-center flex-wrap gap-2 text-xs text-gray-500">
+                              <div className="flex items-center space-x-1">
+                                <span>⏱️</span>
+                                <span>{model.time}</span>
+                              </div>
+                              <div className="flex items-center space-x-1">
+                                <span>🎬</span>
+                                <span>Video</span>
+                              </div>
+                              <div className="flex items-center space-x-1">
+                                <span>💳</span>
+                                <span>{model.credits} credits</span>
+                              </div>
+                            </div>
                           </div>
-                          <div className="flex items-center space-x-1">
-                            <span>💳</span>
-                            <span>{model.credits} credit{model.credits > 1 ? 's' : ''}</span>
-                          </div>
+                          {selectedModel.id === model.id && isVideoMode && (model.tier !== 'Premium' || isPremiumUser) && (
+                            <div className="flex-shrink-0 text-[#FFC0CB]">
+                              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                              </svg>
+                            </div>
+                          )}
                         </div>
-                      </div>
-                      {selectedModel.id === model.id && (
-                        <div className="flex-shrink-0 text-[#FFC0CB]">
-                          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                          </svg>
-                        </div>
-                      )}
-                    </div>
-                  </button>
-                ))}
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -916,11 +1019,33 @@ export default function CardGenerator({
       )}
 
       {/* Floating Card Requirements Input */}
-      <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50 w-full max-w-2xl px-4">
+      <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-40 w-full max-w-2xl px-4">
         <div className="bg-white/95 backdrop-blur-sm rounded-xl shadow-2xl border-2 border-[#FFC0CB] transition-all duration-300 hover:shadow-3xl">
+          {/* Current Model Status Bar */}
+          <div className="px-4 py-2 border-b border-gray-100 bg-gray-50/50 rounded-t-xl">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <span className="text-sm">{selectedModel.icon}</span>
+                <span className="text-xs font-medium text-gray-700">{selectedModel.name}</span>
+                {selectedModel.badge && (
+                  <span className={cn(
+                    "text-xs px-1.5 py-0.5 rounded-full font-medium",
+                    selectedModel.badge === 'Premium' 
+                      ? "bg-gradient-to-r from-[#a786ff] to-[#FF6B94] text-white"
+                      : "bg-blue-100 text-blue-700"
+                  )}>
+                    {selectedModel.badge}
+                  </span>
+                )}
+              </div>
+              <div className="flex items-center space-x-3 text-xs text-gray-500">
+                <span>⏱️ {selectedModel.time}</span>
+                <span>💳 {selectedModel.credits} credits</span>
+              </div>
+            </div>
+          </div>
 
-
-                    {/* Input Section */}
+          {/* Input Section */}
           <div className="p-4">
             {/* Two-line Input Area */}
             <div className="space-y-3">
@@ -945,10 +1070,14 @@ export default function CardGenerator({
                   {/* Model Selection Button */}
                   <button
                     onClick={() => setShowModelSelector(!showModelSelector)}
-                    className="w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors"
+                    className="flex items-center space-x-2 px-3 py-2 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors"
                     title="Select Model"
                   >
                     <span className="text-lg">{selectedModel.icon}</span>
+                    <div className="flex flex-col items-start">
+                      <span className="text-xs font-medium text-gray-700">{selectedModel.name}</span>
+                      <span className="text-xs text-gray-500">{selectedModel.format === 'video' ? 'Video' : selectedModel.format === 'svg' ? 'Animated' : 'Static'}</span>
+                    </div>
                   </button>
                   
                   {/* Reference Image Button */}
