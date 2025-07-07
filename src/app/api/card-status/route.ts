@@ -246,7 +246,7 @@ async function getHMVideoStatus(taskId: string): Promise<HMVideoStatusResponse |
     }
 
     // Call HM API to get video status
-    const response = await fetch(`${baseUrl}/google/v1/models/veo/videos/${taskId}`, {
+    const response = await fetch(`${baseUrl}/google/v1/tasks/${taskId}`, {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${apiKey}`,
@@ -254,7 +254,6 @@ async function getHMVideoStatus(taskId: string): Promise<HMVideoStatusResponse |
       },
       cache: 'no-store'
     });
-    console.log('request', `${baseUrl}/google/v1/models/veo/videos/${taskId}`);
 
     if (!response.ok) {
       console.error(`HM video status API error: ${response.status}`);
