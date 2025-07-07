@@ -114,6 +114,7 @@ export default function EditCardClient({ params }: { params: { cardId: string, c
           setSvgContent(content)
           setOriginalContent(content)
           setOriginalCardId(data.originalCardId)
+          setEditedCardId(cardId) // 设置editedCardId为当前卡片ID
           setRelationship(data.relationship)
           setRecipientName(data.recipientName)
           setSenderName(data.senderName)
