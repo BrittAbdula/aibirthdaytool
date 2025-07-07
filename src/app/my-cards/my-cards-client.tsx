@@ -390,7 +390,7 @@ export function MyCardsClient({ initialGeneratedCards, initialSentCards, initial
             <SelectableImageViewer
               key={card.id}
               alt="Generated Card"
-              cardId={String(card.id)} // ApiLog.id (number) converted to string for SelectableImageViewer
+              cardId={String(card.cardId)} // ApiLog.id (number) converted to string for SelectableImageViewer
               cardType={card.cardType}
               isNewCard={false}
               imgUrl={card.r2Url ? card.r2Url : `data:image/svg+xml;charset=utf-8,${encodeURIComponent(card.responseContent)}`}
