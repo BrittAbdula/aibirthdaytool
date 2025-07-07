@@ -74,7 +74,7 @@ export async function GET(request: Request) {
     }
 
     // Handle HM video generation status
-    if(card.promptVersion === 'video'){
+    if(card.promptVersion.includes('video')){
       const videoData = await getHMVideoStatus(card.taskId || '');
       
       if(videoData?.code === 'success'){
