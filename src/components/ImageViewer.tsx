@@ -65,7 +65,34 @@ export function ImageViewer({ alt, cardId, cardType, imgUrl, isNewCard, svgConte
     setIsPremiumModalOpen(true);
   };
 
+  // Helper function to determine if URL is a video
+  const isVideo = (url?: string) => {
+    if (!url) return false;
+    const videoExtensions = ['.mp4', '.mov', '.avi', '.webm', '.ogg'];
+    return videoExtensions.some(ext => url.toLowerCase().includes(ext));
+  };
+
   function CardImage({ src, alt, isLarge = false }: { src?: string, alt: string, isLarge?: boolean }) {
+    if (isVideo(src)) {
+      return (
+        <video
+          src={src}
+          controls
+          autoPlay
+          muted
+          loop
+          className={`object-contain ${isLarge ? 'max-w-full max-h-full' : 'w-full h-auto hover:scale-105 transition-transform duration-300'}`}
+          style={{
+            width: isLarge ? '100%' : '400px',
+            height: isLarge ? '100%' : '600px',
+          }}
+        >
+          <source src={src} type="video/mp4" />
+          Your browser does not support the video tag.
+        </video>
+      );
+    }
+
     return (
       <img
         src={src}

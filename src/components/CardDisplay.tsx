@@ -20,6 +20,13 @@ export default function CardDisplay({ card }: CardDisplayProps) {
   const [showEnvelope, setShowEnvelope] = useState(true)
   const [showCard, setShowCard] = useState(false)
   const [imageSrc, setImageSrc] = useState<string | null>(null)
+
+  // Helper function to determine if URL is a video
+  const isVideo = (url?: string) => {
+    if (!url) return false;
+    const videoExtensions = ['.mp4', '.mov', '.avi', '.webm', '.ogg'];
+    return videoExtensions.some(ext => url.toLowerCase().includes(ext));
+  };
  
   // Set image source from props on component mount
   useEffect(() => {
@@ -106,15 +113,30 @@ export default function CardDisplay({ card }: CardDisplayProps) {
                 className="relative aspect-[2/3] rounded-lg overflow-hidden bg-transparent"
                 style={{ maxHeight: '70vh' }}
               >
-                <Image
-                  src={imageSrc}
-                  alt={`${card.cardType} card `}
-                  fill
-                  priority
-                  className="transition-transform duration-300 hover:scale-102 object-contain"
-                  onClick={triggerConfetti}
-                  unoptimized
-                />
+                {isVideo(imageSrc) ? (
+                  <video
+                    src={imageSrc}
+                    controls
+                    autoPlay
+                    muted
+                    loop
+                    className="w-full h-full object-contain transition-transform duration-300 hover:scale-102"
+                    onClick={triggerConfetti}
+                  >
+                    <source src={imageSrc} type="video/mp4" />
+                    Your browser does not support the video tag.
+                  </video>
+                ) : (
+                  <Image
+                    src={imageSrc}
+                    alt={`${card.cardType} card `}
+                    fill
+                    priority
+                    className="transition-transform duration-300 hover:scale-102 object-contain"
+                    onClick={triggerConfetti}
+                    unoptimized
+                  />
+                )}
               </div>
             </div>
           </div>
@@ -216,13 +238,26 @@ export default function CardDisplay({ card }: CardDisplayProps) {
                   "w-full h-full transition-opacity duration-500 rounded-lg overflow-hidden",
                   stage === 'revealing' ? "opacity-100" : "opacity-0"
                 )}>
-                  <Image
-                    src={imageSrc}
-                    alt={`${card.cardType} card preview`}
-                    fill
-                    className="object-contain"
-                    unoptimized
-                  />
+                  {isVideo(imageSrc) ? (
+                    <video
+                      src={imageSrc}
+                      autoPlay
+                      muted
+                      loop
+                      className="w-full h-full object-contain"
+                    >
+                      <source src={imageSrc} type="video/mp4" />
+                      Your browser does not support the video tag.
+                    </video>
+                  ) : (
+                    <Image
+                      src={imageSrc}
+                      alt={`${card.cardType} card preview`}
+                      fill
+                      className="object-contain"
+                      unoptimized
+                    />
+                  )}
                 </div>
               </div>
 

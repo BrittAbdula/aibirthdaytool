@@ -6,7 +6,6 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select"
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card"
-import { ChevronDownIcon, ChevronUpIcon } from '@radix-ui/react-icons'
 import { Slider } from "@/components/ui/slider"
 import { Textarea } from "@/components/ui/textarea"
 import { Alert, AlertDescription } from "@/components/ui/alert"
@@ -16,7 +15,6 @@ import { CardType, CardConfig } from '@/lib/card-config'
 import { useSession, signIn } from "next-auth/react"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Loader2 } from 'lucide-react'
-import { CARD_SIZES } from '@/lib/card-config'
 import { useCardGeneration } from '@/hooks/useCardGeneration'
 import { AlertCircle, Info } from 'lucide-react'
 import { PremiumModal } from '@/components/PremiumModal'

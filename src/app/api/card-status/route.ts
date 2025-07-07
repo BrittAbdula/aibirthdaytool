@@ -86,22 +86,48 @@ export async function GET(request: Request) {
             where: { cardId },
             data: { status: 'completed', r2Url: r2Url },
           });
+          
+          // Return the completed video with R2 URL
+          const response = NextResponse.json({
+            status: 'completed',
+            r2Url: r2Url,
+            responseContent: '', // Videos don't have SVG content
+          });
+          
+          response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+          response.headers.set('Pragma', 'no-cache');
+          response.headers.set('Expires', '0');
+          
+          return response;
         }
-      } else if(videoData?.code === 'failed' || videoData?.message?.includes('failed')){
+      } else if(videoData?.code === 'failed'){
         await prisma.apiLog.update({
           where: { cardId },
           data: { status: 'failed', errorMessage: videoData?.message || 'Video generation failed' },
         });
+        
+        // Return the failed status
+        const response = NextResponse.json({
+          status: 'failed',
+          r2Url: '',
+          responseContent: '',
+          errorMessage: videoData?.message || 'Video generation failed'
+        });
+        
+        response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+        response.headers.set('Pragma', 'no-cache');
+        response.headers.set('Expires', '0');
+        
+        return response;
       }
       
-      const videoStatus = videoData?.code === 'success' ? 'completed' : 
-                         videoData?.code === 'failed' ? 'failed' : 'processing';
-      
-      // 添加缓存控制头
+      // For processing status, return the current progress
       const response = NextResponse.json({
-        status: videoStatus,
-        r2Url: videoData?.data?.video_url || '',
-        responseContent: '', // Videos don't have SVG content
+        status: 'processing',
+        r2Url: '',
+        responseContent: '',
+        progress: videoData?.data?.progress || 0,
+        message: videoData?.message || 'Video is being generated'
       });
       
       response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
@@ -185,6 +211,29 @@ export interface HMVideoStatusResponse {
   };
 }
 
+// HM API raw response interface (matches the actual API response)
+interface HMAPIResponse {
+  code: 'success' | 'failed' | 'processing';
+  message: string;
+  data: {
+    task_id: string;
+    notify_hook: string;
+    action: string;
+    status: 'SUCCESS' | 'FAILED' | 'PROCESSING';
+    fail_reason: string;
+    submit_time: number;
+    start_time: number;
+    finish_time: number;
+    progress: string;
+    data: {
+      id: string;
+      status: 'completed' | 'failed' | 'processing';
+      video_url: string;
+      status_update_time: number;
+    };
+  };
+}
+
 // get video generation status by taskId from HM API
 async function getHMVideoStatus(taskId: string): Promise<HMVideoStatusResponse | null> {
   try {
@@ -214,18 +263,35 @@ async function getHMVideoStatus(taskId: string): Promise<HMVideoStatusResponse |
       };
     }
 
-    const data = await response.json();
+    const data: HMAPIResponse = await response.json();
     
     // Map HM API response to our standard format
     if (data.code === 'success' && data.data) {
-      return {
-        code: 'success',
-        data: {
-          video_url: data.data.video_url || data.data.url,
-          status: data.data.status,
-          progress: data.data.progress
-        }
-      };
+      // Check outer status first
+      if (data.data.status === 'SUCCESS' && data.data.data) {
+        return {
+          code: 'success',
+          data: {
+            video_url: data.data.data.video_url, // Correct path: data.data.data.video_url
+            status: data.data.data.status,
+            progress: parseInt(data.data.progress.replace('%', '')) || 100
+          }
+        };
+      } else if (data.data.status === 'FAILED') {
+        return {
+          code: 'failed',
+          message: data.data.fail_reason || 'Video generation failed'
+        };
+      } else {
+        // Still processing
+        return {
+          code: 'processing',
+          message: `Video is being generated (${data.data.progress})`,
+          data: {
+            progress: parseInt(data.data.progress.replace('%', '')) || 0
+          }
+        };
+      }
     } else if (data.code === 'failed' || data.message?.includes('failed')) {
       return {
         code: 'failed',
