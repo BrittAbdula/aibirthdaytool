@@ -31,6 +31,13 @@ export default function EditCardClient({ params }: { params: { cardId: string, c
   const [originalCardId, setOriginalCardId] = useState('')
   const [editableFields, setEditableFields] = useState<Record<string, string>>({})
   const [imageSrc, setImageSrc] = useState<string>('')
+
+  // Helper function to determine if URL is a video
+  const isVideo = (url?: string) => {
+    if (!url) return false;
+    const videoExtensions = ['.mp4', '.mov', '.avi', '.webm', '.ogg'];
+    return videoExtensions.some(ext => url.toLowerCase().includes(ext));
+  };
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [shareLink, setShareLink] = useState('')
   const [editedCardId, setEditedCardId] = useState('')
@@ -148,6 +155,12 @@ export default function EditCardClient({ params }: { params: { cardId: string, c
 
   const convertSvgToPng = (): Promise<string> => {
     return new Promise((resolve, reject) => {
+      // If it's a video, just return the video URL directly
+      if (isVideo(imageSrc)) {
+        resolve(imageSrc)
+        return
+      }
+
       if (!imageSrc.startsWith('data:image/svg+xml')) {
         // If it's not an SVG (likely an r2Url), just return the image source
         resolve(imageSrc)
@@ -175,12 +188,20 @@ export default function EditCardClient({ params }: { params: { cardId: string, c
 
   const handleCopy = async () => {
     try {
-      const pngDataUrl = await convertSvgToPng()
-      const blob = await fetch(pngDataUrl).then(res => res.blob())
-      await navigator.clipboard.write([
-        new ClipboardItem({ 'image/png': blob })
-      ])
-      toast({ description: "Image copied" })
+      const mediaUrl = await convertSvgToPng()
+      
+      // For videos, copy the URL to clipboard instead of the video itself
+      if (isVideo(mediaUrl)) {
+        await navigator.clipboard.writeText(mediaUrl)
+        toast({ description: "Video URL copied" })
+      } else {
+        const blob = await fetch(mediaUrl).then(res => res.blob())
+        await navigator.clipboard.write([
+          new ClipboardItem({ 'image/png': blob })
+        ])
+        toast({ description: "Image copied" })
+      }
+      
       await recordUserAction(cardId, 'copy')
     } catch (err) {
       console.error('Copy failed: ', err)
@@ -194,16 +215,16 @@ export default function EditCardClient({ params }: { params: { cardId: string, c
   const handleDownload = async (isMobile: boolean) => {
     if (isMobile) {
       try {
-        const pngDataUrl = await convertSvgToPng()
+        const mediaUrl = await convertSvgToPng()
         const link = document.createElement('a')
-        link.href = pngDataUrl
+        link.href = mediaUrl
         link.target = '_blank'
         document.body.appendChild(link)
         link.click()
         document.body.removeChild(link)
 
         toast({
-          description: "Long-press on the image to save",
+          description: isVideo(mediaUrl) ? "Long-press on the video to save" : "Long-press on the image to save",
           duration: 5000,
         });
         await recordUserAction(cardId, 'download')
@@ -211,21 +232,28 @@ export default function EditCardClient({ params }: { params: { cardId: string, c
         console.error('Mobile download failed:', err)
         toast({
           variant: "destructive",
-          description: "Failed to open image. Try again.",
+          description: isVideo(imageSrc) ? "Failed to open video. Try again." : "Failed to open image. Try again.",
         })
       }
       return;
     }
 
     try {
-      const pngDataUrl = await convertSvgToPng()
+      const mediaUrl = await convertSvgToPng()
       const link = document.createElement('a')
-      link.href = pngDataUrl
-      link.download = `${cardType}_card.png`
+      link.href = mediaUrl
+      
+      if (isVideo(mediaUrl)) {
+        link.download = `${cardType}_card.mp4`
+        toast({ description: "Video downloaded" })
+      } else {
+        link.download = `${cardType}_card.png`
+        toast({ description: "High quality image downloaded" })
+      }
+      
       document.body.appendChild(link)
       link.click()
       document.body.removeChild(link)
-      toast({ description: "High quality image downloaded" })
       await recordUserAction(cardId, 'download')
     } catch (err) {
       console.error('Download failed: ', err)
@@ -500,16 +528,31 @@ export default function EditCardClient({ params }: { params: { cardId: string, c
                 ) : (
                   <div className="relative aspect-[2/3] flex items-center justify-center">
                     {imageSrc && (
-                      <NextImage
-                        src={imageSrc}
-                        alt={`${cardType} card preview`}
-                        width={400}
-                        height={600}
-                        className="w-full h-auto transform transition-transform duration-300 group-hover:scale-[1.02]"
-                        priority
-                        loading="eager"
-                        onLoadingComplete={() => setIsLoading(false)}
-                      />
+                      isVideo(imageSrc) ? (
+                        <video
+                          src={imageSrc}
+                          controls
+                          autoPlay
+                          muted
+                          loop
+                          className="w-full h-auto transform transition-transform duration-300 group-hover:scale-[1.02] object-contain"
+                          onLoadedData={() => setIsLoading(false)}
+                        >
+                          <source src={imageSrc} type="video/mp4" />
+                          Your browser does not support the video tag.
+                        </video>
+                      ) : (
+                        <NextImage
+                          src={imageSrc}
+                          alt={`${cardType} card preview`}
+                          width={400}
+                          height={600}
+                          className="w-full h-auto transform transition-transform duration-300 group-hover:scale-[1.02]"
+                          priority
+                          loading="eager"
+                          onLoadingComplete={() => setIsLoading(false)}
+                        />
+                      )
                     )}
                   </div>
                 )}
