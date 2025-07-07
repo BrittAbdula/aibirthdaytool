@@ -12,16 +12,35 @@ export async function POST(request: Request) {
     console.log('-------------:', editedCardId, cardType, originalCardId, editedContent, spotifyTrackId, customUrl, relationship, message, r2Url, isPublic, requirements, senderName, recipientName)
     console.log('r2UrlImage:', r2Url)
 
+    // Helper function to determine if URL is a video
+    const isVideo = (url?: string) => {
+      if (!url) return false;
+      const videoExtensions = ['.mp4', '.mov', '.avi', '.webm', '.ogg'];
+      return videoExtensions.some(ext => url.toLowerCase().includes(ext));
+    };
+
     const createdAt = new Date()
     
     if (editedCardId) {
-      // Upload edited content to R2, overwriting the existing file
-      const r2UrlImage = editedContent? await uploadSvgToR2(editedContent, editedCardId, createdAt) : r2Url
+      // For videos, use the r2Url directly without uploading SVG content
+      // For images/SVG, upload the edited content if available
+      let r2UrlImage: string;
+      let finalEditedContent: string;
+
+      if (isVideo(r2Url)) {
+        // For videos: use the video URL directly and clear SVG content
+        r2UrlImage = r2Url;
+        finalEditedContent = ''; // Videos don't have SVG content, use empty string
+      } else {
+        // For images/SVG: upload edited content if available, otherwise use existing r2Url
+        r2UrlImage = editedContent ? await uploadSvgToR2(editedContent, editedCardId, createdAt) : r2Url;
+        finalEditedContent = editedContent || '';
+      }
 
       await prisma.editedCard.update({
         where: { id: editedCardId },
         data: {
-          editedContent,
+          editedContent: finalEditedContent,
           spotifyTrackId,
           r2Url: r2UrlImage,
           userId,
@@ -39,15 +58,27 @@ export async function POST(request: Request) {
       // Generate a new ID for the edited card
       const newCardId = crypto.randomUUID()
       
-      // Upload edited content to R2
-      const r2UrlImage = editedContent? await uploadSvgToR2(editedContent, newCardId, createdAt) : r2Url
+      // For videos, use the r2Url directly without uploading SVG content
+      // For images/SVG, upload the edited content if available
+      let r2UrlImage: string;
+      let finalEditedContent: string;
+
+      if (isVideo(r2Url)) {
+        // For videos: use the video URL directly and clear SVG content
+        r2UrlImage = r2Url;
+        finalEditedContent = ''; // Videos don't have SVG content, use empty string
+      } else {
+        // For images/SVG: upload edited content if available, otherwise use existing r2Url
+        r2UrlImage = editedContent ? await uploadSvgToR2(editedContent, newCardId, createdAt) : r2Url;
+        finalEditedContent = editedContent || '';
+      }
 
       const editedCard = await prisma.editedCard.create({
         data: {
           id: newCardId,
           cardType,
           originalCardId,
-          editedContent,
+          editedContent: finalEditedContent,
           spotifyTrackId,
           r2Url: r2UrlImage,
           userId,
