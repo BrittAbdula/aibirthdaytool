@@ -15,16 +15,6 @@ interface CardContentParams {
     previousCardId?: string;
 }
 
-interface VideoGenerationParams {
-    cardType: CardType;
-    size: string;
-    userPrompt: string;
-    modificationFeedback?: string;
-    previousCardId?: string;
-    model?: 'veo3' | 'veo3-fast' | 'veo3-pro' | 'veo3-pro-frames';
-    enhancePrompt?: boolean;
-}
-
 export async function generateCardImage(params: CardContentParams, modelLevel: string): Promise<{ taskId: string, r2Url: string, svgContent: string, model: string, tokensUsed: number, duration: number, errorMessage?: string, status?: string }> {
     if (modelLevel === 'PREMIUM') {
         return await generateCardImageWith4o(params);
@@ -360,9 +350,11 @@ export async function generateCardImageWithHM(params: CardContentParams): Promis
     }
 }
 
-export async function generateCardVideoWithHM(params: VideoGenerationParams): Promise<{ taskId: string, r2Url: string, svgContent: string, model: string, tokensUsed: number, duration: number, errorMessage?: string, status?: string }> {
-    const { cardType, size, userPrompt, modificationFeedback, previousCardId, model = 'veo3-fast', enhancePrompt = true } = params;
+export async function generateCardVideoWithHM(params: CardContentParams): Promise<{ taskId: string, r2Url: string, svgContent: string, model: string, tokensUsed: number, duration: number, errorMessage?: string, status?: string }> {
+    const { cardType, size, userPrompt, modificationFeedback, previousCardId, } = params;
     const startTime = Date.now();
+    const model = 'veo3-fast';
+    const enhancePrompt = true;
     
     console.log('<----Using model : HM Google-Veo Video Generation---->');
 
@@ -433,7 +425,7 @@ export async function generateCardVideoWithHM(params: VideoGenerationParams): Pr
             taskId: taskId,
             r2Url: '', // 视频URL需要通过查询接口获取
             svgContent: '',
-            model: `hm-${model}-video`,
+            model: `veo-${model}-video`,
             tokensUsed: 0, // Veo API 可能不返回token使用信息
             duration: Date.now() - startTime,
             errorMessage: '',
@@ -446,7 +438,7 @@ export async function generateCardVideoWithHM(params: VideoGenerationParams): Pr
             taskId: '',
             r2Url: '',
             svgContent: '',
-            model: `hm-${model}-video`,
+            model: `veo-${model}-video`,
             tokensUsed: 0,
             duration: Date.now() - startTime,
             errorMessage: error instanceof Error ? error.message : 'Unknown error',
@@ -455,17 +447,104 @@ export async function generateCardVideoWithHM(params: VideoGenerationParams): Pr
     }
 }
 
-export async function generateCardVideo(params: VideoGenerationParams, modelLevel: string): Promise<{ taskId: string, r2Url: string, svgContent: string, model: string, tokensUsed: number, duration: number, errorMessage?: string, status?: string }> {
-    if (modelLevel === 'PREMIUM') {
-        const videoParams = {
-            cardType: params.cardType,
-            size: params.size,
-            userPrompt: params.userPrompt,
-            modificationFeedback: params.modificationFeedback,
-            previousCardId: params.previousCardId,
-            model: params.model,
+export async function generateCardVideoWithLuma(params: CardContentParams): Promise<{ taskId: string, r2Url: string, svgContent: string, model: string, tokensUsed: number, duration: number, errorMessage?: string, status?: string }> {
+    const { cardType, size, userPrompt, modificationFeedback, previousCardId} = params;
+    const startTime = Date.now();
+    const model = 'ray-v2';
+    const enhancePrompt = true;
+    
+    console.log('<----Using model : Luma Video Generation---->');
+
+    try {
+        console.log('<----User prompt : ' + userPrompt + '---->');
+
+        if (userPrompt.length >= 5000) {
+            throw new Error("User prompt too long");
         }
-        return await generateCardVideoWithHM(videoParams);
+
+        const apiKey = process.env.HM_API_KEY;
+        const baseUrl = process.env.HM_BASE_URL;
+        
+        if (!apiKey) {
+            throw new Error("HM_API_KEY is not configured");
+        }
+        
+        if (!baseUrl) {
+            throw new Error("HM_BASE_URL is not configured");
+        }
+
+        // 构建完整提示词
+        const fullPrompt = userPrompt + ` Create a personalized and festive video that brings this message to life with dynamic visuals and smooth animations. Match the event tone with a fitting theme (e.g., magical sparkles for celebrations, warm colors for birthdays). Include engaging motion graphics, text animations, and visual effects that enhance the emotional impact. The video should feel professional yet personal.`;
+
+        // 根据尺寸参数确定分辨率
+        let resolution = '720p';
+        if (size === 'landscape') {
+            resolution = '1080p'; // 横屏使用更高分辨率
+        }
+
+        // 调用 Luma API
+        const response = await fetch(`${baseUrl}/luma/generations`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${apiKey}`
+            },
+            body: JSON.stringify({
+                user_prompt: fullPrompt,
+                expand_prompt: enhancePrompt,
+                loop: false, // 不循环
+                resolution: resolution,
+                duration: '5s', // 5秒时长
+                model_name: model // 使用传入的模型名
+            })
+        });
+
+        if (!response.ok) {
+            const errorData = await response.text();
+            throw new Error(`API request failed: ${response.status} ${errorData}`);
+        }
+
+        const data = await response.json();
+        
+        if (!data.id) {
+            throw new Error(`Video generation failed: ${data.message || 'No task ID returned'}`);
+        }
+
+        // 生成任务ID使用API返回的任务ID
+        const taskId = data.id;
+
+        console.log(`<---- Luma video generation task initiated: ${taskId} ---->`);
+
+        return {
+            taskId: taskId,
+            r2Url: '', // 视频URL需要通过查询接口获取
+            svgContent: '',
+            model: `luma-${model}-video`,
+            tokensUsed: 0, // Luma API 可能不返回token使用信息
+            duration: Date.now() - startTime,
+            errorMessage: '',
+            status: 'processing'
+        };
+
+    } catch (error) {
+        console.error('Error in generateCardVideoWithLuma:', error);
+        return {
+            taskId: '',
+            r2Url: '',
+            svgContent: '',
+            model: `luma-${model}-video`,
+            tokensUsed: 0,
+            duration: Date.now() - startTime,
+            errorMessage: error instanceof Error ? error.message : 'Unknown error',
+            status: 'failed'
+        };
+    }
+}
+
+export async function generateCardVideo(params: CardContentParams, modelLevel: string): Promise<{ taskId: string, r2Url: string, svgContent: string, model: string, tokensUsed: number, duration: number, errorMessage?: string, status?: string }> {
+    if (modelLevel === 'PREMIUM') {
+        
+        return await generateCardVideoWithLuma(params);
     } else {
         // 可以在这里添加其他视频生成服务
         throw new Error('Video generation not supported for this model level');

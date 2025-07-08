@@ -74,7 +74,7 @@ export async function GET(request: Request) {
     }
 
     // Handle HM video generation status
-    if(card.promptVersion.includes('video')){
+    if(card.promptVersion.includes('veo')){
       const videoData = await getHMVideoStatus(card.taskId || '');
       
       if(videoData?.code === 'success'){
@@ -128,6 +128,69 @@ export async function GET(request: Request) {
         responseContent: '',
         progress: videoData?.data?.progress || 0,
         message: videoData?.message || 'Video is being generated'
+      });
+      
+      response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+      response.headers.set('Pragma', 'no-cache');
+      response.headers.set('Expires', '0');
+      
+      return response;
+    }
+
+    // Handle Luma video generation status
+    if(card.promptVersion.includes('luma') && card.promptVersion.includes('video')){
+      const videoData = await getLumaVideoStatus(card.taskId || '');
+      
+      if(videoData?.state === 'completed'){
+        const videoUrl = videoData?.video?.download_url || videoData?.video?.url;
+        if(videoUrl){
+          // For videos, we might want to store the URL directly or upload to R2
+          const r2Url = await uploadVideoToR2(videoUrl, card.taskId || '');
+          await prisma.apiLog.update({
+            where: { cardId },
+            data: { status: 'completed', r2Url: r2Url },
+          });
+          
+          // Return the completed video with R2 URL
+          const response = NextResponse.json({
+            status: 'completed',
+            r2Url: r2Url,
+            responseContent: '', // Videos don't have SVG content
+          });
+          
+          response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+          response.headers.set('Pragma', 'no-cache');
+          response.headers.set('Expires', '0');
+          
+          return response;
+        }
+      } else if(videoData?.state === 'failed'){
+        await prisma.apiLog.update({
+          where: { cardId },
+          data: { status: 'failed', errorMessage: 'Luma video generation failed' },
+        });
+        
+        // Return the failed status
+        const response = NextResponse.json({
+          status: 'failed',
+          r2Url: '',
+          responseContent: '',
+          errorMessage: 'Luma video generation failed'
+        });
+        
+        response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+        response.headers.set('Pragma', 'no-cache');
+        response.headers.set('Expires', '0');
+        
+        return response;
+      }
+      
+      // For processing status, return the current progress
+      const response = NextResponse.json({
+        status: 'processing',
+        r2Url: '',
+        responseContent: '',
+        message: `Video is being generated (${videoData?.state || 'processing'})`
       });
       
       response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
@@ -311,5 +374,79 @@ async function getHMVideoStatus(taskId: string): Promise<HMVideoStatusResponse |
       code: 'failed',
       message: error instanceof Error ? error.message : 'Unknown error'
     };
+  }
+}
+
+// Luma Video status response interface
+export interface LumaVideoStatusResponse {
+  id: string;
+  state: 'pending' | 'processing' | 'completed' | 'failed';
+  video?: {
+    url: string;
+    width: number;
+    height: number;
+    thumbnail: string;
+    download_url: string;
+  };
+  video_raw?: {
+    url: string;
+    width: number;
+    height: number;
+  };
+  thumbnail?: {
+    url: string;
+    width: number;
+    height: number;
+  };
+  prompt?: string;
+  created_at: string;
+  estimate_wait_seconds?: number;
+  liked?: boolean;
+  user_id?: string;
+  batch_id?: string;
+  pipeline_id?: string;
+  queue_state?: string;
+  last_frame?: {
+    url: string;
+    width: number;
+    height: number;
+  };
+}
+
+// get video generation status by taskId from Luma API
+async function getLumaVideoStatus(taskId: string): Promise<LumaVideoStatusResponse | null> {
+  try {
+    const baseUrl = process.env.HM_BASE_URL;
+    const apiKey = process.env.HM_API_KEY;
+    
+    if (!baseUrl || !apiKey) {
+      console.error('Luma API credentials not configured');
+      return null;
+    }
+
+    // Call Luma API to get video status
+    const response = await fetch(`${baseUrl}/luma/generations/${taskId}`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json'
+      },
+      cache: 'no-store'
+    });
+    
+    console.log('-------Luma request', `${baseUrl}/luma/generations/${taskId}`);
+
+    if (!response.ok) {
+      console.error(`Luma video status API error: ${response.status}`);
+      return null;
+    }
+
+    const data: LumaVideoStatusResponse = await response.json();
+    
+    return data;
+    
+  } catch (error) {
+    console.error('Error checking Luma video status:', error);
+    return null;
   }
 }

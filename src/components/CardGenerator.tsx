@@ -278,6 +278,7 @@ export default function CardGenerator({
     type: 'error' | 'warning' | 'info';
   } | null>(null);
   const [isVideoMode, setIsVideoMode] = useState(false);
+  const [isInputCollapsed, setIsInputCollapsed] = useState(false);
 
   // Add ref to track if we're waiting for authentication
   const pendingAuthRef = useRef<boolean>(false)
@@ -594,6 +595,13 @@ export default function CardGenerator({
       return () => clearTimeout(timer);
     }
   }, [errorToast]);
+
+  // Auto-collapse input during generation
+  useEffect(() => {
+    if (isLoading) {
+      setIsInputCollapsed(true);
+    }
+  }, [isLoading]);
 
   if (!cardConfig) {
     return <div>Invalid card type</div>
@@ -1017,98 +1025,146 @@ export default function CardGenerator({
       )}
 
       {/* Floating Card Requirements Input */}
-      <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-40 w-full max-w-2xl px-4">
-        <div className="bg-white/95 backdrop-blur-sm rounded-xl shadow-2xl border-2 border-[#FFC0CB] transition-all duration-300 hover:shadow-3xl">
-          {/* Current Model Status Bar */}
-          <div className="px-4 py-2 border-b border-gray-100 bg-gray-50/50 rounded-t-xl">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <span className="text-sm">{selectedModel.icon}</span>
-                <span className="text-xs font-medium text-gray-700">{selectedModel.name}</span>
-                {selectedModel.badge && (
-                  <span className={cn(
-                    "text-xs px-1.5 py-0.5 rounded-full font-medium",
-                    selectedModel.badge === 'Premium' 
-                      ? "bg-gradient-to-r from-[#a786ff] to-[#FF6B94] text-white"
-                      : "bg-blue-100 text-blue-700"
-                  )}>
-                    {selectedModel.badge}
-                  </span>
-                )}
-              </div>
-              <div className="flex items-center space-x-3 text-xs text-gray-500">
-                <span>⏱️ {selectedModel.time}</span>
-                <span>💳 {selectedModel.credits} credits</span>
-              </div>
+      <div className={cn(
+        "fixed z-40 transition-all duration-500 ease-in-out",
+        isInputCollapsed 
+          ? "bottom-6 right-6 w-auto h-auto"
+          : "bottom-6 left-1/2 transform -translate-x-1/2 w-full max-w-2xl px-4"
+      )}>
+        {isInputCollapsed ? (
+          // Collapsed state - floating icon
+          <div className="relative">
+            <button
+              onClick={() => setIsInputCollapsed(false)}
+              className={cn(
+                "w-14 h-14 rounded-full bg-gradient-to-r from-[#FFC0CB] to-[#b19bff] hover:from-[#FFD1DC] hover:to-[#FFB6C1] flex items-center justify-center transition-all duration-200 hover:scale-105 shadow-2xl",
+                isLoading && "animate-pulse"
+              )}
+              title="Expand Input"
+            >
+              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+              </svg>
+            </button>
+            
+            {/* Model indicator */}
+            <div className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-white border-2 border-[#FFC0CB] flex items-center justify-center text-xs shadow-lg">
+              {selectedModel.icon}
             </div>
+            
+            {/* Generation status indicator */}
+            {isLoading && (
+              <div className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-gradient-to-r from-yellow-400 to-orange-400 animate-bounce flex items-center justify-center text-white text-xs">
+                ✨
+              </div>
+            )}
           </div>
-
-          {/* Input Section */}
-          <div className="p-4">
-            {/* Two-line Input Area */}
-            <div className="space-y-3">
-              <textarea
-                value={cardRequirements}
-                onChange={(e) => setCardRequirements(e.target.value)}
-                placeholder="Please enter your design requirements"
-                className="w-full px-4 py-3 border-0 focus:outline-none focus:ring-0 text-base placeholder-gray-400 bg-transparent resize-none h-16"
-                onKeyPress={(e) => {
-                  if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    handleGenerateCard();
-                  }
-                }}
-                rows={2}
-              />
-              
-              {/* Bottom Button Row */}
+        ) : (
+          // Expanded state - full input area
+          <div className="bg-white/95 backdrop-blur-sm rounded-xl shadow-2xl border-2 border-[#FFC0CB] transition-all duration-300 hover:shadow-3xl">
+            {/* Current Model Status Bar */}
+            <div className="px-4 py-2 border-b border-gray-100 bg-gray-50/50 rounded-t-xl">
               <div className="flex items-center justify-between">
-                {/* Left Buttons */}
+                <div className="flex items-center space-x-2">
+                  <span className="text-sm">{selectedModel.icon}</span>
+                  <span className="text-xs font-medium text-gray-700">{selectedModel.name}</span>
+                  {selectedModel.badge && (
+                    <span className={cn(
+                      "text-xs px-1.5 py-0.5 rounded-full font-medium",
+                      selectedModel.badge === 'Premium' 
+                        ? "bg-gradient-to-r from-[#a786ff] to-[#FF6B94] text-white"
+                        : "bg-blue-100 text-blue-700"
+                    )}>
+                      {selectedModel.badge}
+                    </span>
+                  )}
+                </div>
                 <div className="flex items-center space-x-3">
-                  {/* Model Selection Button */}
+                  <div className="flex items-center space-x-3 text-xs text-gray-500">
+                    <span>⏱️ {selectedModel.time}</span>
+                    <span>💳 {selectedModel.credits} credits</span>
+                  </div>
+                  {/* Collapse Button */}
                   <button
-                    onClick={() => setShowModelSelector(!showModelSelector)}
-                    className="flex items-center space-x-2 px-3 py-2 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors"
-                    title="Select Model"
+                    onClick={() => setIsInputCollapsed(true)}
+                    className="w-6 h-6 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors"
+                    title="Collapse Input"
                   >
-                    <span className="text-lg">{selectedModel.icon}</span>
-                    <div className="flex flex-col items-start">
-                      <span className="text-xs font-medium text-gray-700">{selectedModel.name}</span>
-                      <span className="text-xs text-gray-500">{selectedModel.format === 'video' ? 'Video' : selectedModel.format === 'svg' ? 'Animated' : 'Static'}</span>
-                    </div>
-                  </button>
-                  
-                  {/* Reference Image Button */}
-                  <button
-                    onClick={() => setShowReferenceImageModal(true)}
-                    className="w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors relative"
-                    title="Upload Reference Image"
-                  >
-                    <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    <svg className="w-3 h-3 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                     </svg>
                   </button>
                 </div>
+              </div>
+            </div>
+
+            {/* Input Section */}
+            <div className="p-4">
+              {/* Two-line Input Area */}
+              <div className="space-y-3">
+                <textarea
+                  value={cardRequirements}
+                  onChange={(e) => setCardRequirements(e.target.value)}
+                  placeholder="Please enter your design requirements"
+                  className="w-full px-4 py-3 border-0 focus:outline-none focus:ring-0 text-base placeholder-gray-400 bg-transparent resize-none h-16"
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      handleGenerateCard();
+                    }
+                  }}
+                  rows={2}
+                />
                 
-                {/* Right Generate Button */}
-                <button
-                  onClick={handleGenerateCard}
-                  disabled={isLoading}
-                  className="w-10 h-10 rounded-full bg-gradient-to-r from-[#FFC0CB] to-[#b19bff] hover:from-[#FFD1DC] hover:to-[#FFB6C1] flex items-center justify-center transition-all duration-200 hover:scale-105 shadow-lg"
-                  title="Generate Card"
-                >
-                  {isLoading ? (
-                    <span className="animate-spin text-white text-sm">✨</span>
-                  ) : (
-                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                    </svg>
-                  )}
-                </button>
+                {/* Bottom Button Row */}
+                <div className="flex items-center justify-between">
+                  {/* Left Buttons */}
+                  <div className="flex items-center space-x-3">
+                    {/* Model Selection Button */}
+                    <button
+                      onClick={() => setShowModelSelector(!showModelSelector)}
+                      className="flex items-center space-x-2 px-3 py-2 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors"
+                      title="Select Model"
+                    >
+                      <span className="text-lg">{selectedModel.icon}</span>
+                      <div className="flex flex-col items-start">
+                        <span className="text-xs font-medium text-gray-700">{selectedModel.name}</span>
+                        <span className="text-xs text-gray-500">{selectedModel.format === 'video' ? 'Video' : selectedModel.format === 'svg' ? 'Animated' : 'Static'}</span>
+                      </div>
+                    </button>
+                    
+                    {/* Reference Image Button */}
+                    <button
+                      onClick={() => setShowReferenceImageModal(true)}
+                      className="w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors relative"
+                      title="Upload Reference Image"
+                    >
+                      <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                    </button>
+                  </div>
+                  
+                  {/* Right Generate Button */}
+                  <button
+                    onClick={handleGenerateCard}
+                    disabled={isLoading}
+                    className="w-10 h-10 rounded-full bg-gradient-to-r from-[#FFC0CB] to-[#b19bff] hover:from-[#FFD1DC] hover:to-[#FFB6C1] flex items-center justify-center transition-all duration-200 hover:scale-105 shadow-lg"
+                    title="Generate Card"
+                  >
+                    {isLoading ? (
+                      <span className="animate-spin text-white text-sm">✨</span>
+                    ) : (
+                      <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                      </svg>
+                    )}
+                  </button>
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        )}
       </div>
 
       <Dialog open={showAuthDialog} onOpenChange={setShowAuthDialog}>
