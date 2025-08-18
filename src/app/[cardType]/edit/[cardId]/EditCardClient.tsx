@@ -10,6 +10,7 @@ import { DownloadIcon, CopyIcon, PaperPlaneIcon, TwitterLogoIcon, EnvelopeClosed
 import { useToast } from "@/hooks/use-toast"
 import { recordUserAction } from '@/lib/action'
 import dynamic from 'next/dynamic'
+import { useRouter } from 'next/navigation'
 import { EyeOpenIcon } from '@radix-ui/react-icons'
 import SpotifySearch from '@/components/SpotifySearch'
 import { CardType } from '@/lib/card-config'
@@ -25,6 +26,7 @@ import { Crown } from "lucide-react"
 const IsMobileWrapper = dynamic(() => import('@/components/IsMobileWrapper'), { ssr: false })
 
 export default function EditCardClient({ params }: { params: { cardId: string, cardType: CardType } }) {
+  const router = useRouter()
   const { cardId, cardType } = params
   const [svgContent, setSvgContent] = useState('')
   const [originalContent, setOriginalContent] = useState('')
@@ -187,6 +189,18 @@ export default function EditCardClient({ params }: { params: { cardId: string, c
   }
 
   const handleCopy = async () => {
+    if (!isPremiumUser) {
+      try {
+        const mediaUrl = await convertSvgToPng()
+        const gateKey = crypto.randomUUID()
+        const payload = { src: mediaUrl, intent: 'copy' as const, ts: Date.now() }
+        localStorage.setItem(`mewtrucard_gate_${gateKey}`, JSON.stringify(payload))
+        window.open(`/${cardType}/edit/${cardId}/download?k=${gateKey}`, '_blank', 'noopener,noreferrer')
+      } catch {
+        // ignore
+      }
+      return
+    }
     try {
       const mediaUrl = await convertSvgToPng()
       
@@ -213,6 +227,19 @@ export default function EditCardClient({ params }: { params: { cardId: string, c
   }
 
   const handleDownload = async (isMobile: boolean) => {
+    if (!isPremiumUser) {
+      try {
+        const mediaUrl = await convertSvgToPng()
+        // persist current edited media for the gate page
+        const gateKey = crypto.randomUUID()
+        const payload = { src: mediaUrl, intent: 'download' as const, ts: Date.now() }
+        localStorage.setItem(`mewtrucard_gate_${gateKey}`, JSON.stringify(payload))
+        window.open(`/${cardType}/edit/${cardId}/download?k=${gateKey}`, '_blank', 'noopener,noreferrer')
+      } catch {
+        // ignore
+      }
+      return
+    }
     if (isMobile) {
       try {
         const mediaUrl = await convertSvgToPng()
