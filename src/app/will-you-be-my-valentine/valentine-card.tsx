@@ -9,7 +9,6 @@ export default function ValentineCard() {
   const [noButtonPosition, setNoButtonPosition] = useState({ x: 0, y: 0 });
   const [showHeart, setShowHeart] = useState(false);
   const [shareTooltip, setShareTooltip] = useState(false);
-  const [lastTap, setLastTap] = useState(0);
   const moveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const yesButtonSize = noCount * 20 + 16;
   
@@ -27,17 +26,7 @@ export default function ValentineCard() {
     setNoButtonPosition({ x: newX, y: newY });
   };
 
-  // Function to handle button movement timing
-  const handleButtonMovement = () => {
-    if (moveTimeoutRef.current) {
-      clearTimeout(moveTimeoutRef.current);
-    }
-    
-    // Set a timeout to move the button if second tap doesn't happen quickly
-    moveTimeoutRef.current = setTimeout(() => {
-      moveButton();
-    }, 300); // Same timing as double tap detection
-  };
+
 
   // Cleanup timeout on unmount
   useEffect(() => {
@@ -57,84 +46,50 @@ export default function ValentineCard() {
   const handleNoClick = (e: React.MouseEvent) => {
     e.preventDefault();
     
-    const now = Date.now();
-    const DOUBLE_TAP_DELAY = 300;
+    // Clear any existing movement timeout
+    if (moveTimeoutRef.current) {
+      clearTimeout(moveTimeoutRef.current);
+    }
     
+    // Unified behavior for both mobile and desktop
+    setNoCount(noCount + 1);
+    
+    // On mobile, add a small delay before moving to give visual feedback
     if (isMobile) {
-      if (now - lastTap < DOUBLE_TAP_DELAY) {
-        // Double tap detected - clear movement timeout and perform action
-        if (moveTimeoutRef.current) {
-          clearTimeout(moveTimeoutRef.current);
-        }
-        setNoCount(noCount + 1);
+      setTimeout(() => {
         moveButton();
-
-        if (noCount > 5) {
-          setShowHeart(true);
-          setTimeout(() => setShowHeart(false), 1000);
-        }
-      } else if (noCount > 0) {
-        // First tap - start movement timeout
-        handleButtonMovement();
-      }
-      setLastTap(now);
+      }, 150);
     } else {
-      // Desktop behavior remains the same
-      setNoCount(noCount + 1);
       moveButton();
+    }
 
-      if (noCount > 5) {
-        setShowHeart(true);
-        setTimeout(() => setShowHeart(false), 1000);
-      }
+    if (noCount > 5) {
+      setShowHeart(true);
+      setTimeout(() => setShowHeart(false), 1000);
     }
   };
 
   const handleYesClick = (e: React.MouseEvent) => {
     e.preventDefault();
     
-    const now = Date.now();
-    const DOUBLE_TAP_DELAY = 300;
+    // Clear any existing movement timeout
+    if (moveTimeoutRef.current) {
+      clearTimeout(moveTimeoutRef.current);
+    }
     
-    if (isMobile) {
-      if (now - lastTap < DOUBLE_TAP_DELAY) {
-        // Double tap detected - trigger the yes action
-        if (moveTimeoutRef.current) {
-          clearTimeout(moveTimeoutRef.current);
-        }
-        setYesPressed(true);
-        confetti({
-          particleCount: 100,
-          spread: 70,
-          origin: { y: 0.6 }
-        });
-        
-        try {
-          const audio = new Audio("https://assets.mixkit.co/sfx/preview/mixkit-fairy-arcade-sparkle-866.mp3");
-          audio.play();
-        } catch (e) {
-          console.log("Failed to play audio");
-        }
-      } else {
-        // First tap - start movement timeout for the No button
-        handleButtonMovement();
-      }
-      setLastTap(now);
-    } else {
-      // Desktop behavior remains the same
-      setYesPressed(true);
-      confetti({
-        particleCount: 100,
-        spread: 70,
-        origin: { y: 0.6 }
-      });
-      
-      try {
-        const audio = new Audio("https://assets.mixkit.co/sfx/preview/mixkit-fairy-arcade-sparkle-866.mp3");
-        audio.play();
-      } catch (e) {
-        console.log("Failed to play audio");
-      }
+    // Unified behavior for both mobile and desktop
+    setYesPressed(true);
+    confetti({
+      particleCount: 100,
+      spread: 70,
+      origin: { y: 0.6 }
+    });
+    
+    try {
+      const audio = new Audio("https://assets.mixkit.co/sfx/preview/mixkit-fairy-arcade-sparkle-866.mp3");
+      audio.play();
+    } catch (e) {
+      console.log("Failed to play audio");
     }
   };
 
