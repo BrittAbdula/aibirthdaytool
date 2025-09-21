@@ -29,10 +29,10 @@ function getRandomModel(modelLevel: string): string {
     }
     
     const models = [
-        { name: "anthropic/claude-3.5-haiku", weight: 5 },
+        { name: "anthropic/claude-3.5-haiku", weight: 15 },
         // { name: "anthropic/claude-3.7-sonnet", weight: 1 },
         { name: "anthropic/claude-sonnet-4", weight: 1 },
-        { name: "deepseek/deepseek-chat-v3-0324:free", weight: 20 },
+        // { name: "deepseek/deepseek-chat-v3-0324:free", weight: 20 },
         // { name: "deepseek/deepseek-r1-0528:free", weight: 100 }
     ];
 
@@ -137,7 +137,7 @@ IMPORTANT: return SVG code only. Do not include any explanation, commentary, or 
                         ]
                     }
                 ],
-                "temperature": 0.7,
+                "temperature": 0.85,
                 "max_tokens": 4096,
                 'provider': {
                     'order': [

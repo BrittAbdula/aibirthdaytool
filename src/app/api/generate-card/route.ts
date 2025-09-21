@@ -255,5 +255,7 @@ const createNaturalPrompt = (formData: any, cardType: string) => {
     prompt += `Other requirements: ${cardRequirements}. `;
   }
 
+  // Design directives to reinforce animated accent and cohesion
+  prompt += ` Design directive: Use 1–3 tasteful animated accents as the highlight (e.g., breathing, shimmer, floaty parallax). Keep animations subtle and CPU-light with CSS keyframes inside the SVG; no external scripts or fonts. Ensure strong typography hierarchy and a color palette that matches the tone.`;
   return prompt.trim();
 };
