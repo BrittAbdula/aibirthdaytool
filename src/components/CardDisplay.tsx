@@ -21,6 +21,7 @@ if (typeof document !== 'undefined' && !document.querySelector('#card-display-st
   style.id = 'card-display-styles';
   style.textContent = `
     /* Performance optimized animations using transform3d and will-change */
+    .no-touch-callout { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
     @keyframes sparkle-float {
       0%, 100% { transform: translate3d(0px, 0px, 0px) scale3d(1, 1, 1) rotate(0deg); opacity: 1; }
       25% { transform: translate3d(0px, -10px, 0px) scale3d(1.2, 1.2, 1) rotate(90deg); opacity: 0.8; }
@@ -197,6 +198,7 @@ export default function CardDisplay({ card }: CardDisplayProps) {
   const [isHovering, setIsHovering] = useState(false)
   const [cardRotation, setCardRotation] = useState({ x: 0, y: 0 })
   const cardRef = useRef<HTMLDivElement>(null)
+  const motionRafRef = useRef<number | null>(null)
   
   // 长按充能状态
   const [isCharging, setIsCharging] = useState(false)
@@ -507,6 +509,12 @@ export default function CardDisplay({ card }: CardDisplayProps) {
     setIsHovering(false);
   };
 
+  // Only allow confetti after the card is shown
+  const handleCardClick = useCallback(() => {
+    if (!showCard) return;
+    triggerConfetti();
+  }, [showCard, triggerConfetti]);
+
   // 长按充能处理函数
   const startCharging = () => {
     if (stage !== 'initial' || isCharging) return;
@@ -581,6 +589,40 @@ export default function CardDisplay({ card }: CardDisplayProps) {
     })
   }, [triggerInitialConfetti, triggerConfetti])
 
+  // Mobile device motion → wobble the card
+  useEffect(() => {
+    if (!showCard) return;
+
+    let lastX = 0;
+    let lastY = 0;
+
+    const handleMotion = (event: DeviceMotionEvent) => {
+      const acc = event.accelerationIncludingGravity;
+      if (!acc) return;
+      const x = acc.x ?? 0; // left/right
+      const y = acc.y ?? 0; // up/down
+
+      // Map acceleration to small rotations; smooth with simple damping
+      const targetRotateX = Math.max(-10, Math.min(10, -y * 2));
+      const targetRotateY = Math.max(-10, Math.min(10, x * 2));
+
+      // Basic low-pass filter
+      lastX = lastX + (targetRotateX - lastX) * 0.2;
+      lastY = lastY + (targetRotateY - lastY) * 0.2;
+
+      if (motionRafRef.current) cancelAnimationFrame(motionRafRef.current);
+      motionRafRef.current = requestAnimationFrame(() => {
+        setCardRotation({ x: lastX, y: lastY });
+      });
+    };
+
+    window.addEventListener('devicemotion', handleMotion);
+    return () => {
+      window.removeEventListener('devicemotion', handleMotion);
+      if (motionRafRef.current) cancelAnimationFrame(motionRafRef.current);
+    };
+  }, [showCard])
+
   if (!imageSrc) {
     return (
       <div className="w-full flex items-center justify-center h-[60vh]">
@@ -604,7 +646,10 @@ export default function CardDisplay({ card }: CardDisplayProps) {
             <div className="relative w-full max-w-[400px] mx-auto">
               <div 
                 ref={cardRef}
-                className="relative aspect-[2/3] overflow-hidden bg-transparent transform-gpu transition-all duration-300 cursor-pointer group"
+                className={cn(
+                  "relative aspect-[2/3] overflow-hidden bg-transparent transform-gpu transition-all duration-300 cursor-pointer group",
+                  isShaking ? "animate-shake" : ""
+                )}
                 style={{ 
                   maxHeight: '70vh',
                   transform: `perspective(1000px) rotateX(${cardRotation.x}deg) rotateY(${cardRotation.y}deg)`,
@@ -615,7 +660,7 @@ export default function CardDisplay({ card }: CardDisplayProps) {
                 onMouseMove={handleCardMouseMove}
                 onMouseEnter={() => setIsHovering(true)}
                 onMouseLeave={handleCardMouseLeave}
-                onClick={triggerConfetti}
+                onClick={handleCardClick}
               >
                 <div className="absolute inset-0 bg-gradient-to-br from-pink-200/20 via-purple-200/20 to-blue-200/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-sm"></div>
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 animate-shimmer"></div>
@@ -718,8 +763,9 @@ export default function CardDisplay({ card }: CardDisplayProps) {
                   onMouseLeave={stopCharging}
                   onTouchStart={startCharging}
                   onTouchEnd={stopCharging}
+                  onContextMenu={(e) => { e.preventDefault(); }}
                   className={cn(
-                    "group relative transform transition-all duration-500 hover:scale-110 focus:outline-none cursor-pointer select-none",
+                    "group relative transform transition-all duration-500 hover:scale-110 focus:outline-none cursor-pointer select-none no-touch-callout",
                     isCharging ? "scale-105" : "animate-gentle-bounce",
                     isShaking ? "animate-shake" : ""
                   )}
@@ -754,8 +800,8 @@ export default function CardDisplay({ card }: CardDisplayProps) {
                           />
                           <defs>
                             <linearGradient id="chargeGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                              <stop offset="0%" stopColor="#FFB6C1" />
-                              <stop offset="50%" stopColor="#a786ff" />
+                              <stop offset="0%" stopColor="#FF69B4" />
+                              <stop offset="50%" stopColor="#FFB6C1" />
                               <stop offset="100%" stopColor="#FFC0CB" />
                             </linearGradient>
                           </defs>
@@ -807,7 +853,7 @@ export default function CardDisplay({ card }: CardDisplayProps) {
                       {isCharging ? (
                         <div className="mt-2 text-[#FFC0CB] text-xs font-semibold">
                           <div className="animate-pulse">⚡ Charging...</div>
-                          <div className="text-[0.5rem] mt-1">{Math.round(chargeProgress)}%</div>
+                          <div className="text-[0.5rem] mt-1 text-[#FF69B4]">{Math.round(chargeProgress)}%</div>
                         </div>
                       ) : unlockMethod === 'shake' ? (
                         <div className="mt-2 text-[#FFC0CB] text-xs font-semibold animate-bounce">
