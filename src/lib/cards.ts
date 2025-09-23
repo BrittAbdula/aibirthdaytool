@@ -10,6 +10,7 @@ export interface Card {
   r2Url: string | null;
   like_count?: number;
   premium?: boolean;
+  message: string | null;
   // createdAt: Date; // Add createdAt for sorting
   // originalCardId: string; // Add originalCardId for grouping
 }
@@ -44,25 +45,6 @@ export const getPremiumCardsServer = unstable_cache(
   { revalidate: 3600 }
 );
 
-// 客户端使用的函数，不使用缓存 - 最新卡片
-// export async function getRecentCardsClient(
-//   page: number, 
-//   pageSize: number, 
-//   wishCardType: string|null,
-//   relationship: string|null = null
-// ): Promise<{ cards: Card[], totalPages: number }> {
-//   return fetchRecentCards(page, pageSize, wishCardType, relationship);
-// }
-
-// 客户端使用的函数，不使用缓存 - 热门卡片
-// export async function getPopularCardsClient(
-//   page: number, 
-//   pageSize: number, 
-//   wishCardType: string|null,
-//   relationship: string|null = null
-// ): Promise<{ cards: Card[], totalPages: number }> {
-//   return fetchPopularCards(page, pageSize, wishCardType, relationship);
-// }
 
 async function fetchRecentCards(
   page: number,
@@ -73,10 +55,10 @@ async function fetchRecentCards(
   const offset = (page - 1) * pageSize;
 
   // Base WHERE conditions
-  const whereConditions: Prisma.Sql[] = [];
+  const whereConditions: Prisma.Sql[] = [Prisma.sql`al."promptVersion" in ('gpt4o-image','hm-veo3-fast-video','anthropic/claude-sonnet-4','claude-sonnet-4-20250514','gemini-2.0-flash-image')`];
   if (wishCardType) {
     whereConditions.push(Prisma.sql`ec."cardType" = ${wishCardType}`);
-  }
+    }
   if (relationship) {
     whereConditions.push(Prisma.sql`ec.relationship = ${relationship}`);
   }
@@ -97,7 +79,8 @@ async function fetchRecentCards(
         ec."r2Url",
         ec."createdAt",
         ec."originalCardId",
-        case when al."promptVersion" in ('gpt4o-image', 'anthropic/claude-sonnet-4','anthropic/claude-3.7-sonnet') then true else false end as premium,
+        ec."message",
+        case when al."promptVersion" in ('gpt4o-image','hm-veo3-fast-video') then true else false end as premium,
         -- Rank within each group to find the oldest (rn_asc = 1)
         ROW_NUMBER() OVER (PARTITION BY ec."originalCardId" ORDER BY ec."createdAt" DESC) as rn_asc,
         -- Get the latest timestamp for each group for ordering the groups
@@ -113,6 +96,7 @@ async function fetchRecentCards(
       "r2Url",
       "createdAt",
       "originalCardId",
+      "message",
       premium
     FROM RankedCards
     WHERE rn_asc = 1 -- Select only the oldest card from each group
@@ -124,18 +108,10 @@ async function fetchRecentCards(
   const totalGroupsQuery = Prisma.sql`
     SELECT COUNT(DISTINCT "originalCardId")::integer as count
     FROM "EditedCard" ec
+    LEFT JOIN "ApiLog" al ON al."cardId" = ec."originalCardId"
     ${whereClause};
   `;
-  // Alternatively, use Prisma's count if simpler and efficient enough:
-  // const totalGroupsCount = await prisma.editedCard.count({
-  //   where: {
-  //     r2Url: { not: null },
-  //     ...(wishCardType ? { cardType: wishCardType } : {}),
-  //     ...(relationship ? { relationship: relationship } : {}),
-  //   },
-  //   distinct: ['originalCardId'],
-  // });
-
+  
   // Execute queries concurrently
   const [cardsResult, totalResult] = await Promise.all([
     prisma.$queryRaw<Card[]>(cardsQuery),
@@ -161,7 +137,7 @@ async function fetchPopularCards(
   const offset = (page - 1) * pageSize;
 
   // Base WHERE conditions (same as recent)
-  const whereConditions: Prisma.Sql[] = [];
+  const whereConditions: Prisma.Sql[] = [Prisma.sql`al."promptVersion" in ('gpt4o-image','hm-veo3-fast-video','anthropic/claude-sonnet-4','claude-sonnet-4-20250514','gemini-2.0-flash-image')`];
   if (wishCardType) {
     whereConditions.push(Prisma.sql`ec."cardType" = ${wishCardType}`);
   }
@@ -182,7 +158,8 @@ async function fetchPopularCards(
         ec."cardType",
         ec.relationship,
         ec."r2Url",
-        case when al."promptVersion" in ('gpt4o-image', 'anthropic/claude-sonnet-4','anthropic/claude-3.7-sonnet') then true else false end as premium,
+        ec."message",
+        case when al."promptVersion" in ('gpt4o-image','hm-veo3-fast-video') then true else false end as premium,
         -- Rank within each group to find the oldest (rn_asc = 1)
         ROW_NUMBER() OVER (PARTITION BY ec."originalCardId" ORDER BY ec."createdAt" DESC) as rn_asc,
         -- Count cards per group for popularity ranking
@@ -198,12 +175,13 @@ async function fetchPopularCards(
       "cardType",
       relationship,
       "r2Url",
+      "message",
       premium
     FROM RankedCards
     WHERE rn_asc = 1 -- Select only the oldest card from each group
     ORDER BY
       group_count DESC,        -- Order groups by popularity (count)
-      max_createdAt_in_group ASC -- Tie-breaker: oldest activity first
+      max_createdAt_in_group DESC -- Tie-breaker: oldest activity first
     LIMIT ${pageSize} OFFSET ${offset};
   `;
 
@@ -211,6 +189,7 @@ async function fetchPopularCards(
   const totalGroupsQuery = Prisma.sql`
     SELECT COUNT(DISTINCT "originalCardId")::integer as count
     FROM "EditedCard" ec
+    LEFT JOIN "ApiLog" al ON al."cardId" = ec."originalCardId"
     ${whereClause};
   `;
 
@@ -236,7 +215,7 @@ export async function getLikedCardsServer(
 
   // Base WHERE conditions
   const whereConditions: Prisma.Sql[] = [
-    Prisma.sql`"createdAt" >= NOW() - INTERVAL '60 days'`
+    Prisma.sql`"ec"."createdAt" >= NOW() - INTERVAL '60 days'`
   ];
   if (wishCardType) {
     whereConditions.push(Prisma.sql`ec."cardType" = ${wishCardType}`);
@@ -244,6 +223,7 @@ export async function getLikedCardsServer(
   if (relationship) {
     whereConditions.push(Prisma.sql`ec.relationship = ${relationship}`);
   }
+  whereConditions.push(Prisma.sql`al."promptVersion" in ('gpt4o-image','hm-veo3-fast-video','anthropic/claude-sonnet-4','claude-sonnet-4-20250514','gemini-2.0-flash-image')`);
   
 
   const whereClause = whereConditions.length > 0 
@@ -259,7 +239,8 @@ export async function getLikedCardsServer(
         ec."cardType",
         ec.relationship,
         ec."r2Url",
-        case when al."promptVersion" in ('gpt4o-image', 'anthropic/claude-sonnet-4','anthropic/claude-3.7-sonnet') then true else false end as premium,
+        ec."message",
+        case when al."promptVersion" in ('gpt4o-image','hm-veo3-fast-video') then true else false end as premium,
         -- Rank within each group to find the oldest (rn_asc = 1)
         ROW_NUMBER() OVER (PARTITION BY ec."originalCardId" ORDER BY ec."createdAt" ASC) as rn_asc,
         -- Count cards per group for popularity ranking
@@ -279,6 +260,7 @@ export async function getLikedCardsServer(
       relationship,
       "r2Url",
       like_count,
+      "message",
       premium
     FROM RankedCards
     WHERE rn_asc = 1 -- Select only the oldest card from each group
@@ -293,6 +275,7 @@ export async function getLikedCardsServer(
   const totalGroupsQuery = Prisma.sql`
     SELECT COUNT(DISTINCT "originalCardId")::integer as count
     FROM "EditedCard" ec
+    LEFT JOIN "ApiLog" al ON al."cardId" = ec."originalCardId"
     ${whereClause};
   `;
 
@@ -318,7 +301,7 @@ export async function fetchPremiumCards(
 
   // Base WHERE conditions
   const whereConditions: Prisma.Sql[] = [
-    Prisma.sql`al."promptVersion" in ('gpt4o-image', 'anthropic/claude-sonnet-4','anthropic/claude-3.7-sonnet')`
+    Prisma.sql`al."promptVersion" in ('gpt4o-image','hm-veo3-fast-video','anthropic/claude-sonnet-4')`
   ];
   if (wishCardType) {
     whereConditions.push(Prisma.sql`ec."cardType" = ${wishCardType}`);
@@ -341,6 +324,7 @@ export async function fetchPremiumCards(
         ec."cardType",
         ec.relationship,
         ec."r2Url",
+        ec."message",
         case when al."promptVersion" in ('gpt4o-image', 'anthropic/claude-sonnet-4','anthropic/claude-3.7-sonnet') then true else false end as premium,
         -- Rank within each group to find the oldest (rn_asc = 1)
         ROW_NUMBER() OVER (PARTITION BY ec."originalCardId" ORDER BY ec."createdAt" ASC) as rn_asc,
@@ -361,6 +345,7 @@ export async function fetchPremiumCards(
       relationship,
       "r2Url",
       like_count,
+      "message",
       premium
     FROM RankedCards
     WHERE rn_asc = 1 -- Select only the oldest card from each group

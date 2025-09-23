@@ -30,7 +30,10 @@ export default function SimpleCardGallery({ initialCardsData, wishCardType, tabT
           >
             <div className="w-full relative">
               <ImageViewer
-                alt={card.cardType + '-' + card.relationship + '-' + card.id} 
+                alt={
+                  `MewTruCard ${card.cardType} card for ${card.relationship}` +
+                  (card.message ? `: ${card.message}` : '')
+                }
                 cardId={card.id}
                 cardType={card.cardType}
                 isNewCard={false}

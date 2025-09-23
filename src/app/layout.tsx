@@ -34,14 +34,16 @@ export default function RootLayout({
             window.dataLayer = window.dataLayer || [];
             function gtag(){dataLayer.push(arguments);}
             gtag('consent', 'default', {
-              'ad_storage': 'denied',
-              'analytics_storage': 'denied',
-              'functionality_storage': 'denied',
-              'personalization_storage': 'denied',
+              'ad_storage': 'granted',
+              'analytics_storage': 'granted',
+              'functionality_storage': 'granted',
+              'personalization_storage': 'granted',
+              'ad_user_data': 'granted',
+              'ad_personalization': 'granted',
               'security_storage': 'granted', // Always needed for security purposes
               'wait_for_update': 500
             });
-            gtag('set', 'ads_data_redaction', true);
+            gtag('set', 'ads_data_redaction', false);
             gtag('set', 'url_passthrough', true);
           `}
         </Script>

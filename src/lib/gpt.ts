@@ -1,7 +1,6 @@
 import { CardType } from './card-config';
 import { prisma } from './prisma';
-import { getTemplateByCardType } from './template-config';
-import { defaultPrompt, generatePrompt } from './prompt';
+import { generatePrompt } from './prompt';
 import { CARD_SIZES } from './card-config';
 
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
