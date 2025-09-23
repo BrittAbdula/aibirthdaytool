@@ -151,6 +151,22 @@ export default async function EditedCardPage({ params }: Props) {
           </div>
         </section>
 
+        {/* Reply Button Section */}
+        <div className="mt-8 flex justify-center opacity-0 animate-fade-up animation-delay-800">
+          <a
+            href="/thankyou/"
+            className="group relative inline-flex items-center justify-center px-8 py-3 overflow-hidden font-medium text-white transition duration-300 ease-out bg-gradient-to-r from-purple-500 to-pink-500 rounded-full shadow-lg hover:shadow-xl transform hover:scale-105"
+          >
+            <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-pink-500 to-purple-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
+            <span className="absolute top-0 left-0 w-full bg-gradient-to-b from-white/20 to-transparent h-1/2 rounded-full"></span>
+            <span className="absolute bottom-0 left-0 w-full h-1/2 bg-gradient-to-t from-black/10 to-transparent rounded-full"></span>
+            <span className="relative flex items-center space-x-2">
+              <span className="text-sm sm:text-base font-semibold">Send a Thank You Card Back</span>
+              <span className="inline-block transition-transform group-hover:translate-x-1">💝</span>
+            </span>
+          </a>
+        </div>
+
         <footer className="mt-8 text-center opacity-0 animate-fade-up animation-delay-1000">
           <p className="text-xs sm:text-sm text-gray-500">
           ✨{' '}Created with{' '}

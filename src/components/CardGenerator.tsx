@@ -19,6 +19,7 @@ import { useCardGeneration } from '@/hooks/useCardGeneration'
 import { AlertCircle, Info } from 'lucide-react'
 import { PremiumModal } from '@/components/PremiumModal'
 import { modelConfigs, type ModelConfig } from '@/lib/model-config'
+import AdsenseSlot from '@/components/AdsenseSlot'
 
 const MagicalCardCreation = () => {
   return (
@@ -869,6 +870,12 @@ export default function CardGenerator({
                   {imageState.isLoading ? (
                     <div className="w-full h-full relative">
                       <MagicalCardCreation />
+                      {/* Ad slot during generation */}
+                      {!!process.env.NEXT_PUBLIC_ADSENSE_SLOT_GENERATION && !isPremiumUser && (
+                        <div className="absolute top-3 left-3 right-3 z-10">
+                          <AdsenseSlot className="mx-auto" />
+                        </div>
+                      )}
                       <div className="absolute bottom-3 left-3 right-3 z-10">
                         <div className="w-full bg-white/30 backdrop-blur-sm rounded-full h-2 border border-pink-200">
                           <div

@@ -23,11 +23,12 @@ function isPathDisallowed(pathname: string, disallowPaths: string[]): boolean {
 
 export default function GoogleAdsense() {
   const pathname = usePathname()
-  const { status } = useSession()
-  
+  const { status, data: session } = useSession()
+  const isPremiumUser = (session as any)?.user?.plan === 'PREMIUM'
+
   // Check if the current page is allowed to show ads
-  const disallowShowAds = isPathDisallowed(pathname, DISALLOW_PATHS) || status === 'authenticated'
-  
+  const disallowShowAds = isPathDisallowed(pathname, DISALLOW_PATHS) || isPremiumUser
+
   if (disallowShowAds) {
     return null
   }

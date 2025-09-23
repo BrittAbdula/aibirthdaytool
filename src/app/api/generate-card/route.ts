@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { generateCardContent } from '@/lib/gpt';
+import { generateCardContentWithAnthropic } from '@/lib/anthropic-messages';
 import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
 import { generateCardImageWith4o, generateCardImageGeminiFlash, generateCardImage } from '@/lib/image';
@@ -140,7 +141,17 @@ export async function POST(request: Request) {
       } else if (format === 'video') {
         result = await generateCardVideo(cardParams, modelLevel);
       } else {
-        result = await generateCardContent(cardParams, modelLevel);
+        // SVG path: prefer Anthropic Messages via HOLD gateway if configured
+        const holdBase = process.env.HOLD_AI_BASE_URL;
+        const holdKey = process.env.HOLD_AI_KEY;
+        if (holdBase && holdKey) {
+          const model = (modelLevel === 'PREMIUM')
+            ? 'claude-sonnet-4-20250514'
+            : (Math.random() < 0.2 ? 'claude-sonnet-4-20250514' : 'claude-3-5-haiku-latest');
+          result = await generateCardContentWithAnthropic(cardParams, model);
+        } else {
+          result = await generateCardContent(cardParams, modelLevel);
+        }
       }
 
       // console.log('result', result);
