@@ -121,8 +121,8 @@ export default async function EditedCardPage({ params }: Props) {
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-6 relative z-10">
-        <section className="max-w-2xl mx-auto space-y-4">
+      <div className="container mx-auto px-4 py-4 sm:py-6 relative z-10">
+        <section className="max-w-2xl mx-auto space-y-2 sm:space-y-4">
           <div className="opacity-0 animate-fade-up">
             <Suspense
               fallback={
@@ -136,7 +136,7 @@ export default async function EditedCardPage({ params }: Props) {
             </Suspense>
 
             {card.message && (
-              <div className="p-4  opacity-0 animate-fade-up animation-delay-300">
+              <div className="p-4 opacity-0 animate-fade-up animation-delay-300">
                 <p className="text-gray-700 italic text-center">
                 &quot;{card.message}&quot;
                 </p>
@@ -144,7 +144,7 @@ export default async function EditedCardPage({ params }: Props) {
             )}
 
             {card.spotifyTrackId && (
-              <div className="mt-6 opacity-0 animate-fade-up animation-delay-500">
+              <div className="mt-4 sm:mt-6 opacity-0 animate-fade-up animation-delay-500">
                 <SpotifyPlayer trackId={card.spotifyTrackId} />
               </div>
             )}
@@ -152,7 +152,7 @@ export default async function EditedCardPage({ params }: Props) {
         </section>
 
         {/* Reply Button Section */}
-        <div className="mt-8 flex justify-center opacity-0 animate-fade-up animation-delay-800">
+        <div className="mt-6 sm:mt-8 flex justify-center opacity-0 animate-fade-up animation-delay-800">
           <a
             href="/thankyou/"
             className="group relative inline-flex items-center justify-center px-8 py-3 overflow-hidden font-medium text-white transition duration-300 ease-out bg-gradient-to-r from-purple-500 to-pink-500 rounded-full shadow-lg hover:shadow-xl transform hover:scale-105"
@@ -167,7 +167,7 @@ export default async function EditedCardPage({ params }: Props) {
           </a>
         </div>
 
-        <footer className="mt-8 text-center opacity-0 animate-fade-up animation-delay-1000">
+        <footer className="mt-6 sm:mt-8 text-center opacity-0 animate-fade-up animation-delay-1000">
           <p className="text-xs sm:text-sm text-gray-500">
           ✨{' '}Created with{' '}
             <span className="inline-block animate-bounce">❤️</span>{' '}

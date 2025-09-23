@@ -78,15 +78,24 @@ if (typeof document !== 'undefined' && !document.querySelector('#card-display-st
     }
     @keyframes shake {
       0%, 100% { transform: translate3d(0px, 0px, 0px) rotate(0deg); }
-      10% { transform: translate3d(-2px, -1px, 0px) rotate(-1deg); }
-      20% { transform: translate3d(2px, 1px, 0px) rotate(1deg); }
-      30% { transform: translate3d(-1px, -2px, 0px) rotate(-0.5deg); }
-      40% { transform: translate3d(1px, 2px, 0px) rotate(0.5deg); }
-      50% { transform: translate3d(-1px, -1px, 0px) rotate(-0.5deg); }
-      60% { transform: translate3d(1px, 1px, 0px) rotate(0.5deg); }
-      70% { transform: translate3d(-2px, -1px, 0px) rotate(-1deg); }
-      80% { transform: translate3d(2px, 1px, 0px) rotate(1deg); }
-      90% { transform: translate3d(-1px, -2px, 0px) rotate(-0.5deg); }
+      10% { transform: translate3d(-0.5px, -0.3px, 0px) rotate(-0.2deg); }
+      20% { transform: translate3d(0.5px, 0.3px, 0px) rotate(0.2deg); }
+      30% { transform: translate3d(-0.3px, -0.5px, 0px) rotate(-0.1deg); }
+      40% { transform: translate3d(0.3px, 0.5px, 0px) rotate(0.1deg); }
+      50% { transform: translate3d(-0.3px, -0.3px, 0px) rotate(-0.1deg); }
+      60% { transform: translate3d(0.3px, 0.3px, 0px) rotate(0.1deg); }
+      70% { transform: translate3d(-0.5px, -0.3px, 0px) rotate(-0.2deg); }
+      80% { transform: translate3d(0.5px, 0.3px, 0px) rotate(0.2deg); }
+      90% { transform: translate3d(-0.3px, -0.5px, 0px) rotate(-0.1deg); }
+    }
+    @keyframes shake-gentle {
+      0%, 100% { transform: translate3d(0px, 0px, 0px) rotate(0deg); }
+      25% { transform: translate3d(-0.2px, -0.1px, 0px) rotate(-0.05deg); }
+      75% { transform: translate3d(0.2px, 0.1px, 0px) rotate(0.05deg); }
+    }
+    @keyframes shake-fade {
+      0% { transform: translate3d(-0.3px, -0.2px, 0px) rotate(-0.1deg); opacity: 1; }
+      100% { transform: translate3d(0px, 0px, 0px) rotate(0deg); opacity: 1; }
     }
     
     /* Envelope opening animation - optimized for performance */
@@ -153,7 +162,15 @@ if (typeof document !== 'undefined' && !document.querySelector('#card-display-st
       will-change: opacity;
     }
     .animate-shake { 
-      animation: shake 0.5s ease-in-out infinite; 
+      animation: shake 1.2s ease-in-out infinite; 
+      will-change: transform;
+    }
+    .animate-shake-gentle { 
+      animation: shake-gentle 2s ease-in-out infinite; 
+      will-change: transform;
+    }
+    .animate-shake-fade { 
+      animation: shake-fade 1s ease-out forwards; 
       will-change: transform;
     }
     .animate-envelope-open { 
@@ -210,7 +227,9 @@ export default function CardDisplay({ card }: CardDisplayProps) {
   // 摇一摇检测状态
   const [shakeCount, setShakeCount] = useState(0)
   const [isShaking, setIsShaking] = useState(false)
+  const [shakeIntensity, setShakeIntensity] = useState<'normal' | 'gentle' | 'fading'>('normal')
   const lastShakeRef = useRef<number>(0)
+  const shakeTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const shakeThreshold = 15 // 摇动强度阈值
   const shakeRequiredCount = 3 // 需要摇动次数
 
@@ -418,10 +437,16 @@ export default function CardDisplay({ card }: CardDisplayProps) {
             if (newCount === 1) {
               setIsShaking(true);
               setUnlockMethod('shake');
+              setShakeIntensity('normal');
             }
             
             if (newCount >= shakeRequiredCount) {
+              // 开始渐变停止动画
+              setShakeIntensity('gentle');
+              setTimeout(() => setShakeIntensity('fading'), 300);
+              
               setTimeout(() => {
+                setIsShaking(false);
                 // 直接触发动画序列，避免依赖问题
                 setStage('opening')
                 
@@ -441,16 +466,38 @@ export default function CardDisplay({ card }: CardDisplayProps) {
                 animationSequence.forEach(({ delay, action }) => {
                   setTimeout(() => requestAnimationFrame(action), delay)
                 })
-              }, 500);
+              }, 800);
               return 0;
             }
             
             return newCount;
           });
           
-          setTimeout(() => {
-            setShakeCount(prev => prev > 0 ? Math.max(0, prev - 0.5) : 0);
-          }, 1500);
+          // 清除之前的超时
+          if (shakeTimeoutRef.current) {
+            clearTimeout(shakeTimeoutRef.current);
+          }
+          
+          // 设置新的超时来逐渐停止摇动
+          shakeTimeoutRef.current = setTimeout(() => {
+            setShakeCount(prev => {
+              const newCount = prev > 0 ? Math.max(0, prev - 0.5) : 0;
+              
+              // 如果摇动计数变低，开始渐变停止动画
+              if (newCount <= 1 && isShaking) {
+                setShakeIntensity('gentle');
+                setTimeout(() => {
+                  setShakeIntensity('fading');
+                  setTimeout(() => {
+                    setIsShaking(false);
+                    setUnlockMethod(null);
+                  }, 1000);
+                }, 500);
+              }
+              
+              return newCount;
+            });
+          }, 2000);
         }
       }
       
@@ -479,13 +526,16 @@ export default function CardDisplay({ card }: CardDisplayProps) {
     return () => {
       window.removeEventListener('devicemotion', handleDeviceMotion);
     };
-  }, [stage, shakeThreshold, shakeRequiredCount, triggerInitialConfetti, triggerConfetti])
+  }, [stage, shakeThreshold, shakeRequiredCount, triggerInitialConfetti, triggerConfetti, isShaking])
 
-  // 清理充能计时器
+  // 清理计时器
   useEffect(() => {
     return () => {
       if (chargeTimerRef.current) {
         clearInterval(chargeTimerRef.current);
+      }
+      if (shakeTimeoutRef.current) {
+        clearTimeout(shakeTimeoutRef.current);
       }
     };
   }, [])
@@ -648,14 +698,16 @@ export default function CardDisplay({ card }: CardDisplayProps) {
                 ref={cardRef}
                 className={cn(
                   "relative aspect-[2/3] overflow-hidden bg-transparent transform-gpu transition-all duration-300 cursor-pointer group",
-                  isShaking ? "animate-shake" : ""
+                  isShaking && shakeIntensity === 'normal' ? "animate-shake" : "",
+                  isShaking && shakeIntensity === 'gentle' ? "animate-shake-gentle" : "",
+                  isShaking && shakeIntensity === 'fading' ? "animate-shake-fade" : ""
                 )}
                 style={{ 
                   maxHeight: '70vh',
                   transform: `perspective(1000px) rotateX(${cardRotation.x}deg) rotateY(${cardRotation.y}deg)`,
                   boxShadow: isHovering 
-                    ? '0 25px 50px rgba(167, 134, 255, 0.25), 0 10px 25px rgba(255, 192, 203, 0.15)'
-                    : '0 10px 25px rgba(0, 0, 0, 0.1)'
+                    ? '0 25px 50px rgba(167, 134, 255, 0.35), 0 0 24px rgba(167, 134, 255, 0.25), 0 10px 25px rgba(255, 192, 203, 0.15)'
+                    : '0 0 10px rgba(167, 134, 255, 0.12), 0 8px 20px rgba(0, 0, 0, 0.08)'
                 }}
                 onMouseMove={handleCardMouseMove}
                 onMouseEnter={() => setIsHovering(true)}
@@ -708,24 +760,6 @@ export default function CardDisplay({ card }: CardDisplayProps) {
                 )}
               </div>
 
-              {showCard && (
-                <div className="absolute inset-0 pointer-events-none overflow-visible">
-                  {[...Array(4)].map((_, i) => (
-                    <div
-                      key={`heart-${i}`}
-                      className="absolute text-pink-400 text-lg animate-float-heart opacity-70 gpu-optimized"
-                      style={{
-                        left: `${-10 + Math.random() * 120}%`,
-                        top: `${-10 + Math.random() * 120}%`,
-                        animationDelay: `${i * 1.2}s`,
-                        animationDuration: `${3 + Math.random() * 2}s`
-                      }}
-                    >
-                      💕
-                    </div>
-                  ))}
-                </div>
-              )}
             </div>
           </div>
         </div>
@@ -767,7 +801,9 @@ export default function CardDisplay({ card }: CardDisplayProps) {
                   className={cn(
                     "group relative transform transition-all duration-500 hover:scale-110 focus:outline-none cursor-pointer select-none no-touch-callout",
                     isCharging ? "scale-105" : "animate-gentle-bounce",
-                    isShaking ? "animate-shake" : ""
+                    isShaking && shakeIntensity === 'normal' ? "animate-shake" : "",
+                    isShaking && shakeIntensity === 'gentle' ? "animate-shake-gentle" : "",
+                    isShaking && shakeIntensity === 'fading' ? "animate-shake-fade" : ""
                   )}
                 >
                   <div className="absolute inset-0 rounded-full animate-ping-slow bg-[#a786ff]/20" />
