@@ -19,7 +19,6 @@ import { useCardGeneration } from '@/hooks/useCardGeneration'
 import { AlertCircle, Info } from 'lucide-react'
 import { PremiumModal } from '@/components/PremiumModal'
 import { modelConfigs, type ModelConfig } from '@/lib/model-config'
-import AdsenseSlot from '@/components/AdsenseSlot'
 
 const MagicalCardCreation = () => {
   return (
@@ -380,6 +379,22 @@ export default function CardGenerator({
       setIsVideoMode(false);
     }
   }, [selectedModel.format, isVideoMode]);
+
+  // Initialize AdSense ads when they are rendered
+  useEffect(() => {
+    if (!isPremiumUser && globalLoading) {
+      // 等待一小段时间确保广告元素已渲染
+      const timer = setTimeout(() => {
+        try {
+          ((window as any).adsbygoogle = (window as any).adsbygoogle || []).push({});
+        } catch (e) {
+          console.log('AdSense initialization:', e);
+        }
+      }, 100);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [isPremiumUser, globalLoading]);
 
   useEffect(() => {
     fetchSvgContent(sampleCard)
@@ -870,10 +885,17 @@ export default function CardGenerator({
                   {imageState.isLoading ? (
                     <div className="w-full h-full relative">
                       <MagicalCardCreation />
-                      {/* Ad slot during generation */}
-                      {!!process.env.NEXT_PUBLIC_ADSENSE_SLOT_GENERATION && !isPremiumUser && (
+                      {/* AdSense广告 - 非会员用户在生成过程中显示 */}
+                      {!isPremiumUser && (
                         <div className="absolute top-3 left-3 right-3 z-10">
-                          <AdsenseSlot className="mx-auto" />
+                          <ins 
+                            className="adsbygoogle block"
+                            style={{ display: 'block' }}
+                            data-ad-client="ca-pub-1555702340859042"
+                            data-ad-slot="1314903207"
+                            data-ad-format="auto"
+                            data-full-width-responsive="true"
+                          />
                         </div>
                       )}
                       <div className="absolute bottom-3 left-3 right-3 z-10">

@@ -934,11 +934,16 @@ export default function CardDisplay({ card }: CardDisplayProps) {
                 stage === 'revealing' 
                   ? "translate-y-[-120%] rotate-0 scale-110" 
                   : "translate-y-0 rotate-2"
-              )}>
-                <div className={cn(
-                  "w-full h-full transition-opacity duration-500 rounded-lg overflow-hidden",
-                  stage === 'revealing' ? "opacity-100" : "opacity-0"
-                )}>
+              )}
+                onContextMenu={(e) => { e.preventDefault(); }}
+                onTouchStart={(e) => { e.preventDefault(); }}
+                onTouchEnd={(e) => { e.preventDefault(); }}
+                style={{ 
+                  WebkitTouchCallout: 'none',
+                  WebkitUserSelect: 'none',
+                  userSelect: 'none',
+                  touchAction: 'manipulation'
+                }}>
                   {isVideo(imageSrc) ? (
                     <video
                       src={imageSrc}
@@ -946,6 +951,7 @@ export default function CardDisplay({ card }: CardDisplayProps) {
                       muted
                       loop
                       className="w-full h-full object-contain"
+                      onContextMenu={(e) => { e.preventDefault(); }}
                     >
                       <source src={imageSrc} type="video/mp4" />
                     </video>
@@ -956,10 +962,11 @@ export default function CardDisplay({ card }: CardDisplayProps) {
                       fill
                       className="object-contain"
                       unoptimized
+                      onContextMenu={(e) => { e.preventDefault(); }}
+                      draggable={false}
                     />
                   )}
                 </div>
-              </div>
             </div>
 
             {/* Enhanced Decorative Elements */}
