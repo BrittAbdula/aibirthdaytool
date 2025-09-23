@@ -23,7 +23,7 @@ export const getRecentCardsServer = unstable_cache(
     return fetchRecentCards(page, pageSize, wishCardType, relationship);
   },
   ['recent-cards-server'],
-  { revalidate: 1800 }
+  { revalidate: 300 }
 );
 
 // 服务端渲染使用的函数，带有缓存 - 热门卡片 (for now, just sorted by date in reverse)
@@ -34,7 +34,7 @@ export const getPopularCardsServer = unstable_cache(
     return fetchPopularCards(page, pageSize, wishCardType, relationship);
   },
   ['popular-cards-server'],
-  { revalidate: 3600 }
+  { revalidate: 300 }
 );
 
 export const getPremiumCardsServer = unstable_cache(
@@ -42,7 +42,7 @@ export const getPremiumCardsServer = unstable_cache(
     return fetchPremiumCards(page, pageSize, wishCardType, relationship);
   },
   ['premium-cards-server'],
-  { revalidate: 3600 }
+  { revalidate: 300 }
 );
 
 

@@ -210,6 +210,63 @@ export default async function CardGeneratorPage({ params }: CardGeneratorPagePro
                     </div>
                 </section>
 
+
+                {/* Templates Section */}
+                <section className="text-center mb-16 sm:mb-24">
+                    <h2 className="text-3xl sm:text-4xl font-bold text-center mb-4">
+                        <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-pink-600">
+                            Stunning {cardName} Templates Created by AI
+                        </span>
+                    </h2>
+
+                    <div className="text-center mb-12">
+                        {cardConfig.templateInfo ? (
+                            <p className="text-lg sm:text-xl text-gray-600 max-w-2xl mx-auto px-4 mb-6">
+                                {cardConfig.templateInfo}
+                            </p>
+                        ) : (
+                            <p className="text-lg sm:text-xl text-gray-600 max-w-2xl mx-auto px-4 mb-6">
+                                Explore MewTruCard collection of AI-generated {cardName.toLowerCase()} templates featuring
+                                stunning artwork and heartfelt messages. Each template showcases what MewTruCard AI {cardType}
+                                card generator can create for any relationship and occasion.
+                            </p>
+                        )}
+
+                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 max-w-2xl mx-auto">
+                            <p className="text-blue-800 text-sm">
+                                <strong>💡 Pro Tip:</strong> All templates are fully customizable! Modify text, music,
+                                and sharing URLs to create the perfect {cardType} card that expresses your unique feelings.
+                            </p>
+                        </div>
+                    </div>
+
+                    <Suspense
+                        fallback={
+                            <div className="space-y-4">
+                                <div className="text-center">
+                                    <div className="inline-flex items-center gap-2 text-gray-600">
+                                        <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-purple-500"></div>
+                                        <span>Loading beautiful {cardType} card templates...</span>
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 px-4">
+                                    {[...Array(8)].map((_, i) => (
+                                        <div key={i} className="animate-pulse">
+                                            <div className="aspect-[2/3] bg-gray-200 rounded-lg mb-3"></div>
+                                            <div className="space-y-2">
+                                                <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                                                <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        }
+                    >
+                        <SimpleCardGallery wishCardType={cardType} initialCardsData={initialCardsData} tabType="recent" />
+                    </Suspense>
+                </section>
+
                 {/* New features highlight section */}
                 <section className="mb-16 sm:mb-24">
                     <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-2xl p-8 max-w-5xl mx-auto">
@@ -336,62 +393,6 @@ export default async function CardGeneratorPage({ params }: CardGeneratorPagePro
                         </div>
                     </section>
                 )}
-
-                {/* Templates Section */}
-                <section className="text-center mb-16 sm:mb-24">
-                    <h2 className="text-3xl sm:text-4xl font-bold text-center mb-4">
-                        <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-pink-600">
-                            Stunning {cardName} Templates Created by AI
-                        </span>
-                    </h2>
-
-                    <div className="text-center mb-12">
-                        {cardConfig.templateInfo ? (
-                            <p className="text-lg sm:text-xl text-gray-600 max-w-2xl mx-auto px-4 mb-6">
-                                {cardConfig.templateInfo}
-                            </p>
-                        ) : (
-                            <p className="text-lg sm:text-xl text-gray-600 max-w-2xl mx-auto px-4 mb-6">
-                                Explore MewTruCard collection of AI-generated {cardName.toLowerCase()} templates featuring
-                                stunning artwork and heartfelt messages. Each template showcases what MewTruCard AI {cardType}
-                                card generator can create for any relationship and occasion.
-                            </p>
-                        )}
-
-                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 max-w-2xl mx-auto">
-                            <p className="text-blue-800 text-sm">
-                                <strong>💡 Pro Tip:</strong> All templates are fully customizable! Modify text, music,
-                                and sharing URLs to create the perfect {cardType} card that expresses your unique feelings.
-                            </p>
-                        </div>
-                    </div>
-
-                    <Suspense
-                        fallback={
-                            <div className="space-y-4">
-                                <div className="text-center">
-                                    <div className="inline-flex items-center gap-2 text-gray-600">
-                                        <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-purple-500"></div>
-                                        <span>Loading beautiful {cardType} card templates...</span>
-                                    </div>
-                                </div>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 px-4">
-                                    {[...Array(8)].map((_, i) => (
-                                        <div key={i} className="animate-pulse">
-                                            <div className="aspect-[2/3] bg-gray-200 rounded-lg mb-3"></div>
-                                            <div className="space-y-2">
-                                                <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-                                                <div className="h-3 bg-gray-200 rounded w-1/2"></div>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        }
-                    >
-                        <SimpleCardGallery wishCardType={cardType} initialCardsData={initialCardsData} tabType="recent" />
-                    </Suspense>
-                </section>
 
                 {/* Enhanced FAQ Section */}
                 <section className="mb-16 sm:mb-24 max-w-4xl mx-auto">
