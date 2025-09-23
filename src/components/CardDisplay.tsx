@@ -640,38 +640,7 @@ export default function CardDisplay({ card }: CardDisplayProps) {
   }, [triggerInitialConfetti, triggerConfetti])
 
   // Mobile device motion → wobble the card
-  useEffect(() => {
-    if (!showCard) return;
-
-    let lastX = 0;
-    let lastY = 0;
-
-    const handleMotion = (event: DeviceMotionEvent) => {
-      const acc = event.accelerationIncludingGravity;
-      if (!acc) return;
-      const x = acc.x ?? 0; // left/right
-      const y = acc.y ?? 0; // up/down
-
-      // Map acceleration to small rotations; smooth with simple damping
-      const targetRotateX = Math.max(-10, Math.min(10, -y * 2));
-      const targetRotateY = Math.max(-10, Math.min(10, x * 2));
-
-      // Basic low-pass filter
-      lastX = lastX + (targetRotateX - lastX) * 0.2;
-      lastY = lastY + (targetRotateY - lastY) * 0.2;
-
-      if (motionRafRef.current) cancelAnimationFrame(motionRafRef.current);
-      motionRafRef.current = requestAnimationFrame(() => {
-        setCardRotation({ x: lastX, y: lastY });
-      });
-    };
-
-    window.addEventListener('devicemotion', handleMotion);
-    return () => {
-      window.removeEventListener('devicemotion', handleMotion);
-      if (motionRafRef.current) cancelAnimationFrame(motionRafRef.current);
-    };
-  }, [showCard])
+  // 移除移动端晃动特效（不再监听 devicemotion）
 
   if (!imageSrc) {
     return (

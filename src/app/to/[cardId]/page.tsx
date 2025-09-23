@@ -121,8 +121,8 @@ export default async function EditedCardPage({ params }: Props) {
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-4 sm:py-6 relative z-10">
-        <section className="max-w-2xl mx-auto space-y-2 sm:space-y-4">
+      <div className="container mx-auto px-4 pt-2 pb-4 sm:pt-3 sm:pb-6 relative z-10">
+        <section className="max-w-2xl mx-auto space-y-1.5 sm:space-y-3">
           <div className="opacity-0 animate-fade-up">
             <Suspense
               fallback={
