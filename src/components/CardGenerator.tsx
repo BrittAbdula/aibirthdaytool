@@ -268,7 +268,11 @@ export default function CardGenerator({
   // Unified input lives in the main form as `message`
   const [selectedModel, setSelectedModel] = useState<ModelConfig>(modelConfigs[0]) // Default to first model
   const [showModelSelector, setShowModelSelector] = useState(false)
-  const [showReferenceImageModal, setShowReferenceImageModal] = useState(false)
+  // Reference image upload state
+  const [uploadedRefUrls, setUploadedRefUrls] = useState<string[]>([])
+  const [isRefUploading, setIsRefUploading] = useState(false)
+  const [refError, setRefError] = useState<string | null>(null)
+  const refPhotoInputRef = useRef<HTMLInputElement>(null)
   const [isAuthLoading, setIsAuthLoading] = useState(false)
   const [isPremiumModalOpen, setIsPremiumModalOpen] = useState(false)
   const [isPremiumUser, setIsPremiumUser] = useState(false)
@@ -335,6 +339,8 @@ export default function CardGenerator({
     initializeImageStates(imageCount, defaultImgUrl);
 
   }, [wishCardType, cardConfig, sampleCard, imageCount, initializeImageStates]);
+
+  // Reference prompt handled on backend; no prompt UI here
 
   // Add effect to watch for auth status changes
   useEffect(() => {
@@ -450,7 +456,8 @@ export default function CardGenerator({
       size: selectedSize,
       modelId: selectedModel.id, // 只传递模型ID
       formData: { ...formData },
-      imageCount
+      imageCount,
+      referenceImageUrls: uploadedRefUrls
     };
 
     try {
@@ -782,6 +789,76 @@ export default function CardGenerator({
               </div>
 
 
+              {/* Reference Image Upload (inline) */}
+              <div className="mt-3 space-y-2">
+                <Label className="flex justify-between items-center">
+                  <span>Subject Photo (optional)</span>
+                </Label>
+                {refError && (
+                  <Alert variant="destructive"><AlertDescription>{refError}</AlertDescription></Alert>
+                )}
+                <div
+                  className={cn(
+                    'relative border-2 border-dashed rounded-lg p-3 transition-colors cursor-pointer flex items-center justify-center min-h-28',
+                    isRefUploading ? 'border-[#b19bff] bg-[#f8f5ff] animate-pulse' : 'border-gray-300 hover:border-[#b19bff]'
+                  )}
+                  onClick={() => refPhotoInputRef.current?.click()}
+                  role="button"
+                  aria-label="Upload subject photo"
+                >
+                  <input
+                    ref={refPhotoInputRef}
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    className="hidden"
+                    onChange={async (e) => {
+                      try {
+                        setRefError(null)
+                        setIsRefUploading(true)
+                        const file = (e.target.files && e.target.files[0]) || null
+                        if (!file) { setIsRefUploading(false); return }
+                        const fd = new FormData()
+                        fd.append('file', file)
+                        fd.append('uploadPath', 'images/user-uploads')
+                        fd.append('fileName', file.name)
+                        const resp = await fetch('/api/reference/upload', { method: 'POST', body: fd })
+                        if (!resp.ok) {
+                          const txt = await resp.text(); throw new Error(txt)
+                        }
+                        const data = await resp.json()
+                        const url = data?.data?.downloadUrl
+                        if (!url) throw new Error('Upload failed: no URL')
+                        setUploadedRefUrls([url])
+                      } catch (e: any) {
+                        setRefError(e?.message || 'Upload failed')
+                        setUploadedRefUrls([])
+                      } finally {
+                        setIsRefUploading(false)
+                        if (e.target) {
+                          (e.target as HTMLInputElement).value = ''
+                        }
+                      }
+                    }}
+                  />
+                  {uploadedRefUrls.length > 0 ? (
+                    <div className="w-full">
+                      <img src={uploadedRefUrls[0]} alt="Subject photo" className="w-full max-h-56 object-contain rounded-md border bg-white" />
+                    </div>
+                  ) : (
+                    <div className="text-center text-sm text-gray-500">
+                      Click to upload subject photo (JPG/PNG/WebP)
+                    </div>
+                  )}
+
+                  {isRefUploading && (
+                    <div className="absolute inset-0 bg-white/70 backdrop-blur-sm rounded-lg flex flex-col items-center justify-center">
+                      <Loader2 className="h-5 w-5 animate-spin text-[#b19bff]" />
+                      <span className="text-xs text-gray-600 mt-2">Uploading…</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
               {/* Controls */}
               <div className="mt-4 flex items-center justify-between">
                 <div className="flex items-center space-x-3">
@@ -798,16 +875,7 @@ export default function CardGenerator({
                     </div>
                   </button>
 
-                  <button
-                    type="button"
-                    onClick={() => setShowReferenceImageModal(true)}
-                    className="w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors relative"
-                    title="Upload Reference Image"
-                  >
-                    <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                  </button>
+                  {/* Reference Image button removed; inline uploader used */}
                 </div>
 
                 <Button
@@ -1237,72 +1305,7 @@ export default function CardGenerator({
         <PremiumModal isOpen={isPremiumModalOpen} onOpenChange={setIsPremiumModalOpen} />
       )}
 
-      {/* Reference Image Upload Modal */}
-      <Dialog open={showReferenceImageModal} onOpenChange={setShowReferenceImageModal}>
-        <DialogContent className="border border-[#FFC0CB] shadow-lg max-w-md">
-          <DialogHeader>
-            <DialogTitle className="text-xl font-semibold text-[#4A4A4A] flex items-center space-x-2">
-              <span>📸</span>
-              <span>Reference Image Upload</span>
-              <span className="bg-gradient-to-r from-orange-400 to-orange-500 text-white text-xs font-bold px-2 py-1 rounded-full">
-                COMING SOON
-              </span>
-            </DialogTitle>
-            <DialogDescription className="text-gray-600 mt-3 space-y-4">
-              <div className="bg-gradient-to-br from-blue-50 to-purple-50 p-4 rounded-lg border border-blue-200">
-                <h3 className="font-medium text-gray-900 mb-2 flex items-center">
-                  <span className="text-lg mr-2">🎯</span>
-                  Exciting Feature Coming Soon!
-                </h3>
-                <p className="text-sm text-gray-700 mb-3">
-                  Upload reference images to help our AI understand your style preferences and create cards that match your vision perfectly.
-                </p>
-                
-                <div className="space-y-2 text-sm text-gray-600">
-                  <div className="flex items-center space-x-2">
-                    <span className="w-2 h-2 bg-green-400 rounded-full"></span>
-                    <span>Upload up to 2 reference images</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <span className="w-2 h-2 bg-green-400 rounded-full"></span>
-                    <span>Support for JPG, PNG, WebP formats</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <span className="w-2 h-2 bg-green-400 rounded-full"></span>
-                    <span>AI-powered style matching</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <span className="w-2 h-2 bg-green-400 rounded-full"></span>
-                    <span>Enhanced card personalization</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
-                <div className="flex items-start space-x-3">
-                  <span className="text-yellow-500 text-lg">💡</span>
-                  <div>
-                    <h4 className="font-medium text-gray-900 mb-1">In the meantime...</h4>
-                    <p className="text-sm text-gray-700">
-                      You can describe your desired style in the text input above. For example: 
-                      &ldquo;watercolor style&rdquo;, &ldquo;minimalist design&rdquo;, &ldquo;vintage look&rdquo;, etc.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="mt-6 flex justify-center">
-            <Button
-              onClick={() => setShowReferenceImageModal(false)}
-              className="bg-gradient-to-r from-[#FFC0CB] to-[#FFB6C1] hover:from-[#FFD1DC] hover:to-[#FFC0CB] text-[#4A4A4A] transition-colors px-6"
-            >
-              Got it!
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      {/* Reference Image Modal removed; now inline under Color */}
     </>
   )
 }
