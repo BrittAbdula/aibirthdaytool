@@ -32,7 +32,7 @@ export const modelConfigs: ModelConfig[] = [
     time: '5 sec',
     format: 'image',
     tier: 'Free',
-    credits: 1,
+    credits: 6,
     icon: '🎨',
     badge: 'Fast',
     features: ['Static image', 'Quick delivery', 'Standard quality']

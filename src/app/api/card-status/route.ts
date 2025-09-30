@@ -42,14 +42,20 @@ export async function GET(request: Request) {
 
     if(card.promptVersion === 'gpt4o-image'){
       const data = await getGenerateStatus(card.taskId || '');
-      // console.log('gpt4o-image-------data', data);
+      let outUrl = data?.response?.resultUrls?.[0] || '';
       if(data?.status === 'SUCCESS'){
-        const imageUrl = data?.response?.resultUrls?.[0];
+        const imageUrl = outUrl;
         if(imageUrl){
-          const r2Url = await uploadToCloudflareImages(imageUrl);
+          try {
+            const r2Url = await uploadToCloudflareImages(imageUrl);
+            outUrl = r2Url || imageUrl;
+          } catch (e) {
+            // Fallback to original URL on upload failure
+            outUrl = imageUrl;
+          }
           await prisma.apiLog.update({
             where: { cardId },
-            data: { status: 'completed', r2Url: r2Url },
+            data: { status: 'completed', r2Url: outUrl },
           });
         }
       }else if(data?.status === 'GENERATE_FAILED'){
@@ -63,7 +69,7 @@ export async function GET(request: Request) {
       // 添加缓存控制头
       const response = NextResponse.json({
         status: status,
-        r2Url: data?.response?.resultUrls?.[0] || '',
+        r2Url: outUrl,
       });
       
       response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
@@ -73,8 +79,81 @@ export async function GET(request: Request) {
       return response;
     }
 
+    // Handle Banana Edit image generation status
+    if(card.promptVersion === 'google/nano-banana-edit' || card.promptVersion === 'nano-banana-edit'){
+      const taskId = card.taskId || '';
+      let data: any = null;
+      try {
+        const resp = await fetch(`https://api.kie.ai/api/v1/jobs/recordInfo?taskId=${encodeURIComponent(taskId)}`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${process.env.KIE_API_KEY}`
+          },
+          cache: 'no-store'
+        });
+        data = await resp.json();
+      } catch (e) {
+        // Network or API failure — keep polling without failing the route
+        const response = NextResponse.json({ status: 'processing', r2Url: '' });
+        response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+        response.headers.set('Pragma', 'no-cache');
+        response.headers.set('Expires', '0');
+        return response;
+      }
+      // Normalize
+      const state = data?.data?.state as ('waiting'|'success'|'fail'|undefined);
+      let status: 'processing'|'completed'|'failed' = 'processing';
+      if (state === 'success') status = 'completed';
+      if (state === 'fail') status = 'failed';
+
+      let resultUrl = '';
+      try {
+        const resultJson = data?.data?.resultJson;
+        const parsed = typeof resultJson === 'string' ? JSON.parse(resultJson) : resultJson;
+        resultUrl = parsed?.resultUrls?.[0] || '';
+      } catch {}
+
+      if (status === 'completed' && resultUrl) {
+        let outUrl = resultUrl;
+        try {
+          const r2Url = await uploadToCloudflareImages(resultUrl);
+          outUrl = r2Url || resultUrl;
+        } catch (e) {
+          outUrl = resultUrl; // fallback
+        }
+        await prisma.apiLog.update({
+          where: { cardId },
+          data: { status: 'completed', r2Url: outUrl }
+        });
+        const response = NextResponse.json({ status: 'completed', r2Url: outUrl });
+        response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+        response.headers.set('Pragma', 'no-cache');
+        response.headers.set('Expires', '0');
+        return response;
+      }
+
+      if (status === 'failed') {
+        await prisma.apiLog.update({
+          where: { cardId },
+          data: { status: 'failed', errorMessage: data?.data?.failMsg || 'Banana generation failed' }
+        });
+        const response = NextResponse.json({ status: 'failed', r2Url: '', errorMessage: data?.data?.failMsg || 'Banana generation failed' });
+        response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+        response.headers.set('Pragma', 'no-cache');
+        response.headers.set('Expires', '0');
+        return response;
+      }
+
+      // processing
+      const response = NextResponse.json({ status: 'processing', r2Url: '' });
+      response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+      response.headers.set('Pragma', 'no-cache');
+      response.headers.set('Expires', '0');
+      return response;
+    }
+
     // Handle HM video generation status
-    if(card.promptVersion.includes('veo')){
+    if(card.promptVersion && card.promptVersion.includes('veo')){
       const videoData = await getHMVideoStatus(card.taskId || '');
       
       if(videoData?.code === 'success'){
@@ -138,7 +217,7 @@ export async function GET(request: Request) {
     }
 
     // Handle Luma video generation status
-    if(card.promptVersion.includes('luma') && card.promptVersion.includes('video')){
+    if(card.promptVersion && card.promptVersion.includes('luma') && card.promptVersion.includes('video')){
       const videoData = await getLumaVideoStatus(card.taskId || '');
       
       if(videoData?.state === 'completed'){
@@ -247,20 +326,20 @@ export interface ImageDetailsData {
 
 // get generate status by taskId from 4o
 async function getGenerateStatus(taskId: string) {
-  
-    // Call external API to get status
+  try {
     const response = await fetch(`https://kieai.erweima.ai/api/v1/gpt4o-image/record-info?taskId=${taskId}`, {
       headers: {
         'Accept': 'application/json',
         'Authorization': `Bearer ${process.env.KIE_API_KEY}`
       },
-      // 添加缓存控制
       cache: 'no-store'
     });
-
     const data = await response.json() as KieAPIResponse<ImageDetailsData>;
-    
     return data.data;
+  } catch (e) {
+    // Network failure — return null to keep polling
+    return null as any;
+  }
 }
 
 // HM Video status response interface

@@ -11,6 +11,7 @@ interface CardGenerationOptions {
   modificationFeedback?: string;
   previousCardId?: string;
   imageCount: number;
+  referenceImageUrls?: string[];
 }
 
 interface ImageState {
@@ -82,7 +83,7 @@ export const useCardGeneration = () => {
   }, []);
 
   const generateCards = useCallback(async (options: CardGenerationOptions) => {
-    const { imageCount, cardType, size, modelId, formData, modificationFeedback, previousCardId } = options;
+    const { imageCount, cardType, size, modelId, formData, modificationFeedback, previousCardId, referenceImageUrls } = options;
 
     if (!session) {
       setSavedAuthData(options);
@@ -141,6 +142,9 @@ export const useCardGeneration = () => {
         const payload: Record<string, any> = {
           cardType, size, modelId, ...formData, variationIndex: index
         };
+        if (referenceImageUrls && referenceImageUrls.length) {
+          payload.referenceImageUrls = referenceImageUrls;
+        }
         if (modificationFeedback) {
           payload.modificationFeedback = modificationFeedback;
           payload.previousCardId = previousCardId; // Ensure previousCardId is passed
@@ -356,6 +360,6 @@ export const useCardGeneration = () => {
     showLimitDialog,
     setShowLimitDialog,
     imageRefs, // Return ref to attach in parent
-    initializeImageStates, // Add initialization function
+    initializeImageStates // Add initialization function
   };
 };

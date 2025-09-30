@@ -55,7 +55,7 @@ async function fetchRecentCards(
   const offset = (page - 1) * pageSize;
 
   // Base WHERE conditions
-  const whereConditions: Prisma.Sql[] = [Prisma.sql`al."promptVersion" in ('gpt4o-image','hm-veo3-fast-video','anthropic/claude-sonnet-4','claude-sonnet-4-20250514','gemini-2.0-flash-image')`];
+  const whereConditions: Prisma.Sql[] = [Prisma.sql`al."promptVersion" in ('gpt4o-image','hm-veo3-fast-video','anthropic/claude-sonnet-4','claude-sonnet-4-20250514','gemini-2.0-flash-image','google/nano-banana-edit')`];
   if (wishCardType) {
     whereConditions.push(Prisma.sql`ec."cardType" = ${wishCardType}`);
     }
@@ -68,7 +68,7 @@ async function fetchRecentCards(
     ? Prisma.sql`WHERE ${Prisma.join(whereConditions, ' AND ')}`
     : Prisma.sql``;
 
-  // Main query using ROW_NUMBER() to find the oldest card per group,
+  // Main query using ROW_NUMBER() to find the newest card per group,
   // and MAX() OVER to order groups by the newest card's date.
   const cardsQuery = Prisma.sql`
     WITH RankedCards AS (
@@ -81,7 +81,7 @@ async function fetchRecentCards(
         ec."originalCardId",
         ec."message",
         case when al."promptVersion" in ('gpt4o-image','hm-veo3-fast-video') then true else false end as premium,
-        -- Rank within each group to find the oldest (rn_asc = 1)
+        -- Rank within each group to find the newest (rn_asc = 1)
         ROW_NUMBER() OVER (PARTITION BY ec."originalCardId" ORDER BY ec."createdAt" DESC) as rn_asc,
         -- Get the latest timestamp for each group for ordering the groups
         MAX(ec."createdAt") OVER (PARTITION BY ec."originalCardId") as max_createdAt_in_group
@@ -99,7 +99,7 @@ async function fetchRecentCards(
       "message",
       premium
     FROM RankedCards
-    WHERE rn_asc = 1 -- Select only the oldest card from each group
+    WHERE rn_asc = 1 -- Select only the newest card from each group
     ORDER BY max_createdAt_in_group DESC -- Order groups by the newest card within them
     LIMIT ${pageSize} OFFSET ${offset};
   `;
@@ -137,7 +137,7 @@ async function fetchPopularCards(
   const offset = (page - 1) * pageSize;
 
   // Base WHERE conditions (same as recent)
-  const whereConditions: Prisma.Sql[] = [Prisma.sql`al."promptVersion" in ('gpt4o-image','hm-veo3-fast-video','anthropic/claude-sonnet-4','claude-sonnet-4-20250514','gemini-2.0-flash-image')`];
+  const whereConditions: Prisma.Sql[] = [Prisma.sql`al."promptVersion" in ('gpt4o-image','hm-veo3-fast-video','anthropic/claude-sonnet-4','claude-sonnet-4-20250514','gemini-2.0-flash-image','google/nano-banana-edit')`];
   if (wishCardType) {
     whereConditions.push(Prisma.sql`ec."cardType" = ${wishCardType}`);
   }
@@ -223,7 +223,7 @@ export async function getLikedCardsServer(
   if (relationship) {
     whereConditions.push(Prisma.sql`ec.relationship = ${relationship}`);
   }
-  whereConditions.push(Prisma.sql`al."promptVersion" in ('gpt4o-image','hm-veo3-fast-video','anthropic/claude-sonnet-4','claude-sonnet-4-20250514','gemini-2.0-flash-image')`);
+  whereConditions.push(Prisma.sql`al."promptVersion" in ('gpt4o-image','hm-veo3-fast-video','anthropic/claude-sonnet-4','claude-sonnet-4-20250514','gemini-2.0-flash-image','google/nano-banana-edit')`);
   
 
   const whereClause = whereConditions.length > 0 
@@ -301,7 +301,7 @@ export async function fetchPremiumCards(
 
   // Base WHERE conditions
   const whereConditions: Prisma.Sql[] = [
-    Prisma.sql`al."promptVersion" in ('gpt4o-image','hm-veo3-fast-video','anthropic/claude-sonnet-4')`
+    Prisma.sql`al."promptVersion" in ('gpt4o-image','hm-veo3-fast-video','anthropic/claude-sonnet-4','google/nano-banana-edit')`
   ];
   if (wishCardType) {
     whereConditions.push(Prisma.sql`ec."cardType" = ${wishCardType}`);
@@ -325,7 +325,7 @@ export async function fetchPremiumCards(
         ec.relationship,
         ec."r2Url",
         ec."message",
-        case when al."promptVersion" in ('gpt4o-image', 'anthropic/claude-sonnet-4','anthropic/claude-3.7-sonnet') then true else false end as premium,
+        case when al."promptVersion" in ('gpt4o-image', 'anthropic/claude-sonnet-4','anthropic/claude-3.7-sonnet','google/nano-banana-edit') then true else false end as premium,
         -- Rank within each group to find the oldest (rn_asc = 1)
         ROW_NUMBER() OVER (PARTITION BY ec."originalCardId" ORDER BY ec."createdAt" ASC) as rn_asc,
         -- Count cards per group for popularity ranking

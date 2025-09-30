@@ -551,3 +551,71 @@ export async function generateCardVideo(params: CardContentParams, modelLevel: s
     }
 }
 
+// Reference-image edit via Banana Edit API (google/nano-banana-edit)
+export async function generateCardImageWithBananaEdit(params: { size: string; userPrompt: string; imageUrls: string[] }): Promise<{ taskId: string, r2Url: string, svgContent: string, model: string, tokensUsed: number, duration: number, errorMessage?: string, status?: string }> {
+    const startTime = Date.now();
+    try {
+        const apiKey = process.env.KIE_API_KEY;
+        if (!apiKey) throw new Error('KIE_API_KEY is not configured');
+
+        if (!params.imageUrls?.length) throw new Error('No reference images provided');
+        if (params.userPrompt.length >= 5000) throw new Error('User prompt too long');
+
+        const sizeMap: Record<string, 'auto' | '1:1' | '3:4' | '9:16' | '4:3' | '16:9'> = {
+            portrait: '3:4',
+            landscape: '4:3',
+            square: '1:1',
+            instagram: '1:1',
+            story: '9:16'
+        };
+        const image_size = sizeMap[params.size] || 'auto';
+
+        const payload = {
+            model: 'google/nano-banana-edit',
+            input: {
+                prompt: params.userPrompt,
+                image_urls: params.imageUrls,
+                output_format: 'png',
+                // image_size
+            }
+        };
+
+        const resp = await fetch('https://api.kie.ai/api/v1/jobs/createTask', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${apiKey}`
+            },
+            body: JSON.stringify(payload)
+        });
+        if (!resp.ok) {
+            const text = await resp.text();
+            throw new Error(`Banana createTask failed: ${resp.status} ${text}`);
+        }
+        const data = await resp.json();
+        const taskId = data?.data?.taskId;
+        if (!taskId) throw new Error('No taskId from Banana');
+
+        return {
+            taskId,
+            r2Url: '',
+            svgContent: '',
+            model: 'google/nano-banana-edit',
+            tokensUsed: 0,
+            duration: Date.now() - startTime,
+            errorMessage: '',
+            status: 'processing'
+        };
+    } catch (error) {
+        return {
+            taskId: '',
+            r2Url: '',
+            svgContent: '',
+            model: 'google/nano-banana-edit',
+            tokensUsed: 0,
+            duration: Date.now() - startTime,
+            errorMessage: error instanceof Error ? error.message : 'Unknown error',
+            status: 'failed'
+        };
+    }
+}

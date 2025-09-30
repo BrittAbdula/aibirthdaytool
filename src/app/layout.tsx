@@ -24,7 +24,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <meta name='impact-site-verification' content='775c0013-984f-4645-82d1-36d3f5e90b39' />
         
@@ -47,8 +47,9 @@ export default function RootLayout({
             gtag('set', 'url_passthrough', true);
           `}
         </Script>
+        {/* Google Tag Manager should be inside <head> */}
+        <GoogleTagManager gtmId="GTM-57P7BF4D" />
       </head>
-      <GoogleTagManager gtmId="GTM-57P7BF4D" />
       <body className={`${playfair.className} text-[#4A4A4A]`}>
         <SessionProvider>
         <GoogleAdsense />
