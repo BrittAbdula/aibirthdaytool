@@ -11,7 +11,7 @@ import { getModelConfig, createModelTierMap } from '@/lib/model-config';
 // 获取用户可用积分
 async function getUserCredits(userId: string, planType: string): Promise<number> {
   // 根据计划类型确定每日积分限制
-  const dailyCredits = planType === 'FREE' ? 1 : Infinity; // 免费用户每天1积分，只能生成1次
+  const dailyCredits = planType === 'FREE' ? 2 : Infinity; // 免费用户每天1积分，只能生成1次
   
   if (dailyCredits === Infinity) {
     return Infinity; // PREMIUM 用户无限制
