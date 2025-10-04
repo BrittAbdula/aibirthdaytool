@@ -55,7 +55,7 @@ async function fetchRecentCards(
   const offset = (page - 1) * pageSize;
 
   // Base WHERE conditions
-  const whereConditions: Prisma.Sql[] = [Prisma.sql`al."promptVersion" in ('gpt4o-image','hm-veo3-fast-video','anthropic/claude-sonnet-4','claude-sonnet-4-20250514','gemini-2.0-flash-image','google/nano-banana-edit')`];
+  const whereConditions: Prisma.Sql[] = [Prisma.sql`al."promptVersion" in ('gpt4o-image','hm-veo3-fast-video','anthropic/claude-sonnet-4','claude-sonnet-4-20250514','claude-sonnet-4-5-20250929','gemini-2.0-flash-image','google/nano-banana-edit')`];
   if (wishCardType) {
     whereConditions.push(Prisma.sql`ec."cardType" = ${wishCardType}`);
     }
@@ -137,7 +137,7 @@ async function fetchPopularCards(
   const offset = (page - 1) * pageSize;
 
   // Base WHERE conditions (same as recent)
-  const whereConditions: Prisma.Sql[] = [Prisma.sql`al."promptVersion" in ('gpt4o-image','hm-veo3-fast-video','anthropic/claude-sonnet-4','claude-sonnet-4-20250514','gemini-2.0-flash-image','google/nano-banana-edit')`];
+  const whereConditions: Prisma.Sql[] = [Prisma.sql`al."promptVersion" in ('gpt4o-image','hm-veo3-fast-video','anthropic/claude-sonnet-4','claude-sonnet-4-20250514','claude-sonnet-4-5-20250929','gemini-2.0-flash-image','google/nano-banana-edit')`];
   if (wishCardType) {
     whereConditions.push(Prisma.sql`ec."cardType" = ${wishCardType}`);
   }
@@ -223,7 +223,7 @@ export async function getLikedCardsServer(
   if (relationship) {
     whereConditions.push(Prisma.sql`ec.relationship = ${relationship}`);
   }
-  whereConditions.push(Prisma.sql`al."promptVersion" in ('gpt4o-image','hm-veo3-fast-video','anthropic/claude-sonnet-4','claude-sonnet-4-20250514','gemini-2.0-flash-image','google/nano-banana-edit')`);
+  whereConditions.push(Prisma.sql`al."promptVersion" in ('gpt4o-image','hm-veo3-fast-video','anthropic/claude-sonnet-4','claude-sonnet-4-20250514','claude-sonnet-4-5-20250929','gemini-2.0-flash-image','google/nano-banana-edit')`);
   
 
   const whereClause = whereConditions.length > 0 
@@ -301,7 +301,7 @@ export async function fetchPremiumCards(
 
   // Base WHERE conditions
   const whereConditions: Prisma.Sql[] = [
-    Prisma.sql`al."promptVersion" in ('gpt4o-image','hm-veo3-fast-video','anthropic/claude-sonnet-4','google/nano-banana-edit')`
+    Prisma.sql`al."promptVersion" in ('gpt4o-image','hm-veo3-fast-video','anthropic/claude-sonnet-4','claude-sonnet-4-5-20250929','google/nano-banana-edit')`
   ];
   if (wishCardType) {
     whereConditions.push(Prisma.sql`ec."cardType" = ${wishCardType}`);
@@ -325,7 +325,7 @@ export async function fetchPremiumCards(
         ec.relationship,
         ec."r2Url",
         ec."message",
-        case when al."promptVersion" in ('gpt4o-image', 'anthropic/claude-sonnet-4','anthropic/claude-3.7-sonnet','google/nano-banana-edit') then true else false end as premium,
+        case when al."promptVersion" in ('gpt4o-image', 'anthropic/claude-sonnet-4','claude-sonnet-4-5-20250929','anthropic/claude-3.7-sonnet','google/nano-banana-edit') then true else false end as premium,
         -- Rank within each group to find the oldest (rn_asc = 1)
         ROW_NUMBER() OVER (PARTITION BY ec."originalCardId" ORDER BY ec."createdAt" ASC) as rn_asc,
         -- Count cards per group for popularity ranking

@@ -155,8 +155,8 @@ export async function POST(request: Request) {
         const holdKey = process.env.HOLD_AI_KEY;
         if (holdBase && holdKey) {
           const model = (modelLevel === 'PREMIUM')
-            ? 'claude-sonnet-4-20250514'
-            : (Math.random() < 0.2 ? 'claude-sonnet-4-20250514' : 'claude-3-5-haiku-latest');
+            ? 'claude-sonnet-4-5-20250929'
+            : (Math.random() < 0.2 ? 'claude-sonnet-4-5-20250929' : 'claude-3-5-haiku-latest');
           result = await generateCardContentWithAnthropic(cardParams, model);
         } else {
           result = await generateCardContent(cardParams, modelLevel);
