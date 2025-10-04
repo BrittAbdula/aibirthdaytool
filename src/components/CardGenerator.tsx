@@ -468,7 +468,7 @@ export default function CardGenerator({
       } else if (result.error === 'rate_limit') {
         setErrorToast({
           title: 'Daily Limit Reached',
-          message: 'Free users can generate up to 3 cards per day. Please try again tomorrow or explore our Card Gallery.',
+          message: 'Free users can generate 1 card per day. Please try again tomorrow or explore our Card Gallery.',
           type: 'warning'
         });
       } else if (result.error === 'auth') {
@@ -1258,7 +1258,7 @@ export default function CardGenerator({
           <DialogHeader>
             <DialogTitle className="text-2xl font-semibold text-[#4A4A4A]">Daily Limit Reached</DialogTitle>
             <DialogDescription className="text-gray-600 mt-2 space-y-4">
-              <p>You&apos;ve reached your daily limit for card generation. Free users can generate up to 3 cards per day.</p>
+              <p>You&apos;ve reached your daily limit for card generation. Free users can generate 1 card per day.</p>
 
               <div className="bg-[#FFF5F6] p-4 rounded-lg border border-[#FFC0CB]">
                 <p className="text-[#4A4A4A] font-medium">Don&apos;t worry! You can still create beautiful cards by:</p>

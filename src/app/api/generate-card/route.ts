@@ -7,6 +7,30 @@ import { generateCardImageWith4o, generateCardImageGeminiFlash, generateCardImag
 import { generateCardVideo, generateCardImageWithBananaEdit } from '@/lib/image-and-video';
 import { nanoid } from 'nanoid';
 import { getModelConfig, createModelTierMap } from '@/lib/model-config';
+
+// 获取用户可用积分
+async function getUserCredits(userId: string, planType: string): Promise<number> {
+  // 根据计划类型确定每日积分限制
+  const dailyCredits = planType === 'FREE' ? 1 : Infinity; // 免费用户每天1积分，只能生成1次
+  
+  if (dailyCredits === Infinity) {
+    return Infinity; // PREMIUM 用户无限制
+  }
+  
+  // 查询今日已使用的积分
+  const today = new Date(new Date().setHours(0, 0, 0, 0));
+  const usage = await prisma.apiUsage.findUnique({
+    where: {
+      userId_date: {
+        userId,
+        date: today,
+      },
+    },
+  });
+  
+  const usedCredits = usage?.count || 0;
+  return Math.max(0, dailyCredits - usedCredits);
+}
 // 增加超时限制到最大值
 export const maxDuration = 60; // 增加到 60 秒
 
@@ -68,11 +92,21 @@ export async function POST(request: Request) {
 
     // 获取用户计划类型
     const planType = user?.plan || 'FREE';
-    const dailyLimit = planType === 'FREE' ? 10 : Infinity;
     const creditsUsed = modelConfig.credits;
     const modelLevel = modelTier === 'Premium' && planType === 'PREMIUM' ? 'PREMIUM' : 'FREE';
 
-    // 处理用户使用情况
+    // 查询用户可用积分
+    const availableCredits = await getUserCredits(userId, planType);
+    
+    // 检查积分是否足够
+    if (availableCredits < creditsUsed) {
+      return NextResponse.json({
+        error: 'rate_limit',
+        message: 'Daily limit reached. Free users can generate 1 card per day. Please try again tomorrow or upgrade to Premium for unlimited generations.'
+      }, { status: 429 }); // 429 Too Many Requests
+    }
+
+    // 处理用户使用情况（保留用于统计）
     let currentUsage = usage?.count || 0;
     if (!usage) {
       // 创建新的使用记录 - 这将在生成后异步完成
@@ -90,10 +124,6 @@ export async function POST(request: Request) {
           console.error('Error creating usage record:', error);
         }
       });
-    } else if (currentUsage >= dailyLimit) {
-      return NextResponse.json({
-        error: "You've reached your daily limit. Please try again tomorrow or visit our Card Gallery."
-      }, { status: 429 });
     } else {
       await prisma.apiUsage.update({
         where: { id: usage.id },
@@ -154,9 +184,10 @@ export async function POST(request: Request) {
         const holdBase = process.env.HOLD_AI_BASE_URL;
         const holdKey = process.env.HOLD_AI_KEY;
         if (holdBase && holdKey) {
-          const model = (modelLevel === 'PREMIUM')
-            ? 'claude-sonnet-4-5-20250929'
-            : (Math.random() < 0.2 ? 'claude-sonnet-4-5-20250929' : 'claude-3-5-haiku-latest');
+          // const model = (modelLevel === 'PREMIUM')
+          //   ? 'claude-sonnet-4-5-20250929'
+          //   : (Math.random() < 0.2 ? 'claude-sonnet-4-5-20250929' : 'claude-3-5-haiku-latest');
+          const model = 'claude-sonnet-4-5-20250929';
           result = await generateCardContentWithAnthropic(cardParams, model);
         } else {
           result = await generateCardContent(cardParams, modelLevel);
