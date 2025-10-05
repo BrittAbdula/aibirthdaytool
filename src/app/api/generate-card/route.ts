@@ -11,7 +11,7 @@ import { getModelConfig, createModelTierMap } from '@/lib/model-config';
 // 获取用户可用积分
 async function getUserCredits(userId: string, planType: string): Promise<number> {
   // 根据计划类型确定每日积分限制
-  const dailyCredits = planType === 'FREE' ? 2 : Infinity; // 免费用户每天1积分，只能生成1次
+  const dailyCredits = planType === 'FREE' ? 6 : Infinity; // 免费用户每天6积分，只能生成1次
   
   if (dailyCredits === Infinity) {
     return Infinity; // PREMIUM 用户无限制
@@ -184,10 +184,10 @@ export async function POST(request: Request) {
         const holdBase = process.env.HOLD_AI_BASE_URL;
         const holdKey = process.env.HOLD_AI_KEY;
         if (holdBase && holdKey) {
-          // const model = (modelLevel === 'PREMIUM')
-          //   ? 'claude-sonnet-4-5-20250929'
-          //   : (Math.random() < 0.2 ? 'claude-sonnet-4-5-20250929' : 'claude-3-5-haiku-latest');
-          const model = 'claude-sonnet-4-5-20250929';
+          const model = (modelLevel === 'PREMIUM')
+            ? 'claude-sonnet-4-5-20250929'
+            : (Math.random() < 0.2 ? 'claude-sonnet-4-5-20250929' : 'claude-3-5-haiku-latest');
+          // const model = 'claude-sonnet-4-5-20250929';
           result = await generateCardContentWithAnthropic(cardParams, model);
         } else {
           result = await generateCardContent(cardParams, modelLevel);
@@ -308,15 +308,11 @@ const createNaturalPrompt = (
   }
 
   // Fun visual style applicable to both image/SVG
-  prompt += `Style: fun, whimsical, and charming; add witty details and celebratory props (confetti, balloons, streamers) where suitable. Use a bright cohesive palette, soft lighting, and gentle shadows. `;
+  prompt += `Style: fun, whimsical, and charming; add witty details and celebratory props (such as Candles, confetti, balloons, streamers) where suitable.`;
 
-  // SVG-only micro animation guidance
-  if (medium === 'svg') {
-    prompt += `Use 1–3 tasteful CSS keyframe animations (e.g., gentle shimmer, breathing, floating confetti). Keep them subtle and efficient; no external scripts or fonts. `;
-  }
 
   // Text handling and cleanliness across mediums
-  prompt += `Do not render large text; leave clean space for typography to be added later. Avoid watermarks and logos. Keep the subject clear and appealing.`;
+  prompt += `Avoid watermarks and logos. Keep the subject clear and appealing.`;
 
   return prompt.trim();
 };
