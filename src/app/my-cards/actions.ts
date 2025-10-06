@@ -112,3 +112,92 @@ export async function deleteGeneratedCards(prevState: ActionResponse | null, for
     return { success: false, message: 'Failed to delete generated cards.' }
   }
 } 
+
+// Delete all sent cards that match selected recipient relationship groups
+// Expect form field "groups" as comma-separated values of "relationship::recipientName"
+export async function deleteRecipientGroups(prevState: ActionResponse | null, formData: FormData): Promise<ActionResponse> {
+  const session = await auth()
+  if (!session?.user?.id) {
+    return { success: false, message: 'User not authenticated.' }
+  }
+
+  const groupsString = formData.get('groups') as string | null
+  if (!groupsString) {
+    return { success: false, message: 'No recipient groups provided.' }
+  }
+
+  const rawGroups = groupsString
+    .split(',')
+    .map(s => s.trim())
+    .filter(Boolean)
+  if (rawGroups.length === 0) {
+    return { success: false, message: 'No valid recipient groups provided.' }
+  }
+
+  // Parse into tuples
+  const groups = rawGroups
+    .map(pair => {
+      const [relationship, recipientName] = pair.split('::')
+      return {
+        relationship: relationship?.trim() || null,
+        recipientName: recipientName?.trim() || null,
+      }
+    })
+    .filter(g => g.relationship && g.recipientName) as { relationship: string; recipientName: string }[]
+
+  if (groups.length === 0) {
+    return { success: false, message: 'Recipient groups parsing failed.' }
+  }
+
+  try {
+    // Find all edited cards for these groups for this user
+    const deletedCards = await prisma.editedCard.findMany({
+      where: {
+        userId: session.user.id,
+        OR: groups.map(g => ({
+          relationship: g.relationship,
+          recipientName: g.recipientName,
+        })),
+      },
+      select: {
+        id: true,
+        cardType: true,
+        relationship: true,
+        editedContent: true,
+        spotifyTrackId: true,
+        r2Url: true,
+        originalCardId: true,
+      },
+    })
+
+    if (deletedCards.length === 0) {
+      return { success: true, message: 'No cards matched the selected recipients.' }
+    }
+
+    // Archive into deletedCard table
+    await prisma.deletedCard.createMany({
+      data: deletedCards.map(card => ({
+        editedCardId: card.id,
+        userId: session.user.id,
+        originalCardId: card.originalCardId,
+        cardType: card.cardType,
+        relationship: card.relationship,
+        r2Url: card.r2Url,
+      })),
+    })
+
+    // Delete the edited cards
+    await prisma.editedCard.deleteMany({
+      where: {
+        userId: session.user.id,
+        id: { in: deletedCards.map(c => c.id) },
+      },
+    })
+
+    revalidatePath('/my-cards')
+    return { success: true, message: 'Selected recipient groups deleted.' }
+  } catch (error) {
+    console.error('Error deleting recipient groups:', error)
+    return { success: false, message: 'Failed to delete recipient groups.' }
+  }
+}

@@ -568,7 +568,7 @@ export async function generateCardImageWithBananaEdit(params: { size: string; us
             instagram: '1:1',
             story: '9:16'
         };
-        const image_size = sizeMap[params.size] || 'auto';
+        const image_size = sizeMap[params.size] || '9:16';
 
         const payload = {
             model: 'google/nano-banana-edit',
@@ -576,7 +576,7 @@ export async function generateCardImageWithBananaEdit(params: { size: string; us
                 prompt: params.userPrompt,
                 image_urls: params.imageUrls,
                 output_format: 'png',
-                // image_size
+                image_size
             }
         };
 

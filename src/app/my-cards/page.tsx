@@ -25,6 +25,7 @@ interface EditedCardEntry {
   cardType: string | null;
   r2Url: string | null;
   editedContent: string | null;
+  relationship?: string | null;
   recipientName: string | null;
   customUrl: string | null;
   message: string | null;
@@ -93,6 +94,7 @@ export default async function MyCardsPage() {
         cardType: true,
         r2Url: true,
         editedContent: true,
+        relationship: true,
         recipientName: true,
         customUrl: true,
         message: true,
@@ -125,6 +127,7 @@ export default async function MyCardsPage() {
   const sentCards: EditedCardEntry[] = sentCardsData.map(card => ({ 
     ...card, 
     createdAt: card.createdAt,
+    relationship: card.relationship,
     recipientName: card.recipientName,
     customUrl: card.customUrl,
     message: card.message

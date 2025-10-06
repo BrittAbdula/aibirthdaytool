@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ImageViewer } from '@/components/ImageViewer'
 import { Checkbox } from "@/components/ui/checkbox"
-import { deleteGeneratedCards, deleteSentCards } from './actions'
+import { deleteGeneratedCards, deleteSentCards, deleteRecipientGroups } from './actions'
 import { useFormState, useFormStatus } from 'react-dom'
 import { useRouter } from 'next/navigation'
 import { ApiLogEntry, EditedCardEntry, RecipientRelationship } from './types' // Import shared types
@@ -211,6 +211,7 @@ export function MyCardsClient({ initialGeneratedCards, initialSentCards, initial
   const router = useRouter()
   const [selectedSentCardIds, setSelectedSentCardIds] = useState<string[]>([])
   const [selectedGeneratedCardIds, setSelectedGeneratedCardIds] = useState<number[]>([])
+  const [selectedRecipientGroups, setSelectedRecipientGroups] = useState<string[]>([])
 
   const [generatedCards, setGeneratedCards] = useState<ApiLogEntry[]>(initialGeneratedCards)
   const [sentCards, setSentCards] = useState<EditedCardEntry[]>(initialSentCards)
@@ -218,7 +219,9 @@ export function MyCardsClient({ initialGeneratedCards, initialSentCards, initial
 
   const [deleteSentState, deleteSentAction] = useFormState(deleteSentCards, null)
   const [deleteGeneratedState, deleteGeneratedAction] = useFormState(deleteGeneratedCards, null)
+  const [deleteRecipientsState, deleteRecipientsAction] = useFormState(deleteRecipientGroups, null)
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (deleteSentState?.success) {
       setSentCards(prev => prev.filter(card => !selectedSentCardIds.includes(card.id)))
@@ -227,8 +230,9 @@ export function MyCardsClient({ initialGeneratedCards, initialSentCards, initial
     } else if (deleteSentState?.message) {
       console.error("Error deleting sent cards:", deleteSentState.message)
     }
-  }, [deleteSentState, router]) // Removed selectedSentCardIds from deps, not needed here for this effect logic
+  }, [deleteSentState, router])
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (deleteGeneratedState?.success) {
       setGeneratedCards(prev => prev.filter(card => !selectedGeneratedCardIds.includes(card.id)))
@@ -237,7 +241,26 @@ export function MyCardsClient({ initialGeneratedCards, initialSentCards, initial
     } else if (deleteGeneratedState?.message) {
       console.error("Error deleting generated cards:", deleteGeneratedState.message)
     }
-  }, [deleteGeneratedState, router]) // Removed selectedGeneratedCardIds from deps
+  }, [deleteGeneratedState, router])
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    if (deleteRecipientsState?.success) {
+      // Optimistically remove matching sent cards and recipient groups
+      setSentCards(prev => prev.filter(card => {
+        const key = `${card.relationship ?? ''}::${card.recipientName ?? ''}`
+        return !selectedRecipientGroups.includes(key)
+      }))
+      setRecipientRelationships(prev => prev.filter(r => {
+        const key = `${r.relationship}::${r.recipientName}`
+        return !selectedRecipientGroups.includes(key)
+      }))
+      setSelectedRecipientGroups([])
+      router.refresh()
+    } else if (deleteRecipientsState?.message) {
+      console.error("Error deleting recipient groups:", deleteRecipientsState.message)
+    }
+  }, [deleteRecipientsState, router])
 
   // Sent card ID is string
   const handleSentCardSelect = (cardId: string, isSelected: boolean) => {
@@ -249,10 +272,17 @@ export function MyCardsClient({ initialGeneratedCards, initialSentCards, initial
   // Generated card ID is number, but selection handler receives string from SelectableImageViewer
   const handleGeneratedCardSelect = (cardStringId: string, isSelected: boolean) => {
     const cardId = parseInt(cardStringId, 10);
+    if (Number.isNaN(cardId)) return;
     setSelectedGeneratedCardIds(prev =>
       isSelected ? [...prev, cardId] : prev.filter(id => id !== cardId)
     )
   }
+
+  // Recipient selection uses key "relationship::recipientName"
+  const handleRecipientSelect = (key: string, isSelected: boolean) => {
+    setSelectedRecipientGroups(prev => isSelected ? [...prev, key] : prev.filter(k => k !== key))
+  }
+
 
   useEffect(() => {
     setGeneratedCards(initialGeneratedCards)
@@ -282,6 +312,12 @@ export function MyCardsClient({ initialGeneratedCards, initialSentCards, initial
 
       <TabsContent value="recipients">
         <div className="space-y-4">
+          {recipientRelationships.length > 0 && selectedRecipientGroups.length > 0 && (
+            <form action={deleteRecipientsAction} className="flex justify-end">
+              <input type="hidden" name="groups" value={selectedRecipientGroups.join(',')} />
+              <SubmitButton pendingText="Deleting...">Delete Selected ({selectedRecipientGroups.length})</SubmitButton>
+            </form>
+          )}
           {recipientRelationships.length > 0 ? (
             <div className="bg-white rounded-lg shadow-sm border border-gray-200">
               <div className="px-6 py-4 border-b border-gray-200">
@@ -289,10 +325,20 @@ export function MyCardsClient({ initialGeneratedCards, initialSentCards, initial
                 <p className="text-sm text-gray-500 mt-1">People you&apos;ve sent cards to</p>
               </div>
               <div className="divide-y divide-gray-100">
-                {recipientRelationships.map((recipient, index) => (
+                {recipientRelationships.map((recipient, index) => {
+                  const key = `${recipient.relationship}::${recipient.recipientName}`
+                  const isSelected = selectedRecipientGroups.includes(key)
+                  return (
                   <div key={index} className="px-6 py-4 hover:bg-gray-50 transition-colors">
                     <div className="flex justify-between items-start">
-                      <div className="flex-1">
+                      <div className="flex items-start gap-3 flex-1">
+                        <Checkbox
+                          checked={isSelected}
+                          onCheckedChange={(checked) => handleRecipientSelect(key, !!checked)}
+                          className="mt-1 bg-white data-[state=checked]:bg-purple-600 data-[state=checked]:text-white"
+                          aria-label={`Select ${recipient.relationship} - ${recipient.recipientName}`}
+                        />
+                        <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2">
                           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
                             {recipient.relationship}
@@ -318,13 +364,14 @@ export function MyCardsClient({ initialGeneratedCards, initialSentCards, initial
                             day: 'numeric'
                           })}
                         </p>
+                        </div>
                       </div>
                       <div className="ml-4 flex-shrink-0">
                         <QuickSendButton recipient={recipient} />
                       </div>
                     </div>
                   </div>
-                ))}
+                )})}
               </div>
             </div>
           ) : (
@@ -390,7 +437,7 @@ export function MyCardsClient({ initialGeneratedCards, initialSentCards, initial
             <SelectableImageViewer
               key={card.id}
               alt="Generated Card"
-              cardId={String(card.cardId)} // ApiLog.id (number) converted to string for SelectableImageViewer
+              cardId={String(card.id)} // Use numeric id for stable selection
               cardType={card.cardType}
               isNewCard={false}
               imgUrl={card.r2Url ? card.r2Url : `data:image/svg+xml;charset=utf-8,${encodeURIComponent(card.responseContent)}`}
