@@ -307,12 +307,21 @@ const createNaturalPrompt = (
     prompt += `Composition: square layout; centered, balanced. `;
   }
 
-  // Fun visual style applicable to both image/SVG
-  prompt += `Style: fun, whimsical, and charming; add witty details and celebratory props (such as Candles, confetti, balloons, streamers) where suitable.`;
+  // Medium-aware framing rules to eliminate white blanks
+  if (medium === 'image') {
+    prompt += `Full-bleed, edge-to-edge composition; no borders, frames, or white margins; avoid letterboxing/pillarboxing; fill the canvas with scene and background; use an opaque (non-transparent) background. `;
+    prompt += `Frame the main subject to occupy ~65–85% of the canvas; avoid excessive headroom or footroom. `;
+    prompt += `Do not include any text or captions; do not reserve empty negative space. `;
+  } else if (medium === 'svg') {
+    // For SVG, still avoid empty white slabs while keeping vector cleanliness
+    prompt += `Use a cohesive colored or gradient background that reaches the canvas edges (no plain white slabs); avoid transparent backgrounds. `;
+  }
 
+  // Fun visual style applicable to both image/SVG, encouraging creativity
+  prompt += `Style: fun, whimsical, and charming; add 2–3 witty, thematic props (candles, confetti, balloons, streamers) that interact with the scene; cohesive palette, soft lighting, gentle shadows, and subtle depth. `;
 
-  // Text handling and cleanliness across mediums
-  prompt += `Avoid watermarks and logos. Keep the subject clear and appealing.`;
+  // Cleanliness
+  prompt += `Avoid watermarks and logos. Keep the subject clear and appealing. `;
 
   return prompt.trim();
 };
@@ -367,11 +376,12 @@ function buildReferenceEditPrompt(
     `Keep the subject clearly recognizable (face geometry, hairstyle, skin tone, key accessories). ` +
     `Preserve the main clothing colors and patterns; do not drastically change outfit design. ` +
     `Make the subject the primary character; place on a simple subtle base (e.g., round plinth) if helpful for presentation. ` +
+    `Scale the subject so it fills roughly 65–85% of the canvas; avoid excessive headroom or footroom. ` +
     `${orientationLine}` +
-    `Background: ${motifs} that match the theme and ${toneStyle}. ` +
+    `Background: ${motifs} that match the theme and ${toneStyle}; extend background colors/patterns all the way to the canvas edges (full-bleed); background should be opaque (non-transparent). ` +
     `${paletteLine}` +
-    `Leave clean negative space for future text; do not render any text. ` +
-    `Render as a polished 2D illustration with cohesive palette, soft lighting, and gentle shadows. ` +
+    `Do not render any text; do not reserve blank areas—avoid large white or empty regions; no borders or frames; avoid letterboxing/pillarboxing. ` +
+    `Render as a polished 2D illustration with cohesive palette, soft lighting, gentle shadows, and subtle depth. ` +
     `Respect the reference pose and proportions; avoid adding or removing glasses, hats, or facial hair unless already present. ` +
     `No watermarks or logos. `
   );

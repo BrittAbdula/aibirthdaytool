@@ -63,7 +63,7 @@ export async function generateCardImageWith4o(params: CardContentParams): Promis
                 'Authorization': `Bearer ${apiKey}`
             },
             body: JSON.stringify({
-                "prompt": userPrompt +  `that feels personal and festive, using these details to inspire a unique design. Match the event tone with a fitting theme (e.g., magical for Elsa, safari for kids). Use a central illustration, cohesive colors, handwritten font for the main message, sans-serif for details, and small accents to frame. Be creative for a polished look.`,
+                "prompt": userPrompt +  ` that feels personal and festive, using these details to inspire a unique design. Full-bleed, edge-to-edge composition; fill the canvas; no borders or frames; no white or empty margins; avoid letterboxing/pillarboxing. Do not include any text. Use a central, lively illustration with cohesive colors, soft lighting, gentle shadows, and 2–3 small thematic props for extra charm. Be creative for a polished look.`,
                 "nVariants":  1,
                 "size": aspectRatio,
                 "uploadCn": false,
@@ -132,7 +132,7 @@ export async function generateCardImageGeminiFlash(params: CardContentParams): P
         }
 
         // 构建完整提示词
-        const fullPrompt = userPrompt + ` that feels personal and festive, using these details to inspire a unique design. Match the event tone with a fitting theme (e.g., magical for Elsa, safari for kids). Use a central illustration, cohesive colors, handwritten font for the main message, sans-serif for details, and small accents to frame. Be creative for a polished look. Please generate an image based on this description.`;
+        const fullPrompt = userPrompt + ` that feels personal and festive, using these details to inspire a unique design. Full-bleed, edge-to-edge composition; fill the canvas; no borders or frames; no white or empty margins; avoid letterboxing/pillarboxing. Do not include any text. Use a central, lively illustration with cohesive colors, soft lighting, gentle shadows, and 2–3 small thematic props for extra charm. Be creative for a polished look. Please generate an image based on this description.`;
 
         // 添加尺寸提示
         let sizePrompt = '';
