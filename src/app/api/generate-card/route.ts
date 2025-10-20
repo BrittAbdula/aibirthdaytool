@@ -186,7 +186,7 @@ export async function POST(request: Request) {
         if (holdBase && holdKey) {
           const model = (modelLevel === 'PREMIUM')
             ? 'claude-sonnet-4-5-20250929'
-            : (Math.random() < 0.2 ? 'claude-sonnet-4-5-20250929' : 'claude-3-5-haiku-latest');
+            : (Math.random() < 0.2 ? 'claude-sonnet-4-5-20250929' : 'claude-haiku-4-5-20251001');
           // const model = 'claude-sonnet-4-5-20250929';
           result = await generateCardContentWithAnthropic(cardParams, model);
         } else {
