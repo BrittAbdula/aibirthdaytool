@@ -11,7 +11,7 @@ import { getModelConfig, createModelTierMap } from '@/lib/model-config';
 // 获取用户可用积分
 async function getUserCredits(userId: string, planType: string): Promise<number> {
   // 根据计划类型确定每日积分限制
-  const dailyCredits = planType === 'FREE' ? 6 : Infinity; // 免费用户每天6积分，只能生成1次
+  const dailyCredits = planType === 'FREE' ? 5 : Infinity; // 免费用户每天5积分
   
   if (dailyCredits === Infinity) {
     return Infinity; // PREMIUM 用户无限制
@@ -92,7 +92,11 @@ export async function POST(request: Request) {
 
     // 获取用户计划类型
     const planType = user?.plan || 'FREE';
-    const creditsUsed = modelConfig.credits;
+    let creditsUsed = modelConfig.credits;
+    // Banana模型特殊处理：使用参考图片时消耗6积分
+    if (Array.isArray(referenceImageUrls) && referenceImageUrls.length > 0) {
+      creditsUsed = 6;
+    }
     const modelLevel = modelTier === 'Premium' && planType === 'PREMIUM' ? 'PREMIUM' : 'FREE';
 
     // 查询用户可用积分

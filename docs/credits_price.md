@@ -4,23 +4,35 @@
 
 | Tier    | Monthly Price (USD) | Credits Included |
 |---------|---------------------|------------------|
-| Free    | $0                  | 3 daily          |
+| Free    | $0                  | 5 daily          |
 | Basic   | $2.99               | 100              |
 | Pro     | $19.99              | 1000             |
 
-## Feature Costs
+## Model Costs
+
+| Model ID            | Model Name          | Format | Credits |
+|---------------------|---------------------|--------|---------|
+| Free_SVG            | Basic Animated      | SVG    | 2       |
+| Free_Image          | Basic Static        | Image  | 6       |
+| Premium_SVG         | Pro Animated        | SVG    | 6       |
+| Premium_Image       | Pro Static          | Image  | 6       |
+| Premium_Video_Fast  | Pro Video Fast      | Video  | 6       |
+| Premium_Video_Pro   | Pro Video Ultimate  | Video  | 15      |
+| Banana Edit         | Reference Image Edit| Image  | 6       |
+
+## Feature Costs (Legacy)
 
 ```typescript
 const FEATURE_COSTS = {
   'basic_template_use': 0,        // Free to use basic templates
-  'generate_card_basic_mode': 1,  // 1 credit per basic card generation
-  'generate_card_advanced_mode': 2 // 2 credits per advanced card generation
+  'generate_card_basic_mode': 2,  // 2 credits per basic card generation (SVG)
+  'generate_card_advanced_mode': 6 // 6 credits per advanced card generation (Image/Video)
 } as const;
 ```
 
 ## Credits Rules
 
-- Free tier users receive 3 new credits daily
+- Free tier users receive 5 new credits daily
 - Unused credits from free tier do not accumulate (expire daily)
 - Purchased credits expire after 1 year
 - Credits are consumed in order of expiration (oldest first)

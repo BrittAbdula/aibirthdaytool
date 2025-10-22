@@ -20,7 +20,7 @@ export const modelConfigs: ModelConfig[] = [
     time: '10 sec',
     format: 'svg',
     tier: 'Free',
-    credits: 1,
+    credits: 2,
     icon: '✨',
     badge: null,
     features: ['Animated SVG', 'Fast generation', 'All card types']
@@ -32,7 +32,7 @@ export const modelConfigs: ModelConfig[] = [
     time: '5 sec',
     format: 'image',
     tier: 'Free',
-    credits: 5,
+    credits: 6,
     icon: '🎨',
     badge: 'Fast',
     features: ['Static image', 'Quick delivery', 'Standard quality']
@@ -44,7 +44,7 @@ export const modelConfigs: ModelConfig[] = [
     time: '15 sec',
     format: 'svg',
     tier: 'Premium',
-    credits: 5,
+    credits: 6,
     icon: '🌟',
     badge: 'Premium',
     features: ['Advanced animations', 'Premium effects', 'Higher quality']
@@ -56,7 +56,7 @@ export const modelConfigs: ModelConfig[] = [
     time: '10 sec',
     format: 'image',
     tier: 'Premium',
-    credits: 5,
+    credits: 6,
     icon: '💎',
     badge: 'Premium',
     features: ['Premium quality', 'Advanced styling', 'High resolution']
@@ -68,7 +68,7 @@ export const modelConfigs: ModelConfig[] = [
     time: '45 sec',
     format: 'video',
     tier: 'Premium',
-    credits: 5,
+    credits: 6,
     icon: '🎬',
     badge: 'Premium',
     features: ['HD video output', 'Dynamic animations', 'Professional effects']
