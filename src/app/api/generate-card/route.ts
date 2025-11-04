@@ -9,9 +9,9 @@ import { nanoid } from 'nanoid';
 import { getModelConfig, createModelTierMap } from '@/lib/model-config';
 
 // 获取用户可用积分
-async function getUserCredits(userId: string, planType: string): Promise<number> {
-  // 根据计划类型确定每日积分限制
-  const dailyCredits = planType === 'FREE' ? 5 : Infinity; // 免费用户每天5积分
+async function getUserCredits(userId: string, planType: string, isFirstDay: boolean): Promise<number> {
+  // 根据计划类型确定每日积分限制（FREE 首日 10 分，每日 5 分）
+  const dailyCredits = planType === 'FREE' ? (isFirstDay ? 10 : 5) : Infinity;
   
   if (dailyCredits === Infinity) {
     return Infinity; // PREMIUM 用户无限制
@@ -69,7 +69,7 @@ export async function POST(request: Request) {
     const [user, usage] = await Promise.all([
       prisma.user.findUnique({
         where: { id: userId },
-        select: { plan: true },
+        select: { plan: true, createdAt: true },
       }),
       prisma.apiUsage.findUnique({
         where: {
@@ -99,8 +99,10 @@ export async function POST(request: Request) {
     }
     const modelLevel = modelTier === 'Premium' && planType === 'PREMIUM' ? 'PREMIUM' : 'FREE';
 
-    // 查询用户可用积分
-    const availableCredits = await getUserCredits(userId, planType);
+    // 查询用户可用积分（FREE 用户首日 10 分）
+    const todayStart = new Date(new Date().setHours(0, 0, 0, 0));
+    const isFirstDay = !!user?.createdAt && user.createdAt >= todayStart;
+    const availableCredits = await getUserCredits(userId, planType, isFirstDay);
     
     // 检查积分是否足够
     if (availableCredits < creditsUsed) {
