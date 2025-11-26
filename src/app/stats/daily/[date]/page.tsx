@@ -77,10 +77,14 @@ export default function DailyDetailPage({ params }: { params: { date: string } }
     totalTokens: details.reduce((acc, d) => acc + d.tokensUsed, 0),
   };
 
-  const getCardImageUrl = (responseContent: string) => {
-    // svg code to url
-    const url = `data:image/svg+xml;base64,${Buffer.from(responseContent).toString('base64')}`;
-    return url;
+  const getPreviewUrl = (detail: ApiCallDetail) => {
+    if (detail.r2Url) {
+      return detail.r2Url;
+    }
+    if (detail.responseContent) {
+      return `data:image/svg+xml;base64,${Buffer.from(detail.responseContent).toString('base64')}`;
+    }
+    return '';
   };
 
   return (
@@ -205,25 +209,31 @@ export default function DailyDetailPage({ params }: { params: { date: string } }
                       <TableCell>{detail.duration}ms</TableCell>
                       <TableCell>{detail.promptVersion}</TableCell>
                       <TableCell>
-                        {!detail.isError && detail.responseContent && (
-                          <button
-                            onClick={() => setSelectedImage(getCardImageUrl(detail.responseContent || ''))}
-                            className="block relative w-20 h-20 rounded-lg overflow-hidden border border-gray-200 hover:border-purple-400 transition-colors duration-200 cursor-pointer group"
-                          >
-                            <Image
-                              src={getCardImageUrl(detail.responseContent || '')}
-                              alt={`Card ${detail.cardId}`}
-                              fill
-                              className="object-contain transition-transform duration-200 group-hover:scale-105"
-                              sizes="80px"
-                            />
-                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-200 flex items-center justify-center">
-                              <span className="text-xs text-white/0 group-hover:text-white/90 bg-black/0 group-hover:bg-black/30 px-2 py-1 rounded transition-all duration-200">
-                                View
-                              </span>
-                            </div>
-                          </button>
-                        )}
+                        {(() => {
+                          const previewUrl = getPreviewUrl(detail);
+                          if (detail.isError || !previewUrl) {
+                            return null;
+                          }
+                          return (
+                            <button
+                              onClick={() => setSelectedImage(previewUrl)}
+                              className="block relative w-20 h-20 rounded-lg overflow-hidden border border-gray-200 hover:border-purple-400 transition-colors duration-200 cursor-pointer group"
+                            >
+                              <Image
+                                src={previewUrl}
+                                alt={`Card ${detail.cardId}`}
+                                fill
+                                className="object-contain transition-transform duration-200 group-hover:scale-105"
+                                sizes="80px"
+                              />
+                              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-200 flex items-center justify-center">
+                                <span className="text-xs text-white/0 group-hover:text-white/90 bg-black/0 group-hover:bg-black/30 px-2 py-1 rounded transition-all duration-200">
+                                  View
+                                </span>
+                              </div>
+                            </button>
+                          );
+                        })()}
                       </TableCell>
                     </TableRow>
                   ))}

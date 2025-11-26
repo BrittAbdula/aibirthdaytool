@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma';
 import { fetchSvgContent } from '@/lib/utils';
 import { Prisma } from '@prisma/client';
+import { uploadSvgToR2 } from '@/lib/r2';
 
 export async function GET(
   request: Request,
@@ -26,6 +27,13 @@ export async function GET(
         }
       })
       if (originalCard) {
+        let editedContent = originalCard.responseContent;
+        const isSvgUrl = (url?: string | null) => !!url && url.toLowerCase().endsWith('.svg');
+
+        if (!editedContent && isSvgUrl(originalCard.r2Url)) {
+          editedContent = await fetchSvgContent(originalCard.r2Url) || '';
+        }
+
         // Extract values from userInputs
         const userInputs = originalCard.userInputs as Prisma.JsonObject;
 
@@ -52,7 +60,7 @@ export async function GET(
         return NextResponse.json({
           id: null,
           originalCardId: originalCard.cardId,
-          editedContent: originalCard.responseContent,
+          editedContent: editedContent || '',
           cardType: originalCard.cardType,
           r2Url: originalCard.r2Url,
           relationship: relationshipValue,
@@ -63,7 +71,7 @@ export async function GET(
           isPublic: isPublic
         })
       } else {
-        const responseContent = await fetchSvgContent(`https://store.celeprime.com/${cardType}.svg`)
+        const responseContent = await fetchSvgContent(`https://store.celeprime.com/${cardType}.svg`) || ''
         return NextResponse.json({ responseContent })
       }
     } else {
@@ -84,9 +92,17 @@ export async function PUT(
   const { responseContent } = await request.json()
 
   try {
+    const existingCard = await prisma.apiLog.findUnique({
+      where: { cardId: params.cardId },
+      select: { timestamp: true }
+    });
+
+    const createdAt = existingCard?.timestamp || new Date();
+    const r2Url = await uploadSvgToR2(responseContent, params.cardId, createdAt);
+
     const updatedCard = await prisma.apiLog.update({
       where: { cardId: params.cardId },
-      data: { responseContent },
+      data: { responseContent: '', r2Url },
     })
 
     return NextResponse.json(updatedCard)

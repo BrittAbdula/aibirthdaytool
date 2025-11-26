@@ -440,8 +440,8 @@ export function MyCardsClient({ initialGeneratedCards, initialSentCards, initial
               cardId={String(card.id)} // Use numeric id for stable selection
               cardType={card.cardType}
               isNewCard={false}
-              imgUrl={card.r2Url ? card.r2Url : `data:image/svg+xml;charset=utf-8,${encodeURIComponent(card.responseContent)}`}
-              svgContent={card.responseContent}
+              imgUrl={card.r2Url || (card.responseContent ? `data:image/svg+xml;charset=utf-8,${encodeURIComponent(card.responseContent)}` : undefined)}
+              svgContent={card.responseContent || ''}
               isSelected={selectedGeneratedCardIds.includes(card.id)}
               onSelectedChange={handleGeneratedCardSelect}
             />

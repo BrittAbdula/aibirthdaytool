@@ -7,6 +7,7 @@ import { generateCardImageWith4o, generateCardImageGeminiFlash, generateCardImag
 import { generateCardVideo, generateCardImageWithBananaEdit } from '@/lib/image-and-video';
 import { nanoid } from 'nanoid';
 import { getModelConfig, createModelTierMap } from '@/lib/model-config';
+import { uploadSvgToR2 } from '@/lib/r2';
 
 // 获取用户可用积分
 async function getUserCredits(userId: string, planType: string, isFirstDay: boolean): Promise<number> {
@@ -203,12 +204,17 @@ export async function POST(request: Request) {
       // console.log('result', result);
 
       // Update status to completed with results
+      let resolvedR2Url = result.r2Url || '';
+      if (format === 'svg' && result.svgContent) {
+        resolvedR2Url = await uploadSvgToR2(result.svgContent, cardId, new Date());
+      }
+
       await prisma.apiLog.update({
         where: { cardId },
         data: {
           taskId: result.taskId,
-          r2Url: result.r2Url,
-          responseContent: result.svgContent,
+          r2Url: resolvedR2Url,
+          responseContent: '',
           promptVersion: result.model,
           tokensUsed: result.tokensUsed,
           duration: result.duration,

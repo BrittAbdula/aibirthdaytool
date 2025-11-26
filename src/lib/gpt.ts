@@ -2,6 +2,7 @@ import { CardType } from './card-config';
 import { prisma } from './prisma';
 import { generatePrompt } from './prompt';
 import { CARD_SIZES } from './card-config';
+import { fetchSvgContent } from './utils';
 
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
 const YOUR_SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'http://MewTruCard.COM';
@@ -81,12 +82,18 @@ export async function generateCardContent(params: CardContentParams, modelLevel:
             try {
                 const previousCard = await prisma.apiLog.findUnique({
                     where: { cardId: previousCardId },
-                    select: { responseContent: true }
+                    select: { responseContent: true, r2Url: true }
                 });
 
                 if (previousCard) {
                     previousSvgContent = previousCard.responseContent;
-                    userPromptPrefixText = `
+                    if (!previousSvgContent && previousCard.r2Url?.toLowerCase().endsWith('.svg')) {
+                        const fetchedContent = await fetchSvgContent(previousCard.r2Url);
+                        previousSvgContent = fetchedContent || '';
+                    }
+
+                    if (previousSvgContent) {
+                        userPromptPrefixText = `
 I want to modify the previous card design with this feedback: ${modificationFeedback}
 
 Here is the previous SVG content:
@@ -94,6 +101,7 @@ ${previousSvgContent}
 
 IMPORTANT: return SVG code only. Do not include any explanation, commentary, or other text.
 `;
+                    }
                 }
             } catch (error) {
                 console.error("Error fetching previous card content:", error);
