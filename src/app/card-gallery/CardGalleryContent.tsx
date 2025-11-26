@@ -107,16 +107,6 @@ export default function CardGalleryContent({
           <div className="border border-purple-200 rounded-full p-1 bg-white shadow-sm">
             <div className="flex space-x-1">
               <button
-                onClick={() => handleTabChange('premium')}
-                className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${
-                  currentTab === 'premium'
-                    ? 'bg-purple-500 text-white shadow-sm'
-                    : 'text-gray-600 hover:bg-purple-50'
-                }`}
-              >
-                Premium
-              </button>
-              <button
                 onClick={() => handleTabChange('recent')}
                 className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${
                   currentTab === 'recent'
@@ -145,6 +135,16 @@ export default function CardGalleryContent({
                 }`}
               >
                 Popular
+              </button>
+              <button
+                onClick={() => handleTabChange('premium')}
+                className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${
+                  currentTab === 'premium'
+                    ? 'bg-purple-500 text-white shadow-sm'
+                    : 'text-gray-600 hover:bg-purple-50'
+                }`}
+              >
+                Premium
               </button>
             </div>
           </div>

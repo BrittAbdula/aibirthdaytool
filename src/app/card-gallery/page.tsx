@@ -56,7 +56,7 @@ interface PageProps {
 // Server Component
 export default async function CardGalleryPage({ searchParams }: PageProps) {
   const defaultType = searchParams.type || null
-  const activeTab = (searchParams.tab as TabType) || 'premium'
+  const activeTab = (searchParams.tab as TabType) || 'recent'
   
   // Fetch all card data at build time or during revalidation
   const premiumCardsData = await getPremiumCardsServer(1, 24, defaultType)

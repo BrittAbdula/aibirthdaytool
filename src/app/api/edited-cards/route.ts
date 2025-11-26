@@ -20,6 +20,13 @@ export async function POST(request: Request) {
     };
 
     const createdAt = new Date()
+    const originalCard = originalCardId
+      ? await prisma.apiLog.findUnique({
+          where: { cardId: originalCardId },
+          select: { promptVersion: true }
+        })
+      : null
+    const model = originalCard?.promptVersion || null
     
     if (editedCardId) {
       // For videos, use the r2Url directly without uploading SVG content
@@ -50,7 +57,8 @@ export async function POST(request: Request) {
           isPublic,
           requirements,
           senderName,
-          recipientName
+          recipientName,
+          ...(model ? { model } : {})
         },
       })
       return NextResponse.json({ id: editedCardId, customUrl: customUrl }, { status: 200 })
@@ -89,7 +97,8 @@ export async function POST(request: Request) {
           isPublic,
           requirements,
           senderName,
-          recipientName
+          recipientName,
+          model
         },
       })
       return NextResponse.json({ id: editedCard.id, customUrl: customUrl }, { status: 201 })

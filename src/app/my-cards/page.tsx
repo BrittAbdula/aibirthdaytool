@@ -25,6 +25,7 @@ interface EditedCardEntry {
   cardType: string | null;
   r2Url: string | null;
   editedContent: string | null;
+  model?: string | null;
   relationship?: string | null;
   recipientName: string | null;
   customUrl: string | null;
@@ -94,6 +95,7 @@ export default async function MyCardsPage() {
         cardType: true,
         r2Url: true,
         editedContent: true,
+        model: true,
         relationship: true,
         recipientName: true,
         customUrl: true,
@@ -126,6 +128,7 @@ export default async function MyCardsPage() {
   const generatedCards: ApiLogEntry[] = generatedCardsData.map(card => ({ ...card, id: Number(card.id), timestamp: card.timestamp, r2Url: card.r2Url }))
   const sentCards: EditedCardEntry[] = sentCardsData.map(card => ({ 
     ...card, 
+    model: card.model,
     createdAt: card.createdAt,
     relationship: card.relationship,
     recipientName: card.recipientName,

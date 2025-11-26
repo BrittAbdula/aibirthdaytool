@@ -1,4 +1,4 @@
-import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
+import { S3Client, PutObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
 
 const R2_ACCOUNT_ID = process.env.R2_ACCOUNT_ID;
 const R2_ACCESS_KEY_ID = process.env.R2_ACCESS_KEY_ID;
@@ -45,6 +45,26 @@ export async function uploadSvgToR2(svgContent: string, cardId: string, createdA
             bucketName: R2_BUCKET_NAME
         });
         throw new Error(`Failed to upload to R2: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+}
+
+export async function deleteR2ObjectByUrl(fileUrl: string | null | undefined): Promise<void> {
+    if (!fileUrl) return;
+    try {
+        const parsedUrl = new URL(fileUrl);
+        if (!parsedUrl.hostname.includes('celeprime.com')) {
+            return; // Skip unrelated hosts
+        }
+        const key = parsedUrl.pathname.replace(/^\/+/, '');
+        if (!key) return;
+        await r2Client.send(
+            new DeleteObjectCommand({
+                Bucket: R2_BUCKET_NAME,
+                Key: key,
+            })
+        );
+    } catch (error) {
+        console.error('R2 delete error:', error);
     }
 }
 

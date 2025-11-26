@@ -1,10 +1,11 @@
 'use client'
 
 import React, { useState, useEffect, useRef, useCallback } from 'react'
-import { ImageViewer } from '../../components/ImageViewer'
+import Link from 'next/link'
 import { Card, TabType } from '@/lib/cards'
 import { CardType } from '@/lib/card-config'
 import { motion } from 'framer-motion'
+import { Crown } from 'lucide-react'
 
 interface CardGalleryProps {
   initialCardsData: {
@@ -20,6 +21,12 @@ const CARDS_PER_PAGE = 12
 const SkeletonCard = () => (
   <div className="aspect-[3/4] rounded-lg bg-gray-200 animate-pulse mb-4" />
 )
+
+const isVideoUrl = (url?: string | null) => {
+  if (!url) return false
+  const lowered = url.toLowerCase()
+  return ['.mp4', '.mov', '.avi', '.webm', '.ogg'].some(ext => lowered.includes(ext))
+}
 
 export default function CardGallery({ initialCardsData, wishCardType, tabType }: CardGalleryProps) {
   const [cards, setCards] = useState<Card[]>(initialCardsData.cards)
@@ -142,17 +149,46 @@ export default function CardGallery({ initialCardsData, wishCardType, tabType }:
                 className="w-full bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow"
               >
                 <div className="w-full relative">
-                  <ImageViewer
-                    alt={
-                      `MewTruCard ${card.cardType} card for ${card.relationship}` +
-                      (card.message ? `: ${card.message}` : '')
-                    }
-                    cardId={card.id}
-                    cardType={card.cardType}
-                    isNewCard={false}
-                    imgUrl={card.r2Url || ''}
-                    premium={card.premium}
-                  />
+                  <Link
+                    href={`/to/${card.id}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block"
+                    aria-label={`Open card ${card.id} in a new tab`}
+                  >
+                    <div className="aspect-[3/4] w-full relative overflow-hidden bg-gray-50">
+                      {card.r2Url ? (
+                        isVideoUrl(card.r2Url) ? (
+                          <video
+                            src={card.r2Url}
+                            muted
+                            loop
+                            playsInline
+                            autoPlay
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <img
+                            src={card.r2Url}
+                            alt={`MewTruCard ${card.cardType}`}
+                            loading="lazy"
+                            className="w-full h-full object-cover"
+                          />
+                        )
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-sm text-gray-400">
+                          Preview unavailable
+                        </div>
+                      )}
+
+                      {card.premium && (
+                        <div className="absolute top-3 left-3 flex items-center gap-1 rounded-full bg-purple-600/90 px-3 py-1 text-xs font-semibold text-white">
+                          <Crown className="h-3.5 w-3.5" />
+                          Premium
+                        </div>
+                      )}
+                    </div>
+                  </Link>
                 </div>
               </motion.div>
             ))}

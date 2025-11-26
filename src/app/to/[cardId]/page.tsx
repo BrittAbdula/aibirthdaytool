@@ -167,6 +167,17 @@ export default async function EditedCardPage({ params }: Props) {
           </a>
         </div>
 
+        <div className="mt-4 sm:mt-6 flex justify-center opacity-0 animate-fade-up animation-delay-900">
+          <a
+            href={`/${card.cardType}/edit/${card.id}/`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center justify-center rounded-full border border-purple-200 px-6 py-2 text-sm sm:text-base font-semibold text-purple-600 hover:text-pink-600 hover:border-pink-300 transition-colors duration-200"
+          >
+            Customize this card
+          </a>
+        </div>
+
         <footer className="mt-6 sm:mt-8 text-center opacity-0 animate-fade-up animation-delay-1000">
           <p className="text-xs sm:text-sm text-gray-500">
           ✨{' '}Created with{' '}

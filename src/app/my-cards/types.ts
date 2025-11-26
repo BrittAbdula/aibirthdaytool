@@ -13,6 +13,7 @@ export interface EditedCardEntry {
   cardType: string | null;
   r2Url: string | null;
   editedContent: string | null;
+  model?: string | null;
   relationship?: string | null;
   recipientName: string | null;
   customUrl: string | null;

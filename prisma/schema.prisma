@@ -70,6 +70,7 @@ model EditedCard {
   id             String   @id @default(cuid())
   originalCardId String
   cardType       String
+  model          String?
   relationship   String?
   recipientName  String?
   senderName     String?
@@ -273,4 +274,3 @@ model StripeLog {
   @@index([objectId])
   @@index([createdAt])
 }
-

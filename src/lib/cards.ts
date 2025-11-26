@@ -2,6 +2,32 @@ import { prisma } from '@/lib/prisma';
 import { unstable_cache } from 'next/cache';
 import { CardType } from '@/lib/card-config'
 import { Prisma } from '@prisma/client';
+
+const FEATURED_MODELS = [
+  'gpt4o-image',
+  'hm-veo3-fast-video',
+  'anthropic/claude-sonnet-4',
+  'claude-sonnet-4-20250514',
+  'claude-sonnet-4-5-20250929',
+  'gemini-2.0-flash-image',
+  'google/nano-banana-edit'
+] as const;
+
+const PREMIUM_BADGE_MODELS = [
+  'gpt4o-image',
+  'hm-veo3-fast-video'
+] as const;
+
+const PREMIUM_TAB_MODELS = [
+  'gpt4o-image',
+  'anthropic/claude-sonnet-4',
+  'claude-sonnet-4-5-20250929',
+  'anthropic/claude-3.7-sonnet',
+  'google/nano-banana-edit'
+] as const;
+
+const buildModelCondition = (models: readonly string[]) =>
+  Prisma.sql`ec."model" IN (${Prisma.join(models.map(model => Prisma.sql`${model}`))})`;
 export interface Card {
   id: string;
   cardType: string;
@@ -55,7 +81,7 @@ async function fetchRecentCards(
   const offset = (page - 1) * pageSize;
 
   // Base WHERE conditions
-  const whereConditions: Prisma.Sql[] = [Prisma.sql`al."promptVersion" in ('gpt4o-image','hm-veo3-fast-video','anthropic/claude-sonnet-4','claude-sonnet-4-20250514','claude-sonnet-4-5-20250929','gemini-2.0-flash-image','google/nano-banana-edit')`];
+  const whereConditions: Prisma.Sql[] = [buildModelCondition(FEATURED_MODELS)];
   if (wishCardType) {
     whereConditions.push(Prisma.sql`ec."cardType" = ${wishCardType}`);
     }
@@ -80,13 +106,12 @@ async function fetchRecentCards(
         ec."createdAt",
         ec."originalCardId",
         ec."message",
-        case when al."promptVersion" in ('gpt4o-image','hm-veo3-fast-video') then true else false end as premium,
+        case when ${buildModelCondition(PREMIUM_BADGE_MODELS)} then true else false end as premium,
         -- Rank within each group to find the newest (rn_asc = 1)
         ROW_NUMBER() OVER (PARTITION BY ec."originalCardId" ORDER BY ec."createdAt" DESC) as rn_asc,
         -- Get the latest timestamp for each group for ordering the groups
         MAX(ec."createdAt") OVER (PARTITION BY ec."originalCardId") as max_createdAt_in_group
       FROM "EditedCard" ec
-      left join "ApiLog" al on al."cardId" = ec."originalCardId"
       ${whereClause}
     )
     SELECT
@@ -108,7 +133,6 @@ async function fetchRecentCards(
   const totalGroupsQuery = Prisma.sql`
     SELECT COUNT(DISTINCT "originalCardId")::integer as count
     FROM "EditedCard" ec
-    LEFT JOIN "ApiLog" al ON al."cardId" = ec."originalCardId"
     ${whereClause};
   `;
   
@@ -137,7 +161,7 @@ async function fetchPopularCards(
   const offset = (page - 1) * pageSize;
 
   // Base WHERE conditions (same as recent)
-  const whereConditions: Prisma.Sql[] = [Prisma.sql`al."promptVersion" in ('gpt4o-image','hm-veo3-fast-video','anthropic/claude-sonnet-4','claude-sonnet-4-20250514','claude-sonnet-4-5-20250929','gemini-2.0-flash-image','google/nano-banana-edit')`];
+  const whereConditions: Prisma.Sql[] = [buildModelCondition(FEATURED_MODELS)];
   if (wishCardType) {
     whereConditions.push(Prisma.sql`ec."cardType" = ${wishCardType}`);
   }
@@ -159,7 +183,7 @@ async function fetchPopularCards(
         ec.relationship,
         ec."r2Url",
         ec."message",
-        case when al."promptVersion" in ('gpt4o-image','hm-veo3-fast-video') then true else false end as premium,
+        case when ${buildModelCondition(PREMIUM_BADGE_MODELS)} then true else false end as premium,
         -- Rank within each group to find the oldest (rn_asc = 1)
         ROW_NUMBER() OVER (PARTITION BY ec."originalCardId" ORDER BY ec."createdAt" DESC) as rn_asc,
         -- Count cards per group for popularity ranking
@@ -167,7 +191,6 @@ async function fetchPopularCards(
         -- Get the latest timestamp for tie-breaking in ordering
         MAX(ec."createdAt") OVER (PARTITION BY ec."originalCardId") as max_createdAt_in_group
       FROM "EditedCard" ec
-      left join "ApiLog" al on al."cardId" = ec."originalCardId"
       ${whereClause}
     )
     SELECT
@@ -189,7 +212,6 @@ async function fetchPopularCards(
   const totalGroupsQuery = Prisma.sql`
     SELECT COUNT(DISTINCT "originalCardId")::integer as count
     FROM "EditedCard" ec
-    LEFT JOIN "ApiLog" al ON al."cardId" = ec."originalCardId"
     ${whereClause};
   `;
 
@@ -223,7 +245,7 @@ export async function getLikedCardsServer(
   if (relationship) {
     whereConditions.push(Prisma.sql`ec.relationship = ${relationship}`);
   }
-  whereConditions.push(Prisma.sql`al."promptVersion" in ('gpt4o-image','hm-veo3-fast-video','anthropic/claude-sonnet-4','claude-sonnet-4-20250514','claude-sonnet-4-5-20250929','gemini-2.0-flash-image','google/nano-banana-edit')`);
+  whereConditions.push(buildModelCondition(FEATURED_MODELS));
   
 
   const whereClause = whereConditions.length > 0 
@@ -240,7 +262,7 @@ export async function getLikedCardsServer(
         ec.relationship,
         ec."r2Url",
         ec."message",
-        case when al."promptVersion" in ('gpt4o-image','hm-veo3-fast-video') then true else false end as premium,
+        case when ${buildModelCondition(PREMIUM_BADGE_MODELS)} then true else false end as premium,
         -- Rank within each group to find the oldest (rn_asc = 1)
         ROW_NUMBER() OVER (PARTITION BY ec."originalCardId" ORDER BY ec."createdAt" ASC) as rn_asc,
         -- Count cards per group for popularity ranking
@@ -251,7 +273,6 @@ export async function getLikedCardsServer(
         COUNT(ua.id) OVER (PARTITION BY ec."originalCardId")::integer as like_count
       FROM "EditedCard" ec
       LEFT JOIN "UserAction" ua ON ua."cardId" = ec."id" AND ua.action = 'up'
-      LEFT JOIN "ApiLog" al on al."cardId" = ec."originalCardId"
       ${whereClause}
     )
     SELECT
@@ -275,7 +296,6 @@ export async function getLikedCardsServer(
   const totalGroupsQuery = Prisma.sql`
     SELECT COUNT(DISTINCT "originalCardId")::integer as count
     FROM "EditedCard" ec
-    LEFT JOIN "ApiLog" al ON al."cardId" = ec."originalCardId"
     ${whereClause};
   `;
 
@@ -301,7 +321,7 @@ export async function fetchPremiumCards(
 
   // Base WHERE conditions
   const whereConditions: Prisma.Sql[] = [
-    Prisma.sql`al."promptVersion" in ('gpt4o-image','hm-veo3-fast-video','anthropic/claude-sonnet-4','claude-sonnet-4-5-20250929','google/nano-banana-edit')`
+    buildModelCondition(PREMIUM_TAB_MODELS)
   ];
   if (wishCardType) {
     whereConditions.push(Prisma.sql`ec."cardType" = ${wishCardType}`);
@@ -325,7 +345,7 @@ export async function fetchPremiumCards(
         ec.relationship,
         ec."r2Url",
         ec."message",
-        case when al."promptVersion" in ('gpt4o-image', 'anthropic/claude-sonnet-4','claude-sonnet-4-5-20250929','anthropic/claude-3.7-sonnet','google/nano-banana-edit') then true else false end as premium,
+        case when ${buildModelCondition(PREMIUM_TAB_MODELS)} then true else false end as premium,
         -- Rank within each group to find the oldest (rn_asc = 1)
         ROW_NUMBER() OVER (PARTITION BY ec."originalCardId" ORDER BY ec."createdAt" ASC) as rn_asc,
         -- Count cards per group for popularity ranking
@@ -336,7 +356,6 @@ export async function fetchPremiumCards(
         COUNT(ua.id) OVER (PARTITION BY ec."originalCardId")::integer as like_count
       FROM "EditedCard" ec
       LEFT JOIN "UserAction" ua ON ua."cardId" = ec."id" AND ua.action = 'up'
-      LEFT JOIN "ApiLog" al on al."cardId" = ec."originalCardId"
       ${whereClause}
     )
     SELECT
@@ -360,7 +379,6 @@ export async function fetchPremiumCards(
   const totalGroupsQuery = Prisma.sql`
     SELECT COUNT(DISTINCT "originalCardId")::integer as count
     FROM "EditedCard" ec
-    LEFT JOIN "ApiLog" al on al."cardId" = ec."originalCardId"
     ${whereClause};
   `;
 

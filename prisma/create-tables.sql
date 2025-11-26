@@ -45,6 +45,7 @@ CREATE TABLE IF NOT EXISTS "EditedCard" (
     "id" TEXT PRIMARY KEY,
     "originalCardId" TEXT NOT NULL,
     "cardType" TEXT NOT NULL,
+    "model" TEXT,
     "relationship" TEXT,
     "editedContent" TEXT NOT NULL,
     "spotifyTrackId" TEXT,
