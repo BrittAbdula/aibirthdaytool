@@ -5,21 +5,25 @@ import { Prisma } from '@prisma/client';
 
 const FEATURED_MODELS = [
   'gpt4o-image',
+  'google/nano-banana',
+  'google/nano-banana-pro',
+  'google/nano-banana-edit',
   'hm-veo3-fast-video',
   'anthropic/claude-sonnet-4',
   'claude-sonnet-4-20250514',
   'claude-sonnet-4-5-20250929',
-  'gemini-2.0-flash-image',
-  'google/nano-banana-edit'
+  'gemini-2.0-flash-image'
 ] as const;
 
 const PREMIUM_BADGE_MODELS = [
   'gpt4o-image',
+  'google/nano-banana-pro',
   'hm-veo3-fast-video'
 ] as const;
 
 const PREMIUM_TAB_MODELS = [
   'gpt4o-image',
+  'google/nano-banana-pro',
   'anthropic/claude-sonnet-4',
   'claude-sonnet-4-5-20250929',
   'anthropic/claude-3.7-sonnet',

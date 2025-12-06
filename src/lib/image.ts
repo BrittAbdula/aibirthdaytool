@@ -3,7 +3,6 @@ import { prisma } from './prisma';
 import { CARD_SIZES, CardSize } from './card-config';
 import OpenAI from 'openai';
 import { uploadImageToR2} from '@/lib/r2';
-import { GoogleGenAI, Modality } from "@google/genai";
 import { nanoid } from 'nanoid';
 import { v2 as cloudinary } from 'cloudinary';
 
@@ -16,10 +15,149 @@ interface CardContentParams {
 }
 
 export async function generateCardImage(params: CardContentParams, modelLevel: string): Promise<{ taskId: string, r2Url: string, svgContent: string, model: string, tokensUsed: number, duration: number, errorMessage?: string, status?: string }> {
+    // Static image generation — use KIE for all tiers
     if (modelLevel === 'PREMIUM') {
-        return await generateCardImageWith4o(params);
+        // Premium uses Nano Banana Pro
+        return await generateCardImageWithBananaPro(params);
     } else {
-        return await generateCardImageGeminiFlash(params);
+        // Free uses Nano Banana
+        return await generateCardImageWithBanana(params);
+    }
+}
+
+// Static Image via Banana Pro (google/nano-banana-pro)
+export async function generateCardImageWithBananaPro(params: CardContentParams): Promise<{ taskId: string, r2Url: string, svgContent: string, model: string, tokensUsed: number, duration: number, errorMessage?: string, status?: string }> {
+    const { size, userPrompt } = params;
+    const startTime = Date.now();
+    try {
+        const apiKey = process.env.KIE_API_KEY;
+        if (!apiKey) throw new Error('KIE_API_KEY is not configured');
+
+        if (userPrompt.length >= 5000) throw new Error('User prompt too long');
+
+        const sizeMap: Record<string, 'auto' | '1:1' | '3:4' | '9:16' | '4:3' | '16:9'> = {
+            portrait: '3:4',
+            landscape: '4:3',
+            square: '1:1',
+            instagram: '1:1',
+            story: '9:16'
+        };
+        const image_size = sizeMap[size] || '3:4';
+
+        const payload = {
+            model: 'google/nano-banana-pro',
+            input: {
+                prompt: userPrompt,
+                output_format: 'png',
+                image_size
+            }
+        };
+
+        const resp = await fetch('https://api.kie.ai/api/v1/jobs/createTask', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${apiKey}`
+            },
+            body: JSON.stringify(payload)
+        });
+        if (!resp.ok) {
+            const text = await resp.text();
+            throw new Error(`Banana Pro createTask failed: ${resp.status} ${text}`);
+        }
+        const data = await resp.json();
+        const taskId = data?.data?.taskId;
+        if (!taskId) throw new Error('No taskId from Banana Pro');
+
+        return {
+            taskId,
+            r2Url: '',
+            svgContent: '',
+            model: 'google/nano-banana-pro',
+            tokensUsed: 0,
+            duration: Date.now() - startTime,
+            errorMessage: '',
+            status: 'processing'
+        };
+    } catch (error) {
+        return {
+            taskId: '',
+            r2Url: '',
+            svgContent: '',
+            model: 'google/nano-banana-pro',
+            tokensUsed: 0,
+            duration: Date.now() - startTime,
+            errorMessage: error instanceof Error ? error.message : 'Unknown error',
+            status: 'failed'
+        };
+    }
+}
+
+// Static Image via Banana (google/nano-banana)
+export async function generateCardImageWithBanana(params: CardContentParams): Promise<{ taskId: string, r2Url: string, svgContent: string, model: string, tokensUsed: number, duration: number, errorMessage?: string, status?: string }> {
+    const { size, userPrompt } = params;
+    const startTime = Date.now();
+    try {
+        const apiKey = process.env.KIE_API_KEY;
+        if (!apiKey) throw new Error('KIE_API_KEY is not configured');
+
+        if (userPrompt.length >= 5000) throw new Error('User prompt too long');
+
+        const sizeMap: Record<string, 'auto' | '1:1' | '3:4' | '9:16' | '4:3' | '16:9'> = {
+            portrait: '3:4',
+            landscape: '4:3',
+            square: '1:1',
+            instagram: '1:1',
+            story: '9:16'
+        };
+        const image_size = sizeMap[size] || '3:4';
+
+        const payload = {
+            model: 'google/nano-banana',
+            input: {
+                prompt: userPrompt,
+                output_format: 'png',
+                image_size
+            }
+        };
+
+        const resp = await fetch('https://api.kie.ai/api/v1/jobs/createTask', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${apiKey}`
+            },
+            body: JSON.stringify(payload)
+        });
+        if (!resp.ok) {
+            const text = await resp.text();
+            throw new Error(`Banana createTask failed: ${resp.status} ${text}`);
+        }
+        const data = await resp.json();
+        const taskId = data?.data?.taskId;
+        if (!taskId) throw new Error('No taskId from Banana');
+
+        return {
+            taskId,
+            r2Url: '',
+            svgContent: '',
+            model: 'google/nano-banana',
+            tokensUsed: 0,
+            duration: Date.now() - startTime,
+            errorMessage: '',
+            status: 'processing'
+        };
+    } catch (error) {
+        return {
+            taskId: '',
+            r2Url: '',
+            svgContent: '',
+            model: 'google/nano-banana',
+            tokensUsed: 0,
+            duration: Date.now() - startTime,
+            errorMessage: error instanceof Error ? error.message : 'Unknown error',
+            status: 'failed'
+        };
     }
 }
 
@@ -113,110 +251,4 @@ export async function generateCardImageWith4o(params: CardContentParams): Promis
     }
 }
 
-export async function generateCardImageGeminiFlash(params: CardContentParams): Promise<{ taskId: string, r2Url: string, svgContent: string, model: string, tokensUsed: number, duration: number, errorMessage?: string, status?: string }> {
-    const { cardType, size, userPrompt, modificationFeedback, previousCardId } = params;
-    const startTime = Date.now();
-    
-    console.log('<----Using model : Gemini 2.0 Flash Image Generation---->');
-
-    try {
-        console.log('<----User prompt : ' + userPrompt + '---->');
-
-        if (userPrompt.length >= 5000) {
-            throw new Error("User prompt too long");
-        }
-
-        const apiKey = process.env.GEMINI_API_KEY;
-        if (!apiKey) {
-            throw new Error("GEMINI_API_KEY is not configured");
-        }
-
-        // 构建完整提示词
-        const fullPrompt = userPrompt + ` that feels personal and festive, using these details to inspire a unique design. Full-bleed, edge-to-edge composition; fill the canvas; no borders or frames; no white or empty margins; avoid letterboxing/pillarboxing. Do not include any text. Use a central, lively illustration with cohesive colors, soft lighting, gentle shadows, and 2–3 small thematic props for extra charm. Be creative for a polished look. Please generate an image based on this description.`;
-
-        // 添加尺寸提示
-        let sizePrompt = '';
-        if (size === 'portrait' || size === 'story') {
-            sizePrompt = ' Create the image in portrait orientation (taller than wide).';
-        } else if (size === 'landscape') {
-            sizePrompt = ' Create the image in landscape orientation (wider than tall).';
-        } else {
-            sizePrompt = ' Create the image in square format.';
-        }
-
-        const completePrompt = fullPrompt + sizePrompt;
-
-        // 调用Gemini API
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-preview-image-generation:generateContent?key=${apiKey}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                contents: [{
-                    parts: [{ text: completePrompt }]
-                }],
-                generationConfig: {
-                    responseModalities: ["TEXT", "IMAGE"]
-                }
-            })
-        });
-
-        if (!response.ok) {
-            const errorData = await response.text();
-            throw new Error(`API request failed: ${response.status} ${errorData}`);
-        }
-
-        const data = await response.json();
-        
-        if (!data.candidates?.[0]?.content?.parts) {
-            throw new Error("No content returned from Gemini API");
-        }
-
-        // 提取图像数据
-        let imageData: string | null = null;
-        for (const part of data.candidates[0].content.parts) {
-            if (part.inlineData?.data) {
-                imageData = part.inlineData.data;
-                break;
-            }
-        }
-
-        if (!imageData) {
-            throw new Error("No image data returned from Gemini API");
-        }
-
-        // 生成任务ID
-        const taskId = `gemini_flash_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-
-        // 处理图像：转换为Buffer并上传
-        const imageBuffer = Buffer.from(imageData, 'base64');
-        const imageUrl = await uploadImageToR2(imageBuffer, taskId);
-
-        console.log(`<---- Image generation completed: ${taskId} ---->`);
-
-        return {
-            taskId: taskId,
-            r2Url: imageUrl, // 直接返回可用的URL
-            svgContent: '',
-            model: 'gemini-2.0-flash-image',
-            tokensUsed: 0,
-            duration: Date.now() - startTime,
-            errorMessage: '',
-            status: 'completed'
-        };
-
-    } catch (error) {
-        console.error('Error in generateCardImageGeminiFlash:', error);
-        return {
-            taskId: '',
-            r2Url: '',
-            svgContent: '',
-            model: 'gemini-2.0-flash-image',
-            tokensUsed: 0,
-            duration: Date.now() - startTime,
-            errorMessage: error instanceof Error ? error.message : 'Unknown error',
-            status: 'failed'
-        };
-    }
-}
+// Removed Gemini path; all static images now use KIE endpoints

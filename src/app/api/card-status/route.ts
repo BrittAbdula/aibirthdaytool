@@ -79,8 +79,13 @@ export async function GET(request: Request) {
       return response;
     }
 
-    // Handle Banana Edit image generation status
-    if(card.promptVersion === 'google/nano-banana-edit' || card.promptVersion === 'nano-banana-edit'){
+    // Handle Banana image generation status (Edit/Pro)
+    if(
+      card.promptVersion === 'google/nano-banana-edit' ||
+      card.promptVersion === 'nano-banana-edit' ||
+      card.promptVersion === 'google/nano-banana-pro' ||
+      card.promptVersion === 'google/nano-banana'
+    ){
       const taskId = card.taskId || '';
       let data: any = null;
       try {

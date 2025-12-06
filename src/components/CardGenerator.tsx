@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { ImageViewer } from '@/components/ImageViewer'
 import { cn, fetchSvgContent } from '@/lib/utils'
-import { CardType, CardConfig } from '@/lib/card-config'
+import { CardType, CardConfig, CARD_SIZES } from '@/lib/card-config'
 import { useSession, signIn } from "next-auth/react"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Loader2 } from 'lucide-react'
@@ -19,6 +19,8 @@ import { useCardGeneration } from '@/hooks/useCardGeneration'
 import { AlertCircle, Info } from 'lucide-react'
 import { PremiumModal } from '@/components/PremiumModal'
 import { modelConfigs, type ModelConfig } from '@/lib/model-config'
+import { stylePresets, getPresetsForFormat, type StylePreset, type OutputFormat } from '@/lib/style-presets'
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 
 const MagicalCardCreation = () => {
   return (
@@ -255,6 +257,8 @@ export default function CardGenerator({
   initialImgUrl: string,
   cardConfig: CardConfig
 }) {
+  // Persist user inputs across OAuth redirects
+  const AUTH_DRAFT_KEY = 'mewtrucard.authDraft.v1'
   const { data: session, status } = useSession()
   const [usageCount, setUsageCount] = useState<number>(0)
   const [currentCardType, setCurrentCardType] = useState<CardType>(wishCardType)
@@ -264,10 +268,19 @@ export default function CardGenerator({
   const sampleCard = `/card/goodluck.svg`
   const [submited, setSubmited] = useState(false)
   const [customValues, setCustomValues] = useState<Record<string, string>>({})
-  const [selectedSize, setSelectedSize] = useState(cardConfig.defaultSize || 'portrait')
+  const [selectedSize, setSelectedSize] = useState('portrait')
   // Unified input lives in the main form as `message`
-  const [selectedModel, setSelectedModel] = useState<ModelConfig>(modelConfigs[0]) // Default to first model
+  // Default to Static Image (Free_Image) instead of Animated SVG
+  const [selectedModel, setSelectedModel] = useState<ModelConfig>(
+    modelConfigs.find(m => m.id === 'Free_Image') || modelConfigs[0]
+  )
   const [showModelSelector, setShowModelSelector] = useState(false)
+  // Simplified format + style selection
+  const [selectedFormat, setSelectedFormat] = useState<OutputFormat>('image')
+  const [selectedStyleId, setSelectedStyleId] = useState<string | null>(null)
+  const [selectedTier, setSelectedTier] = useState<'base' | 'pro'>('base')
+  const [styleDialogOpen, setStyleDialogOpen] = useState(false)
+  const [styleSearch, setStyleSearch] = useState('')
   // Reference image upload state
   const [uploadedRefUrls, setUploadedRefUrls] = useState<string[]>([])
   const [isRefUploading, setIsRefUploading] = useState(false)
@@ -282,6 +295,78 @@ export default function CardGenerator({
     type: 'error' | 'warning' | 'info';
   } | null>(null);
   const [isVideoMode, setIsVideoMode] = useState(false);
+
+  // Pick default model for a given output format aligning with product rules
+  const pickDefaultModelForFormat = (fmt: OutputFormat): ModelConfig => {
+    if (fmt === 'video') {
+      // Video is Premium-only by product rule; prefer fast option
+      return modelConfigs.find(m => m.format === 'video' && m.tier === 'Premium' && m.id.includes('Fast'))
+        || modelConfigs.find(m => m.format === 'video' && m.tier === 'Premium')
+        || modelConfigs.find(m => m.format === 'video')
+        || modelConfigs[0];
+    }
+    if (fmt === 'image') {
+      return modelConfigs.find(m => m.format === 'image' && m.tier === 'Free')
+        || modelConfigs.find(m => m.format === 'image')
+        || modelConfigs[0];
+    }
+    // svg
+    return modelConfigs.find(m => m.format === 'svg' && m.tier === 'Free')
+      || modelConfigs.find(m => m.format === 'svg')
+      || modelConfigs[0];
+  };
+
+  // Return base/pro choices per format using existing modelConfigs
+  const getTierOptionsForFormat = (fmt: OutputFormat): { base: ModelConfig; pro?: ModelConfig } => {
+    if (fmt === 'svg') {
+      const base = modelConfigs.find(m => m.id === 'Free_SVG') || pickDefaultModelForFormat('svg');
+      const pro = modelConfigs.find(m => m.id === 'Premium_SVG');
+      return { base, pro };
+    }
+    if (fmt === 'image') {
+      const base = modelConfigs.find(m => m.id === 'Free_Image') || pickDefaultModelForFormat('image');
+      const pro = modelConfigs.find(m => m.id === 'Premium_Image');
+      return { base, pro };
+    }
+    // video
+    const base = modelConfigs.find(m => m.id === 'Premium_Video_Fast') || pickDefaultModelForFormat('video');
+    const pro = modelConfigs.find(m => m.id === 'Premium_Video_Pro');
+    return { base, pro };
+  };
+
+  // Initialize format/model/style sensible defaults
+  useEffect(() => {
+    // Ensure selectedFormat follows current model on mount
+    setSelectedFormat(prev => selectedModel?.format || prev);
+    // If no style yet, choose first compatible for current format
+    if (!selectedStyleId) {
+      const first = getPresetsForFormat(selectedModel?.format || 'image')[0];
+      if (first) setSelectedStyleId(first.id);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // React to format/tier change by swapping the model automatically
+  useEffect(() => {
+    if (!selectedFormat) return;
+    const tiers = getTierOptionsForFormat(selectedFormat);
+    const nextModel = selectedTier === 'pro' && tiers.pro ? tiers.pro : tiers.base;
+    setSelectedModel(nextModel);
+    // If current style not compatible, reset to first compatible
+    if (selectedFormat === 'svg') {
+      // Animated has no style selection per product rule
+      setSelectedStyleId(null);
+    } else if (selectedStyleId) {
+      const style = stylePresets.find(s => s.id === selectedStyleId);
+      if (style && !style.formats.includes(selectedFormat)) {
+        const first = getPresetsForFormat(selectedFormat)[0];
+        setSelectedStyleId(first ? first.id : null);
+      }
+    } else {
+      const first = getPresetsForFormat(selectedFormat)[0];
+      if (first) setSelectedStyleId(first.id);
+    }
+  }, [selectedFormat, selectedTier]);
 
   // Add ref to track if we're waiting for authentication
   const pendingAuthRef = useRef<boolean>(false)
@@ -365,6 +450,41 @@ export default function CardGenerator({
     }
   }, [session, savedFormData, setShowAuthDialog]);
 
+  // Restore draft after OAuth redirect (and optionally auto-generate)
+  useEffect(() => {
+    try {
+      const raw = typeof window !== 'undefined' ? window.localStorage.getItem(AUTH_DRAFT_KEY) : null
+      if (!raw) return
+      const draft = JSON.parse(raw || '{}') as {
+        shouldAutoGenerate?: boolean;
+        formData?: Record<string, any>;
+        customValues?: Record<string, string>;
+        selectedSize?: string;
+        selectedModelId?: string;
+        selectedFormat?: OutputFormat;
+        cardType?: string;
+      }
+
+      if (draft.formData) setFormData(draft.formData)
+      if (draft.customValues) setCustomValues(draft.customValues)
+      if (draft.selectedSize) setSelectedSize(draft.selectedSize)
+      if (draft.cardType) setCurrentCardType(draft.cardType as CardType)
+      if (draft.selectedModelId) {
+        const m = modelConfigs.find(m => m.id === draft.selectedModelId)
+        if (m) setSelectedModel(m)
+      }
+      if (draft.selectedFormat) setSelectedFormat(draft.selectedFormat)
+
+      // If logged in and flagged, auto-generate then clear
+      if (session && draft.shouldAutoGenerate) {
+        window.localStorage.removeItem(AUTH_DRAFT_KEY)
+        setTimeout(() => handleGenerateCard(), 400)
+      }
+    } catch (e) {
+      // Ignore parse errors
+    }
+  }, [session])
+
   // Add effect to set premium status when session changes
   useEffect(() => {
     if (session?.user) {
@@ -424,8 +544,12 @@ export default function CardGenerator({
   };
 
   const handleGenerateCard = async () => {
-    // Validate required fields
-    const requiredFields = cardConfig.fields.filter(field => !field.optional);
+    // Validate required fields for selected format
+    const requiredFields = cardConfig.fields.filter((field) => {
+      const fmts = (field as any).formats as OutputFormat[] | undefined;
+      const applies = !fmts || fmts.includes(selectedFormat);
+      return applies && !field.optional;
+    });
     const missingFields = requiredFields.filter(field => !formData[field.name]);
 
     if (missingFields.length > 0) {
@@ -445,6 +569,22 @@ export default function CardGenerator({
         selectedSize,
         selectedModel
       });
+      // Persist to localStorage so a redirect won't lose inputs
+      try {
+        const payload = {
+          shouldAutoGenerate: true,
+          formData: { ...formData },
+          customValues: { ...customValues },
+          selectedSize,
+          selectedModelId: selectedModel.id,
+          selectedFormat,
+          cardType: currentCardType,
+          ts: Date.now()
+        }
+        if (typeof window !== 'undefined') {
+          window.localStorage.setItem(AUTH_DRAFT_KEY, JSON.stringify(payload))
+        }
+      } catch {}
       pendingAuthRef.current = true;
       setIsPremiumUser(false) // User is not logged in, so definitely not premium
       setShowAuthDialog(true);
@@ -457,13 +597,16 @@ export default function CardGenerator({
       modelId: selectedModel.id, // 只传递模型ID
       formData: { ...formData },
       imageCount,
-      referenceImageUrls: uploadedRefUrls
+      referenceImageUrls: uploadedRefUrls,
+      styleId: selectedFormat === 'image' ? (selectedStyleId || undefined) : undefined,
+      outputFormat: selectedFormat
     };
 
     try {
       const result = await generateCards(options);
 
       if (result.success) {
+        try { if (typeof window !== 'undefined') window.localStorage.removeItem(AUTH_DRAFT_KEY) } catch {}
         setSubmited(true);
       } else if (result.error === 'rate_limit') {
         setErrorToast({
@@ -496,6 +639,22 @@ export default function CardGenerator({
   const handleLogin = async () => {
     try {
       setIsAuthLoading(true)
+      // Ensure latest draft is saved before redirecting to Google
+      try {
+        const payload = {
+          shouldAutoGenerate: true,
+          formData: { ...formData },
+          customValues: { ...customValues },
+          selectedSize,
+          selectedModelId: selectedModel.id,
+          selectedFormat,
+          cardType: currentCardType,
+          ts: Date.now()
+        }
+        if (typeof window !== 'undefined') {
+          window.localStorage.setItem(AUTH_DRAFT_KEY, JSON.stringify(payload))
+        }
+      } catch {}
       await signIn('google', { callbackUrl: window.location.href })
     } catch (error) {
       console.error('Login failed:', error)
@@ -635,6 +794,80 @@ export default function CardGenerator({
   return (
     <>
       <ErrorToast />
+      {/* Style selection dialog */}
+      <Dialog open={styleDialogOpen} onOpenChange={setStyleDialogOpen}>
+        <DialogContent className="sm:max-w-[900px]">
+          <DialogHeader>
+            <DialogTitle>Select Style</DialogTitle>
+            <DialogDescription>Choose a visual style preset for {selectedFormat === 'image' ? 'Static' : 'Video'}.</DialogDescription>
+          </DialogHeader>
+          <div className="flex items-center justify-between mb-2">
+            <div className="text-xs text-gray-500">{getPresetsForFormat(selectedFormat).length} styles</div>
+            <Input
+              placeholder="Search style"
+              value={styleSearch}
+              onChange={(e) => setStyleSearch(e.target.value)}
+              className="w-60"
+            />
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 max-h-[60vh] overflow-auto">
+            {/* Auto option */}
+            <button
+              type="button"
+              onClick={() => { setSelectedStyleId(null); setStyleDialogOpen(false); }}
+              className={cn('relative rounded-lg border overflow-hidden text-left group transition-all',
+                !selectedStyleId ? 'border-[#b19bff] ring-2 ring-[#b19bff]' : 'border-gray-200 hover:border-[#b19bff]')}
+            >
+              <div className="relative w-full overflow-hidden bg-gradient-to-br from-purple-50 to-pink-50 flex items-center justify-center" style={{ aspectRatio: '3/4' }}>
+                <span className="text-sm text-gray-700">Auto</span>
+              </div>
+              <div className="p-2">
+                <div className="flex items-center justify-between">
+                  <div className="text-sm font-medium text-gray-800 truncate">Automatic</div>
+                  <div className="text-[11px] px-1.5 py-0.5 rounded-full bg-purple-50 text-purple-700 border border-purple-200">
+                    0 pts
+                  </div>
+                </div>
+                <div className="text-[11px] text-gray-500 truncate">Balanced</div>
+              </div>
+              {!selectedStyleId && (<div className="absolute inset-0 ring-2 ring-[#b19bff] pointer-events-none" />)}
+            </button>
+            {getPresetsForFormat(selectedFormat)
+              .filter(p => !styleSearch || p.name.toLowerCase().includes(styleSearch.toLowerCase()) || p.category.toLowerCase().includes(styleSearch.toLowerCase()))
+              .map(preset => {
+                const active = selectedStyleId === preset.id;
+                return (
+                  <button
+                    key={preset.id}
+                    type="button"
+                    onClick={() => { setSelectedStyleId(preset.id); setStyleDialogOpen(false); }}
+                    className={cn('relative rounded-lg border overflow-hidden text-left group transition-all',
+                      active ? 'border-[#b19bff] ring-2 ring-[#b19bff]' : 'border-gray-200 hover:border-[#b19bff]')}
+                  >
+                    <div className="relative w-full overflow-hidden" style={{ aspectRatio: '3/4' }}>
+                      {preset.sample ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={preset.sample} alt={preset.name} className="absolute inset-0 w-full h-full object-cover" />
+                      ) : (
+                        <div className="absolute inset-0 w-full h-full bg-gradient-to-br from-purple-50 to-pink-50" />
+                      )}
+                    </div>
+                    <div className="p-2">
+                      <div className="flex items-center justify-between">
+                        <div className="text-sm font-medium text-gray-800 truncate">{preset.name}</div>
+                        <div className="text-[11px] px-1.5 py-0.5 rounded-full bg-purple-50 text-purple-700 border border-purple-200">
+                          {preset.cost} pts
+                        </div>
+                      </div>
+                      <div className="text-[11px] text-gray-500 truncate">{preset.category}</div>
+                    </div>
+                    {active && (<div className="absolute inset-0 ring-2 ring-[#b19bff] pointer-events-none" />)}
+                  </button>
+                )
+              })}
+          </div>
+        </DialogContent>
+      </Dialog>
       <main className="mx-auto pb-32">
         {error && (
           <Alert variant="destructive" className="mb-4">
@@ -663,228 +896,594 @@ export default function CardGenerator({
                 />
               </div>
               
-              {/* Fallback message field if not defined in config */}
-              {!cardConfig.fields.some((f) => f.name === 'message') && (
-                <div key="message" className="space-y-2">
-                  <Label htmlFor="message" className="after:content-[''] after:ml-0.5 after:text-red-500">Message</Label>
-                  <Textarea
-                    id="message"
-                    value={formData['message'] || ''}
-                    onChange={(e) => handleInputChange('message', e.target.value)}
-                    placeholder="Enter your message and any design requirements"
-                    rows={3}
-                    className="resize-none text-base"
-                    onKeyPress={(e) => {
-                      if (e.key === 'Enter' && !e.shiftKey) {
-                        e.preventDefault();
-                        handleGenerateCard();
-                      }
-                    }}
-                  />
-                </div>
-              )}
+              {/* First: To / Relationship */}
+              {(() => {
+                const toField = cardConfig.fields.find((f) => f.name === 'to' && !Array.isArray((f as any).formats));
+                const relField = cardConfig.fields.find((f) => f.name === 'relationship' && !Array.isArray((f as any).formats));
+                const firstField = toField || relField;
+                return firstField ? (
+                  <div key={(firstField as any).name + '-top'}>{renderField(firstField)}</div>
+                ) : null;
+              })()}
 
-              {/* Optional mood/tone if not provided by config */}
-              {!cardConfig.fields.some((f) => f.name === 'tone') && (
-                <div key="tone" className="space-y-2">
-                  <Label htmlFor="tone">Mood (optional)</Label>
-                  <CustomSelect
-                    value={(formData['tone'] as string) || ''}
-                    onValueChange={(value) => handleInputChange('tone', value)}
-                    customValue={''}
-                    onCustomValueChange={() => {}}
-                    placeholder="Choose mood: surprise, touching or humor"
-                    options={[ 'surprise', 'touching', 'humor' ]}
-                    label="Mood"
-                  />
-                </div>
-              )}
+              {/* Then: Recipient's Name */}
+              {(() => {
+                const recipientField = cardConfig.fields.find((f) => f.name === 'recipientName' && !Array.isArray((f as any).formats));
+                return recipientField ? (
+                  <div key="recipientName-top">{renderField(recipientField)}</div>
+                ) : null;
+              })()}
 
-            {cardConfig.fields.map((field) => renderField(field))}
-
-            {/* Color Selection */}
-            <div key="card-design" className="space-y-2">
-                <Label htmlFor="card-design" className="flex justify-between items-center">
-                  <span>Color</span>
-                </Label>
-                <div className="grid grid-cols-8 gap-2 w-full">
-                  {[
-                    { id: "black", name: "Black", color: "#000000" },
-                    { id: "gray", name: "Gray", color: "#BDBDBD" },
-                    { id: "white", name: "White", color: "#FFFFFF", border: true },
-                    { id: "red", name: "Red", color: "#D32F2F" },
-                    { id: "purple", name: "Purple", color: "#7B1FA2" },
-                    { id: "pink", name: "Pink", color: "#FF80AB" },
-                    { id: "green", name: "Green", color: "#388E3C" },
-                    { id: "light-green", name: "Light Green", color: "#A5D6A7" },
-                    { id: "blue", name: "Blue", color: "#1976D2" },
-                    { id: "navy", name: "Navy", color: "#283593" },
-                    { id: "sky", name: "Sky Blue", color: "#B3E5FC" },
-                    { id: "gold", name: "Gold", color: "#D4AF37" },
-                    { id: "beige", name: "Beige", color: "#F5F5DC" },
-                    { id: "yellow", name: "Yellow", color: "#FFF176" },
-                    { id: "brown", name: "Brown", color: "#8D5524" },
-                    { id: "peach", name: "Peach", color: "#FFCC99" },
-                  ].map((color) => {
-                    const colorValue = `${color.id}`;
-                    const isSelected = formData["design"] === colorValue;
-                    return (
-                      <button
-                        key={color.id}
-                        type="button"
-                        onClick={() => handleInputChange("design", isSelected ? '' : colorValue)}
-                        className={cn(
-                          "h-8 w-8 rounded-full border-2 flex items-center justify-center transition-all duration-200",
-                          isSelected
-                            ? "border-[#b19bff] ring-2 ring-[#b19bff]"
-                            : color.border ? "border-gray-300" : "border-transparent"
-                        )}
-                        style={{ backgroundColor: color.color }}
-                        aria-label={color.name}
-                      >
-                        {isSelected && (
-                          <span className="block w-3 h-3 rounded-full border-2 border-white bg-white" />
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setCustomValues(prev => ({
-                      ...prev,
-                      design: formData["design"] === "custom" ? "" : (prev.design || "")
-                    }));
-                    handleInputChange("design", formData["design"] === "custom" ? "" : "custom");
-                  }}
-                  className={cn(
-                    "mt-1 w-full py-1.5 px-2 border rounded-md flex items-center justify-center gap-1 transition-all duration-200 text-sm",
-                    formData["design"] === "custom"
-                      ? "border-[#b19bff] bg-[#b19bff]/10"
-                      : "border-gray-200 hover:border-[#b19bff] hover:bg-[#b19bff]/5"
-                  )}
-                >
-                  <span className="text-sm">✨</span>
-                  <span className={formData["design"] === "custom" ? "text-[#b19bff] font-medium" : "text-gray-600"}>
-                    Custom Design
-                  </span>
-                </button>
-                {formData["design"] === "custom" && (
-                  <div className="mt-1">
-                    <Input
-                      value={customValues["design"] || ''}
-                      onChange={(e) => {
-                        setCustomValues(prev => ({ ...prev, design: e.target.value }));
-                        handleInputChange("design", "custom");
+              {/* Public inputs: Message + Signed (below Recipient's Name) */}
+              {(() => {
+                const messageField = cardConfig.fields.find((f) => f.name === 'message');
+                return messageField ? (
+                  <div key="message-top">{renderField(messageField)}</div>
+                ) : (
+                  <div key="message" className="space-y-2">
+                    <Label htmlFor="message">Message</Label>
+                    <Textarea
+                      id="message"
+                      value={formData['message'] || ''}
+                      onChange={(e) => handleInputChange('message', e.target.value)}
+                      placeholder="Enter your message and any design requirements"
+                      rows={3}
+                      className="resize-none text-base"
+                      onKeyPress={(e) => {
+                        if (e.key === 'Enter' && !e.shiftKey) {
+                          e.preventDefault();
+                          handleGenerateCard();
+                        }
                       }}
-                      placeholder="Describe any design you want: colors, patterns, style, layout..."
-                      className="border-[#b19bff] focus-visible:ring-[#b19bff] text-sm"
                     />
-                    <p className="text-xs text-gray-500 mt-1">
-                      Examples: &ldquo;pastel watercolor with flowers&rdquo;, &ldquo;modern minimalist&rdquo;, &ldquo;hand-drawn cartoon style&rdquo;
-                    </p>
                   </div>
-                )}
-              </div>
+                );
+              })()}
 
+              {(() => {
+                const signedField = cardConfig.fields.find((f) => f.name === 'signed');
+                return signedField ? (
+                  <div key="signed-top">{renderField(signedField)}</div>
+                ) : (
+                  <div key="signed" className="space-y-2">
+                    <Label htmlFor="signed">Signed (optional)</Label>
+                    <Input
+                      id="signed"
+                      type="text"
+                      value={formData['signed'] || ''}
+                      onChange={(e) => handleInputChange('signed', e.target.value)}
+                      placeholder="Your name or nickname to sign the card"
+                      className="text-base"
+                    />
+                  </div>
+                );
+              })()}
 
-              {/* Reference Image Upload (inline) */}
-              <div className="mt-3 space-y-2">
-                <Label className="flex justify-between items-center">
-                  <span>Subject Photo (optional)</span>
-                </Label>
-                {refError && (
-                  <Alert variant="destructive"><AlertDescription>{refError}</AlertDescription></Alert>
-                )}
-                <div
-                  className={cn(
-                    'relative border-2 border-dashed rounded-lg p-3 transition-colors cursor-pointer flex items-center justify-center min-h-28',
-                    isRefUploading ? 'border-[#b19bff] bg-[#f8f5ff] animate-pulse' : 'border-gray-300 hover:border-[#b19bff]'
-                  )}
-                  onClick={() => refPhotoInputRef.current?.click()}
-                  role="button"
-                  aria-label="Upload subject photo"
-                >
-                  <input
-                    ref={refPhotoInputRef}
-                    type="file"
-                    accept="image/jpeg,image/png,image/webp"
-                    className="hidden"
-                    onChange={async (e) => {
-                      try {
-                        setRefError(null)
-                        setIsRefUploading(true)
-                        const file = (e.target.files && e.target.files[0]) || null
-                        if (!file) { setIsRefUploading(false); return }
-                        const fd = new FormData()
-                        fd.append('file', file)
-                        fd.append('uploadPath', 'images/user-uploads')
-                        fd.append('fileName', file.name)
-                        const resp = await fetch('/api/reference/upload', { method: 'POST', body: fd })
-                        if (!resp.ok) {
-                          const txt = await resp.text(); throw new Error(txt)
-                        }
-                        const data = await resp.json()
-                        const url = data?.data?.downloadUrl
-                        if (!url) throw new Error('Upload failed: no URL')
-                        setUploadedRefUrls([url])
-                      } catch (e: any) {
-                        setRefError(e?.message || 'Upload failed')
-                        setUploadedRefUrls([])
-                      } finally {
-                        setIsRefUploading(false)
-                        if (e.target) {
-                          (e.target as HTMLInputElement).value = ''
-                        }
-                      }
-                    }}
-                  />
-                  {uploadedRefUrls.length > 0 ? (
-                    <div className="w-full">
-                      <img src={uploadedRefUrls[0]} alt="Subject photo" className="w-full max-h-56 object-contain rounded-md border bg-white" />
-                    </div>
-                  ) : (
-                    <div className="text-center text-sm text-gray-500">
-                      Click to upload subject photo (JPG/PNG/WebP)
-                    </div>
-                  )}
+              {/* Common dynamic fields (no formats specified) - required only (excluding to/relationship/recipientName/message/signed) */}
+              {cardConfig.fields
+                .filter((field) => !Array.isArray((field as any).formats) && !field.optional && !['to','relationship','recipientName','message','signed'].includes(field.name))
+                .map((field) => renderField(field))}
 
-                  {isRefUploading && (
-                    <div className="absolute inset-0 bg-white/70 backdrop-blur-sm rounded-lg flex flex-col items-center justify-center">
-                      <Loader2 className="h-5 w-5 animate-spin text-[#b19bff]" />
-                      <span className="text-xs text-gray-600 mt-2">Uploading…</span>
-                    </div>
-                  )}
-                </div>
+              {/* Format Tabs */}
+              <div className="mt-4">
+                <Tabs value={selectedFormat} onValueChange={(v) => setSelectedFormat(v as OutputFormat)} className="w-full">
+                  <TabsList className="grid w-full grid-cols-3 mb-2">
+                    <TabsTrigger value="svg">Animated</TabsTrigger>
+                    <TabsTrigger value="image">Static</TabsTrigger>
+                    <TabsTrigger value="video">Video</TabsTrigger>
+                  </TabsList>
+
+                  {(['svg','image','video'] as OutputFormat[]).map(fmt => (
+                    <TabsContent key={fmt} value={fmt}>
+                      {fmt === 'image' && (
+                        <div className="space-y-2">
+                          <Label>Style</Label>
+                          <div className="flex items-center justify-between">
+                            <div className="text-sm text-gray-700">
+                              {(() => {
+                                const cur = stylePresets.find(s => s.id === selectedStyleId);
+                                return cur ? `${cur.name} · +${cur.cost} pts` : 'Auto · 0 pts';
+                              })()}
+                            </div>
+                            <Button type="button" variant="outline" size="sm" onClick={() => setStyleDialogOpen(true)}>
+                              Choose Style
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Format-specific dynamic fields (required only) */}
+                      <div className="mt-4 space-y-3">
+                        {cardConfig.fields
+                          .filter((field) => Array.isArray((field as any).formats) && (field as any).formats.includes(fmt) && !field.optional && !['message','signed','recipientName','to','relationship'].includes(field.name))
+                          .map((field) => renderField(field))}
+                      </div>
+
+                      {/* SVG extra options (keep original richness) */}
+                      {fmt === 'svg' && (
+                        <div className="mt-4 space-y-4">
+                          {/* Optional mood/tone if not provided by config */}
+                          {!cardConfig.fields.some((f) => f.name === 'tone') && (
+                            <div key="tone" className="space-y-2">
+                              <Label htmlFor="tone">Mood (optional)</Label>
+                              <CustomSelect
+                                value={(formData['tone'] as string) || ''}
+                                onValueChange={(value) => handleInputChange('tone', value)}
+                                customValue={''}
+                                onCustomValueChange={() => {}}
+                                placeholder="Choose mood: surprise, touching or humor"
+                                options={[ 'surprise', 'touching', 'humor' ]}
+                                label="Mood"
+                              />
+                            </div>
+                          )}
+
+                          {/* Optional common dynamic fields (exclude message/signed to avoid duplicates) */}
+                          <div className="space-y-3">
+                            {cardConfig.fields
+                              .filter((field) => !Array.isArray((field as any).formats) && field.optional && !['message','signed','to','relationship','recipientName'].includes(field.name))
+                               .map((field) => renderField(field))}
+                          </div>
+
+                          {/* Color / Custom design */}
+                          <div key="card-design" className="space-y-2">
+                            <Label htmlFor="card-design" className="flex justify-between items-center">
+                              <span>Color</span>
+                            </Label>
+                            <div className="grid grid-cols-8 gap-2 w-full">
+                              {[
+                                { id: "black", name: "Black", color: "#000000" },
+                                { id: "gray", name: "Gray", color: "#BDBDBD" },
+                                { id: "white", name: "White", color: "#FFFFFF", border: true },
+                                { id: "red", name: "Red", color: "#D32F2F" },
+                                { id: "purple", name: "Purple", color: "#7B1FA2" },
+                                { id: "pink", name: "Pink", color: "#FF80AB" },
+                                { id: "green", name: "Green", color: "#388E3C" },
+                                { id: "light-green", name: "Light Green", color: "#A5D6A7" },
+                                { id: "blue", name: "Blue", color: "#1976D2" },
+                                { id: "navy", name: "Navy", color: "#283593" },
+                                { id: "sky", name: "Sky Blue", color: "#B3E5FC" },
+                                { id: "gold", name: "Gold", color: "#D4AF37" },
+                                { id: "beige", name: "Beige", color: "#F5F5DC" },
+                                { id: "yellow", name: "Yellow", color: "#FFF176" },
+                                { id: "brown", name: "Brown", color: "#8D5524" },
+                                { id: "peach", name: "Peach", color: "#FFCC99" },
+                              ].map((color) => {
+                                const colorValue = `${color.id}`;
+                                const isSelected = formData["design"] === colorValue;
+                                return (
+                                  <button
+                                    key={color.id}
+                                    type="button"
+                                    onClick={() => handleInputChange("design", isSelected ? '' : colorValue)}
+                                    className={cn(
+                                      "h-8 w-8 rounded-full border-2 flex items-center justify-center transition-all duration-200",
+                                      isSelected
+                                        ? "border-[#b19bff] ring-2 ring-[#b19bff]"
+                                        : color.border ? "border-gray-300" : "border-transparent"
+                                    )}
+                                    style={{ backgroundColor: color.color }}
+                                    aria-label={color.name}
+                                  >
+                                    {isSelected && (
+                                      <span className="block w-3 h-3 rounded-full border-2 border-white bg-white" />
+                                    )}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setCustomValues(prev => ({
+                                  ...prev,
+                                  design: formData["design"] === "custom" ? "" : (prev.design || "")
+                                }));
+                                handleInputChange("design", formData["design"] === "custom" ? "" : "custom");
+                              }}
+                              className={cn(
+                                "mt-1 w-full py-1.5 px-2 border rounded-md flex items-center justify-center gap-1 transition-all duration-200 text-sm",
+                                formData["design"] === "custom"
+                                  ? "border-[#b19bff] bg-[#b19bff]/10"
+                                  : "border-gray-200 hover:border-[#b19bff] hover:bg-[#b19bff]/5"
+                              )}
+                            >
+                              <span className="text-sm">✨</span>
+                              <span className={formData["design"] === "custom" ? "text-[#b19bff] font-medium" : "text-gray-600"}>
+                                Custom Design
+                              </span>
+                            </button>
+                            {formData["design"] === "custom" && (
+                              <div className="mt-1">
+                                <Input
+                                  value={customValues["design"] || ''}
+                                  onChange={(e) => {
+                                    setCustomValues(prev => ({ ...prev, design: e.target.value }));
+                                    handleInputChange("design", "custom");
+                                  }}
+                                  placeholder="Describe any design you want: colors, patterns, style, layout..."
+                                  className="border-[#b19bff] focus-visible:ring-[#b19bff] text-sm"
+                                />
+                                <p className="text-xs text-gray-500 mt-1">
+                                  Examples: “pastel watercolor with flowers”, “modern minimalist”, “hand-drawn cartoon style”
+                                </p>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Optional format-specific dynamic fields (SVG only) */}
+                          <div className="space-y-3">
+                            {cardConfig.fields
+                              .filter((field) => Array.isArray((field as any).formats) && (field as any).formats.includes('svg') && field.optional)
+                              .map((field) => renderField(field))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Reference Image Upload (Static/Video only) */}
+                      {fmt !== 'svg' && (
+                        <div className="mt-4 space-y-2">
+                          <Label className="flex justify-between items-center">
+                            <span>Subject Photo (optional)</span>
+                          </Label>
+                          {refError && (
+                            <Alert variant="destructive"><AlertDescription>{refError}</AlertDescription></Alert>
+                          )}
+                          <div
+                            className={cn(
+                              'relative border-2 border-dashed rounded-lg p-3 transition-colors cursor-pointer flex items-center justify-center min-h-28',
+                              isRefUploading ? 'border-[#b19bff] bg-[#f8f5ff] animate-pulse' : 'border-gray-300 hover:border-[#b19bff]'
+                            )}
+                            onClick={() => refPhotoInputRef.current?.click()}
+                            role="button"
+                            aria-label="Upload subject photo"
+                          >
+                            <input
+                              ref={refPhotoInputRef}
+                              type="file"
+                              accept="image/jpeg,image/png,image/webp"
+                              className="hidden"
+                              onChange={async (e) => {
+                                try {
+                                  setRefError(null)
+                                  setIsRefUploading(true)
+                                  const file = (e.target.files && e.target.files[0]) || null
+                                  if (!file) { setIsRefUploading(false); return }
+                                  const fd = new FormData()
+                                  fd.append('file', file)
+                                  fd.append('uploadPath', 'images/user-uploads')
+                                  fd.append('fileName', file.name)
+                                  const resp = await fetch('/api/reference/upload', { method: 'POST', body: fd })
+                                  if (!resp.ok) {
+                                    const txt = await resp.text(); throw new Error(txt)
+                                  }
+                                  const data = await resp.json()
+                                  const url = data?.data?.downloadUrl
+                                  if (!url) throw new Error('Upload failed: no URL')
+                                  setUploadedRefUrls([url])
+                                } catch (e: any) {
+                                  setRefError(e?.message || 'Upload failed')
+                                  setUploadedRefUrls([])
+                                } finally {
+                                  setIsRefUploading(false)
+                                  if (e.target) {
+                                    (e.target as HTMLInputElement).value = ''
+                                  }
+                                }
+                              }}
+                            />
+                            {uploadedRefUrls.length > 0 ? (
+                              <div className="w-full">
+                                <img src={uploadedRefUrls[0]} alt="Subject photo" className="w-full max-h-56 object-contain rounded-md border bg-white" />
+                              </div>
+                            ) : (
+                              <div className="text-center text-sm text-gray-500">
+                                Click to upload subject photo (JPG/PNG/WebP)
+                              </div>
+                            )}
+
+                            {isRefUploading && (
+                              <div className="absolute inset-0 bg-white/70 backdrop-blur-sm rounded-lg flex flex-col items-center justify-center">
+                                <Loader2 className="h-5 w-5 animate-spin text-[#b19bff]" />
+                                <span className="text-xs text-gray-600 mt-2">Uploading…</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Removed Advanced Options group; keep hidden container to avoid large diff */}
+                      <div className="hidden">
+                        <div className="hidden">
+                          <div className="hidden"></div>
+                          <div className="hidden">
+                            {/* Size selector */}
+                            <div className="space-y-2">
+                              <Label htmlFor="size">Size</Label>
+                              <Select value={selectedSize} onValueChange={setSelectedSize}>
+                                <SelectTrigger className="w-full">
+                                  <SelectValue placeholder="Select size" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {Object.values(CARD_SIZES).map((s) => (
+                                    <SelectItem key={s.id} value={s.id}>{s.name} · {s.width}x{s.height}</SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+
+                            {/* Fallback message field if not defined in config */}
+                            {!cardConfig.fields.some((f) => f.name === 'message') && (
+                              <div key="message" className="space-y-2">
+                                <Label htmlFor="message">Message</Label>
+                                <Textarea
+                                  id="message"
+                                  value={formData['message'] || ''}
+                                  onChange={(e) => handleInputChange('message', e.target.value)}
+                                  placeholder="Enter your message and any design requirements"
+                                  rows={3}
+                                  className="resize-none text-base"
+                                  onKeyPress={(e) => {
+                                    if (e.key === 'Enter' && !e.shiftKey) {
+                                      e.preventDefault();
+                                      handleGenerateCard();
+                                    }
+                                  }}
+                                />
+                              </div>
+                            )}
+
+                            {/* Optional mood/tone (SVG only) if not provided by config */}
+                            {fmt === 'svg' && !cardConfig.fields.some((f) => f.name === 'tone') && (
+                              <div key="tone" className="space-y-2">
+                                <Label htmlFor="tone">Mood (optional)</Label>
+                                <CustomSelect
+                                  value={(formData['tone'] as string) || ''}
+                                  onValueChange={(value) => handleInputChange('tone', value)}
+                                  customValue={''}
+                                  onCustomValueChange={() => {}}
+                                  placeholder="Choose mood: surprise, touching or humor"
+                                  options={[ 'surprise', 'touching', 'humor' ]}
+                                  label="Mood"
+                                />
+                              </div>
+                            )}
+
+                            {/* Optional common dynamic fields (SVG only) */}
+                            {fmt === 'svg' && (
+                              <div className="space-y-3">
+                                {cardConfig.fields
+                                  .filter((field) => !Array.isArray((field as any).formats) && field.optional && !['message','signed','to','relationship','recipientName'].includes(field.name))
+                                  .map((field) => renderField(field))}
+                              </div>
+                            )}
+
+                            {/* Color/Custom design (SVG only) */}
+                            {fmt === 'svg' && (
+                              <div key="card-design" className="space-y-2">
+                                <Label htmlFor="card-design" className="flex justify-between items-center">
+                                  <span>Color</span>
+                                </Label>
+                                <div className="grid grid-cols-8 gap-2 w-full">
+                                  {[
+                                    { id: "black", name: "Black", color: "#000000" },
+                                    { id: "gray", name: "Gray", color: "#BDBDBD" },
+                                    { id: "white", name: "White", color: "#FFFFFF", border: true },
+                                    { id: "red", name: "Red", color: "#D32F2F" },
+                                    { id: "purple", name: "Purple", color: "#7B1FA2" },
+                                    { id: "pink", name: "Pink", color: "#FF80AB" },
+                                    { id: "green", name: "Green", color: "#388E3C" },
+                                    { id: "light-green", name: "Light Green", color: "#A5D6A7" },
+                                    { id: "blue", name: "Blue", color: "#1976D2" },
+                                    { id: "navy", name: "Navy", color: "#283593" },
+                                    { id: "sky", name: "Sky Blue", color: "#B3E5FC" },
+                                    { id: "gold", name: "Gold", color: "#D4AF37" },
+                                    { id: "beige", name: "Beige", color: "#F5F5DC" },
+                                    { id: "yellow", name: "Yellow", color: "#FFF176" },
+                                    { id: "brown", name: "Brown", color: "#8D5524" },
+                                    { id: "peach", name: "Peach", color: "#FFCC99" },
+                                  ].map((color) => {
+                                    const colorValue = `${color.id}`;
+                                    const isSelected = formData["design"] === colorValue;
+                                    return (
+                                      <button
+                                        key={color.id}
+                                        type="button"
+                                        onClick={() => handleInputChange("design", isSelected ? '' : colorValue)}
+                                        className={cn(
+                                          "h-8 w-8 rounded-full border-2 flex items-center justify-center transition-all duration-200",
+                                          isSelected
+                                            ? "border-[#b19bff] ring-2 ring-[#b19bff]"
+                                            : color.border ? "border-gray-300" : "border-transparent"
+                                        )}
+                                        style={{ backgroundColor: color.color }}
+                                        aria-label={color.name}
+                                      >
+                                        {isSelected && (
+                                          <span className="block w-3 h-3 rounded-full border-2 border-white bg-white" />
+                                        )}
+                                      </button>
+                                    );
+                                  })}
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setCustomValues(prev => ({
+                                      ...prev,
+                                      design: formData["design"] === "custom" ? "" : (prev.design || "")
+                                    }));
+                                    handleInputChange("design", formData["design"] === "custom" ? "" : "custom");
+                                  }}
+                                  className={cn(
+                                    "mt-1 w-full py-1.5 px-2 border rounded-md flex items-center justify-center gap-1 transition-all duration-200 text-sm",
+                                    formData["design"] === "custom"
+                                      ? "border-[#b19bff] bg-[#b19bff]/10"
+                                      : "border-gray-200 hover:border-[#b19bff] hover:bg-[#b19bff]/5"
+                                  )}
+                                >
+                                  <span className="text-sm">✨</span>
+                                  <span className={formData["design"] === "custom" ? "text-[#b19bff] font-medium" : "text-gray-600"}>
+                                    Custom Design
+                                  </span>
+                                </button>
+                                {formData["design"] === "custom" && (
+                                  <div className="mt-1">
+                                    <Input
+                                      value={customValues["design"] || ''}
+                                      onChange={(e) => {
+                                        setCustomValues(prev => ({ ...prev, design: e.target.value }));
+                                        handleInputChange("design", "custom");
+                                      }}
+                                      placeholder="Describe any design you want: colors, patterns, style, layout..."
+                                      className="border-[#b19bff] focus-visible:ring-[#b19bff] text-sm"
+                                    />
+                                    <p className="text-xs text-gray-500 mt-1">
+                                      Examples: “pastel watercolor with flowers”, “modern minimalist”, “hand-drawn cartoon style”
+                                    </p>
+                                  </div>
+                                )}
+                              </div>
+                            )}
+
+                            {/* Reference Image Upload (Static/Video only) */}
+                            {fmt !== 'svg' && (
+                            <div className="mt-3 space-y-2">
+                              <Label className="flex justify-between items-center">
+                                <span>Subject Photo (optional)</span>
+                              </Label>
+                              {refError && (
+                                <Alert variant="destructive"><AlertDescription>{refError}</AlertDescription></Alert>
+                              )}
+                              <div
+                                className={cn(
+                                  'relative border-2 border-dashed rounded-lg p-3 transition-colors cursor-pointer flex items-center justify-center min-h-28',
+                                  isRefUploading ? 'border-[#b19bff] bg-[#f8f5ff] animate-pulse' : 'border-gray-300 hover:border-[#b19bff]'
+                                )}
+                                onClick={() => refPhotoInputRef.current?.click()}
+                                role="button"
+                                aria-label="Upload subject photo"
+                              >
+                                <input
+                                  ref={refPhotoInputRef}
+                                  type="file"
+                                  accept="image/jpeg,image/png,image/webp"
+                                  className="hidden"
+                                  onChange={async (e) => {
+                                    try {
+                                      setRefError(null)
+                                      setIsRefUploading(true)
+                                      const file = (e.target.files && e.target.files[0]) || null
+                                      if (!file) { setIsRefUploading(false); return }
+                                      const fd = new FormData()
+                                      fd.append('file', file)
+                                      fd.append('uploadPath', 'images/user-uploads')
+                                      fd.append('fileName', file.name)
+                                      const resp = await fetch('/api/reference/upload', { method: 'POST', body: fd })
+                                      if (!resp.ok) {
+                                        const txt = await resp.text(); throw new Error(txt)
+                                      }
+                                      const data = await resp.json()
+                                      const url = data?.data?.downloadUrl
+                                      if (!url) throw new Error('Upload failed: no URL')
+                                      setUploadedRefUrls([url])
+                                    } catch (e: any) {
+                                      setRefError(e?.message || 'Upload failed')
+                                      setUploadedRefUrls([])
+                                    } finally {
+                                      setIsRefUploading(false)
+                                      if (e.target) {
+                                        (e.target as HTMLInputElement).value = ''
+                                      }
+                                    }
+                                  }}
+                                />
+                                {uploadedRefUrls.length > 0 ? (
+                                  <div className="w-full">
+                                    <img src={uploadedRefUrls[0]} alt="Subject photo" className="w-full max-h-56 object-contain rounded-md border bg-white" />
+                                  </div>
+                                ) : (
+                                  <div className="text-center text-sm text-gray-500">
+                                    Click to upload subject photo (JPG/PNG/WebP)
+                                  </div>
+                                )}
+
+                                {isRefUploading && (
+                                  <div className="absolute inset-0 bg-white/70 backdrop-blur-sm rounded-lg flex flex-col items-center justify-center">
+                                    <Loader2 className="h-5 w-5 animate-spin text-[#b19bff]" />
+                                    <span className="text-xs text-gray-600 mt-2">Uploading…</span>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                            )}
+
+                            {/* Optional format-specific dynamic fields (SVG only) */}
+                            {fmt === 'svg' && (
+                              <div className="space-y-3">
+                                {cardConfig.fields
+                                  .filter((field) => Array.isArray((field as any).formats) && (field as any).formats.includes(fmt) && field.optional)
+                                  .map((field) => renderField(field))}
+                              </div>
+                            )}
+
+                          </div>
+                        </div>
+                      </div>
+                    </TabsContent>
+                  ))}
+                </Tabs>
               </div>
 
               {/* Controls */}
-              <div className="mt-4 flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  <button
-                    type="button"
-                    onClick={() => setShowModelSelector(!showModelSelector)}
-                    className="flex items-center space-x-2 px-3 py-2 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors"
-                    title="Select Model"
-                  >
-                    <span className="text-lg">{selectedModel.icon}</span>
-                    <div className="flex flex-col items-start">
-                      <span className="text-xs font-medium text-gray-700">{selectedModel.name}</span>
-                      <span className="text-xs text-gray-500">{selectedModel.format === 'video' ? 'Video' : selectedModel.format === 'svg' ? 'Animated' : 'Static'}</span>
-                    </div>
-                  </button>
-
-                  {/* Reference Image button removed; inline uploader used */}
+              {/* Model row (single line) */}
+              <div className="mt-4">
+                <Label className="text-xs text-gray-500">Model</Label>
+                <div className="mt-1">
+                  <Select value={selectedTier} onValueChange={(v) => setSelectedTier(v as 'base'|'pro')}>
+                    <SelectTrigger className="w-full bg-gray-50">
+                      <SelectValue placeholder="Choose model" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {(() => {
+                        const tiers = getTierOptionsForFormat(selectedFormat);
+                        return (
+                          <>
+                            <SelectItem value="base">
+                              <div className="flex items-center justify-between w-full">
+                                <span className="text-sm">{tiers.base.name}</span>
+                                <span className="text-xs text-gray-500">{tiers.base.time}</span>
+                              </div>
+                            </SelectItem>
+                            <SelectItem value="pro" disabled={!tiers.pro}>
+                              <div className="flex items-center justify-between w-full">
+                                <span className="text-sm">{tiers.pro ? tiers.pro.name : 'Pro (N/A)'}</span>
+                                <span className="text-xs text-gray-500">{tiers.pro ? tiers.pro.time : ''}</span>
+                              </div>
+                            </SelectItem>
+                          </>
+                        )
+                      })()}
+                    </SelectContent>
+                  </Select>
                 </div>
+              </div>
 
+              {/* Points row removed; button shows points */}
+
+              {/* Generate button row (single line) */}
+              <div className="mt-3">
                 <Button
                   type="button"
                   onClick={handleGenerateCard}
                   disabled={isLoading}
-                  className="bg-gradient-to-r from-[#FFC0CB] to-[#b19bff] hover:from-[#FFD1DC] hover:to-[#FFB6C1] text-[#4A4A4A] transition-all"
+                  className="w-full bg-gradient-to-r from-[#FFC0CB] to-[#b19bff] hover:from-[#FFD1DC] hover:to-[#FFB6C1] text-[#4A4A4A] transition-all"
                 >
-                  {isLoading ? 'Generating…' : 'Generate'}
+                  {isLoading ? 'Generating…' : (() => {
+                    const styleCost = selectedFormat !== 'svg' ? ((stylePresets.find(s=>s.id===selectedStyleId)?.cost) || 0) : 0;
+                    const total = (uploadedRefUrls.length > 0) ? 6 : ((selectedModel?.credits || 0) + styleCost);
+                    return `Generate · ${total} pts`;
+                  })()}
                 </Button>
               </div>
 

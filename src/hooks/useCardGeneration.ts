@@ -1,5 +1,6 @@
 // hooks/useCardGeneration.ts
 import { useState, useCallback, useRef, useEffect } from 'react';
+import type { OutputFormat } from '@/lib/style-presets';
 import confetti from 'canvas-confetti';
 import { useSession, signIn } from 'next-auth/react';
 
@@ -12,6 +13,8 @@ interface CardGenerationOptions {
   previousCardId?: string;
   imageCount: number;
   referenceImageUrls?: string[];
+  styleId?: string; // selected style preset id
+  outputFormat?: OutputFormat; // svg | image | video for backend awareness
 }
 
 interface ImageState {
@@ -83,7 +86,7 @@ export const useCardGeneration = () => {
   }, []);
 
   const generateCards = useCallback(async (options: CardGenerationOptions) => {
-    const { imageCount, cardType, size, modelId, formData, modificationFeedback, previousCardId, referenceImageUrls } = options;
+    const { imageCount, cardType, size, modelId, formData, modificationFeedback, previousCardId, referenceImageUrls, styleId, outputFormat } = options;
 
     if (!session) {
       setSavedAuthData(options);
@@ -144,6 +147,12 @@ export const useCardGeneration = () => {
         };
         if (referenceImageUrls && referenceImageUrls.length) {
           payload.referenceImageUrls = referenceImageUrls;
+        }
+        if (styleId) {
+          payload.styleId = styleId;
+        }
+        if (outputFormat) {
+          payload.outputFormat = outputFormat;
         }
         if (modificationFeedback) {
           payload.modificationFeedback = modificationFeedback;

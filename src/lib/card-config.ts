@@ -1,5 +1,6 @@
 import { prisma } from './prisma'
 import { cache } from 'react'
+import type { OutputFormat } from './style-presets'
 
 export type CardType = string;
 
@@ -14,6 +15,9 @@ export interface Field {
   options?: string[];
   optional?: boolean;
   defaultValue?: string;
+  // Optional: limit this field to specific output formats (svg/image/video)
+  // If omitted, treated as common field for all formats
+  formats?: OutputFormat[];
 }
 
 export interface CardSize {

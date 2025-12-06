@@ -3,11 +3,12 @@ import { generateCardContent } from '@/lib/gpt';
 import { generateCardContentWithAnthropic } from '@/lib/anthropic-messages';
 import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
-import { generateCardImageWith4o, generateCardImageGeminiFlash, generateCardImage } from '@/lib/image';
+import { generateCardImage } from '@/lib/image';
 import { generateCardVideo, generateCardImageWithBananaEdit } from '@/lib/image-and-video';
 import { nanoid } from 'nanoid';
 import { getModelConfig, createModelTierMap } from '@/lib/model-config';
 import { uploadSvgToR2 } from '@/lib/r2';
+import { stylePresets } from '@/lib/style-presets';
 
 // 获取用户可用积分
 async function getUserCredits(userId: string, planType: string, isFirstDay: boolean): Promise<number> {
@@ -56,6 +57,8 @@ export async function POST(request: Request) {
       previousCardId,
       modelId = 'Free_SVG', // Default to Free_SVG if not specified
       referenceImageUrls,
+      styleId,
+      outputFormat,
       ...defaultFields
     } = requestData;
 
@@ -88,13 +91,21 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Invalid model ID' }, { status: 400 });
     }
 
-    const format = modelConfig.format;
+    const format = (outputFormat as 'image'|'svg'|'video') || modelConfig.format;
     const modelTier = modelConfig.tier;
 
     // 获取用户计划类型
     const planType = user?.plan || 'FREE';
-    let creditsUsed = modelConfig.credits;
-    // Banana模型特殊处理：使用参考图片时消耗6积分
+    // Compute style surcharge (only applies to static images per product rule)
+    const styleCost = (() => {
+      if (!styleId || format !== 'image') return 0;
+      const preset = stylePresets.find(p => p.id === styleId);
+      return preset?.cost ?? 0;
+    })();
+
+    // Credits: static image baseline = 6, plus style cost; SVG/Video use model credits
+    let creditsUsed = (format === 'image' ? 6 : modelConfig.credits) + styleCost;
+    // Banana Edit special case: using reference images costs 6 (ignore style surcharge)
     if (Array.isArray(referenceImageUrls) && referenceImageUrls.length > 0) {
       creditsUsed = 6;
     }
@@ -159,12 +170,43 @@ export async function POST(request: Request) {
     });
 
     // Before generating card, create the proper params object
+    // Build style segment
+    const styleSegment = (() => {
+      // Only apply style presets to static images; SVG/video keep backend-driven phrasing
+      if (!styleId || format !== 'image') return '';
+      const preset = stylePresets.find(p => p.id === styleId);
+      if (!preset) return '';
+      const promptForFmt = preset.prompts.image;
+      return promptForFmt ? ` Style preset: ${promptForFmt}.` : '';
+    })();
+
+    // Advanced options segment (optional)
+    const advancedSegment = (() => {
+      const f = defaultFields as any;
+      let seg = '';
+      if (format === 'svg') {
+        if (f.animationSpeed) seg += ` Animation speed: ${f.animationSpeed}.`;
+        if (f.loop) seg += ` Loop animation: ${String(f.loop)}.`;
+      } else if (format === 'image') {
+        // Keep minimal guidance; rely on style preset for rendering details
+        if (f.styleStrength) seg += ` Style intensity: ${f.styleStrength}.`;
+      } else if (format === 'video') {
+        // Keep only duration as a minimal controllable parameter
+        if (f.duration) seg += ` Target duration: ${f.duration} seconds.`;
+      }
+      return seg;
+    })();
+
+    const basePrompt = isModification
+      ? modificationFeedback
+      : createNaturalPrompt(requestData, defaultFields.cardType, { size: defaultFields.size || 'portrait', medium: format });
+
+    const finalPrompt = `${basePrompt}${styleSegment}${advancedSegment}`.trim();
+
     const cardParams = {
       cardType: defaultFields.cardType,
       size: defaultFields.size || 'portrait', // Add a default size if not provided
-      userPrompt: isModification
-        ? modificationFeedback
-        : createNaturalPrompt(requestData, defaultFields.cardType, { size: defaultFields.size || 'portrait', medium: format }),
+      userPrompt: finalPrompt,
       // Only include these if it's a modification request
       ...(isModification && {
         modificationFeedback,
@@ -178,9 +220,9 @@ export async function POST(request: Request) {
       let result;
       // If reference images are provided, use Banana Edit API
       if (Array.isArray(referenceImageUrls) && referenceImageUrls.length > 0) {
-        const basePrompt = createNaturalPrompt(requestData, defaultFields.cardType, { size: defaultFields.size || 'portrait', medium: 'image' });
+        const basePromptRef = createNaturalPrompt(requestData, defaultFields.cardType, { size: defaultFields.size || 'portrait', medium: 'image' });
         const likeness = buildReferenceEditPrompt(requestData, defaultFields.cardType, { size: defaultFields.size || 'portrait' });
-        const prompt = `${basePrompt} ${likeness}`.slice(0, 5000);
+        const prompt = `${basePromptRef}${styleSegment}${advancedSegment} ${likeness}`.slice(0, 5000);
         result = await generateCardImageWithBananaEdit({ size: defaultFields.size || 'portrait', userPrompt: prompt, imageUrls: referenceImageUrls });
       } else if (format === 'image') {
         result = await generateCardImage(cardParams, modelLevel);
@@ -256,22 +298,35 @@ const createNaturalPrompt = (
   cardType: string,
   opts?: { size?: string, medium?: 'image' | 'svg' | 'video' }
 ) => {
-  const { to, recipientName, message, signed, design, yearsTogether, age, tone, cardRequirements } = formData;
+  const { to, recipientName, message, signed, design, yearsTogether, age, cardRequirements } = (formData?.formData ?? formData);
   const size = opts?.size || 'portrait';
   const medium = opts?.medium || 'image';
+  const base = (formData?.formData ?? formData) as any;
+  // Aliases and normalized fields
+  const toResolved = (base?.to || base?.relationship || '').toString();
+  const signedResolved = (base?.signed || base?.senderName || '').toString();
+  const toneRaw = (base?.tone || '').toString().toLowerCase();
+  const customDesign = (base?.customDesign || base?.design_custom || '').toString();
+  const toneStyle = toneRaw.includes('humor')
+    ? 'playful, light-hearted mood'
+    : toneRaw.includes('surprise')
+      ? 'vibrant, energetic, celebratory mood'
+      : toneRaw.includes('touching')
+        ? 'warm, tender, heartfelt mood'
+        : toneRaw ? `${toneRaw} mood` : '';
 
   let prompt = '';
 
   // Goal & audience
-  prompt += `Design a playful, delightful ${cardType} greeting-card visual. `;
+  prompt += `Create a heartfelt ${cardType} greeting-card visual that authentically reflects the sender's feelings. `;
 
   // Recipient context
-  if (to && recipientName) {
-    const relationship = to.toLowerCase() === 'myself' ? 'myself' : `my ${to.toLowerCase()}`;
+  if (toResolved && recipientName) {
+    const relationship = toResolved.toLowerCase() === 'myself' ? 'myself' : `my ${toResolved.toLowerCase()}`;
     prompt += `It is for ${relationship} ${recipientName}. `;
   }
 
-  // Message context
+  // Message context (use the message to drive the overall emotional direction without rendering text)
   if (message) {
     const messageContext = {
       'sorry': 'Reason for apology',
@@ -288,18 +343,23 @@ const createNaturalPrompt = (
     } as const;
     const context = (messageContext as any)[cardType] || 'Message';
     prompt += `${context}: "${message}". `;
+    prompt += `Interpret this message as visual emotion and symbolism (not literal text). `;
   }
 
   // Signature & other simple facts
-  if (signed) prompt += `Signed by: ${signed}. `;
+  if (signedResolved && medium !== 'image') {
+    // For non-image media, influence tone without instructing text rendering
+    prompt += `Personal touch from sender (${signedResolved}); convey warmth and authenticity. `;
+  }
   if (yearsTogether) prompt += `Years together: ${yearsTogether}. `;
   if (age) prompt += `Age: ${age}. `;
-  if (tone) prompt += `Desired tone: ${tone}. `;
+  if (toneStyle) {
+    prompt += `Overall mood: ${toneStyle}. `;
+  }
 
   // Color / design
   if (design) {
     if (design === 'custom') {
-      const customDesign = formData.customDesign || formData.design_custom;
       if (customDesign) prompt += `Color palette: ${customDesign}. `;
     } else {
       prompt += `Color palette: ${design}. `;
@@ -309,6 +369,49 @@ const createNaturalPrompt = (
   if (cardRequirements) {
     prompt += `Other requirements: ${cardRequirements}. `;
   }
+
+  // Include additional simple user inputs as natural-language context (avoid tag soup)
+  try {
+    const excluded = new Set([
+      'to','relationship','recipientName','message','signed','senderName','design','customDesign','design_custom',
+      'yearsTogether','age','cardRequirements','tone',
+      'size','modelId','styleId','outputFormat','imageCount','referenceImageUrls','animationSpeed','loop','styleStrength','duration'
+    ]);
+    const extras: string[] = [];
+    Object.entries(base || {}).forEach(([k, v]) => {
+      if (excluded.has(k)) return;
+      if (v === null || v === undefined) return;
+      if (typeof v === 'string' && v.trim() === '') return;
+      if (typeof v === 'object') return;
+      const human = k.replace(/([a-z])([A-Z])/g, '$1 $2').replace(/[-_]/g, ' ').toLowerCase();
+      if (typeof v === 'boolean') {
+        if (v) extras.push(`Include ${human} if relevant.`);
+      } else {
+        extras.push(`${human}: ${v}.`);
+      }
+    });
+    if (extras.length) {
+      prompt += `Consider these user details: ${extras.join(' ')} `;
+    }
+  } catch {}
+
+  // Motifs per card type to guide scene building
+  const motifsMap: Record<string, string> = {
+    birthday: 'balloons, confetti, candles, colorful streamers',
+    anniversary: 'warm lights, roses, soft sparkles',
+    valentine: 'hearts, rose petals, delicate ribbons',
+    love: 'soft hearts, gentle glow',
+    'thank-you': 'subtle florals, ribbons, soft gradients',
+    congratulations: 'confetti, stars, celebratory ribbons',
+    'get-well': 'calming shapes, soothing colors',
+    graduation: 'mortarboard, scroll, confetti',
+    wedding: 'floral arch, rings, lace patterns',
+    holiday: 'seasonal ornaments, cozy lights',
+    baby: 'pastel toys, clouds, stars',
+    sorry: 'calm tones, soft bokeh'
+  };
+  const motifs = motifsMap[cardType] || 'festive, thematic elements that match the occasion';
+  prompt += `Use tasteful motifs for ${cardType}: ${motifs}. `;
 
   // Size & composition guidance
   if (size === 'portrait' || size === 'story') {
@@ -323,14 +426,27 @@ const createNaturalPrompt = (
   if (medium === 'image') {
     prompt += `Full-bleed, edge-to-edge composition; no borders, frames, or white margins; avoid letterboxing/pillarboxing; fill the canvas with scene and background; use an opaque (non-transparent) background. `;
     prompt += `Frame the main subject to occupy ~65–85% of the canvas; avoid excessive headroom or footroom. `;
-    prompt += `Do not include any text or captions; do not reserve empty negative space. `;
+    // Handwritten inscription for who-to-who if provided
+    const parts: string[] = [];
+    if (recipientName) parts.push(`To ${recipientName}`);
+    if (signedResolved) parts.push(`from ${signedResolved}`);
+    if (parts.length > 0) {
+      const inscription = parts.join(', ');
+      prompt += `Add one small, tasteful handwritten-style inscription reading "${inscription}"; place subtly near a corner or the lower area; integrate naturally; keep it short, legible, and not dominant. Avoid any other text. `;
+    } else {
+      prompt += `Avoid including any text or captions; translate emotional intent into color, light, and symbolic props. `;
+    }
   } else if (medium === 'svg') {
     // For SVG, still avoid empty white slabs while keeping vector cleanliness
     prompt += `Use a cohesive colored or gradient background that reaches the canvas edges (no plain white slabs); avoid transparent backgrounds. `;
+  } else if (medium === 'video') {
+    prompt += `Ensure smooth, coherent motion with clear subject focus; avoid jittery or disorienting camera moves. `;
   }
 
-  // Fun visual style applicable to both image/SVG, encouraging creativity
-  prompt += `Style: fun, whimsical, and charming; add 2–3 witty, thematic props (candles, confetti, balloons, streamers) that interact with the scene; cohesive palette, soft lighting, gentle shadows, and subtle depth. `;
+  // Visual style seed: keep for SVG; Static/Video rely primarily on style preset
+  if (medium === 'svg') {
+    prompt += `Style: clean vector aesthetic with playful charm; add 1–2 thematic props (confetti, balloons, streamers) that interact with the scene; cohesive palette, soft lighting, gentle depth. `;
+  }
 
   // Cleanliness
   prompt += `Avoid watermarks and logos. Keep the subject clear and appealing. `;
