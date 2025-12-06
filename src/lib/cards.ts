@@ -85,7 +85,10 @@ async function fetchRecentCards(
   const offset = (page - 1) * pageSize;
 
   // Base WHERE conditions
-  const whereConditions: Prisma.Sql[] = [buildModelCondition(FEATURED_MODELS)];
+  const whereConditions: Prisma.Sql[] = [
+    buildModelCondition(FEATURED_MODELS),
+    Prisma.sql`ec."isPublic" = true`
+  ];
   if (wishCardType) {
     whereConditions.push(Prisma.sql`ec."cardType" = ${wishCardType}`);
     }
@@ -165,7 +168,10 @@ async function fetchPopularCards(
   const offset = (page - 1) * pageSize;
 
   // Base WHERE conditions (same as recent)
-  const whereConditions: Prisma.Sql[] = [buildModelCondition(FEATURED_MODELS)];
+  const whereConditions: Prisma.Sql[] = [
+    buildModelCondition(FEATURED_MODELS),
+    Prisma.sql`ec."isPublic" = true`
+  ];
   if (wishCardType) {
     whereConditions.push(Prisma.sql`ec."cardType" = ${wishCardType}`);
   }
@@ -241,7 +247,8 @@ export async function getLikedCardsServer(
 
   // Base WHERE conditions
   const whereConditions: Prisma.Sql[] = [
-    Prisma.sql`"ec"."createdAt" >= NOW() - INTERVAL '60 days'`
+    Prisma.sql`"ec"."createdAt" >= NOW() - INTERVAL '60 days'`,
+    Prisma.sql`ec."isPublic" = true`
   ];
   if (wishCardType) {
     whereConditions.push(Prisma.sql`ec."cardType" = ${wishCardType}`);
@@ -325,7 +332,8 @@ export async function fetchPremiumCards(
 
   // Base WHERE conditions
   const whereConditions: Prisma.Sql[] = [
-    buildModelCondition(PREMIUM_TAB_MODELS)
+    buildModelCondition(PREMIUM_TAB_MODELS),
+    Prisma.sql`ec."isPublic" = true`
   ];
   if (wishCardType) {
     whereConditions.push(Prisma.sql`ec."cardType" = ${wishCardType}`);

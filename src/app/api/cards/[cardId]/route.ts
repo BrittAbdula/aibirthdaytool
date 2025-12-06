@@ -54,7 +54,10 @@ export async function GET(
           recipientName = (userInputs.to as string) || "";
           senderName = (userInputs.signed as string) || "";
           requirements = (userInputs.cardRequirements as string) || "";
-          isPublic = (userInputs.isPublic as boolean) || true;
+          const rawIsPublic = userInputs.isPublic;
+          if (typeof rawIsPublic === 'boolean') {
+            isPublic = rawIsPublic;
+          }
         }
 
         return NextResponse.json({

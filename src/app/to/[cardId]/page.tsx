@@ -10,6 +10,18 @@ interface Props {
 }
 
 async function getCard(cardId: string) {
+  if (cardId === 'test-card' || cardId === 'demo') {
+     return {
+       id: 'test-card',
+       cardType: 'birthday',
+       editedContent: '',
+       r2Url: 'https://images.unsplash.com/photo-1513151233558-d860c539d99f?q=80&w=2075&auto=format&fit=crop',
+       spotifyTrackId: null,
+       message: 'Happy Birthday! This card has magical vibes now.',
+       customUrl: 'test-card'
+     }
+  }
+
   // 尝试通过 ID 或自定义 URL 查找卡片
   const card = await prisma.editedCard.findFirst({
     where: {

@@ -14,11 +14,11 @@ import { stylePresets } from '@/lib/style-presets';
 async function getUserCredits(userId: string, planType: string, isFirstDay: boolean): Promise<number> {
   // 根据计划类型确定每日积分限制（FREE 首日 10 分，每日 5 分）
   const dailyCredits = planType === 'FREE' ? (isFirstDay ? 10 : 5) : Infinity;
-  
+
   if (dailyCredits === Infinity) {
     return Infinity; // PREMIUM 用户无限制
   }
-  
+
   // 查询今日已使用的积分
   const today = new Date(new Date().setHours(0, 0, 0, 0));
   const usage = await prisma.apiUsage.findUnique({
@@ -29,7 +29,7 @@ async function getUserCredits(userId: string, planType: string, isFirstDay: bool
       },
     },
   });
-  
+
   const usedCredits = usage?.count || 0;
   return Math.max(0, dailyCredits - usedCredits);
 }
@@ -42,7 +42,7 @@ export const dynamic = 'force-dynamic';
 
 export async function POST(request: Request) {
   try {
-  const session = await auth();
+    const session = await auth();
 
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -91,7 +91,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Invalid model ID' }, { status: 400 });
     }
 
-    const format = (outputFormat as 'image'|'svg'|'video') || modelConfig.format;
+    const format = (outputFormat as 'image' | 'svg' | 'video') || modelConfig.format;
     const modelTier = modelConfig.tier;
 
     // 获取用户计划类型
@@ -115,7 +115,7 @@ export async function POST(request: Request) {
     const todayStart = new Date(new Date().setHours(0, 0, 0, 0));
     const isFirstDay = !!user?.createdAt && user.createdAt >= todayStart;
     const availableCredits = await getUserCredits(userId, planType, isFirstDay);
-    
+
     // 检查积分是否足够
     if (availableCredits < creditsUsed) {
       return NextResponse.json({
@@ -171,12 +171,34 @@ export async function POST(request: Request) {
 
     // Before generating card, create the proper params object
     // Build style segment
+    // Build style segment
     const styleSegment = (() => {
       // Only apply style presets to static images; SVG/video keep backend-driven phrasing
-      if (!styleId || format !== 'image') return '';
-      const preset = stylePresets.find(p => p.id === styleId);
+      if (format !== 'image') return '';
+
+      let targetStyleId = styleId;
+      let isRandom = false;
+
+      // Random style logic: if no style selected for image, pick one randomly
+      if (!targetStyleId) {
+        const availableStyles = stylePresets.filter(p => p.formats.includes('image') && p.prompts.image);
+        if (availableStyles.length > 0) {
+          const randomStyle = availableStyles[Math.floor(Math.random() * availableStyles.length)];
+          targetStyleId = randomStyle.id;
+          isRandom = true;
+          // output log for debugging
+          // console.log(`[Auto-Style] Selected random style: ${randomStyle.name} (${randomStyle.id})`);
+        }
+      }
+
+      if (!targetStyleId) return '';
+
+      const preset = stylePresets.find(p => p.id === targetStyleId);
       if (!preset) return '';
-      const promptForFmt = preset.prompts.image;
+      const promptForFmt = preset.prompts?.image;
+
+      // If random, we might want to tell the prompt it was an artistic choice, or just treat it normally.
+      // Treating it normally works best.
       return promptForFmt ? ` Style preset: ${promptForFmt}.` : '';
     })();
 
@@ -307,18 +329,21 @@ const createNaturalPrompt = (
   const signedResolved = (base?.signed || base?.senderName || '').toString();
   const toneRaw = (base?.tone || '').toString().toLowerCase();
   const customDesign = (base?.customDesign || base?.design_custom || '').toString();
+
+  // Enhanced emotional and atmospheric mappings
   const toneStyle = toneRaw.includes('humor')
-    ? 'playful, light-hearted mood'
+    ? 'whimsical, playful, light-hearted yet sophisticated'
     : toneRaw.includes('surprise')
-      ? 'vibrant, energetic, celebratory mood'
+      ? 'dynamic, vibrant, celebratory, energetic'
       : toneRaw.includes('touching')
-        ? 'warm, tender, heartfelt mood'
-        : toneRaw ? `${toneRaw} mood` : '';
+        ? 'deeply emotional, tender, heartwarming, soft and intimate'
+        : toneRaw ? `${toneRaw}, elegant and polished` : 'elegant and heartfelt';
 
   let prompt = '';
 
-  // Goal & audience
-  prompt += `Create a heartfelt ${cardType} greeting-card visual that authentically reflects the sender's feelings. `;
+  // Goal & audience with quality boosters
+  prompt += `Create a masterpiece ${cardType} greeting card visual of award-winning quality. `;
+  prompt += `The image should be highly detailed, cinematic, and aesthetically pleasing. `;
 
   // Recipient context
   if (toResolved && recipientName) {
@@ -326,32 +351,31 @@ const createNaturalPrompt = (
     prompt += `It is for ${relationship} ${recipientName}. `;
   }
 
-  // Message context (use the message to drive the overall emotional direction without rendering text)
+  // Message context
   if (message) {
     const messageContext = {
-      'sorry': 'Reason for apology',
-      'birthday': 'Birthday message',
-      'thank-you': 'Reason for gratitude',
-      'congratulations': 'Celebration reason',
-      'love': 'Love message',
-      'get-well': 'Get well wishes',
-      'graduation': 'Graduation message',
-      'wedding': 'Wedding wishes',
-      'holiday': 'Holiday message',
-      'anniversary': 'Anniversary message',
-      'baby': 'Baby shower message'
+      'sorry': 'apology and reconciliation',
+      'birthday': 'birthday celebration',
+      'thank-you': 'gratitude and appreciation',
+      'congratulations': 'joyous achievement',
+      'love': 'deep romantic affection',
+      'get-well': 'healing and comfort',
+      'graduation': 'academic success and future potential',
+      'wedding': 'eternal love and union',
+      'holiday': 'festive seasonal joy',
+      'anniversary': 'enduring love and partnership',
+      'baby': 'new life and tenderness'
     } as const;
     const context = (messageContext as any)[cardType] || 'Message';
-    prompt += `${context}: "${message}". `;
-    prompt += `Interpret this message as visual emotion and symbolism (not literal text). `;
+    prompt += `The core emotion is ${context}: "${message}". `;
+    prompt += `Translate this sentiment into a rich visual metaphor with emotional depth (do not render the text literal). `;
   }
 
   // Signature & other simple facts
   if (signedResolved && medium !== 'image') {
-    // For non-image media, influence tone without instructing text rendering
-    prompt += `Personal touch from sender (${signedResolved}); convey warmth and authenticity. `;
+    prompt += `Personal touch from sender (${signedResolved}); convey warmth. `;
   }
-  if (yearsTogether) prompt += `Years together: ${yearsTogether}. `;
+  if (yearsTogether) prompt += `Celebrates ${yearsTogether} years together. `;
   if (age) prompt += `Age: ${age}. `;
   if (toneStyle) {
     prompt += `Overall mood: ${toneStyle}. `;
@@ -367,15 +391,15 @@ const createNaturalPrompt = (
   }
 
   if (cardRequirements) {
-    prompt += `Other requirements: ${cardRequirements}. `;
+    prompt += `Specific requirements: ${cardRequirements}. `;
   }
 
-  // Include additional simple user inputs as natural-language context (avoid tag soup)
+  // Include additional simple user inputs
   try {
     const excluded = new Set([
-      'to','relationship','recipientName','message','signed','senderName','design','customDesign','design_custom',
-      'yearsTogether','age','cardRequirements','tone',
-      'size','modelId','styleId','outputFormat','imageCount','referenceImageUrls','animationSpeed','loop','styleStrength','duration'
+      'to', 'relationship', 'recipientName', 'message', 'signed', 'senderName', 'design', 'customDesign', 'design_custom',
+      'yearsTogether', 'age', 'cardRequirements', 'tone',
+      'size', 'modelId', 'styleId', 'outputFormat', 'imageCount', 'referenceImageUrls', 'animationSpeed', 'loop', 'styleStrength', 'duration'
     ]);
     const extras: string[] = [];
     Object.entries(base || {}).forEach(([k, v]) => {
@@ -391,65 +415,67 @@ const createNaturalPrompt = (
       }
     });
     if (extras.length) {
-      prompt += `Consider these user details: ${extras.join(' ')} `;
+      prompt += `Details to incorporate: ${extras.join(' ')} `;
     }
-  } catch {}
+  } catch { }
 
-  // Motifs per card type to guide scene building
+  // Refined Motifs for Elegance
   const motifsMap: Record<string, string> = {
-    birthday: 'balloons, confetti, candles, colorful streamers',
-    anniversary: 'warm lights, roses, soft sparkles',
-    valentine: 'hearts, rose petals, delicate ribbons',
-    love: 'soft hearts, gentle glow',
-    'thank-you': 'subtle florals, ribbons, soft gradients',
-    congratulations: 'confetti, stars, celebratory ribbons',
-    'get-well': 'calming shapes, soothing colors',
-    graduation: 'mortarboard, scroll, confetti',
-    wedding: 'floral arch, rings, lace patterns',
-    holiday: 'seasonal ornaments, cozy lights',
-    baby: 'pastel toys, clouds, stars',
-    sorry: 'calm tones, soft bokeh'
+    birthday: 'elegant balloons in pastel or metallic tones, soft confetti, glowing candles, delicious artisanal cake',
+    anniversary: 'warm candlelight, lush roses, golden accents, soft romantic bokeh',
+    valentine: 'silk ribbons, rose petals, soft hearts, dreamy lighting',
+    love: 'ethereal glow, intertwined elements, soft focus, warmth',
+    'thank-you': 'delicate floras, botanical elements, soft sunlight, elegant stationery vibe',
+    congratulations: 'sparkling streamers, golden stars, triumphant lighting, premium textures',
+    'get-well': 'serene nature scenes, fresh flowers, calming water, soft sunlight',
+    graduation: 'classic mortarboard, rolled scroll, golden light, aspirational horizon',
+    wedding: 'intricate lace details, white florals, soft drapery, pure elegance',
+    holiday: 'magical fairy lights, rich seasonal foliage, cozy textures, snow-dusted elements',
+    baby: 'soft plush textures, clouds, stars, pastel lullaby aesthetic',
+    sorry: 'muted tones, single flower, rain-streaked window or soft light, peaceful atmosphere'
   };
-  const motifs = motifsMap[cardType] || 'festive, thematic elements that match the occasion';
-  prompt += `Use tasteful motifs for ${cardType}: ${motifs}. `;
+  const motifs = motifsMap[cardType] || 'tasteful, high-quality thematic elements that match the occasion';
+  prompt += `Use elegant motifs: ${motifs}. `;
 
   // Size & composition guidance
   if (size === 'portrait' || size === 'story') {
-    prompt += `Composition: portrait orientation; balanced vertical layout. `;
+    prompt += `Composition: portrait orientation; balanced vertical layout with a clear focal point. `;
   } else if (size === 'landscape') {
-    prompt += `Composition: landscape orientation; cinematic horizontal layout. `;
+    prompt += `Composition: landscape orientation; cinematic horizontal layout with depth. `;
   } else {
-    prompt += `Composition: square layout; centered, balanced. `;
+    prompt += `Composition: square layout; perfectly centered and symmetrical or artistically balanced. `;
   }
 
-  // Medium-aware framing rules to eliminate white blanks
+  // Medium-aware framing rules
   if (medium === 'image') {
-    prompt += `Full-bleed, edge-to-edge composition; no borders, frames, or white margins; avoid letterboxing/pillarboxing; fill the canvas with scene and background; use an opaque (non-transparent) background. `;
-    prompt += `Frame the main subject to occupy ~65–85% of the canvas; avoid excessive headroom or footroom. `;
-    // Handwritten inscription for who-to-who if provided
+    prompt += `Key Requirements: Full-bleed, edge-to-edge composition. No borders, frames, or white margins. `;
+    prompt += `Avoid letterboxing/pillarboxing. The background must be fully opaque and rich. `;
+    prompt += `Frame the main subject artistically (approx. 65–85% of canvas). `;
+    prompt += `Style: High-end digital art, soft lighting, 8k resolution, highly detailed, photorealistic or premium illustration style (depending on tone). `;
+
+    // Handwritten inscription logic
     const parts: string[] = [];
     if (recipientName) parts.push(`To ${recipientName}`);
     if (signedResolved) parts.push(`from ${signedResolved}`);
     if (parts.length > 0) {
       const inscription = parts.join(', ');
-      prompt += `Add one small, tasteful handwritten-style inscription reading "${inscription}"; place subtly near a corner or the lower area; integrate naturally; keep it short, legible, and not dominant. Avoid any other text. `;
+      prompt += `Add a very small, elegant handwritten-style inscription: "${inscription}". Place it subtly in a corner. It must be legible but unobtrusive. Avoid any other text. `;
     } else {
-      prompt += `Avoid including any text or captions; translate emotional intent into color, light, and symbolic props. `;
+      prompt += `Do not include any text or captions. Rely entirely on visual storytelling. `;
     }
   } else if (medium === 'svg') {
-    // For SVG, still avoid empty white slabs while keeping vector cleanliness
-    prompt += `Use a cohesive colored or gradient background that reaches the canvas edges (no plain white slabs); avoid transparent backgrounds. `;
+    prompt += `Use a cohesive colored or gradient background (no plain white slabs). `;
   } else if (medium === 'video') {
-    prompt += `Ensure smooth, coherent motion with clear subject focus; avoid jittery or disorienting camera moves. `;
+    prompt += `Ensure smooth, cinematic motion. `;
   }
 
-  // Visual style seed: keep for SVG; Static/Video rely primarily on style preset
+  // Visual style seed for SVG (kept similar as requested to focus on static image primarily, but updated for consistency)
   if (medium === 'svg') {
-    prompt += `Style: clean vector aesthetic with playful charm; add 1–2 thematic props (confetti, balloons, streamers) that interact with the scene; cohesive palette, soft lighting, gentle depth. `;
+    prompt += `Style: clean vector aesthetic, modern and playful; thematic props interact with the scene; cohesive palette. `;
   }
 
   // Cleanliness
-  prompt += `Avoid watermarks and logos. Keep the subject clear and appealing. `;
+  prompt += `Final Polish: No watermarks, no logos, no artifacts. Pristine and clear. `;
 
   return prompt.trim();
 };
@@ -465,33 +491,33 @@ function buildReferenceEditPrompt(
   const customDesign = formData?.customDesign || formData?.design_custom;
 
   const toneStyle = tone.includes('humor')
-    ? 'playful, slightly cartoony, light-hearted'
+    ? 'whimsical, playful, light-hearted'
     : tone.includes('surprise')
-      ? 'vibrant, energetic, celebratory'
+      ? 'dynamic, vibrant, celebratory'
       : tone.includes('touching')
-        ? 'warm, tender, soft gradients'
-        : 'cheerful and welcoming';
+        ? 'deeply emotional, tender, heartwarming, atmospheric'
+        : 'elegant, polished, and welcoming';
 
   const motifsMap: Record<string, string> = {
-    birthday: 'balloons, confetti, streamers, candles',
-    anniversary: 'warm lights, roses, subtle sparkles',
-    valentine: 'hearts, rose petals, ribbons',
-    love: 'soft hearts, warm glows',
-    'thank-you': 'gentle florals, ribbons',
-    congratulations: 'ribbons, confetti, stars',
-    'get-well': 'soft shapes, soothing colors',
-    graduation: 'mortarboard, scroll, confetti',
-    wedding: 'floral arch, rings, lace patterns',
-    holiday: 'seasonal ornaments, cozy lights',
-    baby: 'pastel toys, clouds, stars',
-    sorry: 'calm tones, soft bokeh'
+    birthday: 'elegant balloons, soft confetti, streamers, cake',
+    anniversary: 'romantic lighting, roses, gold accents',
+    valentine: 'hearts, petals, soft pinks/reds',
+    love: 'warm glow, soft hearts',
+    'thank-you': 'botanicals, fresh flowers',
+    congratulations: 'stars, sparkles, confetti',
+    'get-well': 'soothing nature elements',
+    graduation: 'mortarboard, scroll, gold details',
+    wedding: 'floral arrangements, lace, rings',
+    holiday: 'seasonal decor, lights, cozy atmosphere',
+    baby: 'soft toys, clouds, stars',
+    sorry: 'peaceful, muted tones'
   };
-  const motifs = motifsMap[cardType] || 'festive, clean, thematic elements';
+  const motifs = motifsMap[cardType] || 'festive, elegant thematic elements';
 
   const paletteLine = design
     ? (design === 'custom' && customDesign
-        ? `Color palette: ${customDesign}. `
-        : `Color palette: ${design}. `)
+      ? `Color palette: ${customDesign}. `
+      : `Color palette: ${design}. `)
     : '';
 
   const orientationLine = size === 'landscape'
@@ -501,16 +527,17 @@ function buildReferenceEditPrompt(
       : 'Use a balanced vertical composition. ';
 
   return (
-    `Keep the subject clearly recognizable (face geometry, hairstyle, skin tone, key accessories). ` +
-    `Preserve the main clothing colors and patterns; do not drastically change outfit design. ` +
-    `Make the subject the primary character; place on a simple subtle base (e.g., round plinth) if helpful for presentation. ` +
-    `Scale the subject so it fills roughly 65–85% of the canvas; avoid excessive headroom or footroom. ` +
+    `Create a high-quality, elegant transformation. ` +
+    `Keep the subject clearly recognizable (face geometry, hairstyle, skin tone, accessories). ` +
+    `Preserve main clothing colors/patterns but refine them for a premium look. ` +
+    `Make the subject the star; place on a subtle, aesthetic base if needed. ` +
+    `Subject scale: 65–85% of canvas. ` +
     `${orientationLine}` +
-    `Background: ${motifs} that match the theme and ${toneStyle}; extend background colors/patterns all the way to the canvas edges (full-bleed); background should be opaque (non-transparent). ` +
+    `Background: ${motifs} matching the ${toneStyle} mood. Extend background to edges (full-bleed, opaque). ` +
     `${paletteLine}` +
-    `Do not render any text; do not reserve blank areas—avoid large white or empty regions; no borders or frames; avoid letterboxing/pillarboxing. ` +
-    `Render as a polished 2D illustration with cohesive palette, soft lighting, gentle shadows, and subtle depth. ` +
-    `Respect the reference pose and proportions; avoid adding or removing glasses, hats, or facial hair unless already present. ` +
-    `No watermarks or logos. `
+    `NO text. NO white borders. NO letterboxing. ` +
+    `Render as a polished, high-definition 2D illustration (or photorealistic if appropriate) with cohesive color grading, soft cinematic lighting, and depth. ` +
+    `Respect the reference pose. ` +
+    `No watermarks/logos. Best quality, 8k, masterpiece.`
   );
 }

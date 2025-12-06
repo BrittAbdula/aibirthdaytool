@@ -20,218 +20,186 @@ if (typeof document !== 'undefined' && !document.querySelector('#card-display-st
   const style = document.createElement('style');
   style.id = 'card-display-styles';
   style.textContent = `
-    /* Performance optimized animations using transform3d and will-change */
+    /* Apple-style Easing & Animations */
+    :root {
+      --ease-apple: cubic-bezier(0.25, 0.1, 0.25, 1);
+      --ease-spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
     .no-touch-callout { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
-    @keyframes sparkle-float {
-      0%, 100% { transform: translate3d(0px, 0px, 0px) scale3d(1, 1, 1) rotate(0deg); opacity: 1; }
-      25% { transform: translate3d(0px, -10px, 0px) scale3d(1.2, 1.2, 1) rotate(90deg); opacity: 0.8; }
-      50% { transform: translate3d(0px, 5px, 0px) scale3d(0.8, 0.8, 1) rotate(180deg); opacity: 1; }
-      75% { transform: translate3d(0px, -5px, 0px) scale3d(1.1, 1.1, 1) rotate(270deg); opacity: 0.9; }
+
+    /* Elegant Sparkle - subtle and slow */
+    @keyframes sparkle-elegant {
+      0%, 100% { transform: scale(0.8) rotate(0deg); opacity: 0.4; }
+      50% { transform: scale(1.2) rotate(180deg); opacity: 0.8; }
     }
-    @keyframes ribbon-fall {
-      0% { transform: translate3d(0px, -20px, 0px) rotate(0deg) scale3d(1, 1, 1); opacity: 0; }
-      10% { opacity: 1; }
-      90% { opacity: 1; }
-      100% { transform: translate3d(0px, 100vh, 0px) rotate(720deg) scale3d(0.5, 0.5, 1); opacity: 0; }
-    }
-    @keyframes sparkle-dance {
-      0%, 100% { transform: scale3d(1, 1, 1) rotate(0deg); opacity: 1; }
-      25% { transform: scale3d(1.3, 1.3, 1) rotate(90deg); opacity: 0.7; }
-      50% { transform: scale3d(0.7, 0.7, 1) rotate(180deg); opacity: 1; }
-      75% { transform: scale3d(1.1, 1.1, 1) rotate(270deg); opacity: 0.8; }
-    }
-    @keyframes magic-trail {
-      0% { transform: translate3d(0px, 0px, 0px) scale3d(1, 1, 1) rotate(45deg); opacity: 0; }
-      20% { opacity: 1; }
-      80% { opacity: 0.6; }
-      100% { transform: translate3d(0px, -50px, 0px) scale3d(0, 0, 1) rotate(225deg); opacity: 0; }
-    }
-    @keyframes celebration-burst {
-      0% { transform: scale3d(0, 0, 1) rotate(0deg); opacity: 1; }
-      50% { transform: scale3d(2, 2, 1) rotate(180deg); opacity: 0.8; }
-      100% { transform: scale3d(0, 0, 1) rotate(360deg); opacity: 0; }
-    }
-    @keyframes float-heart {
-      0%, 100% { transform: translate3d(0px, 0px, 0px) rotate(0deg) scale3d(1, 1, 1); opacity: 0.7; }
-      33% { transform: translate3d(5px, -15px, 0px) rotate(10deg) scale3d(1.1, 1.1, 1); opacity: 1; }
-      66% { transform: translate3d(-5px, 8px, 0px) rotate(-5deg) scale3d(0.9, 0.9, 1); opacity: 0.8; }
-    }
-    @keyframes gentle-bounce {
-      0%, 100% { transform: translate3d(0px, 0px, 0px) scale3d(1, 1, 1); }
-      50% { transform: translate3d(0px, -3px, 0px) scale3d(1.02, 1.02, 1); }
-    }
-    @keyframes shimmer {
-      0% { transform: translate3d(-100%, 0px, 0px); }
-      100% { transform: translate3d(100%, 0px, 0px); }
-    }
-    @keyframes slow-spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-    @keyframes ping-slow {
-      0% { transform: scale3d(1, 1, 1); opacity: 1; }
-      75%, 100% { transform: scale3d(2, 2, 1); opacity: 0; }
-    }
-    @keyframes pulse-slow {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.5; }
-    }
-    @keyframes shake {
-      0%, 100% { transform: translate3d(0px, 0px, 0px) rotate(0deg); }
-      10% { transform: translate3d(-0.5px, -0.3px, 0px) rotate(-0.2deg); }
-      20% { transform: translate3d(0.5px, 0.3px, 0px) rotate(0.2deg); }
-      30% { transform: translate3d(-0.3px, -0.5px, 0px) rotate(-0.1deg); }
-      40% { transform: translate3d(0.3px, 0.5px, 0px) rotate(0.1deg); }
-      50% { transform: translate3d(-0.3px, -0.3px, 0px) rotate(-0.1deg); }
-      60% { transform: translate3d(0.3px, 0.3px, 0px) rotate(0.1deg); }
-      70% { transform: translate3d(-0.5px, -0.3px, 0px) rotate(-0.2deg); }
-      80% { transform: translate3d(0.5px, 0.3px, 0px) rotate(0.2deg); }
-      90% { transform: translate3d(-0.3px, -0.5px, 0px) rotate(-0.1deg); }
-    }
-    @keyframes shake-gentle {
-      0%, 100% { transform: translate3d(0px, 0px, 0px) rotate(0deg); }
-      25% { transform: translate3d(-0.2px, -0.1px, 0px) rotate(-0.05deg); }
-      75% { transform: translate3d(0.2px, 0.1px, 0px) rotate(0.05deg); }
-    }
-    @keyframes shake-fade {
-      0% { transform: translate3d(-0.3px, -0.2px, 0px) rotate(-0.1deg); opacity: 1; }
-      100% { transform: translate3d(0px, 0px, 0px) rotate(0deg); opacity: 1; }
+
+    /* Soft float */
+    @keyframes float-gentle {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
     }
     
-    /* Envelope opening animation - optimized for performance */
-    @keyframes envelope-open {
-      0% { transform: translate3d(0px, 0px, 0px) rotateX(0deg) scale3d(1, 1, 1); }
-      100% { transform: translate3d(0px, 0px, 0px) rotateX(-180deg) scale3d(1.1, 1.1, 1); }
-    }
-    @keyframes envelope-slide-out {
-      0% { transform: translate3d(0px, 0px, 0px) rotate(0deg) scale3d(1, 1, 1); opacity: 1; }
-      100% { transform: translate3d(0px, -120%, 0px) rotate(0deg) scale3d(1.1, 1.1, 1); opacity: 1; }
-    }
-    @keyframes envelope-fade-out {
-      0% { transform: translate3d(0px, -32px, 0px) rotate(3deg) scale3d(0.9, 0.9, 1); opacity: 1; }
-      100% { transform: translate3d(0px, -64px, 0px) rotate(6deg) scale3d(0.8, 0.8, 1); opacity: 0; }
-    }
-    @keyframes card-reveal {
-      0% { transform: translate3d(0px, 8px, 0px) scale3d(0.9, 0.9, 1); opacity: 0; }
-      100% { transform: translate3d(0px, 0px, 0px) scale3d(1, 1, 1); opacity: 1; }
+    /* Envelope Opening - Physics based */
+    @keyframes envelope-open-flap {
+      0% { transform: rotateX(0deg); }
+      100% { transform: rotateX(-180deg); }
     }
     
-    /* Animation classes with performance optimizations */
-    .animate-sparkle-float { 
-      animation: sparkle-float 3s ease-in-out infinite; 
-      will-change: transform, opacity;
+    @keyframes envelope-slide-down {
+      0% { transform: translateY(0); opacity: 1; }
+      100% { transform: translateY(100px); opacity: 0; }
     }
-    .animate-ribbon-fall { 
-      animation: ribbon-fall 4s linear infinite; 
-      will-change: transform, opacity;
+
+    /* Card Reveal - Smooth slide up */
+    @keyframes card-reveal-elegant {
+      0% { transform: translateY(100px) scale(0.95); opacity: 0; }
+      100% { transform: translateY(0) scale(1); opacity: 1; }
     }
-    .animate-sparkle-dance { 
-      animation: sparkle-dance 2.5s ease-in-out infinite; 
-      will-change: transform, opacity;
-    }
-    .animate-magic-trail { 
-      animation: magic-trail 2s ease-out infinite; 
-      will-change: transform, opacity;
-    }
-    .animate-celebration-burst { 
-      animation: celebration-burst 1.5s ease-out infinite; 
-      will-change: transform, opacity;
-    }
-    .animate-float-heart { 
-      animation: float-heart 4s ease-in-out infinite; 
-      will-change: transform, opacity;
-    }
-    .animate-gentle-bounce { 
-      animation: gentle-bounce 2s ease-in-out infinite; 
-      will-change: transform;
-    }
-    .animate-shimmer { 
-      animation: shimmer 2s linear infinite; 
-      will-change: transform;
-    }
-    .animate-slow-spin { 
-      animation: slow-spin 10s linear infinite; 
-      will-change: transform;
-    }
-    .animate-ping-slow { 
-      animation: ping-slow 2s cubic-bezier(0, 0, 0.2, 1) infinite; 
-      will-change: transform, opacity;
-    }
-    .animate-pulse-slow { 
-      animation: pulse-slow 3s cubic-bezier(0.4, 0, 0.6, 1) infinite; 
-      will-change: opacity;
-    }
-    .animate-shake { 
-      animation: shake 1.2s ease-in-out infinite; 
-      will-change: transform;
-    }
-    .animate-shake-gentle { 
-      animation: shake-gentle 2s ease-in-out infinite; 
-      will-change: transform;
-    }
-    .animate-shake-fade { 
-      animation: shake-fade 1s ease-out forwards; 
-      will-change: transform;
-    }
-    .animate-envelope-open { 
-      animation: envelope-open 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards; 
-      will-change: transform;
-    }
-    .animate-envelope-slide-out { 
-      animation: envelope-slide-out 1.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards; 
-      will-change: transform, opacity;
-    }
-    .animate-envelope-fade-out { 
-      animation: envelope-fade-out 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards; 
-      will-change: transform, opacity;
-    }
-    .animate-card-reveal { 
-      animation: card-reveal 1s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards; 
+
+    /* Classes */
+    .animate-sparkle-elegant {
+      animation: sparkle-elegant 4s ease-in-out infinite;
       will-change: transform, opacity;
     }
     
-    /* Performance optimizations */
+    .animate-float-gentle {
+      animation: float-gentle 6s ease-in-out infinite;
+      will-change: transform;
+    }
+
+    .animate-envelope-open-flap {
+      animation: envelope-open-flap 0.8s var(--ease-apple) forwards;
+      transform-origin: top;
+      will-change: transform;
+    }
+    
+    .animate-envelope-slide-down {
+      animation: envelope-slide-down 1s var(--ease-apple) forwards;
+      will-change: transform, opacity;
+    }
+
+    .animate-card-reveal-elegant {
+      animation: card-reveal-elegant 1.2s var(--ease-apple) forwards;
+      will-change: transform, opacity;
+    }
+
+    /* Shake Animation - More controlled */
+    @keyframes shake-elegant {
+      0%, 100% { transform: rotate(0deg); }
+      25% { transform: rotate(-2deg); }
+      75% { transform: rotate(2deg); }
+    }
+    
+    .animate-shake-elegant {
+      animation: shake-elegant 0.4s ease-in-out infinite;
+    }
+
     .perspective-1000 { perspective: 1000px; }
-    .perspective-envelope { perspective: 800px; }
+    .perspective-envelope { perspective: 1200px; }
     .transform-style-3d { transform-style: preserve-3d; }
     .backface-hidden { backface-visibility: hidden; }
-    .gpu-optimized { 
-      transform: translate3d(0, 0, 0); 
-      will-change: transform; 
+    
+    /* Premium Shadows */
+    .shadow-envelope {
+      box-shadow: 0 20px 40px -5px rgba(0,0,0,0.1), 0 10px 20px -5px rgba(0,0,0,0.05);
     }
-    .group:hover .animate-sparkle-float { animation-duration: 1.5s; }
-    .group:hover .animate-float-heart { animation-duration: 2s; }
+    
+    .shadow-card-elegant {
+      box-shadow: 0 25px 50px -12px rgba(0,0,0,0.3);
+    }
+
+    /* MAGIC EFFECTS */
+    @keyframes aura-pulse {
+      0%, 100% { box-shadow: 0 0 40px 10px rgba(255, 215, 0, 0.2); }
+      50% { box-shadow: 0 0 60px 20px rgba(255, 215, 0, 0.4); }
+    }
+
+    @keyframes float-dust {
+      0% { transform: translateY(0) translateX(0); opacity: 0; }
+      10% { opacity: 0.8; }
+      90% { opacity: 0.8; }
+      100% { transform: translateY(-100px) translateX(20px); opacity: 0; }
+    }
+
+    @keyframes light-burst {
+      0% { opacity: 0; transform: scale(0.5); }
+      50% { opacity: 1; transform: scale(1.5); }
+      100% { opacity: 0; transform: scale(2); }
+    }
+
+    .animate-aura-pulse {
+      animation: aura-pulse 4s ease-in-out infinite;
+    }
+
+    .magic-particle {
+      position: absolute;
+      background: white;
+      border-radius: 50%;
+      pointer-events: none;
+    }
   `;
   document.head.appendChild(style);
 }
+
+// Magical Particle Component
+const MagicalParticles = () => {
+  const particles = Array.from({ length: 20 }).map((_, i) => ({
+    id: i,
+    left: `${Math.random() * 100}%`,
+    top: `${Math.random() * 100}%`,
+    size: Math.random() * 3 + 1 + 'px',
+    duration: Math.random() * 5 + 5 + 's',
+    delay: Math.random() * 5 + 's',
+  }));
+
+  return (
+    <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
+      {particles.map((p) => (
+        <div
+          key={p.id}
+          className="magic-particle opacity-0"
+          style={{
+            left: p.left,
+            top: p.top,
+            width: p.size,
+            height: p.size,
+            animation: `float-dust ${p.duration} ease-in-out infinite`,
+            animationDelay: p.delay,
+            background: 'radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(255,215,0,0.5) 100%)',
+            boxShadow: '0 0 5px rgba(255, 215, 0, 0.5)'
+          }}
+        />
+      ))}
+    </div>
+  );
+};
 
 export default function CardDisplay({ card }: CardDisplayProps) {
   const [stage, setStage] = useState<'initial' | 'opening' | 'revealing' | 'final'>('initial')
   const [showEnvelope, setShowEnvelope] = useState(true)
   const [showCard, setShowCard] = useState(false)
+  const [showBurst, setShowBurst] = useState(false) // New state for burst
   const [imageSrc, setImageSrc] = useState<string | null>(null)
-  const [sparkles, setSparkles] = useState<Array<{ id: number; x: number; y: number; delay: number }>>([])
-  const [ribbonParticles, setRibbonParticles] = useState<Array<{ id: number; x: number; y: number; color: string; delay: number }>>([])
+  
+  // Interaction states
   const [isHovering, setIsHovering] = useState(false)
   const [cardRotation, setCardRotation] = useState({ x: 0, y: 0 })
   const cardRef = useRef<HTMLDivElement>(null)
-  const motionRafRef = useRef<number | null>(null)
   
-  // 长按充能状态
+  // Long press / Charging
   const [isCharging, setIsCharging] = useState(false)
   const [chargeProgress, setChargeProgress] = useState(0)
-  const [unlockMethod, setUnlockMethod] = useState<'longpress' | 'shake' | null>(null)
   const chargeTimerRef = useRef<NodeJS.Timeout | null>(null)
   const chargeStartRef = useRef<number>(0)
   
-  // 摇一摇检测状态
+  // Shake
   const [shakeCount, setShakeCount] = useState(0)
   const [isShaking, setIsShaking] = useState(false)
-  const [shakeIntensity, setShakeIntensity] = useState<'normal' | 'gentle' | 'fading'>('normal')
   const lastShakeRef = useRef<number>(0)
   const shakeTimeoutRef = useRef<NodeJS.Timeout | null>(null)
-  const shakeThreshold = 15 // 摇动强度阈值
-  const shakeRequiredCount = 3 // 需要摇动次数
+  const shakeThreshold = 15
+  const shakeRequiredCount = 3
 
   // Helper function to determine if URL is a video
   const isVideo = (url?: string) => {
@@ -250,165 +218,38 @@ export default function CardDisplay({ card }: CardDisplayProps) {
     }
   }, [card.r2Url, card.svgContent])
 
-  // Generate floating sparkles - optimized with reduced count
-  const generateSparkles = useCallback(() => {
-    const newSparkles = Array.from({ length: 6 }, (_, i) => ({
-      id: Date.now() + i, // Use timestamp for unique IDs
-      x: Math.random() * 100,
-      y: Math.random() * 100,
-      delay: Math.random() * 2,
-    }));
-    setSparkles(newSparkles);
-    
-    // Use requestAnimationFrame for cleanup
-    setTimeout(() => {
-      requestAnimationFrame(() => setSparkles([]));
-    }, 3500);
-  }, []);
+  // Minimalist Confetti
+  const triggerConfetti = useCallback(() => {
+    const end = Date.now() + 1000;
+    const colors = ["#FFD700", "#C0C0C0", "#ffffff"]; // Gold, Silver, White
 
-  // Generate ribbon particles - optimized with reduced count
-  const generateRibbonParticles = useCallback(() => {
-    const colors = ["#FFB6C1", "#DDA0DD", "#F0E68C", "#98FB98", "#87CEEB"];
-    const newParticles = Array.from({ length: 8 }, (_, i) => ({
-      id: Date.now() + i, // Use timestamp for unique IDs
-      x: Math.random() * 100,
-      y: Math.random() * 100,
-      color: colors[Math.floor(Math.random() * colors.length)],
-      delay: Math.random() * 2.5,
-    }));
-    setRibbonParticles(newParticles);
-    
-    // Use requestAnimationFrame for cleanup
-    setTimeout(() => {
-      requestAnimationFrame(() => setRibbonParticles([]));
-    }, 4000);
-  }, []);
-
-  // 初始的两边confetti效果（刚打开时）
-  const triggerInitialConfetti = useCallback(() => {
-    const duration = 3000;
-    const end = Date.now() + duration;
-    const colors = ["#a786ff", "#fd8bbc", "#eca184", "#f8deb1", "#FFB6C1", "#DDA0DD", "#F0E68C"];
-
-    // 中心爆发
-    confetti({
-      particleCount: 100,
-      spread: 70,
-      origin: { y: 0.6 },
-      colors: colors,
-    });
-
-    // 持续的两边喷射效果
-    function continuousFrame() {
-      if (Date.now() > end) return;
-
-      // 左边喷射
+    (function frame() {
       confetti({
         particleCount: 3,
         angle: 60,
         spread: 55,
-        startVelocity: 60,
-        origin: { x: 0, y: 0.5 },
+        origin: { x: 0 },
         colors: colors,
-        shapes: ['star', 'circle'],
-        scalar: 0.8,
+        shapes: ['circle', 'star'], // Added star for magic
+        scalar: 0.8
       });
-      
-      // 右边喷射
       confetti({
         particleCount: 3,
         angle: 120,
         spread: 55,
-        startVelocity: 60,
-        origin: { x: 1, y: 0.5 },
+        origin: { x: 1 },
         colors: colors,
-        shapes: ['star', 'circle'],
-        scalar: 0.8,
+        shapes: ['circle', 'star'],
+        scalar: 0.8
       });
 
-      // 偶尔的顶部爆发
-      if (Math.random() < 0.3) {
-        confetti({
-          particleCount: 15,
-          spread: 100,
-          startVelocity: 45,
-          origin: { x: Math.random(), y: 0.1 },
-          colors: colors,
-          shapes: ['star'],
-          scalar: 1.2,
-        });
+      if (Date.now() < end) {
+        requestAnimationFrame(frame);
       }
-
-      requestAnimationFrame(continuousFrame);
-    }
-
-    continuousFrame();
+    }());
   }, []);
 
-  // Enhanced confetti effects
-  const triggerConfetti = useCallback(() => {
-    const colors = ["#a786ff", "#fd8bbc", "#eca184", "#f8deb1", "#FFB6C1", "#DDA0DD", "#F0E68C"];
-    
-    const patterns = [
-      // Pattern 1: Heart burst
-      () => {
-        confetti({
-          particleCount: 50,
-          spread: 60,
-          origin: { y: 0.6 },
-          colors: ["#FFB6C1", "#FF69B4", "#DDA0DD"],
-          shapes: ['star'],
-          scalar: 1.2,
-        });
-        setTimeout(() => {
-      confetti({
-            particleCount: 30,
-            spread: 80,
-            origin: { y: 0.4 },
-        colors: colors,
-            shapes: ['star'],
-            scalar: 0.8,
-          });
-        }, 300);
-      },
-      // Pattern 2: Rainbow cascade
-      () => {
-        for (let i = 0; i < 3; i++) {
-          setTimeout(() => {
-            confetti({
-              particleCount: 25,
-              spread: 50,
-              origin: { x: 0.2 + (i * 0.3), y: 0.3 },
-              colors: colors.slice(i * 2, i * 2 + 3),
-              shapes: ['circle', 'square'],
-              scalar: 1.0,
-            });
-          }, i * 200);
-        }
-      },
-      // Pattern 3: Spiral celebration
-      () => {
-      confetti({
-          particleCount: 80,
-          spread: 360,
-          origin: { y: 0.5 },
-        colors: colors,
-          shapes: ['star', 'circle'],
-          scalar: 0.9,
-          startVelocity: 30,
-        });
-      },
-    ];
-
-    const selectedPattern = patterns[Math.floor(Math.random() * patterns.length)];
-    selectedPattern();
-
-    // 减少粒子效果触发概率，提升性能
-    if (Math.random() < 0.4) generateSparkles();
-    if (Math.random() < 0.3) generateRibbonParticles();
-  }, [generateSparkles, generateRibbonParticles]);
-
-  // 设备运动检测（摇一摇）
+  // Device Motion (Shake)
   useEffect(() => {
     if (stage !== 'initial') return;
 
@@ -429,263 +270,153 @@ export default function CardDisplay({ card }: CardDisplayProps) {
       
       if (totalDelta > shakeThreshold) {
         const now = Date.now();
-        if (now - lastShakeRef.current > 200) {
+        if (now - lastShakeRef.current > 300) {
           lastShakeRef.current = now;
           setShakeCount(prev => {
             const newCount = prev + 1;
-            
-            if (newCount === 1) {
-              setIsShaking(true);
-              setUnlockMethod('shake');
-              setShakeIntensity('normal');
-            }
-            
+            if (newCount === 1) setIsShaking(true);
             if (newCount >= shakeRequiredCount) {
-              // 开始渐变停止动画
-              setShakeIntensity('gentle');
-              setTimeout(() => setShakeIntensity('fading'), 300);
-              
-              setTimeout(() => {
-                setIsShaking(false);
-                // 直接触发动画序列，避免依赖问题
-                setStage('opening')
-                
-                const animationSequence = [
-                  { delay: 1200, action: () => setStage('revealing') },
-                  { delay: 3000, action: () => setStage('final') },
-                  { delay: 4200, action: () => setShowEnvelope(false) },
-                  { delay: 5000, action: () => {
-                    setShowCard(true)
-                    requestAnimationFrame(() => {
-                      triggerInitialConfetti()
-                      setTimeout(() => triggerConfetti(), 500)
-                    })
-                  }}
-                ]
-                
-                animationSequence.forEach(({ delay, action }) => {
-                  setTimeout(() => requestAnimationFrame(action), delay)
-                })
-              }, 800);
+              handleOpen();
               return 0;
             }
-            
             return newCount;
           });
           
-          // 清除之前的超时
-          if (shakeTimeoutRef.current) {
-            clearTimeout(shakeTimeoutRef.current);
-          }
-          
-          // 设置新的超时来逐渐停止摇动
+          if (shakeTimeoutRef.current) clearTimeout(shakeTimeoutRef.current);
           shakeTimeoutRef.current = setTimeout(() => {
-            setShakeCount(prev => {
-              const newCount = prev > 0 ? Math.max(0, prev - 0.5) : 0;
-              
-              // 如果摇动计数变低，开始渐变停止动画
-              if (newCount <= 1 && isShaking) {
-                setShakeIntensity('gentle');
-                setTimeout(() => {
-                  setShakeIntensity('fading');
-                  setTimeout(() => {
-                    setIsShaking(false);
-                    setUnlockMethod(null);
-                  }, 1000);
-                }, 500);
-              }
-              
-              return newCount;
-            });
-          }, 2000);
+             setShakeCount(0);
+             setIsShaking(false);
+          }, 1500);
         }
       }
       
-      lastX = x;
-      lastY = y;
-      lastZ = z;
+      lastX = x; lastY = y; lastZ = z;
     };
 
     const requestPermission = async () => {
-      if (typeof (DeviceMotionEvent as any).requestPermission === 'function') {
+      if (typeof (DeviceMotionEvent as any)?.requestPermission === 'function') {
         try {
           const permission = await (DeviceMotionEvent as any).requestPermission();
           if (permission === 'granted') {
             window.addEventListener('devicemotion', handleDeviceMotion);
           }
-        } catch (error) {
-          console.log('Device motion permission denied');
-        }
+        } catch (e) { console.log('Permission denied'); }
       } else {
         window.addEventListener('devicemotion', handleDeviceMotion);
       }
     };
 
     requestPermission();
+    return () => window.removeEventListener('devicemotion', handleDeviceMotion);
+  }, [stage]);
 
-    return () => {
-      window.removeEventListener('devicemotion', handleDeviceMotion);
-    };
-  }, [stage, shakeThreshold, shakeRequiredCount, triggerInitialConfetti, triggerConfetti, isShaking])
-
-  // 清理计时器
-  useEffect(() => {
-    return () => {
-      if (chargeTimerRef.current) {
-        clearInterval(chargeTimerRef.current);
-      }
-      if (shakeTimeoutRef.current) {
-        clearTimeout(shakeTimeoutRef.current);
-      }
-    };
-  }, [])
-
-  // Handle card mouse movement for 3D effect
   const handleCardMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!cardRef.current) return;
-    
     const rect = cardRef.current.getBoundingClientRect();
     const centerX = rect.left + rect.width / 2;
     const centerY = rect.top + rect.height / 2;
-    
-    const rotateX = (e.clientY - centerY) / 10;
-    const rotateY = (centerX - e.clientX) / 10;
-    
+    const rotateX = (e.clientY - centerY) / 20;
+    const rotateY = (centerX - e.clientX) / 20;
     setCardRotation({ x: rotateX, y: rotateY });
   };
 
-  const handleCardMouseLeave = () => {
-    setCardRotation({ x: 0, y: 0 });
-    setIsHovering(false);
-  };
-
-  // Only allow confetti after the card is shown
-  const handleCardClick = useCallback(() => {
-    if (!showCard) return;
-    triggerConfetti();
-  }, [showCard, triggerConfetti]);
-
-  // 长按充能处理函数
   const startCharging = () => {
     if (stage !== 'initial' || isCharging) return;
-    
     setIsCharging(true);
-    setUnlockMethod('longpress');
     setChargeProgress(0);
     chargeStartRef.current = Date.now();
     
-    const chargeDuration = 2500;
-    const updateInterval = 50;
-    
     chargeTimerRef.current = setInterval(() => {
       const elapsed = Date.now() - chargeStartRef.current;
-      const progress = Math.min((elapsed / chargeDuration) * 100, 100);
-      
+      const progress = Math.min((elapsed / 1500) * 100, 100);
       setChargeProgress(progress);
       
       if (progress >= 100) {
-        if (chargeTimerRef.current) {
-          clearInterval(chargeTimerRef.current);
-        }
+        if (chargeTimerRef.current) clearInterval(chargeTimerRef.current);
         setIsCharging(false);
-        setTimeout(() => handleOpenClick(), 200);
+        handleOpen();
       }
-    }, updateInterval);
+    }, 16);
   };
 
   const stopCharging = () => {
     if (!isCharging) return;
-    
-    if (chargeTimerRef.current) {
-      clearInterval(chargeTimerRef.current);
-    }
-    
+    if (chargeTimerRef.current) clearInterval(chargeTimerRef.current);
     setIsCharging(false);
-    
-    const fadeOut = setInterval(() => {
-      setChargeProgress(prev => {
-        const newProgress = prev - 5;
-        if (newProgress <= 0) {
-          clearInterval(fadeOut);
-          setUnlockMethod(null);
-          return 0;
-        }
-        return newProgress;
-      });
-    }, 100);
+    setChargeProgress(0);
   };
 
-  const handleOpenClick = useCallback(() => {
-    // 使用requestAnimationFrame优化动画时序
-    setStage('opening')
+  const handleOpen = useCallback(() => {
+    setStage('opening');
     
-    // 优化时序，减少状态更新频率
-    const animationSequence = [
-      { delay: 1200, action: () => setStage('revealing') },
-      { delay: 3000, action: () => setStage('final') },
-      { delay: 4200, action: () => setShowEnvelope(false) },
-      { delay: 5000, action: () => {
-        setShowCard(true)
-        // 使用requestAnimationFrame确保DOM更新后再触发动画
-        requestAnimationFrame(() => {
-          triggerInitialConfetti()
-          setTimeout(() => triggerConfetti(), 500)
-        })
-      }}
-    ]
+    // Animation sequence
+    setTimeout(() => {
+        setStage('revealing');
+        setShowBurst(true); // Trigger burst
+    }, 600);
     
-    animationSequence.forEach(({ delay, action }) => {
-      setTimeout(() => requestAnimationFrame(action), delay)
-    })
-  }, [triggerInitialConfetti, triggerConfetti])
-
-  // Mobile device motion → wobble the card
-  // 移除移动端晃动特效（不再监听 devicemotion）
+    setTimeout(() => {
+      setStage('final');
+      setShowEnvelope(false);
+      setShowCard(true);
+      setShowBurst(false); // End burst
+      requestAnimationFrame(triggerConfetti);
+    }, 1200);
+  }, [triggerConfetti]);
 
   if (!imageSrc) {
     return (
       <div className="w-full flex items-center justify-center h-[60vh]">
-        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-purple-400"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-slate-200"></div>
       </div>
     )
   }
 
   return (
     <div className="relative w-full max-w-2xl mx-auto min-h-[80vh] flex items-center justify-center">
-      {/* Final Card Display */}
+      {/* Light Burst Overlay */}
+      {showBurst && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center pointer-events-none">
+          <div className="w-[500px] h-[500px] bg-radial-gradient(circle, rgba(255,255,255,0.8) 0%, rgba(255,215,0,0) 70%) animate-[light-burst_0.6s_ease-out_forwards]"></div>
+        </div>
+      )}
+
+      {/* FINAL CARD DISPLAY */}
       <div className={cn(
-        "transition-all duration-1000 w-full perspective-1000",
-        !showEnvelope ? "opacity-100 scale-100" : "opacity-0 scale-90"
+        "transition-all duration-1000 w-full perspective-1000 relative z-10",
+        !showEnvelope ? "opacity-100 scale-100" : "opacity-0 scale-95 pointer-events-none absolute"
       )}>
-        <div className="w-full mx-auto relative">
-          <div className={cn(
-            "gpu-optimized",
-            showCard ? 'animate-card-reveal' : 'opacity-0 scale-90 translate-y-8'
-          )}>
-            <div className="relative w-full max-w-[400px] mx-auto">
+        {/* Magical Background Particles (Only when card is shown) */}
+        {showCard && <MagicalParticles />}
+
+        <div className={cn(
+          "w-full mx-auto relative",
+          showCard ? 'animate-card-reveal-elegant' : 'opacity-0'
+        )}>
+           {/* Card Container with Aura */}
+           <div className="relative w-full max-w-[400px] mx-auto">
+              <div className={cn(
+                  "absolute inset-0 rounded-xl bg-amber-200/20 blur-2xl transform scale-110",
+                  showCard ? "animate-aura-pulse" : "" 
+              )}></div>
+
               <div 
                 ref={cardRef}
                 className={cn(
-                  "relative aspect-[2/3] overflow-hidden bg-transparent transform-gpu transition-all duration-300 cursor-pointer group",
-                  isShaking && shakeIntensity === 'normal' ? "animate-shake" : "",
-                  isShaking && shakeIntensity === 'gentle' ? "animate-shake-gentle" : "",
-                  isShaking && shakeIntensity === 'fading' ? "animate-shake-fade" : ""
+                   "relative aspect-[2/3] transform-gpu transition-all duration-300 cursor-pointer shadow-card-elegant rounded-xl overflow-hidden bg-white/50 backdrop-blur-sm border border-white/50",
+                   showCard ? "animate-aura-pulse" : "" // Double pulse for intensity
                 )}
                 style={{ 
-                  maxHeight: '70vh',
                   transform: `perspective(1000px) rotateX(${cardRotation.x}deg) rotateY(${cardRotation.y}deg)`,
-                  boxShadow: isHovering 
-                    ? '0 25px 50px rgba(167, 134, 255, 0.35), 0 0 24px rgba(167, 134, 255, 0.25), 0 10px 25px rgba(255, 192, 203, 0.15)'
-                    : '0 0 10px rgba(167, 134, 255, 0.12), 0 8px 20px rgba(0, 0, 0, 0.08)'
                 }}
                 onMouseMove={handleCardMouseMove}
                 onMouseEnter={() => setIsHovering(true)}
-                onMouseLeave={handleCardMouseLeave}
-                onClick={handleCardClick}
+                onMouseLeave={() => {
+                  setCardRotation({ x: 0, y: 0 });
+                  setIsHovering(false);
+                }}
+                onClick={triggerConfetti}
               >
-                <div className="absolute inset-0 bg-gradient-to-br from-pink-200/20 via-purple-200/20 to-blue-200/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-sm"></div>
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 animate-shimmer"></div>
-                
                 {isVideo(imageSrc) ? (
                   <video
                     src={imageSrc}
@@ -693,322 +424,125 @@ export default function CardDisplay({ card }: CardDisplayProps) {
                     autoPlay
                     muted
                     loop
-                    className="w-full h-full object-cover transition-all duration-500 group-hover:scale-105"
+                    className="w-full h-full object-cover"
                   >
                     <source src={imageSrc} type="video/mp4" />
-                    Your browser does not support the video tag.
                   </video>
                 ) : (
                   <Image
                     src={imageSrc}
-                    alt={`${card.cardType} card `}
+                    alt={`${card.cardType} card`}
                     fill
                     priority
-                    className="transition-all duration-500 group-hover:scale-105 object-cover"
+                    className="object-cover"
                     unoptimized
                   />
                 )}
-
-                <div className="absolute inset-0 bg-gradient-to-tr from-white/10 via-transparent to-transparent opacity-60 pointer-events-none"></div>
                 
-                {isHovering && (
-                  <div className="absolute inset-0 pointer-events-none">
-                    {[...Array(6)].map((_, i) => (
-                      <div
-                        key={i}
-                        className="absolute w-1 h-1 bg-yellow-300 rounded-full animate-ping gpu-optimized"
-                        style={{
-                          left: `${20 + (i * 12)}%`,
-                          top: `${15 + Math.sin(i) * 20}%`,
-                          animationDelay: `${i * 0.3}s`,
-                          animationDuration: '2s'
-                        }}
-                      />
-                    ))}
-                  </div>
-                )}
+                {/* Light Sheen */}
+                <div className="absolute inset-0 bg-gradient-to-tr from-white/30 via-transparent to-transparent opacity-60 pointer-events-none mix-blend-overlay"></div>
+                
+                {/* Sparkle Texture Overlay */}
+                <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-10 mix-blend-overlay pointer-events-none"></div>
               </div>
-
-            </div>
-          </div>
+           </div>
         </div>
       </div>
 
-      {/* Enhanced Envelope with Long Press & Shake */}
+      {/* ENVELOPE */}
       {showEnvelope && (
         <div className={cn(
-          "absolute inset-0 w-full perspective-envelope flex items-center justify-center",
-          stage === 'initial' ? "cursor-pointer" : ""
+          "absolute inset-0 w-full perspective-envelope flex items-center justify-center transition-opacity duration-1000 z-20",
+          stage === 'final' ? "opacity-0 pointer-events-none" : "opacity-100"
         )}>
-          <div className="w-full max-w-[500px] px-4">
-            {stage === 'initial' && (
-              <div className="absolute inset-0 flex flex-col items-center justify-center z-30 space-y-4">
-                <div className="text-center space-y-2 mb-4">
-                  <p className="text-sm text-[#a786ff] font-medium animate-pulse">
-                    {unlockMethod === 'shake' ? (
-                      <>🤳 Keep shaking... ({shakeCount}/{shakeRequiredCount})</>
-                    ) : unlockMethod === 'longpress' ? (
-                      <>⏳ Keep holding...</>
-                    ) : (
-                      <>📱 Shake your device or long press to open</>
-                    )}
-                  </p>
-                  {!unlockMethod && (
-                    <p className="text-xs text-gray-500">
-                      ✨ Choose your magical way to unlock
-                    </p>
-                  )}
-                </div>
+          <div 
+            className={cn(
+              "relative w-full max-w-[450px] aspect-[4/3] transition-transform duration-500",
+              isShaking ? "animate-shake-elegant" : "animate-float-gentle",
+              stage === 'revealing' ? "animate-envelope-slide-down" : ""
+            )}
+            onMouseDown={startCharging}
+            onMouseUp={stopCharging}
+            onMouseLeave={stopCharging}
+            onTouchStart={startCharging}
+            onTouchEnd={stopCharging}
+          >
+            {/* Envelope Body (Back) */}
+            <div className="absolute inset-0 bg-[#f5f5f7] rounded-lg shadow-envelope border border-white/40"></div>
+            
+            {/* Card Preview Inside (Hidden initially) */}
+            <div className={cn(
+               "absolute top-2 left-4 right-4 bottom-2 bg-white shadow-sm transition-transform duration-700 ease-[cubic-bezier(0.25,0.1,0.25,1)]",
+               stage === 'opening' || stage === 'revealing' ? "translate-y-[-10%]" : "translate-y-0"
+            )}>
+              <div className="w-full h-full bg-slate-100 overflow-hidden relative">
+                 {/* Simplified abstract preview */}
+                 <div className="absolute inset-0 bg-gradient-to-br from-purple-50 to-pink-50 opacity-50"></div>
+                 {/* Magic hint inside */}
+                 <div className="absolute inset-0 flex items-center justify-center opacity-30">
+                    <div className="w-20 h-20 bg-amber-100 rounded-full blur-xl"></div>
+                 </div>
+              </div>
+            </div>
 
-                <div
-                  onMouseDown={startCharging}
-                  onMouseUp={stopCharging}
-                  onMouseLeave={stopCharging}
-                  onTouchStart={startCharging}
-                  onTouchEnd={stopCharging}
-                  onContextMenu={(e) => { e.preventDefault(); }}
-                  className={cn(
-                    "group relative transform transition-all duration-500 hover:scale-110 focus:outline-none cursor-pointer select-none no-touch-callout",
-                    isCharging ? "scale-105" : "animate-gentle-bounce",
-                    isShaking && shakeIntensity === 'normal' ? "animate-shake" : "",
-                    isShaking && shakeIntensity === 'gentle' ? "animate-shake-gentle" : "",
-                    isShaking && shakeIntensity === 'fading' ? "animate-shake-fade" : ""
-                  )}
-                >
-                  <div className="absolute inset-0 rounded-full animate-ping-slow bg-[#a786ff]/20" />
-                  <div className="absolute inset-[-8px] rounded-full animate-pulse-slow bg-[#a786ff]/10" />
-                  <div className="absolute inset-[-16px] rounded-full animate-ping bg-[#FFB6C1]/15" style={{ animationDuration: '3s' }} />
-                  
-                  <div className="relative w-36 h-36 flex items-center justify-center">
-                    {(isCharging || chargeProgress > 0) && (
-                      <div className="absolute inset-0 rounded-full">
-                        <svg className="w-full h-full transform -rotate-90" viewBox="0 0 144 144">
-                          <circle
-                            cx="72"
-                            cy="72"
-                            r="68"
-                            fill="none"
-                            stroke="rgba(255,255,255,0.2)"
-                            strokeWidth="4"
-                          />
-                          <circle
-                            cx="72"
-                            cy="72"
-                            r="68"
-                            fill="none"
-                            stroke="url(#chargeGradient)"
-                            strokeWidth="4"
-                            strokeLinecap="round"
-                            strokeDasharray={`${2 * Math.PI * 68}`}
-                            strokeDashoffset={`${2 * Math.PI * 68 * (1 - chargeProgress / 100)}`}
-                            className="transition-all duration-100 ease-out"
-                          />
-                          <defs>
-                            <linearGradient id="chargeGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                              <stop offset="0%" stopColor="#FF69B4" />
-                              <stop offset="50%" stopColor="#FFB6C1" />
-                              <stop offset="100%" stopColor="#FFC0CB" />
-                            </linearGradient>
-                          </defs>
-                        </svg>
-                        {isCharging && (
-                          <div className="absolute inset-0 rounded-full bg-[#a786ff]/20 animate-pulse blur-sm"></div>
-                        )}
-                      </div>
-                    )}
+            {/* Envelope Body (Front - Bottom Fold) */}
+            <div className="absolute bottom-0 left-0 right-0 h-[60%] bg-[#ffffff] rounded-b-lg shadow-sm z-20 border-t border-slate-100 mask-image-linear-gradient-to-t">
+               <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/5 rounded-b-lg"></div>
+            </div>
+            
+            {/* Envelope Body (Front - Side Folds) */}
+             <div className="absolute inset-0 z-20 pointer-events-none">
+                 <div className="absolute top-[40%] left-0 w-[50%] h-[60%] bg-[#fafafa] origin-bottom-left skew-y-12 shadow-sm rounded-bl-lg"></div>
+                 <div className="absolute top-[40%] right-0 w-[50%] h-[60%] bg-[#fafafa] origin-bottom-right -skew-y-12 shadow-sm rounded-br-lg"></div>
+             </div>
 
-                    {isShaking && (
-                      <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 flex space-x-1">
-                        {[...Array(shakeRequiredCount)].map((_, i) => (
-                          <div
-                            key={i}
-                            className={cn(
-                              "w-3 h-3 rounded-full transition-all duration-300",
-                              i < shakeCount 
-                                ? "bg-[#a786ff] scale-110 animate-pulse" 
-                                : "bg-white/30 scale-100"
-                            )}
+            {/* Top Flap */}
+            <div className={cn(
+              "absolute top-0 left-0 right-0 h-[50%] bg-[#fbfbfd] rounded-t-lg z-30 origin-top shadow-md transition-all duration-800 transform-style-3d",
+              stage !== 'initial' ? "animate-envelope-open-flap" : ""
+            )}>
+               {/* Flap Texture */}
+               <div className="absolute inset-0 bg-gradient-to-b from-white to-slate-50 opacity-50 rounded-t-lg"></div>
+               
+               {/* Wax Seal / Button */}
+               <div className={cn(
+                  "absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 w-16 h-16 transition-all duration-300",
+                  stage === 'initial' ? "scale-100 opacity-100" : "scale-50 opacity-0"
+               )}>
+                  <div className="relative w-full h-full flex items-center justify-center">
+                    {/* Ring for charging */}
+                    {isCharging && (
+                       <svg className="absolute inset-[-4px] w-[calc(100%+8px)] h-[calc(100%+8px)] -rotate-90">
+                          <circle cx="50%" cy="50%" r="32" fill="none" stroke="#e2e8f0" strokeWidth="2" />
+                          <circle cx="50%" cy="50%" r="32" fill="none" stroke="#fbbf24" strokeWidth="2" 
+                            strokeDasharray="201" strokeDashoffset={201 * (1 - chargeProgress / 100)} 
+                            className="transition-all duration-75 ease-linear"
+                            style={{ filter: 'drop-shadow(0 0 2px #fbbf24)' }}
                           />
-                        ))}
-                      </div>
+                       </svg>
                     )}
                     
+                    {/* Seal Body - Gold accent now */}
                     <div className={cn(
-                      "absolute inset-2 rounded-full bg-gradient-to-br from-[#a786ff]/95 via-[#b19bff]/90 to-[#a786ff]/95 shadow-[inset_0_2px_4px_rgba(0,0,0,0.2),0_8px_32px_rgba(167,134,255,0.4)] backdrop-blur-sm transition-all duration-500",
-                      isCharging ? "shadow-[inset_0_2px_8px_rgba(0,0,0,0.3),0_12px_48px_rgba(167,134,255,0.8)] scale-105" : "group-hover:shadow-[inset_0_2px_8px_rgba(0,0,0,0.3),0_12px_48px_rgba(167,134,255,0.6)]"
-                    )}></div>
-                    
-                    <div className={cn(
-                      "absolute inset-4 rounded-full border-2 border-dashed border-white/40 transition-all duration-500 animate-slow-spin",
-                      isCharging ? "border-white/70 rotate-[20deg]" : "group-hover:border-white/60 group-hover:rotate-[20deg]"
-                    )}></div>
-                    
-                    <div className={cn(
-                      "relative text-center transition-transform duration-500 z-10",
-                      isCharging ? "scale-110" : "group-hover:scale-110"
+                       "w-14 h-14 rounded-full bg-gradient-to-br from-[#e2e2e2] to-[#ffffff] shadow-lg flex items-center justify-center border border-white/60 transform transition-transform group",
+                       isCharging ? "scale-90" : "hover:scale-105"
                     )}>
-                      <div className="text-[0.8rem] uppercase tracking-[0.2em] font-bold text-[#FFC0CB] 
-                        [text-shadow:2px_2px_2px_rgba(0,0,0,0.4),-1px_-1px_1px_rgba(255,255,255,0.3)]">
-                        {card.cardType}
-                      </div>
-                      <div className="text-[0.6rem] text-white/80 mt-1 transition-colors duration-300">
-                        {new Date().toLocaleDateString()}
-                      </div>
-                      
-                      {isCharging ? (
-                        <div className="mt-2 text-[#FFC0CB] text-xs font-semibold">
-                          <div className="animate-pulse">⚡ Charging...</div>
-                          <div className="text-[0.5rem] mt-1 text-[#FF69B4]">{Math.round(chargeProgress)}%</div>
-                        </div>
-                      ) : unlockMethod === 'shake' ? (
-                        <div className="mt-2 text-[#FFC0CB] text-xs font-semibold animate-bounce">
-                          <span>🤳 Shake me!</span>
-                        </div>
-                      ) : (
-                        <div className="mt-2 text-[#FFC0CB] text-xs font-semibold">
-                          <div className="flex items-center justify-center gap-1">
-                            <span className="animate-pulse">✨</span>
-                            <span>Hold or Shake</span>
-                            <span className="animate-pulse">✨</span>
-                          </div>
-                          <div className="mt-1 text-[0.5rem] flex items-center justify-center gap-1">
-                            <span className="animate-bounce">📱</span>
-                            <span className="animate-ping">🎁</span>
-                      </div>
-                      </div>
-                      )}
+                       <div className="text-2xl text-amber-500/80 font-serif italic group-hover:text-amber-500 transition-colors">M</div>
                     </div>
                   </div>
-                </div>
+               </div>
+            </div>
+
+            {/* Instruction Text */}
+            {stage === 'initial' && (
+              <div className="absolute -bottom-16 left-0 right-0 text-center animate-pulse">
+                <p className="text-sm font-medium text-slate-400 tracking-wide uppercase text-[10px] flex items-center justify-center gap-2">
+                  <span className="inline-block w-1 h-1 rounded-full bg-amber-400"></span>
+                  {isCharging ? "Light the Magic" : "Hold to Open"}
+                  <span className="inline-block w-1 h-1 rounded-full bg-amber-400"></span>
+                </p>
               </div>
             )}
-
-            {/* Envelope */}
-            <div className={cn(
-              "relative w-full aspect-[3/4] bg-gradient-to-br from-[#FFE5E5] via-[#FFEBEE] to-[#FFC0CB] rounded-lg shadow-xl gpu-optimized",
-              stage === 'initial' ? "opacity-100" : "",
-              stage === 'opening' ? "animate-envelope-open" : "",
-              stage === 'revealing' ? "animate-envelope-slide-out" : "",
-              stage === 'final' ? "animate-envelope-fade-out" : ""
-            )}>
-              <div className="absolute inset-0 rounded-lg bg-gradient-to-br from-white/20 via-transparent to-transparent opacity-60"></div>
-
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-5xl opacity-40 transform transition-all duration-1000">
-                <span className="text-[#a786ff] animate-pulse" style={{ animationDuration: '3s' }}>💗</span>
-              </div>
-
-              <div className="absolute top-[30%] left-1/2 -translate-x-1/2 -translate-y-1/2 w-full text-center">
-                <div className="font-serif text-2xl tracking-widest text-[#a786ff]/50 transition-all duration-500" 
-                     style={{ 
-                       fontStyle: 'italic',
-                       textShadow: '1px 1px 2px rgba(255,192,203,0.3)'
-                     }}>
-                  MewTruCard
-                </div>
-                <div className="w-40 h-px mx-auto mt-3 bg-gradient-to-r from-transparent via-[#a786ff]/40 to-transparent relative">
-                  <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-2 h-2 bg-[#a786ff]/60 rounded-full animate-pulse"></div>
-                </div>
-                <div className="mt-2 text-xs text-[#a786ff]/30 tracking-wider">
-                  Special Delivery ✉️
-                </div>
-              </div>
-
-              <div className={cn(
-                "absolute top-0 left-0 right-0 h-1/2 bg-gradient-to-b from-[#FFC0CB] via-[#FFD1DC] to-[#FFE5E5] rounded-t-lg origin-top z-20 backface-hidden shadow-lg gpu-optimized",
-                stage === 'initial' ? "" : "",
-                stage === 'opening' ? "animate-envelope-open" : "",
-                stage === 'revealing' ? "animate-envelope-open" : ""
-              )}>
-                <div className={cn(
-                  "absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 w-10 h-10 bg-gradient-to-br from-[#a786ff] via-[#b19bff] to-[#a786ff] rounded-full shadow-[inset_0_2px_4px_rgba(0,0,0,0.2),0_4px_12px_rgba(167,134,255,0.4)] flex items-center justify-center transition-all duration-500 transform-gpu",
-                  stage === 'initial' ? "opacity-100 scale-100 rotate-0" : "",
-                  stage === 'opening' ? "opacity-80 scale-110 rotate-45" : "",
-                  stage === 'revealing' ? "opacity-0 scale-150 rotate-90" : ""
-                )}>
-                  <span className="text-white text-xl drop-shadow-sm relative z-10">♥</span>
-                </div>
-              </div>
-              
-              <div className={cn(
-                "absolute inset-4 bg-transparent rounded-lg shadow-inner transition-all duration-1000 transform-gpu",
-                stage === 'revealing' 
-                  ? "translate-y-[-120%] rotate-0 scale-110" 
-                  : "translate-y-0 rotate-2"
-              )}
-                onContextMenu={(e) => { e.preventDefault(); }}
-                onTouchStart={(e) => { e.preventDefault(); }}
-                onTouchEnd={(e) => { e.preventDefault(); }}
-                style={{ 
-                  WebkitTouchCallout: 'none',
-                  WebkitUserSelect: 'none',
-                  userSelect: 'none',
-                  touchAction: 'manipulation'
-                }}>
-                  {isVideo(imageSrc) ? (
-                    <video
-                      src={imageSrc}
-                      autoPlay
-                      muted
-                      loop
-                      className="w-full h-full object-contain"
-                      onContextMenu={(e) => { e.preventDefault(); }}
-                    >
-                      <source src={imageSrc} type="video/mp4" />
-                    </video>
-                  ) : (
-                    <Image
-                      src={imageSrc}
-                      alt={`${card.cardType} card preview`}
-                      fill
-                      className="object-contain"
-                      unoptimized
-                      onContextMenu={(e) => { e.preventDefault(); }}
-                      draggable={false}
-                    />
-                  )}
-                </div>
-            </div>
-
-            {/* Enhanced Decorative Elements */}
-            <div className="absolute inset-0 pointer-events-none overflow-hidden">
-              {sparkles.map((sparkle) => (
-                <div
-                  key={sparkle.id}
-                  className="absolute w-2 h-2 bg-gradient-to-br from-yellow-300 to-yellow-400 rounded-full animate-sparkle-float shadow-sm"
-                  style={{
-                    left: `${sparkle.x}%`,
-                    top: `${sparkle.y}%`,
-                    animationDelay: `${sparkle.delay}s`,
-                  }}
-                />
-              ))}
-
-              {ribbonParticles.map((particle) => (
-                <div
-                  key={particle.id}
-                  className="absolute w-1 h-4 rounded-full animate-ribbon-fall opacity-80"
-                  style={{
-                    left: `${particle.x}%`,
-                    top: `${particle.y}%`,
-                    backgroundColor: particle.color,
-                    animationDelay: `${particle.delay}s`,
-                    transform: `rotate(${Math.random() * 360}deg)`
-                  }}
-                />
-              ))}
-
-              {(stage === 'revealing' || stage === 'final') && [...Array(6)].map((_, i) => (
-                <div
-                  key={`original-${i}`}
-                  className="absolute w-1.5 h-1.5 bg-gradient-to-br from-[#FFB1C1] to-[#DDA0DD] rounded-full animate-sparkle-dance shadow-sm gpu-optimized"
-                  style={{
-                    left: `${Math.random() * 100}%`,
-                    top: `${Math.random() * 100}%`,
-                    animationDelay: `${Math.random() * 3}s`,
-                  }}
-                />
-              ))}
-            </div>
           </div>
         </div>
       )}

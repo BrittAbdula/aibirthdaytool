@@ -103,11 +103,13 @@ export default function CardGalleryContent({
     <main className="min-h-screen">
       <div className="relative py-8 sm:py-12">
         {/* Tab Selection */}
-        <div className="mb-8 flex justify-center">
+        <div className="mb-8 flex justify-center" role="tablist" aria-label="Gallery tabs">
           <div className="border border-purple-200 rounded-full p-1 bg-white shadow-sm">
             <div className="flex space-x-1">
               <button
                 onClick={() => handleTabChange('recent')}
+                role="tab"
+                aria-selected={currentTab === 'recent'}
                 className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${
                   currentTab === 'recent'
                     ? 'bg-purple-500 text-white shadow-sm'
@@ -118,6 +120,8 @@ export default function CardGalleryContent({
               </button>
               <button
                 onClick={() => handleTabChange('liked')}
+                role="tab"
+                aria-selected={currentTab === 'liked'}
                 className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${
                   currentTab === 'liked'
                     ? 'bg-purple-500 text-white shadow-sm'
@@ -128,6 +132,8 @@ export default function CardGalleryContent({
               </button>
               <button
                 onClick={() => handleTabChange('popular')}
+                role="tab"
+                aria-selected={currentTab === 'popular'}
                 className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${
                   currentTab === 'popular'
                     ? 'bg-purple-500 text-white shadow-sm'
@@ -138,6 +144,8 @@ export default function CardGalleryContent({
               </button>
               <button
                 onClick={() => handleTabChange('premium')}
+                role="tab"
+                aria-selected={currentTab === 'premium'}
                 className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${
                   currentTab === 'premium'
                     ? 'bg-purple-500 text-white shadow-sm'
@@ -150,7 +158,7 @@ export default function CardGalleryContent({
           </div>
         </div>
 
-        <section className="mb-8">
+        <section className="mb-8 md:sticky md:top-4 md:z-20 md:bg-gradient-to-b md:from-white/90 md:to-white/60 md:backdrop-blur md:supports-[backdrop-filter]:bg-white/60 md:-mx-4 md:px-4 md:py-2 md:rounded-3xl">
           <CardTypeFilter 
             selectedType={selectedType}
             selectedRelationship={selectedRelationship}
@@ -158,7 +166,7 @@ export default function CardGalleryContent({
           />
         </section>
 
-        <section>
+        <section aria-live="polite">
           {isLoading ? (
             <div className="flex flex-col items-center justify-center h-64 space-y-4">
               <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500"></div>

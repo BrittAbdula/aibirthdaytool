@@ -14,13 +14,15 @@ import { cn, fetchSvgContent } from '@/lib/utils'
 import { CardType, CardConfig, CARD_SIZES } from '@/lib/card-config'
 import { useSession, signIn } from "next-auth/react"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { Loader2 } from 'lucide-react'
+import { Loader2, Crown } from 'lucide-react'
 import { useCardGeneration } from '@/hooks/useCardGeneration'
 import { AlertCircle, Info } from 'lucide-react'
 import { PremiumModal } from '@/components/PremiumModal'
 import { modelConfigs, type ModelConfig } from '@/lib/model-config'
 import { stylePresets, getPresetsForFormat, type StylePreset, type OutputFormat } from '@/lib/style-presets'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
+import { Switch } from "@/components/ui/switch"
+import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover"
 
 const MagicalCardCreation = () => {
   return (
@@ -289,6 +291,7 @@ export default function CardGenerator({
   const [isAuthLoading, setIsAuthLoading] = useState(false)
   const [isPremiumModalOpen, setIsPremiumModalOpen] = useState(false)
   const [isPremiumUser, setIsPremiumUser] = useState(false)
+  const [isPrivateCard, setIsPrivateCard] = useState(false)
   const [errorToast, setErrorToast] = useState<{
     title: string;
     message: string;
@@ -338,11 +341,8 @@ export default function CardGenerator({
   useEffect(() => {
     // Ensure selectedFormat follows current model on mount
     setSelectedFormat(prev => selectedModel?.format || prev);
-    // If no style yet, choose first compatible for current format
-    if (!selectedStyleId) {
-      const first = getPresetsForFormat(selectedModel?.format || 'image')[0];
-      if (first) setSelectedStyleId(first.id);
-    }
+    // Note: We deliberately do NOT select a default style here anymore.
+    // We want "Auto" (null) to be the default.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -352,20 +352,19 @@ export default function CardGenerator({
     const tiers = getTierOptionsForFormat(selectedFormat);
     const nextModel = selectedTier === 'pro' && tiers.pro ? tiers.pro : tiers.base;
     setSelectedModel(nextModel);
-    // If current style not compatible, reset to first compatible
+    // If current style not compatible, reset to null ("Auto")
     if (selectedFormat === 'svg') {
       // Animated has no style selection per product rule
       setSelectedStyleId(null);
     } else if (selectedStyleId) {
       const style = stylePresets.find(s => s.id === selectedStyleId);
       if (style && !style.formats.includes(selectedFormat)) {
-        const first = getPresetsForFormat(selectedFormat)[0];
-        setSelectedStyleId(first ? first.id : null);
+        // Incompatible style for this format, reset to Auto
+        setSelectedStyleId(null);
       }
-    } else {
-      const first = getPresetsForFormat(selectedFormat)[0];
-      if (first) setSelectedStyleId(first.id);
     }
+    // Note: We no longer force a default style if selectedStyleId is null.
+    // Null means "Auto", which is a valid state now.
   }, [selectedFormat, selectedTier]);
 
   // Add ref to track if we're waiting for authentication
@@ -375,7 +374,8 @@ export default function CardGenerator({
     formData: Record<string, any>,
     customValues: Record<string, string>,
     selectedSize: string,
-    selectedModel: ModelConfig
+    selectedModel: ModelConfig,
+    isPrivate: boolean
   } | null>(null)
 
   // Use the card generation hook
@@ -439,6 +439,7 @@ export default function CardGenerator({
       if (savedFormData.selectedModel) {
         setSelectedModel(savedFormData.selectedModel);
       }
+      setIsPrivateCard(savedFormData.isPrivate ?? false);
 
       // Close the auth dialog
       setShowAuthDialog(false);
@@ -463,6 +464,7 @@ export default function CardGenerator({
         selectedModelId?: string;
         selectedFormat?: OutputFormat;
         cardType?: string;
+        isPrivateCard?: boolean;
       }
 
       if (draft.formData) setFormData(draft.formData)
@@ -474,6 +476,9 @@ export default function CardGenerator({
         if (m) setSelectedModel(m)
       }
       if (draft.selectedFormat) setSelectedFormat(draft.selectedFormat)
+      if (typeof draft.isPrivateCard === 'boolean') {
+        setIsPrivateCard(draft.isPrivateCard)
+      }
 
       // If logged in and flagged, auto-generate then clear
       if (session && draft.shouldAutoGenerate) {
@@ -493,6 +498,12 @@ export default function CardGenerator({
       setIsPremiumUser(false);
     }
   }, [session]);
+
+  useEffect(() => {
+    if (!isPremiumUser && isPrivateCard) {
+      setIsPrivateCard(false);
+    }
+  }, [isPremiumUser, isPrivateCard]);
 
   // Sync video mode with selected model format
   useEffect(() => {
@@ -567,7 +578,8 @@ export default function CardGenerator({
         formData: { ...formData },
         customValues: { ...customValues },
         selectedSize,
-        selectedModel
+        selectedModel,
+        isPrivate: isPrivateCard
       });
       // Persist to localStorage so a redirect won't lose inputs
       try {
@@ -579,7 +591,8 @@ export default function CardGenerator({
           selectedModelId: selectedModel.id,
           selectedFormat,
           cardType: currentCardType,
-          ts: Date.now()
+          ts: Date.now(),
+          isPrivateCard
         }
         if (typeof window !== 'undefined') {
           window.localStorage.setItem(AUTH_DRAFT_KEY, JSON.stringify(payload))
@@ -595,7 +608,7 @@ export default function CardGenerator({
       cardType: currentCardType,
       size: selectedSize,
       modelId: selectedModel.id, // 只传递模型ID
-      formData: { ...formData },
+      formData: { ...formData, isPublic: !isPrivateCard },
       imageCount,
       referenceImageUrls: uploadedRefUrls,
       styleId: selectedFormat === 'image' ? (selectedStyleId || undefined) : undefined,
@@ -636,6 +649,14 @@ export default function CardGenerator({
     }
   };
 
+  const handlePrivateToggle = (checked: boolean) => {
+    if (checked && !isPremiumUser) {
+      setIsPremiumModalOpen(true)
+      return
+    }
+    setIsPrivateCard(checked)
+  }
+
   const handleLogin = async () => {
     try {
       setIsAuthLoading(true)
@@ -649,7 +670,8 @@ export default function CardGenerator({
           selectedModelId: selectedModel.id,
           selectedFormat,
           cardType: currentCardType,
-          ts: Date.now()
+          ts: Date.now(),
+          isPrivateCard
         }
         if (typeof window !== 'undefined') {
           window.localStorage.setItem(AUTH_DRAFT_KEY, JSON.stringify(payload))
@@ -810,25 +832,27 @@ export default function CardGenerator({
               className="w-60"
             />
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 max-h-[60vh] overflow-auto">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 max-h-[75vh] overflow-y-auto p-1 pb-16">
             {/* Auto option */}
             <button
               type="button"
               onClick={() => { setSelectedStyleId(null); setStyleDialogOpen(false); }}
-              className={cn('relative rounded-lg border overflow-hidden text-left group transition-all',
+              className={cn('relative rounded-lg border overflow-hidden text-left group transition-all flex flex-col',
                 !selectedStyleId ? 'border-[#b19bff] ring-2 ring-[#b19bff]' : 'border-gray-200 hover:border-[#b19bff]')}
             >
-              <div className="relative w-full overflow-hidden bg-gradient-to-br from-purple-50 to-pink-50 flex items-center justify-center" style={{ aspectRatio: '3/4' }}>
+              <div className="relative w-full aspect-[3/4] overflow-hidden bg-gradient-to-br from-purple-50 to-pink-50 flex items-center justify-center">
                 <span className="text-sm text-gray-700">Auto</span>
               </div>
-              <div className="p-2">
-                <div className="flex items-center justify-between">
-                  <div className="text-sm font-medium text-gray-800 truncate">Automatic</div>
-                  <div className="text-[11px] px-1.5 py-0.5 rounded-full bg-purple-50 text-purple-700 border border-purple-200">
-                    0 pts
+              <div className="p-3 flex-1 flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <div className="text-sm font-medium text-gray-800 truncate">Automatic</div>
+                    <div className="text-[10px] px-1.5 py-0.5 rounded-full bg-purple-50 text-purple-700 border border-purple-200 shrink-0 ml-1">
+                      0 pts
+                    </div>
                   </div>
+                  <div className="text-[11px] text-gray-500 truncate">Balanced</div>
                 </div>
-                <div className="text-[11px] text-gray-500 truncate">Balanced</div>
               </div>
               {!selectedStyleId && (<div className="absolute inset-0 ring-2 ring-[#b19bff] pointer-events-none" />)}
             </button>
@@ -841,10 +865,10 @@ export default function CardGenerator({
                     key={preset.id}
                     type="button"
                     onClick={() => { setSelectedStyleId(preset.id); setStyleDialogOpen(false); }}
-                    className={cn('relative rounded-lg border overflow-hidden text-left group transition-all',
+                    className={cn('relative rounded-lg border overflow-hidden text-left group transition-all flex flex-col',
                       active ? 'border-[#b19bff] ring-2 ring-[#b19bff]' : 'border-gray-200 hover:border-[#b19bff]')}
                   >
-                    <div className="relative w-full overflow-hidden" style={{ aspectRatio: '3/4' }}>
+                    <div className="relative w-full aspect-[3/4] overflow-hidden bg-gray-100">
                       {preset.sample ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img src={preset.sample} alt={preset.name} className="absolute inset-0 w-full h-full object-cover" />
@@ -852,14 +876,16 @@ export default function CardGenerator({
                         <div className="absolute inset-0 w-full h-full bg-gradient-to-br from-purple-50 to-pink-50" />
                       )}
                     </div>
-                    <div className="p-2">
-                      <div className="flex items-center justify-between">
-                        <div className="text-sm font-medium text-gray-800 truncate">{preset.name}</div>
-                        <div className="text-[11px] px-1.5 py-0.5 rounded-full bg-purple-50 text-purple-700 border border-purple-200">
-                          {preset.cost} pts
+                    <div className="p-3 flex-1 flex flex-col justify-between">
+                      <div>
+                        <div className="flex items-center justify-between mb-1">
+                          <div className="text-sm font-medium text-gray-800 truncate" title={preset.name}>{preset.name}</div>
+                          <div className="text-[10px] px-1.5 py-0.5 rounded-full bg-purple-50 text-purple-700 border border-purple-200 shrink-0 ml-1">
+                            {preset.cost} pts
+                          </div>
                         </div>
+                        <div className="text-[11px] text-gray-500 truncate">{preset.category}</div>
                       </div>
-                      <div className="text-[11px] text-gray-500 truncate">{preset.category}</div>
                     </div>
                     {active && (<div className="absolute inset-0 ring-2 ring-[#b19bff] pointer-events-none" />)}
                   </button>
@@ -1466,6 +1492,41 @@ export default function CardGenerator({
                       })()}
                     </SelectContent>
                   </Select>
+                </div>
+              </div>
+
+              {/* Visibility control above generate button */}
+              <div className="mt-6">
+                <div className="flex items-center justify-between rounded-2xl border border-purple-100 bg-white/80 px-4 py-3 shadow-sm">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-semibold text-gray-800">Public Visibility</span>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <button
+                          type="button"
+                          className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-gray-200 text-gray-500 hover:text-gray-700"
+                          aria-label="Visibility info"
+                        >
+                          <Info className="w-3.5 h-3.5" />
+                        </button>
+                      </PopoverTrigger>
+                      <PopoverContent side="top" align="start" className="max-w-xs text-sm text-gray-600">
+                        When this option is enabled, the output may be selected by MewTruCard.com and published to the Explore feed.
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    {!isPremiumUser && (
+                      <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-r from-amber-400 to-pink-400 text-white">
+                        <Crown className="w-3 h-3" />
+                      </span>
+                    )}
+                    <Switch
+                      checked={!isPrivateCard}
+                      onCheckedChange={(checked) => handlePrivateToggle(!checked)}
+                      className="data-[state=checked]:bg-[#f5427f] data-[state=unchecked]:bg-gray-300"
+                    />
+                  </div>
                 </div>
               </div>
 
