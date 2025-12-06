@@ -5,7 +5,9 @@ import Link from 'next/link'
 import { Card, TabType } from '@/lib/cards'
 import { CardType } from '@/lib/card-config'
 import { motion } from 'framer-motion'
-import { Crown } from 'lucide-react'
+import { Crown, Heart, ThumbsUp } from 'lucide-react'
+import { CARD_TYPES, RELATIONSHIPS } from '@/lib/card-constants'
+import { recordUserAction } from '@/lib/action'
 
 interface CardGalleryProps {
   initialCardsData: {
@@ -19,7 +21,7 @@ interface CardGalleryProps {
 const CARDS_PER_PAGE = 12
 
 const SkeletonCard = () => (
-  <div className="aspect-[3/4] rounded-lg bg-gray-200 animate-pulse mb-4" />
+  <div className="aspect-[3/4] w-full rounded-lg bg-gray-200 animate-pulse" />
 )
 
 const isVideoUrl = (url?: string | null) => {
@@ -36,6 +38,7 @@ export default function CardGallery({ initialCardsData, wishCardType, tabType }:
   const [hasMore, setHasMore] = useState(currentPage < totalPages)
   const [preloadedImages, setPreloadedImages] = useState<Set<string>>(new Set())
   const observerTarget = useRef<HTMLDivElement>(null)
+  const [likedMap, setLikedMap] = useState<Record<string, boolean>>({})
 
   const preloadImage = (url: string) => {
     if (!url || preloadedImages.has(url)) return
@@ -72,6 +75,13 @@ export default function CardGallery({ initialCardsData, wishCardType, tabType }:
     setCards(initialCardsData.cards)
     setTotalPages(initialCardsData.totalPages)
     setHasMore(initialCardsData.totalPages > 1)
+    // hydrate likes from localStorage for visible cards
+    try {
+      const local = JSON.parse(localStorage.getItem('likedCards') || '{}')
+      if (local && typeof local === 'object') {
+        setLikedMap(local)
+      }
+    } catch {}
   }, [wishCardType, initialCardsData, tabType])
 
   useEffect(() => {
@@ -113,92 +123,132 @@ export default function CardGallery({ initialCardsData, wishCardType, tabType }:
     }
   }
 
-  // 将卡片分配到不同的列中
-  const getColumnCards = (columnIndex: number, totalColumns: number) => {
-    return cards.filter((_, index) => index % totalColumns === columnIndex)
-  }
+  const getTypeLabel = (type: string | undefined) =>
+    CARD_TYPES.find(t => t.type === type)?.label || (type ? String(type) : 'Card')
 
-  // 根据屏幕宽度决定列数
-  const getColumnCount = () => {
-    if (typeof window === 'undefined') return 2
-    const width = window.innerWidth
-    if (width >= 1536) return 6 // 2xl
-    if (width >= 1280) return 5 // xl
-    if (width >= 1024) return 4 // lg
-    if (width >= 768) return 3  // md
-    return 2                    // sm and default
-  }
+  const getRelationshipLabel = (rel: string | null | undefined) =>
+    RELATIONSHIPS.find(r => r.value.toLowerCase() === (rel || '').toLowerCase())?.label || null
 
-  const columnCount = getColumnCount()
+  const toggleLike = (cardId: string) => {
+    setLikedMap(prev => {
+      const next = { ...prev, [cardId]: !prev[cardId] }
+      try {
+        localStorage.setItem('likedCards', JSON.stringify(next))
+      } catch {}
+      if (next[cardId]) {
+        try { recordUserAction(cardId, 'up') } catch {}
+      }
+      return next
+    })
+  }
 
   return (
-    <div className="min-h-screen px-2">
-      <div className="flex gap-4">
-        {Array.from({ length: columnCount }).map((_, columnIndex) => (
-          <div key={columnIndex} className="flex-1 flex flex-col gap-4">
-            {getColumnCards(columnIndex, columnCount).map((card, index) => (
-              <motion.div
-                key={card.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{
-                  duration: 0.4,
-                  delay: index * 0.1,
-                  ease: "easeOut"
-                }}
-                className="w-full bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow"
+    <div className="min-h-screen px-2 sm:px-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5 gap-4 max-w-6xl mx-auto">
+        {cards.map((card, index) => (
+          <motion.div
+            key={card.id}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{
+              duration: 0.4,
+              delay: index * 0.05,
+              ease: "easeOut"
+            }}
+            className="group w-full bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all border border-purple-100/40"
+          >
+            <div className="w-full relative">
+              <Link
+                href={`/to/${card.id}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block"
+                aria-label={`Open card ${card.id} in a new tab`}
               >
-                <div className="w-full relative">
-                  <Link
-                    href={`/to/${card.id}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="block"
-                    aria-label={`Open card ${card.id} in a new tab`}
-                  >
-                    <div className="aspect-[3/4] w-full relative overflow-hidden bg-gray-50">
-                      {card.r2Url ? (
-                        isVideoUrl(card.r2Url) ? (
-                          <video
-                            src={card.r2Url}
-                            muted
-                            loop
-                            playsInline
-                            autoPlay
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <img
-                            src={card.r2Url}
-                            alt={`MewTruCard ${card.cardType}`}
-                            loading="lazy"
-                            className="w-full h-full object-cover"
-                          />
-                        )
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-sm text-gray-400">
-                          Preview unavailable
-                        </div>
-                      )}
-
-                      {card.premium && (
-                        <div className="absolute top-3 left-3 flex items-center gap-1 rounded-full bg-purple-600/90 px-3 py-1 text-xs font-semibold text-white">
-                          <Crown className="h-3.5 w-3.5" />
-                          Premium
-                        </div>
-                      )}
+                <div className="aspect-[3/4] w-full relative overflow-hidden bg-gray-50">
+                  {card.r2Url ? (
+                    isVideoUrl(card.r2Url) ? (
+                      <video
+                        src={card.r2Url}
+                        muted
+                        loop
+                        playsInline
+                        autoPlay
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <img
+                        src={card.r2Url}
+                        alt={`MewTruCard ${card.cardType}`}
+                        loading="lazy"
+                        className="w-full h-full object-cover"
+                      />
+                    )
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-sm text-gray-400">
+                      Preview unavailable
                     </div>
-                  </Link>
+                  )}
                 </div>
-              </motion.div>
-            ))}
-            
-            {/* 加载时的骨架屏 */}
-            {isLoading && columnIndex < (CARDS_PER_PAGE / columnCount) && (
-              <SkeletonCard />
-            )}
-          </div>
+              </Link>
+
+              {card.premium && (
+                <div className="absolute top-3 left-3 flex items-center gap-1 rounded-full bg-purple-600/90 px-3 py-1 text-xs font-semibold text-white">
+                  <Crown className="h-3.5 w-3.5" />
+                  Premium
+                </div>
+              )}
+
+            </div>
+
+            {/* Metadata + actions */}
+            <div className="px-4 pt-3 pb-4 space-y-2 border-t border-purple-50 bg-gradient-to-b from-white to-purple-50/30">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="inline-flex items-center gap-1 text-[11px] px-2 py-1 rounded-full bg-purple-100 text-purple-700">
+                  {getTypeLabel(card.cardType)}
+                </span>
+                {getRelationshipLabel(card.relationship) && (
+                  <span className="inline-flex items-center gap-1 text-[11px] px-2 py-1 rounded-full bg-pink-100 text-pink-700">
+                    {getRelationshipLabel(card.relationship)}
+                  </span>
+                )}
+              </div>
+              <div className="flex items-center justify-between gap-2">
+                {card.message ? (
+                  <p className="text-xs text-gray-600 truncate" title={card.message || undefined}>
+                    {card.message}
+                  </p>
+                ) : (
+                  <span className="text-[11px] text-gray-400">Tap to preview</span>
+                )}
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => toggleLike(card.id)}
+                    aria-label={likedMap[card.id] ? 'Unlike' : 'Like'}
+                    className={`inline-flex items-center justify-center w-7 h-7 rounded-full border transition-colors ${
+                      likedMap[card.id]
+                        ? 'border-rose-200 bg-rose-50 text-rose-500'
+                        : 'border-purple-100 bg-white/85 text-gray-500'
+                    }`}
+                  >
+                    <ThumbsUp className={`w-3.5 h-3.5 ${likedMap[card.id] ? 'fill-rose-500' : ''}`} />
+                  </button>
+                  {typeof card.like_count === 'number' && (
+                    <div className="flex items-center gap-1 text-[11px] text-gray-500">
+                      <Heart className="w-3 h-3" />
+                      {card.like_count}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </motion.div>
         ))}
+        {isLoading &&
+          Array.from({ length: 4 }).map((_, idx) => (
+            <SkeletonCard key={`skeleton-${idx}`} />
+          ))}
       </div>
 
       {hasMore && (
