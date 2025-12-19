@@ -257,7 +257,7 @@ export async function POST(request: Request) {
         if (holdBase && holdKey) {
           const model = (modelLevel === 'PREMIUM')
             ? 'claude-sonnet-4-5-20250929'
-            : (Math.random() < 0.2 ? 'claude-sonnet-4-5-20250929' : 'claude-haiku-4-5-20251001');
+            : (Math.random() < 0.2 ? 'claude-sonnet-4-5-20250929' : 'gemini-3-flash-preview');
           // const model = 'claude-sonnet-4-5-20250929';
           result = await generateCardContentWithAnthropic(cardParams, model);
         } else {
@@ -324,64 +324,207 @@ const createNaturalPrompt = (
   const size = opts?.size || 'portrait';
   const medium = opts?.medium || 'image';
   const base = (formData?.formData ?? formData) as any;
+  
   // Aliases and normalized fields
   const toResolved = (base?.to || base?.relationship || '').toString();
   const signedResolved = (base?.signed || base?.senderName || '').toString();
   const toneRaw = (base?.tone || '').toString().toLowerCase();
   const customDesign = (base?.customDesign || base?.design_custom || '').toString();
 
-  // Enhanced emotional and atmospheric mappings
-  const toneStyle = toneRaw.includes('humor')
-    ? 'whimsical, playful, light-hearted yet sophisticated'
-    : toneRaw.includes('surprise')
-      ? 'dynamic, vibrant, celebratory, energetic'
-      : toneRaw.includes('touching')
-        ? 'deeply emotional, tender, heartwarming, soft and intimate'
-        : toneRaw ? `${toneRaw}, elegant and polished` : 'elegant and heartfelt';
+  // Enhanced emotional and philosophical tone mappings
+  const toneMapping: Record<string, { style: string; philosophy: string; animation: string }> = {
+    'humor': {
+      style: 'whimsical, playful, light-hearted yet sophisticated with delightful surprises',
+      philosophy: 'Laughter connects souls — find the gentle humor that brings warmth',
+      animation: 'bouncy, playful motion with unexpected delights'
+    },
+    'surprise': {
+      style: 'dynamic, vibrant, celebratory with moments of wonder and discovery',
+      philosophy: 'The best surprises reveal what we always hoped was true',
+      animation: 'revealing animations, elements that emerge and delight'
+    },
+    'touching': {
+      style: 'deeply emotional, tender, intimate with soft atmospheric quality',
+      philosophy: 'True emotion needs no words — let the visuals speak to the heart',
+      animation: 'breathing rhythms, gentle heartbeat pulses, slow graceful movements'
+    },
+    'romantic': {
+      style: 'sensual, warm, intimate with dreamy soft-focus quality',
+      philosophy: 'Love is seeing someone fully and choosing them — honor that sacred seeing',
+      animation: 'intertwining elements, synchronized movements, magnetic attraction'
+    },
+    'nostalgic': {
+      style: 'warm sepia-tinted, memory-like, bittersweet beauty',
+      philosophy: 'Memories are how love defeats time — honor the past while celebrating now',
+      animation: 'gentle fades, floating drift like memories surfacing'
+    },
+    'hopeful': {
+      style: 'bright, ascending, dawn-like with emerging light',
+      philosophy: 'Hope is courage in the face of uncertainty — show light breaking through',
+      animation: 'upward motion, gradual brightening, unfurling growth'
+    },
+    'grateful': {
+      style: 'warm, grounded, rich earth tones with golden light',
+      philosophy: 'Gratitude transforms what we have into enough — show abundance in simplicity',
+      animation: 'gentle blooming, warming glow, assembling elements'
+    }
+  };
+
+  // Find matching tone or use default
+  const toneKey = Object.keys(toneMapping).find(key => toneRaw.includes(key)) || '';
+  const toneConfig = toneMapping[toneKey] || {
+    style: 'elegant, heartfelt, and emotionally resonant',
+    philosophy: 'Every card is a moment of connection between two souls',
+    animation: 'subtle breathing motion, gentle presence'
+  };
 
   let prompt = '';
 
-  // Goal & audience with quality boosters
-  prompt += `Create a masterpiece ${cardType} greeting card visual of award-winning quality. `;
-  prompt += `The image should be highly detailed, cinematic, and aesthetically pleasing. `;
+  // Opening with emotional intent (different for SVG vs other media)
+  if (medium === 'svg') {
+    prompt += `Create a deeply moving ${cardType} card that touches the heart. `;
+    prompt += `${toneConfig.philosophy}. `;
+  } else {
+    prompt += `Create a masterpiece ${cardType} greeting card visual of award-winning quality. `;
+    prompt += `The image should evoke genuine emotion — not just beautiful, but meaningful. `;
+  }
 
-  // Recipient context
+  // Recipient context with emotional depth
   if (toResolved && recipientName) {
     const relationship = toResolved.toLowerCase() === 'myself' ? 'myself' : `my ${toResolved.toLowerCase()}`;
-    prompt += `It is for ${relationship} ${recipientName}. `;
+    prompt += `This is for ${relationship}, ${recipientName}. `;
+    
+    // Add relationship-specific emotional context for SVG
+    if (medium === 'svg') {
+      const relationshipEmotions: Record<string, string> = {
+        'mom': 'Honor the quiet sacrifices of maternal love — hands that held, arms that comforted',
+        'mother': 'Honor the quiet sacrifices of maternal love — hands that held, arms that comforted',
+        'dad': 'Celebrate steadfast presence — the silent strength that shapes who we become',
+        'father': 'Celebrate steadfast presence — the silent strength that shapes who we become',
+        'friend': 'True friendship is chosen family — souls that recognized each other',
+        'partner': 'Two people choosing each other, again and again — love as a daily decision',
+        'wife': 'The miracle of being truly known and loved anyway',
+        'husband': 'The miracle of being truly known and loved anyway',
+        'child': 'Each child rewrites possibility — pure potential wrapped in wonder',
+        'grandparent': 'Living bridges to our history — wisdom and unconditional love',
+        'sibling': 'Shared childhood, parallel journeys — the first friends we ever had',
+        'colleague': 'We spend our days together — recognize the human behind the role',
+        'myself': 'Self-compassion is the foundation of all love — you deserve celebration'
+      };
+      const relationshipKey = Object.keys(relationshipEmotions).find(key => 
+        toResolved.toLowerCase().includes(key)
+      );
+      if (relationshipKey) {
+        prompt += `${relationshipEmotions[relationshipKey]}. `;
+      }
+    }
   }
 
-  // Message context
+  // Message context with deeper emotional translation
   if (message) {
-    const messageContext = {
-      'sorry': 'apology and reconciliation',
-      'birthday': 'birthday celebration',
-      'thank-you': 'gratitude and appreciation',
-      'congratulations': 'joyous achievement',
-      'love': 'deep romantic affection',
-      'get-well': 'healing and comfort',
-      'graduation': 'academic success and future potential',
-      'wedding': 'eternal love and union',
-      'holiday': 'festive seasonal joy',
-      'anniversary': 'enduring love and partnership',
-      'baby': 'new life and tenderness'
-    } as const;
-    const context = (messageContext as any)[cardType] || 'Message';
-    prompt += `The core emotion is ${context}: "${message}". `;
-    prompt += `Translate this sentiment into a rich visual metaphor with emotional depth (do not render the text literal). `;
+    const messageContextDeep: Record<string, { emotion: string; visual: string }> = {
+      'sorry': {
+        emotion: 'the courage of vulnerability, the hope for reconciliation, the weight of regret transformed into bridge-building',
+        visual: 'mending, bridges forming, light returning after storm, hands reaching across gaps'
+      },
+      'birthday': {
+        emotion: 'another year of existence is a miracle — celebrate not just age but the gift of being alive',
+        visual: 'rising elements, life force glowing, cycles of renewal, wishes taking flight'
+      },
+      'thank-you': {
+        emotion: 'gratitude as recognition of grace in others — seeing the gifts we often take for granted',
+        visual: 'blooming flowers, light emerging, hands giving and receiving, seeds of kindness sprouting'
+      },
+      'congratulations': {
+        emotion: 'achievement deserves witness — joy shared multiplies, pride earned through effort',
+        visual: 'ascending paths, stars rising, doors opening, peaks reached, light bursting forth'
+      },
+      'love': {
+        emotion: 'love as seeing someone fully and choosing them — vulnerability as strength, devotion as daily choice',
+        visual: 'intertwining elements, hearts as vessels, magnetic attraction, two becoming constellation'
+      },
+      'get-well': {
+        emotion: 'healing needs witness — being seen in suffering brings comfort, hope as medicine',
+        visual: 'warm light breaking through, gentle embrace, new growth after rain, protective warmth'
+      },
+      'graduation': {
+        emotion: 'threshold crossing — honoring effort while celebrating limitless possibility ahead',
+        visual: 'doors opening, paths ascending, light at horizon, wings unfurling'
+      },
+      'wedding': {
+        emotion: 'two people choosing to build a world together — sacred promise, leap of faith hand in hand',
+        visual: 'rings interlinked, flames merging, roots intertwining, two paths becoming one'
+      },
+      'holiday': {
+        emotion: 'traditions connect us across time — warmth of belonging, the comfort of ritual',
+        visual: 'gathering lights, warm hearth, circles of connection, seasonal magic'
+      },
+      'anniversary': {
+        emotion: 'love as a choice made every day — staying is bravery, growing together is miracle',
+        visual: 'intertwined paths, tree rings marking years, two moons in eternal dance'
+      },
+      'baby': {
+        emotion: 'new life as pure possibility — the awesome responsibility and wonder of beginning',
+        visual: 'stars being born, dawn breaking, seeds sprouting, delicate new leaves'
+      }
+    };
+    
+    const context = messageContextDeep[cardType] || {
+      emotion: 'heartfelt sentiment',
+      visual: 'elegant thematic elements'
+    };
+    
+    prompt += `Core message: "${message}". `;
+    if (medium === 'svg') {
+      prompt += `Emotional essence: ${context.emotion}. `;
+      prompt += `Translate this into visual metaphor: ${context.visual}. `;
+    } else {
+      prompt += `Transform this sentiment into rich visual poetry with emotional depth. `;
+    }
   }
 
-  // Signature & other simple facts
+  // SVG-specific: Animation guidance based on tone
+  if (medium === 'svg') {
+    prompt += `Animation spirit: ${toneConfig.animation}. `;
+    prompt += `The animation should feel like breathing — natural, inevitable, meditative. `;
+  }
+
+  // Signature with warmth
   if (signedResolved && medium !== 'image') {
-    prompt += `Personal touch from sender (${signedResolved}); convey warmth. `;
+    prompt += `From ${signedResolved} — infuse personal warmth into the design. `;
   }
-  if (yearsTogether) prompt += `Celebrates ${yearsTogether} years together. `;
-  if (age) prompt += `Age: ${age}. `;
-  if (toneStyle) {
-    prompt += `Overall mood: ${toneStyle}. `;
+  
+  // Milestone context with meaning
+  if (yearsTogether) {
+    const yearsNum = parseInt(yearsTogether);
+    if (yearsNum >= 25) {
+      prompt += `Celebrating ${yearsTogether} remarkable years together — a testament to enduring love. `;
+    } else if (yearsNum >= 10) {
+      prompt += `Honoring ${yearsTogether} years of choosing each other — a decade of shared life. `;
+    } else {
+      prompt += `Marking ${yearsTogether} years together — each year a chapter in an ongoing story. `;
+    }
+  }
+  
+  if (age) {
+    const ageNum = parseInt(age);
+    if (ageNum >= 80) {
+      prompt += `A life of ${age} years — rich with wisdom, stories, and love given. `;
+    } else if (ageNum >= 50) {
+      prompt += `${age} years of living, learning, loving — a milestone worth celebrating deeply. `;
+    } else if (ageNum <= 10) {
+      prompt += `${age} years young — all of life's wonder still ahead. `;
+    } else {
+      prompt += `Celebrating ${age} years. `;
+    }
   }
 
-  // Color / design
+  // Tone/mood styling
+  if (toneConfig.style) {
+    prompt += `Overall mood: ${toneConfig.style}. `;
+  }
+
+  // Color palette
   if (design) {
     if (design === 'custom') {
       if (customDesign) prompt += `Color palette: ${customDesign}. `;
@@ -391,10 +534,10 @@ const createNaturalPrompt = (
   }
 
   if (cardRequirements) {
-    prompt += `Specific requirements: ${cardRequirements}. `;
+    prompt += `Specific requests: ${cardRequirements}. `;
   }
 
-  // Include additional simple user inputs
+  // Include additional user inputs
   try {
     const excluded = new Set([
       'to', 'relationship', 'recipientName', 'message', 'signed', 'senderName', 'design', 'customDesign', 'design_custom',
@@ -409,73 +552,114 @@ const createNaturalPrompt = (
       if (typeof v === 'object') return;
       const human = k.replace(/([a-z])([A-Z])/g, '$1 $2').replace(/[-_]/g, ' ').toLowerCase();
       if (typeof v === 'boolean') {
-        if (v) extras.push(`Include ${human} if relevant.`);
+        if (v) extras.push(`Include ${human} element.`);
       } else {
         extras.push(`${human}: ${v}.`);
       }
     });
     if (extras.length) {
-      prompt += `Details to incorporate: ${extras.join(' ')} `;
+      prompt += `Additional details: ${extras.join(' ')} `;
     }
   } catch { }
 
-  // Refined Motifs for Elegance
-  const motifsMap: Record<string, string> = {
-    birthday: 'elegant balloons in pastel or metallic tones, soft confetti, glowing candles, delicious artisanal cake',
-    anniversary: 'warm candlelight, lush roses, golden accents, soft romantic bokeh',
-    valentine: 'silk ribbons, rose petals, soft hearts, dreamy lighting',
-    love: 'ethereal glow, intertwined elements, soft focus, warmth',
-    'thank-you': 'delicate floras, botanical elements, soft sunlight, elegant stationery vibe',
-    congratulations: 'sparkling streamers, golden stars, triumphant lighting, premium textures',
-    'get-well': 'serene nature scenes, fresh flowers, calming water, soft sunlight',
-    graduation: 'classic mortarboard, rolled scroll, golden light, aspirational horizon',
-    wedding: 'intricate lace details, white florals, soft drapery, pure elegance',
-    holiday: 'magical fairy lights, rich seasonal foliage, cozy textures, snow-dusted elements',
-    baby: 'soft plush textures, clouds, stars, pastel lullaby aesthetic',
-    sorry: 'muted tones, single flower, rain-streaked window or soft light, peaceful atmosphere'
+  // Visual motifs with emotional depth
+  const motifsMapEnhanced: Record<string, { motifs: string; mood: string }> = {
+    birthday: {
+      motifs: 'gentle candle flames as life force, floating wishes like stars, elegant balloons ascending, soft celebration particles',
+      mood: 'joyful wonder with a touch of time\'s preciousness'
+    },
+    anniversary: {
+      motifs: 'intertwined paths or ribbons, warm golden light, two elements in harmony (stars, flowers, flames), rings or circles of continuity',
+      mood: 'deep gratitude, the comfort of being truly known'
+    },
+    valentine: {
+      motifs: 'hearts as vessels not clichés, silk ribbons, soft rose petals drifting, warm intimate glow',
+      mood: 'romantic intimacy, the vulnerability of love'
+    },
+    love: {
+      motifs: 'two elements in gravitational dance, ethereal glow, intertwined forms, magnetic attraction visualized',
+      mood: 'devotion, the miracle of choosing and being chosen'
+    },
+    'thank-you': {
+      motifs: 'blooming florals, light emerging from darkness, hands in gesture of giving, seeds transforming',
+      mood: 'humble gratitude, recognition of grace'
+    },
+    congratulations: {
+      motifs: 'ascending elements, stars rising, paths reaching peaks, light bursting through, triumphant arcs',
+      mood: 'earned pride, boundless possibility'
+    },
+    'get-well': {
+      motifs: 'warm light breaking through clouds, gentle protective embrace, new growth, soothing natural elements',
+      mood: 'tender care, quiet strength, gentle hope'
+    },
+    graduation: {
+      motifs: 'doors opening, paths ascending toward light, wings unfurling, threshold symbols',
+      mood: 'achievement honored, future embraced'
+    },
+    wedding: {
+      motifs: 'two flames becoming one, interlinked rings, roots growing together, white florals with golden light',
+      mood: 'sacred joy, eternal promise'
+    },
+    holiday: {
+      motifs: 'gathering warm lights, cozy glowing elements, seasonal magic, circles of connection',
+      mood: 'warmth of belonging, comfort of tradition'
+    },
+    baby: {
+      motifs: 'soft clouds and stars, gentle dawn colors, tiny precious elements, nurturing embrace shapes',
+      mood: 'pure wonder, tender new beginning'
+    },
+    sorry: {
+      motifs: 'bridge forming across gap, light returning after storm, gentle rain washing clean, hands reaching',
+      mood: 'humble hope, the courage of vulnerability'
+    }
   };
-  const motifs = motifsMap[cardType] || 'tasteful, high-quality thematic elements that match the occasion';
-  prompt += `Use elegant motifs: ${motifs}. `;
-
-  // Size & composition guidance
-  if (size === 'portrait' || size === 'story') {
-    prompt += `Composition: portrait orientation; balanced vertical layout with a clear focal point. `;
-  } else if (size === 'landscape') {
-    prompt += `Composition: landscape orientation; cinematic horizontal layout with depth. `;
+  
+  const motifsConfig = motifsMapEnhanced[cardType] || {
+    motifs: 'tasteful, meaningful thematic elements that serve the emotional core',
+    mood: 'elegant and heartfelt'
+  };
+  
+  if (medium === 'svg') {
+    prompt += `Visual metaphors to consider: ${motifsConfig.motifs}. `;
+    prompt += `Emotional atmosphere: ${motifsConfig.mood}. `;
   } else {
-    prompt += `Composition: square layout; perfectly centered and symmetrical or artistically balanced. `;
+    prompt += `Use elegant motifs: ${motifsConfig.motifs}. `;
   }
 
-  // Medium-aware framing rules
-  if (medium === 'image') {
-    prompt += `Key Requirements: Full-bleed, edge-to-edge composition. No borders, frames, or white margins. `;
-    prompt += `Avoid letterboxing/pillarboxing. The background must be fully opaque and rich. `;
-    prompt += `Frame the main subject artistically (approx. 65–85% of canvas). `;
-    prompt += `Style: High-end digital art, soft lighting, 8k resolution, highly detailed, photorealistic or premium illustration style (depending on tone). `;
+  // Size & composition
+  if (size === 'portrait' || size === 'story') {
+    prompt += `Composition: portrait orientation with clear focal point and visual breathing room. `;
+  } else if (size === 'landscape') {
+    prompt += `Composition: landscape orientation with cinematic depth and horizontal flow. `;
+  } else {
+    prompt += `Composition: square layout, centered with intentional balance. `;
+  }
 
-    // Handwritten inscription logic
+  // Medium-specific guidance
+  if (medium === 'image') {
+    prompt += `Full-bleed, edge-to-edge composition. No borders or white margins. `;
+    prompt += `Rich, fully opaque background. Frame main subject at 65–85% of canvas. `;
+    prompt += `Style: High-end digital art, soft cinematic lighting, 8k resolution, highly detailed. `;
+
     const parts: string[] = [];
     if (recipientName) parts.push(`To ${recipientName}`);
     if (signedResolved) parts.push(`from ${signedResolved}`);
     if (parts.length > 0) {
       const inscription = parts.join(', ');
-      prompt += `Add a very small, elegant handwritten-style inscription: "${inscription}". Place it subtly in a corner. It must be legible but unobtrusive. Avoid any other text. `;
+      prompt += `Small elegant handwritten inscription: "${inscription}" in corner. `;
     } else {
-      prompt += `Do not include any text or captions. Rely entirely on visual storytelling. `;
+      prompt += `Rely entirely on visual storytelling — no text. `;
     }
   } else if (medium === 'svg') {
-    prompt += `Use a cohesive colored or gradient background (no plain white slabs). `;
+    prompt += `Use rich gradient or textured background — no plain white. `;
+    prompt += `Style: Modern vector aesthetic with soul — clean lines that carry emotional weight. `;
+    prompt += `Include ONE signature animation that embodies the emotional core — breathing, floating, or gentle motion. `;
+    prompt += `The animation should be meditative, not distracting — a gentle heartbeat of presence. `;
   } else if (medium === 'video') {
-    prompt += `Ensure smooth, cinematic motion. `;
+    prompt += `Smooth, cinematic motion with emotional pacing. `;
   }
 
-  // Visual style seed for SVG (kept similar as requested to focus on static image primarily, but updated for consistency)
-  if (medium === 'svg') {
-    prompt += `Style: clean vector aesthetic, modern and playful; thematic props interact with the scene; cohesive palette. `;
-  }
-
-  // Cleanliness
-  prompt += `Final Polish: No watermarks, no logos, no artifacts. Pristine and clear. `;
+  prompt += `Final quality: Pristine, no watermarks, no artifacts. A gift worth giving. `;
 
   return prompt.trim();
 };

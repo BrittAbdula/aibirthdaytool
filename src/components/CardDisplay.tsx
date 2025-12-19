@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import Image from 'next/image'
 import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
+// removed unused Button import if not needed, or keep if standard
 import confetti from "canvas-confetti"
 
 interface CardDisplayProps {
@@ -20,137 +20,122 @@ if (typeof document !== 'undefined' && !document.querySelector('#card-display-st
   const style = document.createElement('style');
   style.id = 'card-display-styles';
   style.textContent = `
-    /* Apple-style Easing & Animations */
+    /* Dreamy Easing & Animations */
     :root {
-      --ease-apple: cubic-bezier(0.25, 0.1, 0.25, 1);
-      --ease-spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      --ease-elastic: cubic-bezier(0.34, 1.56, 0.64, 1);
+      --ease-soft: cubic-bezier(0.4, 0.0, 0.2, 1);
+      --ease-dreamy: cubic-bezier(0.25, 0.1, 0.25, 1);
     }
 
     .no-touch-callout { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
 
-    /* Elegant Sparkle - subtle and slow */
-    @keyframes sparkle-elegant {
-      0%, 100% { transform: scale(0.8) rotate(0deg); opacity: 0.4; }
-      50% { transform: scale(1.2) rotate(180deg); opacity: 0.8; }
-    }
-
-    /* Soft float */
-    @keyframes float-gentle {
-      0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-10px); }
+    /* Floating Heart/Star Particles */
+    @keyframes float-particle {
+      0% { transform: translateY(0) rotate(0deg); opacity: 0; }
+      10% { opacity: 0.8; }
+      100% { transform: translateY(-100px) rotate(360deg); opacity: 0; }
     }
     
-    /* Envelope Opening - Physics based */
-    @keyframes envelope-open-flap {
+    @keyframes pulse-soft-glow {
+      0%, 100% { box-shadow: 0 0 20px 5px rgba(255, 182, 193, 0.3); }
+      50% { box-shadow: 0 0 30px 10px rgba(255, 223, 186, 0.5); }
+    }
+
+    /* Envelope Opening - Bouncier */
+    @keyframes envelope-open-flap-dreamy {
       0% { transform: rotateX(0deg); }
       100% { transform: rotateX(-180deg); }
     }
     
-    @keyframes envelope-slide-down {
+    @keyframes envelope-slide-down-dreamy {
       0% { transform: translateY(0); opacity: 1; }
-      100% { transform: translateY(100px); opacity: 0; }
+      100% { transform: translateY(150px); opacity: 0; }
     }
 
-    /* Card Reveal - Smooth slide up */
-    @keyframes card-reveal-elegant {
-      0% { transform: translateY(100px) scale(0.95); opacity: 0; }
-      100% { transform: translateY(0) scale(1); opacity: 1; }
+    /* Card Reveal - Magical Pop */
+    @keyframes card-reveal-dreamy {
+      0% { transform: translateY(100px) scale(0.8) rotate(-5deg); opacity: 0; }
+      60% { transform: translateY(-20px) scale(1.05) rotate(2deg); opacity: 1; }
+      100% { transform: translateY(0) scale(1) rotate(0deg); opacity: 1; }
     }
 
-    /* Classes */
-    .animate-sparkle-elegant {
-      animation: sparkle-elegant 4s ease-in-out infinite;
-      will-change: transform, opacity;
-    }
-    
-    .animate-float-gentle {
-      animation: float-gentle 6s ease-in-out infinite;
-      will-change: transform;
-    }
-
-    .animate-envelope-open-flap {
-      animation: envelope-open-flap 0.8s var(--ease-apple) forwards;
+    .animate-envelope-open-flap-dreamy {
+      animation: envelope-open-flap-dreamy 1.2s var(--ease-elastic) forwards;
       transform-origin: top;
       will-change: transform;
     }
     
-    .animate-envelope-slide-down {
-      animation: envelope-slide-down 1s var(--ease-apple) forwards;
+    .animate-envelope-slide-down-dreamy {
+      animation: envelope-slide-down-dreamy 1.2s var(--ease-soft) forwards;
       will-change: transform, opacity;
     }
 
-    .animate-card-reveal-elegant {
-      animation: card-reveal-elegant 1.2s var(--ease-apple) forwards;
+    .animate-card-reveal-dreamy {
+      animation: card-reveal-dreamy 1.5s var(--ease-elastic) forwards;
       will-change: transform, opacity;
     }
 
-    /* Shake Animation - More controlled */
-    @keyframes shake-elegant {
+    /* Cute Wiggle Interaction */
+    @keyframes wiggle-cute {
       0%, 100% { transform: rotate(0deg); }
-      25% { transform: rotate(-2deg); }
-      75% { transform: rotate(2deg); }
+      25% { transform: rotate(-3deg); }
+      75% { transform: rotate(3deg); }
     }
     
-    .animate-shake-elegant {
-      animation: shake-elegant 0.4s ease-in-out infinite;
+    .animate-wiggle-cute {
+      animation: wiggle-cute 0.5s ease-in-out infinite;
+    }
+
+    /* Soft Floating */
+    @keyframes float-dreamy {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-12px); }
+    }
+
+    .animate-float-dreamy {
+      animation: float-dreamy 5s ease-in-out infinite;
     }
 
     .perspective-1000 { perspective: 1000px; }
     .perspective-envelope { perspective: 1200px; }
     .transform-style-3d { transform-style: preserve-3d; }
-    .backface-hidden { backface-visibility: hidden; }
     
-    /* Premium Shadows */
-    .shadow-envelope {
-      box-shadow: 0 20px 40px -5px rgba(0,0,0,0.1), 0 10px 20px -5px rgba(0,0,0,0.05);
+    /* Dreamy Shadows */
+    .shadow-envelope-dreamy {
+      box-shadow: 0 20px 50px -10px rgba(255, 105, 180, 0.15), 0 10px 20px -5px rgba(255, 182, 193, 0.2);
     }
     
-    .shadow-card-elegant {
-      box-shadow: 0 25px 50px -12px rgba(0,0,0,0.3);
+    .shadow-card-dreamy {
+      box-shadow: 0 25px 60px -12px rgba(147, 112, 219, 0.25);
     }
-
-    /* MAGIC EFFECTS */
-    @keyframes aura-pulse {
-      0%, 100% { box-shadow: 0 0 40px 10px rgba(255, 215, 0, 0.2); }
-      50% { box-shadow: 0 0 60px 20px rgba(255, 215, 0, 0.4); }
+    
+    /* Magic Burst */
+    @keyframes magic-burst-ring {
+      0% { width: 0; height: 0; opacity: 1; border-width: 20px; }
+      100% { width: 500px; height: 500px; opacity: 0; border-width: 0px; }
     }
-
-    @keyframes float-dust {
-      0% { transform: translateY(0) translateX(0); opacity: 0; }
-      10% { opacity: 0.8; }
-      90% { opacity: 0.8; }
-      100% { transform: translateY(-100px) translateX(20px); opacity: 0; }
-    }
-
-    @keyframes light-burst {
-      0% { opacity: 0; transform: scale(0.5); }
-      50% { opacity: 1; transform: scale(1.5); }
-      100% { opacity: 0; transform: scale(2); }
-    }
-
-    .animate-aura-pulse {
-      animation: aura-pulse 4s ease-in-out infinite;
-    }
-
-    .magic-particle {
-      position: absolute;
-      background: white;
-      border-radius: 50%;
-      pointer-events: none;
+    
+    /* Frosted Glass */
+    .glass-morphism {
+      background: rgba(255, 255, 255, 0.7);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.5);
     }
   `;
   document.head.appendChild(style);
 }
 
-// Magical Particle Component
-const MagicalParticles = () => {
-  const particles = Array.from({ length: 20 }).map((_, i) => ({
+// Magical Particle Component (Hearts & Stars)
+const DreamyParticles = () => {
+  const particles = Array.from({ length: 25 }).map((_, i) => ({
     id: i,
     left: `${Math.random() * 100}%`,
     top: `${Math.random() * 100}%`,
-    size: Math.random() * 3 + 1 + 'px',
-    duration: Math.random() * 5 + 5 + 's',
-    delay: Math.random() * 5 + 's',
+    size: Math.random() * 10 + 5 + 'px',
+    duration: Math.random() * 4 + 3 + 's',
+    delay: Math.random() * 2 + 's',
+    type: Math.random() > 0.5 ? 'heart' : 'star'
   }));
 
   return (
@@ -158,18 +143,27 @@ const MagicalParticles = () => {
       {particles.map((p) => (
         <div
           key={p.id}
-          className="magic-particle opacity-0"
+          className="absolute opacity-0"
           style={{
             left: p.left,
             top: p.top,
             width: p.size,
             height: p.size,
-            animation: `float-dust ${p.duration} ease-in-out infinite`,
+            animation: `float-particle ${p.duration} ease-in-out infinite`,
             animationDelay: p.delay,
-            background: 'radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(255,215,0,0.5) 100%)',
-            boxShadow: '0 0 5px rgba(255, 215, 0, 0.5)'
+            color: p.type === 'heart' ? '#FFD1DC' : '#FFFACD', 
           }}
-        />
+        >
+          {p.type === 'heart' ? (
+             <svg viewBox="0 0 24 24" fill="currentColor" className="w-full h-full drop-shadow-md">
+                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+             </svg>
+          ) : (
+             <svg viewBox="0 0 24 24" fill="currentColor" className="w-full h-full drop-shadow-md">
+                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+             </svg>
+          )}
+        </div>
       ))}
     </div>
   );
@@ -179,7 +173,7 @@ export default function CardDisplay({ card }: CardDisplayProps) {
   const [stage, setStage] = useState<'initial' | 'opening' | 'revealing' | 'final'>('initial')
   const [showEnvelope, setShowEnvelope] = useState(true)
   const [showCard, setShowCard] = useState(false)
-  const [showBurst, setShowBurst] = useState(false) // New state for burst
+  const [showBurst, setShowBurst] = useState(false)
   const [imageSrc, setImageSrc] = useState<string | null>(null)
   
   // Interaction states
@@ -187,19 +181,12 @@ export default function CardDisplay({ card }: CardDisplayProps) {
   const [cardRotation, setCardRotation] = useState({ x: 0, y: 0 })
   const cardRef = useRef<HTMLDivElement>(null)
   
-  // Long press / Charging
-  const [isCharging, setIsCharging] = useState(false)
-  const [chargeProgress, setChargeProgress] = useState(0)
-  const chargeTimerRef = useRef<NodeJS.Timeout | null>(null)
-  const chargeStartRef = useRef<number>(0)
+  // Interaction / Shake
+  const [isInteracting, setIsInteracting] = useState(false)
   
-  // Shake
-  const [shakeCount, setShakeCount] = useState(0)
-  const [isShaking, setIsShaking] = useState(false)
+  // Device Motion
   const lastShakeRef = useRef<number>(0)
-  const shakeTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const shakeThreshold = 15
-  const shakeRequiredCount = 3
 
   // Helper function to determine if URL is a video
   const isVideo = (url?: string) => {
@@ -218,29 +205,48 @@ export default function CardDisplay({ card }: CardDisplayProps) {
     }
   }, [card.r2Url, card.svgContent])
 
-  // Minimalist Confetti
-  const triggerConfetti = useCallback(() => {
-    const end = Date.now() + 1000;
-    const colors = ["#FFD700", "#C0C0C0", "#ffffff"]; // Gold, Silver, White
+  // Dreamy Confetti
+  const triggerDreamyConfetti = useCallback(() => {
+    const end = Date.now() + 1500;
+    const colors = ["#FFC0CB", "#FFD700", "#E6E6FA", "#FFF0F5"]; // Pink, Gold, Lavender, Blush
 
     (function frame() {
+      // Hearts (using circles/stars as hearts are not default supported shapes)
       confetti({
-        particleCount: 3,
+        particleCount: 4,
         angle: 60,
         spread: 55,
         origin: { x: 0 },
         colors: colors,
-        shapes: ['circle', 'star'], // Added star for magic
-        scalar: 0.8
+        shapes: ['circle', 'star'],
+        scalar: 2,
+        drift: 0.5,
+        ticks: 300
       });
       confetti({
-        particleCount: 3,
+        particleCount: 4,
         angle: 120,
         spread: 55,
         origin: { x: 1 },
         colors: colors,
         shapes: ['circle', 'star'],
-        scalar: 0.8
+        scalar: 2,
+        drift: -0.5,
+        ticks: 300
+      });
+      
+      // Star Dust
+      confetti({
+        particleCount: 5,
+        angle: 90,
+        spread: 100,
+        origin: { y: 0.6 },
+        colors: ["#ffffff", "#FFD700"],
+        shapes: ['star'],
+        scalar: 0.6,
+        gravity: 0.8,
+        decay: 0.96,
+        startVelocity: 20
       });
 
       if (Date.now() < end) {
@@ -270,23 +276,11 @@ export default function CardDisplay({ card }: CardDisplayProps) {
       
       if (totalDelta > shakeThreshold) {
         const now = Date.now();
-        if (now - lastShakeRef.current > 300) {
+        if (now - lastShakeRef.current > 500) {
           lastShakeRef.current = now;
-          setShakeCount(prev => {
-            const newCount = prev + 1;
-            if (newCount === 1) setIsShaking(true);
-            if (newCount >= shakeRequiredCount) {
-              handleOpen();
-              return 0;
-            }
-            return newCount;
-          });
-          
-          if (shakeTimeoutRef.current) clearTimeout(shakeTimeoutRef.current);
-          shakeTimeoutRef.current = setTimeout(() => {
-             setShakeCount(0);
-             setIsShaking(false);
-          }, 1500);
+          setIsInteracting(true);
+          setTimeout(() => setIsInteracting(false), 800);
+          handleOpen();
         }
       }
       
@@ -315,59 +309,34 @@ export default function CardDisplay({ card }: CardDisplayProps) {
     const rect = cardRef.current.getBoundingClientRect();
     const centerX = rect.left + rect.width / 2;
     const centerY = rect.top + rect.height / 2;
-    const rotateX = (e.clientY - centerY) / 20;
-    const rotateY = (centerX - e.clientX) / 20;
+    const rotateX = (e.clientY - centerY) / 25; // Gentler rotation
+    const rotateY = (centerX - e.clientX) / 25;
     setCardRotation({ x: rotateX, y: rotateY });
   };
 
-  const startCharging = () => {
-    if (stage !== 'initial' || isCharging) return;
-    setIsCharging(true);
-    setChargeProgress(0);
-    chargeStartRef.current = Date.now();
-    
-    chargeTimerRef.current = setInterval(() => {
-      const elapsed = Date.now() - chargeStartRef.current;
-      const progress = Math.min((elapsed / 1500) * 100, 100);
-      setChargeProgress(progress);
-      
-      if (progress >= 100) {
-        if (chargeTimerRef.current) clearInterval(chargeTimerRef.current);
-        setIsCharging(false);
-        handleOpen();
-      }
-    }, 16);
-  };
-
-  const stopCharging = () => {
-    if (!isCharging) return;
-    if (chargeTimerRef.current) clearInterval(chargeTimerRef.current);
-    setIsCharging(false);
-    setChargeProgress(0);
-  };
-
   const handleOpen = useCallback(() => {
+    if (stage !== 'initial') return;
     setStage('opening');
     
     // Animation sequence
     setTimeout(() => {
         setStage('revealing');
         setShowBurst(true); // Trigger burst
-    }, 600);
+    }, 800);
     
     setTimeout(() => {
       setStage('final');
       setShowEnvelope(false);
       setShowCard(true);
       setShowBurst(false); // End burst
-      requestAnimationFrame(triggerConfetti);
-    }, 1200);
-  }, [triggerConfetti]);
+      requestAnimationFrame(triggerDreamyConfetti);
+    }, 1800);
+  }, [stage, triggerDreamyConfetti]);
 
   if (!imageSrc) {
     return (
       <div className="w-full flex items-center justify-center h-[60vh]">
-        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-slate-200"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-pink-300"></div>
       </div>
     )
   }
@@ -377,7 +346,10 @@ export default function CardDisplay({ card }: CardDisplayProps) {
       {/* Light Burst Overlay */}
       {showBurst && (
         <div className="absolute inset-0 z-50 flex items-center justify-center pointer-events-none">
-          <div className="w-[500px] h-[500px] bg-radial-gradient(circle, rgba(255,255,255,0.8) 0%, rgba(255,215,0,0) 70%) animate-[light-burst_0.6s_ease-out_forwards]"></div>
+           <div className="relative">
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border-[10px] border-pink-200/50 animate-[magic-burst-ring_0.8s_ease-out_forwards]"></div>
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border-[20px] border-white/80 animate-[magic-burst-ring_1s_ease-out_0.1s_forwards]"></div>
+           </div>
         </div>
       )}
 
@@ -386,28 +358,26 @@ export default function CardDisplay({ card }: CardDisplayProps) {
         "transition-all duration-1000 w-full perspective-1000 relative z-10",
         !showEnvelope ? "opacity-100 scale-100" : "opacity-0 scale-95 pointer-events-none absolute"
       )}>
-        {/* Magical Background Particles (Only when card is shown) */}
-        {showCard && <MagicalParticles />}
+        {/* Dreamy Particles (Always active for ambiance when card is shown) */}
+        {showCard && <DreamyParticles />}
 
         <div className={cn(
           "w-full mx-auto relative",
-          showCard ? 'animate-card-reveal-elegant' : 'opacity-0'
+          showCard ? 'animate-card-reveal-dreamy' : 'opacity-0'
         )}>
-           {/* Card Container with Aura */}
-           <div className="relative w-full max-w-[400px] mx-auto">
-              <div className={cn(
-                  "absolute inset-0 rounded-xl bg-amber-200/20 blur-2xl transform scale-110",
-                  showCard ? "animate-aura-pulse" : "" 
-              )}></div>
-
+           {/* Card Container with Soft Glow and Float */}
+           <div className="relative w-full max-w-[400px] mx-auto animate-float-dreamy">
+              {/* Back Glow - Stronger Halo */}
+              <div className="absolute -inset-8 rounded-full bg-pink-300 blur-3xl opacity-60 animate-[pulse-soft-glow_4s_infinite]"></div>
+              
               <div 
                 ref={cardRef}
                 className={cn(
-                   "relative aspect-[2/3] transform-gpu transition-all duration-300 cursor-pointer shadow-card-elegant rounded-xl overflow-hidden bg-white/50 backdrop-blur-sm border border-white/50",
-                   showCard ? "animate-aura-pulse" : "" // Double pulse for intensity
+                   "relative aspect-[2/3] transform-gpu transition-all duration-300 cursor-pointer shadow-card-dreamy rounded-xl overflow-hidden bg-white/40 backdrop-blur-md border border-white/60",
                 )}
                 style={{ 
                   transform: `perspective(1000px) rotateX(${cardRotation.x}deg) rotateY(${cardRotation.y}deg)`,
+                  boxShadow: '0 0 50px 10px rgba(255, 192, 203, 0.5)' // Inline override for stronger halo
                 }}
                 onMouseMove={handleCardMouseMove}
                 onMouseEnter={() => setIsHovering(true)}
@@ -415,7 +385,7 @@ export default function CardDisplay({ card }: CardDisplayProps) {
                   setCardRotation({ x: 0, y: 0 });
                   setIsHovering(false);
                 }}
-                onClick={triggerConfetti}
+                onClick={triggerDreamyConfetti}
               >
                 {isVideo(imageSrc) ? (
                   <video
@@ -439,17 +409,17 @@ export default function CardDisplay({ card }: CardDisplayProps) {
                   />
                 )}
                 
-                {/* Light Sheen */}
-                <div className="absolute inset-0 bg-gradient-to-tr from-white/30 via-transparent to-transparent opacity-60 pointer-events-none mix-blend-overlay"></div>
+                {/* Dreamy Overlays */}
+                <div className="absolute inset-0 bg-gradient-to-tr from-pink-100/20 via-transparent to-blue-100/20 mix-blend-overlay pointer-events-none"></div>
                 
-                {/* Sparkle Texture Overlay */}
-                <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-10 mix-blend-overlay pointer-events-none"></div>
+                {/* Subtle Grain */}
+                <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.03] mix-blend-overlay pointer-events-none"></div>
               </div>
            </div>
         </div>
       </div>
 
-      {/* ENVELOPE */}
+      {/* DREAMY ENVELOPE */}
       {showEnvelope && (
         <div className={cn(
           "absolute inset-0 w-full perspective-envelope flex items-center justify-center transition-opacity duration-1000 z-20",
@@ -458,88 +428,71 @@ export default function CardDisplay({ card }: CardDisplayProps) {
           <div 
             className={cn(
               "relative w-full max-w-[450px] aspect-[4/3] transition-transform duration-500",
-              isShaking ? "animate-shake-elegant" : "animate-float-gentle",
-              stage === 'revealing' ? "animate-envelope-slide-down" : ""
+              isInteracting || isHovering ? "animate-wiggle-cute" : "animate-float-dreamy",
+              stage === 'revealing' ? "animate-envelope-slide-down-dreamy" : ""
             )}
-            onMouseDown={startCharging}
-            onMouseUp={stopCharging}
-            onMouseLeave={stopCharging}
-            onTouchStart={startCharging}
-            onTouchEnd={stopCharging}
+            onClick={handleOpen}
+            onMouseEnter={() => setIsHovering(true)}
+            onMouseLeave={() => setIsHovering(false)}
           >
             {/* Envelope Body (Back) */}
-            <div className="absolute inset-0 bg-[#f5f5f7] rounded-lg shadow-envelope border border-white/40"></div>
+            <div className="absolute inset-0 bg-[#fff0f5] rounded-xl shadow-envelope-dreamy border border-white/80"></div>
             
-            {/* Card Preview Inside (Hidden initially) */}
+            {/* Card Preview Inside */}
             <div className={cn(
                "absolute top-2 left-4 right-4 bottom-2 bg-white shadow-sm transition-transform duration-700 ease-[cubic-bezier(0.25,0.1,0.25,1)]",
-               stage === 'opening' || stage === 'revealing' ? "translate-y-[-10%]" : "translate-y-0"
+               stage === 'opening' || stage === 'revealing' ? "translate-y-[-15%]" : "translate-y-0"
             )}>
-              <div className="w-full h-full bg-slate-100 overflow-hidden relative">
-                 {/* Simplified abstract preview */}
-                 <div className="absolute inset-0 bg-gradient-to-br from-purple-50 to-pink-50 opacity-50"></div>
-                 {/* Magic hint inside */}
-                 <div className="absolute inset-0 flex items-center justify-center opacity-30">
-                    <div className="w-20 h-20 bg-amber-100 rounded-full blur-xl"></div>
-                 </div>
+              <div className="w-full h-full bg-slate-50 overflow-hidden relative">
+                 <div className="absolute inset-0 bg-gradient-to-br from-pink-200 to-purple-200 opacity-30"></div>
+                 {/* Sparkle Hint */}
+                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-4xl animate-pulse">✨</div>
               </div>
             </div>
 
-            {/* Envelope Body (Front - Bottom Fold) */}
-            <div className="absolute bottom-0 left-0 right-0 h-[60%] bg-[#ffffff] rounded-b-lg shadow-sm z-20 border-t border-slate-100 mask-image-linear-gradient-to-t">
-               <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/5 rounded-b-lg"></div>
+            {/* Envelope Front (Bottom) */}
+            <div className="absolute bottom-0 left-0 right-0 h-[60%] bg-[#fff5f8] rounded-b-xl shadow-sm z-20 border-t border-white/50 backdrop-blur-sm">
+               <div className="absolute inset-0 bg-gradient-to-b from-transparent to-pink-100/30 rounded-b-xl"></div>
             </div>
             
-            {/* Envelope Body (Front - Side Folds) */}
+            {/* Envelope Front (Sides) */}
              <div className="absolute inset-0 z-20 pointer-events-none">
-                 <div className="absolute top-[40%] left-0 w-[50%] h-[60%] bg-[#fafafa] origin-bottom-left skew-y-12 shadow-sm rounded-bl-lg"></div>
-                 <div className="absolute top-[40%] right-0 w-[50%] h-[60%] bg-[#fafafa] origin-bottom-right -skew-y-12 shadow-sm rounded-br-lg"></div>
+                 <div className="absolute top-[40%] left-0 w-[50%] h-[60%] bg-[#fff0f5] origin-bottom-left skew-y-6 shadow-sm rounded-bl-xl border-r border-white/20"></div>
+                 <div className="absolute top-[40%] right-0 w-[50%] h-[60%] bg-[#fff0f5] origin-bottom-right -skew-y-6 shadow-sm rounded-br-xl border-l border-white/20"></div>
              </div>
 
             {/* Top Flap */}
             <div className={cn(
-              "absolute top-0 left-0 right-0 h-[50%] bg-[#fbfbfd] rounded-t-lg z-30 origin-top shadow-md transition-all duration-800 transform-style-3d",
-              stage !== 'initial' ? "animate-envelope-open-flap" : ""
+              "absolute top-0 left-0 right-0 h-[50%] bg-[#ffe4e1] rounded-t-xl z-30 origin-top shadow-md transition-all duration-800 transform-style-3d",
+              stage !== 'initial' ? "animate-envelope-open-flap-dreamy" : ""
             )}>
                {/* Flap Texture */}
-               <div className="absolute inset-0 bg-gradient-to-b from-white to-slate-50 opacity-50 rounded-t-lg"></div>
+               <div className="absolute inset-0 bg-gradient-to-b from-white/40 to-transparent rounded-t-xl"></div>
                
-               {/* Wax Seal / Button */}
+               {/* Cute Heart Seal */}
                <div className={cn(
-                  "absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 w-16 h-16 transition-all duration-300",
-                  stage === 'initial' ? "scale-100 opacity-100" : "scale-50 opacity-0"
+                  "absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 transition-all duration-300 z-40",
+                  stage === 'initial' ? "scale-100 opacity-100" : "scale-0 opacity-0"
                )}>
-                  <div className="relative w-full h-full flex items-center justify-center">
-                    {/* Ring for charging */}
-                    {isCharging && (
-                       <svg className="absolute inset-[-4px] w-[calc(100%+8px)] h-[calc(100%+8px)] -rotate-90">
-                          <circle cx="50%" cy="50%" r="32" fill="none" stroke="#e2e8f0" strokeWidth="2" />
-                          <circle cx="50%" cy="50%" r="32" fill="none" stroke="#fbbf24" strokeWidth="2" 
-                            strokeDasharray="201" strokeDashoffset={201 * (1 - chargeProgress / 100)} 
-                            className="transition-all duration-75 ease-linear"
-                            style={{ filter: 'drop-shadow(0 0 2px #fbbf24)' }}
-                          />
-                       </svg>
-                    )}
-                    
-                    {/* Seal Body - Gold accent now */}
-                    <div className={cn(
-                       "w-14 h-14 rounded-full bg-gradient-to-br from-[#e2e2e2] to-[#ffffff] shadow-lg flex items-center justify-center border border-white/60 transform transition-transform group",
-                       isCharging ? "scale-90" : "hover:scale-105"
-                    )}>
-                       <div className="text-2xl text-amber-500/80 font-serif italic group-hover:text-amber-500 transition-colors">M</div>
-                    </div>
+                  <div className="relative group cursor-pointer">
+                     {/* Pulse Ring */}
+                     <div className="absolute inset-0 bg-pink-400 rounded-full animate-ping opacity-20"></div>
+                     
+                     {/* Heart Icon */}
+                     <div className="w-16 h-16 bg-gradient-to-br from-pink-400 to-rose-400 rounded-full shadow-lg flex items-center justify-center border-4 border-white transform transition-transform group-hover:scale-110">
+                        <svg viewBox="0 0 24 24" fill="white" className="w-8 h-8 drop-shadow-sm">
+                           <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                        </svg>
+                     </div>
                   </div>
                </div>
             </div>
 
             {/* Instruction Text */}
             {stage === 'initial' && (
-              <div className="absolute -bottom-16 left-0 right-0 text-center animate-pulse">
-                <p className="text-sm font-medium text-slate-400 tracking-wide uppercase text-[10px] flex items-center justify-center gap-2">
-                  <span className="inline-block w-1 h-1 rounded-full bg-amber-400"></span>
-                  {isCharging ? "Light the Magic" : "Hold to Open"}
-                  <span className="inline-block w-1 h-1 rounded-full bg-amber-400"></span>
+              <div className="absolute -bottom-20 left-0 right-0 text-center animate-bounce">
+                <p className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/80 backdrop-blur text-pink-500 text-sm font-medium shadow-sm border border-pink-100">
+                  <span>💌</span> Tap to open for a surprise! <span>✨</span>
                 </p>
               </div>
             )}

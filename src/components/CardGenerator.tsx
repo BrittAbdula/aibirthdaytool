@@ -25,86 +25,147 @@ import { Switch } from "@/components/ui/switch"
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover"
 
 const MagicalCardCreation = () => {
+  // Richer status messages
+  const [loadingText, setLoadingText] = useState("Weaving your magical words...");
+  
+  useEffect(() => {
+    const messages = [
+      "Weaving your magical words...",
+      "Mixing colors from the rainbow...",
+      "Sprinkling stardust...",
+      "Asking the AI fairies...",
+      "Almost ready...",
+    ];
+    let i = 0;
+    const interval = setInterval(() => {
+      i = (i + 1) % messages.length;
+      setLoadingText(messages[i]);
+    }, 2500);
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <div className="w-full h-full relative overflow-hidden bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50">
-      {/* Floating sparkles with dance animation */}
-      {[...Array(10)].map((_, i) => (
-        <div
-          key={`sparkle-${i}`}
-          className="absolute animate-sparkle-dance"
-          style={{
-            left: `${15 + (i * 8)}%`,
-            top: `${20 + Math.sin(i) * 25}%`,
-            animationDelay: `${i * 0.4}s`,
-          }}
-        >
-          <span className="text-yellow-400 text-base drop-shadow-sm">✨</span>
-        </div>
-      ))}
+      {/* Background Ambience */}
+      <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-pink-200/40 rounded-full blur-[100px] animate-blob mix-blend-multiply"></div>
+      <div className="absolute top-1/3 right-1/4 w-[400px] h-[400px] bg-purple-200/40 rounded-full blur-[100px] animate-blob animation-delay-2000 mix-blend-multiply"></div>
       
-      {/* Floating hearts with gentle movement */}
-      {[...Array(6)].map((_, i) => (
+      {/* "AI Wisdom" Particles */}
+      {[...Array(20)].map((_, i) => (
         <div
-          key={`heart-${i}`}
-          className="absolute animate-float-gentle"
+          key={`wisdom-${i}`}
+          className="absolute rounded-full bg-gradient-to-r from-yellow-300 to-pink-300 blur-[1px]"
           style={{
-            left: `${25 + (i * 12)}%`,
-            top: `${30 + Math.cos(i) * 20}%`,
-            animationDelay: `${i * 0.6}s`,
-          }}
-        >
-          <span className="text-pink-400 text-sm drop-shadow-sm">💕</span>
-        </div>
-      ))}
-      
-      {/* Magic creation canvas */}
-      <div className="absolute inset-0 flex items-center justify-center">
-        <div className="relative">
-          <div className="w-32 h-40 border-2 border-dashed border-pink-300 rounded-lg animate-magic-glow">
-            <div className="absolute inset-3 bg-gradient-to-br from-pink-100 via-purple-100 to-blue-100 rounded opacity-60 animate-pulse"></div>
-            
-            {/* Card elements appearing */}
-            <div className="absolute inset-4 flex flex-col justify-center items-center space-y-2">
-              <div className="w-16 h-2 bg-gradient-to-r from-pink-300 to-purple-300 rounded animate-pulse" style={{ animationDelay: '0.5s' }}></div>
-              <div className="w-12 h-1 bg-gradient-to-r from-blue-300 to-green-300 rounded animate-pulse" style={{ animationDelay: '1s' }}></div>
-              <div className="w-8 h-8 bg-gradient-to-br from-yellow-300 to-orange-300 rounded-full animate-bounce" style={{ animationDelay: '1.5s' }}></div>
-              <div className="w-14 h-1 bg-gradient-to-r from-purple-300 to-pink-300 rounded animate-pulse" style={{ animationDelay: '2s' }}></div>
-            </div>
-          </div>
-          
-          {/* Magic wand with wave animation */}
-          <div className="absolute -top-6 -right-6 animate-wand-wave">
-            <div className="w-10 h-1.5 bg-gradient-to-r from-yellow-400 via-orange-400 to-pink-400 rounded-full shadow-md"></div>
-            <div className="absolute -top-0.5 -right-0.5 animate-sparkle-dance">
-              <span className="text-yellow-300 text-xs">⭐</span>
-            </div>
-            {/* Magic trail */}
-            <div className="absolute -left-8 top-0 w-8 h-0.5 bg-gradient-to-l from-yellow-300 to-transparent rounded animate-pulse opacity-60"></div>
-          </div>
-        </div>
-      </div>
-      
-      {/* Magical particles */}
-      {[...Array(8)].map((_, i) => (
-        <div
-          key={`particle-${i}`}
-          className="absolute w-2 h-2 rounded-full animate-float-gentle"
-          style={{
-            left: `${20 + (i * 8)}%`,
-            top: `${35 + Math.sin(i * 1.5) * 20}%`,
-            backgroundColor: ['#FFE4E1', '#E6E6FA', '#F0F8FF', '#F5FFFA', '#FFF8DC', '#F0FFF0', '#FFE4E1', '#E0FFFF'][i],
-            animationDelay: `${i * 0.3}s`,
-            boxShadow: '0 0 4px rgba(255, 255, 255, 0.8)'
+             width: Math.random() * 4 + 2 + 'px',
+             height: Math.random() * 4 + 2 + 'px',
+             left: '50%',
+             top: '50%',
+             transform: `rotate(${i * 18}deg) translateY(-${Math.random() * 200 + 100}px)`,
+             opacity: 0,
+             animation: `wisdom-flow 3s ease-in-out infinite`,
+             animationDelay: `${Math.random() * 2}s`
           }}
         />
       ))}
-      
-      {/* Mystical circles with improved animation */}
+
+      {/* Floating Icon Bubbles (Richer Animation) */}
+      {[...Array(12)].map((_, i) => (
+         <div 
+            key={`icon-${i}`}
+            className="absolute animate-float-up opacity-0"
+            style={{
+               left: `${Math.random() * 100}%`,
+               bottom: '-50px',
+               animationDelay: `${Math.random() * 5}s`,
+               animationDuration: `${Math.random() * 5 + 5}s`,
+               fontSize: `${Math.random() * 1.5 + 1}rem`
+            }}
+         >
+            {['❤️', '✨', '🎵', '🌟', '🦋', '🌸'][Math.floor(Math.random() * 6)]}
+         </div>
+      ))}
+
+      {/* Central Glowing Card Construction */}
       <div className="absolute inset-0 flex items-center justify-center">
-        <div className="absolute w-48 h-48 border border-pink-200/40 rounded-full animate-spin opacity-20" style={{ animationDuration: '12s' }}></div>
-        <div className="absolute w-36 h-36 border border-purple-200/50 rounded-full animate-spin opacity-25" style={{ animationDuration: '8s', animationDirection: 'reverse' }}></div>
-        <div className="absolute w-24 h-24 border border-blue-200/60 rounded-full animate-spin opacity-30" style={{ animationDuration: '6s' }}></div>
+         <div className="relative">
+            {/* Halo Glow */}
+            <div className="absolute -inset-10 bg-gradient-to-tr from-pink-300 via-purple-300 to-blue-300 rounded-full blur-3xl opacity-40 animate-pulse"></div>
+            
+            {/* Card Silhouette */}
+            <div className="w-48 h-64 bg-white/40 backdrop-blur-md rounded-xl border border-white/60 shadow-[0_0_50px_10px_rgba(255,192,203,0.5)] flex items-center justify-center overflow-hidden relative animate-bounce-gentle">
+               
+               {/* Internal Scanning Effect */}
+               <div className="absolute inset-0 bg-gradient-to-b from-transparent via-white/50 to-transparent w-full h-[20%] animate-scan"></div>
+               
+               {/* Traveling Light Beam Orbit */}
+               <div className="absolute inset-0 pointer-events-none">
+                  <div className="absolute top-0 left-0 w-full h-full animate-orbit-beam">
+                      <div className="w-20 h-20 bg-gradient-to-r from-transparent via-white to-transparent opacity-50 blur-sm transform rotate-45 translate-x-10 translate-y-10"></div>
+                  </div>
+               </div>
+               
+               {/* Growing Content */}
+               <div className="flex flex-col items-center gap-3 relative z-10">
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-pink-400 to-purple-400 animate-pulse shadow-lg flex items-center justify-center">
+                     <span className="text-xl animate-spin-slow">✨</span>
+                  </div>
+                  <div className="h-2 w-24 bg-pink-100 rounded-full overflow-hidden">
+                     <div className="h-full bg-pink-400 w-1/2 animate-progress"></div>
+                  </div>
+               </div>
+            </div>
+
+            {/* Orbiting Elements */}
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-72 h-72 border border-pink-200/30 rounded-full animate-spin-slow">
+               <div className="absolute -top-1 left-1/2 w-3 h-3 bg-pink-400 rounded-full shadow-[0_0_10px_rgba(255,105,180,0.8)]"></div>
+            </div>
+         </div>
       </div>
+
+      {/* Rotating Status Text */}
+      <div className="absolute bottom-20 left-0 right-0 text-center px-4">
+         <p className="text-lg font-medium bg-clip-text text-transparent bg-gradient-to-r from-pink-500 to-purple-600 animate-fade-in-out">
+            {loadingText}
+         </p>
+      </div>
+      
+      <style jsx>{`
+        @keyframes wisdom-flow {
+          0% { transform: rotate(var(--r)) translateY(-300px); opacity: 0; }
+          50% { opacity: 1; }
+          100% { transform: rotate(var(--r)) translateY(0); opacity: 0; }
+        }
+        @keyframes float-up {
+           0% { transform: translateY(0) rotate(0deg); opacity: 0; }
+           10% { opacity: 0.7; }
+           100% { transform: translateY(-80vh) rotate(360deg); opacity: 0; }
+        }
+        @keyframes scan {
+          0% { top: -20%; }
+          100% { top: 120%; }
+        }
+        @keyframes bounce-gentle {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-10px); }
+        }
+        @keyframes spin-slow {
+          from { transform: translate(-50%, -50%) rotate(0deg); }
+          to { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+        @keyframes progress {
+           0% { width: 0%; left: 0; }
+           50% { width: 100%; left: 0; }
+           100% { width: 0%; left: 100%; }
+        }
+        @keyframes fade-in-out {
+           0%, 100% { opacity: 0.7; transform: scale(0.98); }
+           50% { opacity: 1; transform: scale(1); }
+        }
+        @keyframes orbit-beam {
+           0% { transform: rotate(0deg); }
+           100% { transform: rotate(360deg); }
+        }
+      `}</style>
     </div>
   )
 }
