@@ -1,6 +1,6 @@
 import { Suspense } from 'react'
 import { Metadata } from 'next'
-import { getRecentCardsServer, getPopularCardsServer, getPremiumCardsServer } from '@/lib/cards'
+import { getRecentCardsServer, getPopularCardsServer } from '@/lib/cards'
 import CardGalleryContent from './CardGalleryContent'
 import { CardType } from '@/lib/card-config'
 import { TabType } from '@/lib/cards'
@@ -39,10 +39,9 @@ export const revalidate = 3600
 // Generate static params for common card types
 export async function generateStaticParams() {
   return [
-    { tab: 'premium', type: null },
     { tab: 'recent', type: null },
     { tab: 'popular', type: null },
-    // Add other common combinations as needed
+    { tab: 'liked', type: null },
   ]
 }
 
@@ -58,12 +57,11 @@ export default async function CardGalleryPage({ searchParams }: PageProps) {
   const defaultType = searchParams.type || null
   const activeTab = (searchParams.tab as TabType) || 'recent'
   
-  // Fetch all card data at build time or during revalidation
-  const premiumCardsData = await getPremiumCardsServer(1, 24, defaultType)
+  // Fetch card data at build time or during revalidation
   const recentCardsData = await getRecentCardsServer(1, 24, defaultType)
   const popularCardsData = await getPopularCardsServer(1, 24, defaultType)
     
-  const initialCardsData = activeTab === 'premium' ? premiumCardsData : activeTab === 'recent' ? recentCardsData : popularCardsData
+  const initialCardsData = activeTab === 'recent' ? recentCardsData : popularCardsData
   
   return (
     <article className="min-h-screen bg-gradient-to-br from-white via-purple-50 to-pink-50">

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { getRecentCardsServer, getPopularCardsServer, getLikedCardsServer, TabType, getPremiumCardsServer } from '@/lib/cards'
+import { getRecentCardsServer, getPopularCardsServer, getLikedCardsServer, TabType } from '@/lib/cards'
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
@@ -13,9 +13,6 @@ export async function GET(request: Request) {
     let cardsData;
     
     switch (tab) {
-      case 'premium':
-        cardsData = await getPremiumCardsServer(page, pageSize, wishCardType, relationship)
-        break
       case 'popular':
         cardsData = await getPopularCardsServer(page, pageSize, wishCardType, relationship)
         break

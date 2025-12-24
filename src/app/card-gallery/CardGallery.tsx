@@ -144,7 +144,7 @@ export default function CardGallery({ initialCardsData, wishCardType, tabType }:
 
   return (
     <div className="min-h-screen px-2 sm:px-4">
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5 gap-4 max-w-6xl mx-auto">
+      <div className="columns-2 sm:columns-3 lg:columns-4 2xl:columns-5 gap-3 sm:gap-4 max-w-6xl mx-auto">
         {cards.map((card, index) => (
           <motion.div
             key={card.id}
@@ -155,7 +155,7 @@ export default function CardGallery({ initialCardsData, wishCardType, tabType }:
               delay: index * 0.05,
               ease: "easeOut"
             }}
-            className="group w-full bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all border border-purple-100/40"
+            className="group w-full bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all border border-gray-100 mb-3 sm:mb-4 break-inside-avoid"
           >
             <div className="w-full relative">
               <Link
@@ -165,7 +165,7 @@ export default function CardGallery({ initialCardsData, wishCardType, tabType }:
                 className="block"
                 aria-label={`Open card ${card.id} in a new tab`}
               >
-                <div className="aspect-[3/4] w-full relative overflow-hidden bg-gray-50">
+                <div className="w-full relative overflow-hidden bg-gray-50">
                   {card.r2Url ? (
                     isVideoUrl(card.r2Url) ? (
                       <video
@@ -174,18 +174,18 @@ export default function CardGallery({ initialCardsData, wishCardType, tabType }:
                         loop
                         playsInline
                         autoPlay
-                        className="w-full h-full object-cover"
+                        className="w-full h-auto block"
                       />
                     ) : (
                       <img
                         src={card.r2Url}
                         alt={`MewTruCard ${card.cardType}`}
                         loading="lazy"
-                        className="w-full h-full object-cover"
+                        className="w-full h-auto block"
                       />
                     )
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center text-sm text-gray-400">
+                    <div className="w-full aspect-[3/4] flex items-center justify-center text-sm text-gray-400">
                       Preview unavailable
                     </div>
                   )}

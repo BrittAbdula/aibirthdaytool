@@ -45,7 +45,7 @@ export interface Card {
   // originalCardId: string; // Add originalCardId for grouping
 }
 
-export type TabType = 'recent' | 'popular' | 'liked' | 'premium';
+export type TabType = 'recent' | 'popular' | 'liked';
 
 // 服务端渲染使用的函数，带有缓存 - 最新卡片
 export const getRecentCardsServer = unstable_cache(

@@ -103,14 +103,14 @@ export default function CardGalleryContent({
     <main className="min-h-screen">
       <div className="relative py-8 sm:py-12">
         {/* Tab Selection */}
-        <div className="mb-8 flex justify-center" role="tablist" aria-label="Gallery tabs">
-          <div className="border border-purple-200 rounded-full p-1 bg-white shadow-sm">
-            <div className="flex space-x-1">
+        <div className="mb-6 sm:mb-8 flex justify-center px-2" role="tablist" aria-label="Gallery tabs">
+          <div className="border border-purple-200 rounded-full p-1 bg-white shadow-sm w-full max-w-md sm:w-auto">
+            <div className="grid grid-cols-3 sm:flex sm:space-x-1 gap-1">
               <button
                 onClick={() => handleTabChange('recent')}
                 role="tab"
                 aria-selected={currentTab === 'recent'}
-                className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${
+                className={`px-3 sm:px-6 py-2 rounded-full text-xs sm:text-sm font-medium transition-all whitespace-nowrap ${
                   currentTab === 'recent'
                     ? 'bg-purple-500 text-white shadow-sm'
                     : 'text-gray-600 hover:bg-purple-50'
@@ -122,37 +122,25 @@ export default function CardGalleryContent({
                 onClick={() => handleTabChange('liked')}
                 role="tab"
                 aria-selected={currentTab === 'liked'}
-                className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${
+                className={`px-3 sm:px-6 py-2 rounded-full text-xs sm:text-sm font-medium transition-all whitespace-nowrap ${
                   currentTab === 'liked'
                     ? 'bg-purple-500 text-white shadow-sm'
                     : 'text-gray-600 hover:bg-purple-50'
                 }`}
               >
-                Weekly Liked
+                <span className="hidden sm:inline">Weekly </span>Liked
               </button>
               <button
                 onClick={() => handleTabChange('popular')}
                 role="tab"
                 aria-selected={currentTab === 'popular'}
-                className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${
+                className={`px-3 sm:px-6 py-2 rounded-full text-xs sm:text-sm font-medium transition-all whitespace-nowrap ${
                   currentTab === 'popular'
                     ? 'bg-purple-500 text-white shadow-sm'
                     : 'text-gray-600 hover:bg-purple-50'
                 }`}
               >
                 Popular
-              </button>
-              <button
-                onClick={() => handleTabChange('premium')}
-                role="tab"
-                aria-selected={currentTab === 'premium'}
-                className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${
-                  currentTab === 'premium'
-                    ? 'bg-purple-500 text-white shadow-sm'
-                    : 'text-gray-600 hover:bg-purple-50'
-                }`}
-              >
-                Premium
               </button>
             </div>
           </div>
