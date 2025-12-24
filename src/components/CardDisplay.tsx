@@ -126,44 +126,33 @@ if (typeof document !== 'undefined' && !document.querySelector('#card-display-st
   document.head.appendChild(style);
 }
 
-// Magical Particle Component (Hearts & Stars)
-const DreamyParticles = () => {
-  const particles = Array.from({ length: 25 }).map((_, i) => ({
+// Subtle Sparkle Component - minimal and elegant
+const SubtleSparkles = () => {
+  const sparkles = Array.from({ length: 6 }).map((_, i) => ({
     id: i,
-    left: `${Math.random() * 100}%`,
-    top: `${Math.random() * 100}%`,
-    size: Math.random() * 10 + 5 + 'px',
-    duration: Math.random() * 4 + 3 + 's',
-    delay: Math.random() * 2 + 's',
-    type: Math.random() > 0.5 ? 'heart' : 'star'
+    left: `${15 + Math.random() * 70}%`,
+    top: `${10 + Math.random() * 80}%`,
+    size: Math.random() * 4 + 3 + 'px',
+    duration: Math.random() * 3 + 4 + 's',
+    delay: Math.random() * 3 + 's',
   }));
 
   return (
     <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
-      {particles.map((p) => (
+      {sparkles.map((s) => (
         <div
-          key={p.id}
-          className="absolute opacity-0"
+          key={s.id}
+          className="absolute rounded-full bg-white/60"
           style={{
-            left: p.left,
-            top: p.top,
-            width: p.size,
-            height: p.size,
-            animation: `float-particle ${p.duration} ease-in-out infinite`,
-            animationDelay: p.delay,
-            color: p.type === 'heart' ? '#FFD1DC' : '#FFFACD', 
+            left: s.left,
+            top: s.top,
+            width: s.size,
+            height: s.size,
+            animation: `twinkle ${s.duration} ease-in-out infinite`,
+            animationDelay: s.delay,
+            boxShadow: '0 0 6px 2px rgba(255,255,255,0.4)'
           }}
-        >
-          {p.type === 'heart' ? (
-             <svg viewBox="0 0 24 24" fill="currentColor" className="w-full h-full drop-shadow-md">
-                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-             </svg>
-          ) : (
-             <svg viewBox="0 0 24 24" fill="currentColor" className="w-full h-full drop-shadow-md">
-                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-             </svg>
-          )}
-        </div>
+        />
       ))}
     </div>
   );
@@ -205,54 +194,21 @@ export default function CardDisplay({ card }: CardDisplayProps) {
     }
   }, [card.r2Url, card.svgContent])
 
-  // Dreamy Confetti
-  const triggerDreamyConfetti = useCallback(() => {
-    const end = Date.now() + 1500;
-    const colors = ["#FFC0CB", "#FFD700", "#E6E6FA", "#FFF0F5"]; // Pink, Gold, Lavender, Blush
-
-    (function frame() {
-      // Hearts (using circles/stars as hearts are not default supported shapes)
-      confetti({
-        particleCount: 4,
-        angle: 60,
-        spread: 55,
-        origin: { x: 0 },
-        colors: colors,
-        shapes: ['circle', 'star'],
-        scalar: 2,
-        drift: 0.5,
-        ticks: 300
-      });
-      confetti({
-        particleCount: 4,
-        angle: 120,
-        spread: 55,
-        origin: { x: 1 },
-        colors: colors,
-        shapes: ['circle', 'star'],
-        scalar: 2,
-        drift: -0.5,
-        ticks: 300
-      });
-      
-      // Star Dust
-      confetti({
-        particleCount: 5,
-        angle: 90,
-        spread: 100,
-        origin: { y: 0.6 },
-        colors: ["#ffffff", "#FFD700"],
-        shapes: ['star'],
-        scalar: 0.6,
-        gravity: 0.8,
-        decay: 0.96,
-        startVelocity: 20
-      });
-
-      if (Date.now() < end) {
-        requestAnimationFrame(frame);
-      }
-    }());
+  // Elegant single confetti burst - simple and refined
+  const triggerElegantConfetti = useCallback(() => {
+    // Single elegant burst from center
+    confetti({
+      particleCount: 30,
+      spread: 70,
+      origin: { x: 0.5, y: 0.5 },
+      colors: ["#c41e3a", "#2d5a3f", "#daa520", "#ffffff"],
+      shapes: ['circle'],
+      scalar: 0.8,
+      gravity: 0.6,
+      decay: 0.94,
+      startVelocity: 25,
+      ticks: 200
+    });
   }, []);
 
   // Device Motion (Shake)
@@ -329,9 +285,9 @@ export default function CardDisplay({ card }: CardDisplayProps) {
       setShowEnvelope(false);
       setShowCard(true);
       setShowBurst(false); // End burst
-      requestAnimationFrame(triggerDreamyConfetti);
+      requestAnimationFrame(triggerElegantConfetti);
     }, 1800);
-  }, [stage, triggerDreamyConfetti]);
+  }, [stage, triggerElegantConfetti]);
 
   if (!imageSrc) {
     return (
@@ -358,8 +314,8 @@ export default function CardDisplay({ card }: CardDisplayProps) {
         "transition-all duration-1000 w-full perspective-1000 relative z-10",
         !showEnvelope ? "opacity-100 scale-100" : "opacity-0 scale-95 pointer-events-none absolute"
       )}>
-        {/* Dreamy Particles (Always active for ambiance when card is shown) */}
-        {showCard && <DreamyParticles />}
+        {/* Subtle Sparkles - minimal ambiance */}
+        {showCard && <SubtleSparkles />}
 
         <div className={cn(
           "w-full mx-auto relative",
@@ -385,7 +341,7 @@ export default function CardDisplay({ card }: CardDisplayProps) {
                   setCardRotation({ x: 0, y: 0 });
                   setIsHovering(false);
                 }}
-                onClick={triggerDreamyConfetti}
+                onClick={triggerElegantConfetti}
               >
                 {isVideo(imageSrc) ? (
                   <video

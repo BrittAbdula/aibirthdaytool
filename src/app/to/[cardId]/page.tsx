@@ -4,6 +4,7 @@ import CardDisplay from '@/components/CardDisplay'
 import { Suspense } from 'react'
 import { Metadata, ResolvingMetadata } from 'next'
 import SpotifyPlayer from '@/components/SpotifyPlayer'
+import ChristmasBackground from './christmas-background'
 
 interface Props {
   params: { cardId: string }
@@ -113,47 +114,23 @@ export default async function EditedCardPage({ params }: Props) {
   }
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-white via-purple-50 to-pink-50">
-      <div className="fixed inset-0 overflow-hidden pointer-events-none z-0 bg-[#fff0f5]">
-        {/* Base Gradient - Pale Pink & Purple */}
-        <div className="absolute inset-0 bg-gradient-to-br from-pink-50 via-purple-50 to-white opacity-80"></div>
-        
-        {/* Soft Pastel Floating Blobs */}
-        <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-pink-200/40 rounded-full blur-[100px] animate-blob mix-blend-multiply"></div>
-        <div className="absolute top-1/3 right-1/4 w-[400px] h-[400px] bg-purple-200/40 rounded-full blur-[100px] animate-blob animation-delay-2000 mix-blend-multiply"></div>
-        <div className="absolute bottom-1/4 left-1/2 w-[600px] h-[600px] bg-rose-100/40 rounded-full blur-[100px] animate-blob animation-delay-4000 mix-blend-multiply"></div>
-
-        {/* Floating Particles/Bubbles */}
-        <div className="absolute inset-0 overflow-hidden">
-           {[...Array(20)].map((_, i) => (
-              <div 
-                key={`bubble-${i}`}
-                className="absolute rounded-full bg-gradient-to-t from-white to-pink-100 shadow-sm animate-float-gentle"
-                style={{
-                  left: `${Math.random() * 100}%`,
-                  top: `${Math.random() * 100 + 20}%`,
-                  width: `${Math.random() * 30 + 10}px`,
-                  height: `${Math.random() * 30 + 10}px`,
-                  opacity: Math.random() * 0.4 + 0.2,
-                  animationDuration: `${Math.random() * 10 + 15}s`,
-                  animationDelay: `${Math.random() * 5}s`
-                }}
-              />
-           ))}
-        </div>
-
-        {/* Subtle Grain Texture */}
-        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-10 mix-blend-overlay"></div>
-      </div>
+    <main className="min-h-screen relative overflow-hidden">
+      {/* Christmas Background */}
+      <ChristmasBackground />
 
       <div className="container mx-auto px-4 pt-2 pb-4 sm:pt-3 sm:pb-6 relative z-10">
         <section className="max-w-2xl mx-auto space-y-1.5 sm:space-y-3">
-          <div className="opacity-0 animate-fade-up">
+          <div className="animate-[fadeUp_0.8s_ease-out_forwards]">
             <Suspense
               fallback={
                 <div className="flex flex-col items-center justify-center h-40 space-y-3">
-                  <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-purple-400"></div>
-                  <p className="text-gray-500 text-sm">Loading your special card...</p>
+                  <div className="relative">
+                    <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-[#c41e3a]"></div>
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <span className="text-xs">❄️</span>
+                    </div>
+                  </div>
+                  <p className="text-[#2d5a3f] text-sm font-medium">Unwrapping your special card...</p>
                 </div>
               }
             >
@@ -161,15 +138,19 @@ export default async function EditedCardPage({ params }: Props) {
             </Suspense>
 
             {card.message && (
-              <div className="p-4 opacity-0 animate-fade-up animation-delay-300">
-                <p className="text-gray-700 italic text-center">
-                &quot;{card.message}&quot;
-                </p>
+              <div className="p-4 animate-[fadeUp_0.8s_ease-out_0.3s_forwards] opacity-0">
+                <div className="relative">
+                  <div className="absolute -left-2 -top-2 text-lg opacity-60">❝</div>
+                  <p className="text-[#2d5a3f] italic text-center font-serif text-lg px-4">
+                    {card.message}
+                  </p>
+                  <div className="absolute -right-2 -bottom-2 text-lg opacity-60">❞</div>
+                </div>
               </div>
             )}
 
             {card.spotifyTrackId && (
-              <div className="mt-4 sm:mt-6 opacity-0 animate-fade-up animation-delay-500">
+              <div className="mt-4 sm:mt-6 animate-[fadeUp_0.8s_ease-out_0.5s_forwards] opacity-0">
                 <SpotifyPlayer trackId={card.spotifyTrackId} />
               </div>
             )}
@@ -177,45 +158,51 @@ export default async function EditedCardPage({ params }: Props) {
         </section>
 
         {/* Reply Button Section */}
-        <div className="mt-6 sm:mt-8 flex justify-center opacity-0 animate-fade-up animation-delay-800">
+        <div className="mt-6 sm:mt-8 flex justify-center animate-[fadeUp_0.8s_ease-out_0.8s_forwards] opacity-0">
           <a
             href="/thankyou/"
-            className="group relative inline-flex items-center justify-center px-8 py-3 overflow-hidden font-medium text-white transition duration-300 ease-out bg-gradient-to-r from-purple-500 to-pink-500 rounded-full shadow-lg hover:shadow-xl transform hover:scale-105"
+            className="group relative inline-flex items-center justify-center px-8 py-3.5 overflow-hidden font-medium text-white transition-all duration-500 ease-out rounded-full shadow-lg hover:shadow-xl transform hover:scale-105"
+            style={{
+              background: 'linear-gradient(135deg, #c41e3a 0%, #8b1538 50%, #c41e3a 100%)',
+              backgroundSize: '200% 200%',
+            }}
           >
-            <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-pink-500 to-purple-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
-            <span className="absolute top-0 left-0 w-full bg-gradient-to-b from-white/20 to-transparent h-1/2 rounded-full"></span>
-            <span className="absolute bottom-0 left-0 w-full h-1/2 bg-gradient-to-t from-black/10 to-transparent rounded-full"></span>
-            <span className="relative flex items-center space-x-2">
-              <span className="text-sm sm:text-base font-semibold">Send a Thank You Card Back</span>
-              <span className="inline-block transition-transform group-hover:translate-x-1">💝</span>
+            <span className="absolute inset-0 bg-gradient-to-r from-[#8b1538] via-[#c41e3a] to-[#8b1538] opacity-0 group-hover:opacity-100 transition-opacity duration-500 animate-[shimmer_2s_infinite]"></span>
+            <span className="absolute top-0 left-0 w-full bg-gradient-to-b from-white/30 to-transparent h-1/2 rounded-full"></span>
+            <span className="relative flex items-center space-x-3">
+              <span className="text-sm sm:text-base font-semibold tracking-wide">Send a Thank You Card Back</span>
+              <span className="inline-block text-lg group-hover:animate-[wiggle_0.5s_ease-in-out_infinite]">🎁</span>
             </span>
           </a>
         </div>
 
-        <div className="mt-4 sm:mt-6 flex justify-center opacity-0 animate-fade-up animation-delay-900">
+        <div className="mt-4 sm:mt-6 flex justify-center animate-[fadeUp_0.8s_ease-out_0.9s_forwards] opacity-0">
           <a
             href={`/${card.cardType}/edit/${card.id}/`}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center justify-center rounded-full border border-purple-200 px-6 py-2 text-sm sm:text-base font-semibold text-purple-600 hover:text-pink-600 hover:border-pink-300 transition-colors duration-200"
+            className="inline-flex items-center justify-center rounded-full border-2 border-[#2d5a3f]/30 px-6 py-2.5 text-sm sm:text-base font-semibold text-[#2d5a3f] hover:text-[#c41e3a] hover:border-[#c41e3a]/50 transition-all duration-300 backdrop-blur-sm bg-white/40 hover:bg-white/60"
           >
+            <span className="mr-2">✨</span>
             Customize this card
           </a>
         </div>
 
-        <footer className="mt-6 sm:mt-8 text-center opacity-0 animate-fade-up animation-delay-1000">
-          <p className="text-xs sm:text-sm text-gray-500">
-          ✨{' '}Created with{' '}
-            <span className="inline-block animate-bounce">❤️</span>{' '}
-            on {' '}
+        <footer className="mt-8 sm:mt-10 text-center animate-[fadeUp_0.8s_ease-out_1s_forwards] opacity-0">
+          <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white/50 backdrop-blur-sm border border-white/60 shadow-sm">
+            <span className="text-[#2d5a3f] text-sm">
+              Created with
+            </span>
+            <span className="inline-block animate-pulse text-[#c41e3a]">❤️</span>
+            <span className="text-[#2d5a3f] text-sm">on</span>
             <a
               href="/"
-              className="text-purple-600 hover:text-pink-600 transition-colors duration-200 font-medium group"
+              className="text-[#c41e3a] hover:text-[#8b1538] transition-colors duration-300 font-semibold group"
             >
-              MewTruCard.com{' '}
-              <span className="inline-block transition-transform group-hover:rotate-12">✨</span>
+              MewTruCard
+              <span className="inline-block ml-1 group-hover:rotate-12 transition-transform duration-300">🎄</span>
             </a>
-          </p>
+          </div>
         </footer>
       </div>
     </main>
