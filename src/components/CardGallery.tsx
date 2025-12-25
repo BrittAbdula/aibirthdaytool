@@ -218,7 +218,7 @@ export default function CardGallery({ initialCardsData, wishCardType }: CardGall
       {/* End Message */}
       {!hasMore && cards.length > 0 && (
         <div className="flex justify-center items-center py-8">
-          <p className="text-sm text-gray-400">— You've seen it all —</p>
+          <p className="text-sm text-gray-400">— End of results —</p>
         </div>
       )}
 

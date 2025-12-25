@@ -76,7 +76,17 @@ export default function Footer() {
                 >
                   Refund Policy
                 </Link>
-              </li> 
+              </li>
+              <li>
+                <a 
+                  href="https://cleartok.io/" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-sm text-gray-600 hover:text-purple-600 transition-colors"
+                >
+                  ClearTok
+                </a>
+              </li>
               {/* <li>
                 <a 
                   href="https://linktr.ee/auroroa" 
