@@ -360,6 +360,16 @@ export default function CardGenerator({
   } | null>(null);
   const [isVideoMode, setIsVideoMode] = useState(false);
 
+  // Credits system state
+  const [creditsStatus, setCreditsStatus] = useState<{
+    isFirstDay: boolean;
+    isPremium: boolean;
+    availableCredits: number | 'unlimited';
+    hasClaimed: boolean;
+    message: string;
+  } | null>(null);
+  const [isClaimingCredits, setIsClaimingCredits] = useState(false);
+
   // Pick default model for a given output format aligning with product rules
   const pickDefaultModelForFormat = (fmt: OutputFormat): ModelConfig => {
     if (fmt === 'video') {
@@ -560,6 +570,39 @@ export default function CardGenerator({
     }
   }, [session]);
 
+  // Fetch credits status when session changes
+  useEffect(() => {
+    const fetchCreditsStatus = async () => {
+      if (!session?.user) {
+        setCreditsStatus(null);
+        return;
+      }
+      try {
+        const res = await fetch('/api/claim-credits');
+        if (res.ok) {
+          const data = await res.json();
+          setCreditsStatus({
+            isFirstDay: data.isFirstDay,
+            isPremium: data.isPremium,
+            availableCredits: data.availableCredits,
+            hasClaimed: data.hasClaimed,
+            message: data.message,
+          });
+        }
+      } catch (e) {
+        console.error('Failed to fetch credits status:', e);
+      }
+    };
+    fetchCreditsStatus();
+  }, [session]);
+
+  // Force SVG format for first-day FREE users
+  useEffect(() => {
+    if (creditsStatus?.isFirstDay && !creditsStatus?.isPremium && selectedFormat !== 'svg') {
+      setSelectedFormat('svg');
+    }
+  }, [creditsStatus, selectedFormat]);
+
   useEffect(() => {
     if (!isPremiumUser && isPrivateCard) {
       setIsPrivateCard(false);
@@ -716,6 +759,42 @@ export default function CardGenerator({
       return
     }
     setIsPrivateCard(checked)
+  }
+
+  const handleClaimCredits = async () => {
+    if (isClaimingCredits) return;
+    setIsClaimingCredits(true);
+    try {
+      const res = await fetch('/api/claim-credits', { method: 'POST' });
+      const data = await res.json();
+      if (data.success) {
+        setCreditsStatus(prev => prev ? {
+          ...prev,
+          hasClaimed: true,
+          availableCredits: data.availableCredits,
+          message: data.message,
+        } : null);
+        setErrorToast({
+          title: '🎉 Credits Claimed!',
+          message: data.message,
+          type: 'info'
+        });
+      } else {
+        setErrorToast({
+          title: 'Could not claim credits',
+          message: data.message || 'Please try again.',
+          type: 'warning'
+        });
+      }
+    } catch (e) {
+      setErrorToast({
+        title: 'Error',
+        message: 'Failed to claim credits. Please try again.',
+        type: 'error'
+      });
+    } finally {
+      setIsClaimingCredits(false);
+    }
   }
 
   const handleLogin = async () => {
@@ -1051,13 +1130,78 @@ export default function CardGenerator({
                 .filter((field) => !Array.isArray((field as any).formats) && !field.optional && !['to','relationship','recipientName','message','signed'].includes(field.name))
                 .map((field) => renderField(field))}
 
+              {/* Credits Status Banner */}
+              {session && creditsStatus && !creditsStatus.isPremium && (
+                <div className={cn(
+                  "rounded-lg p-3 text-sm border",
+                  creditsStatus.isFirstDay 
+                    ? "bg-gradient-to-r from-purple-50 to-pink-50 border-purple-200" 
+                    : creditsStatus.hasClaimed 
+                      ? "bg-green-50 border-green-200"
+                      : "bg-amber-50 border-amber-200"
+                )}>
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex-1">
+                      <p className="font-medium text-gray-800">
+                        {creditsStatus.isFirstDay 
+                          ? "✨ Welcome to your creative journey!" 
+                          : creditsStatus.hasClaimed 
+                            ? `🎨 ${creditsStatus.availableCredits} credits available`
+                            : "🎁 Daily credits ready!"}
+                      </p>
+                      <p className="text-xs text-gray-600 mt-0.5">
+                        {creditsStatus.isFirstDay 
+                          ? "Create 2 animated cards today. More options unlock tomorrow!"
+                          : creditsStatus.hasClaimed 
+                            ? "Create something magical today!"
+                            : "Claim your 5 credits to unlock today's creations."}
+                      </p>
+                    </div>
+                    {!creditsStatus.isFirstDay && !creditsStatus.hasClaimed && (
+                      <Button 
+                        type="button"
+                        size="sm"
+                        onClick={handleClaimCredits}
+                        disabled={isClaimingCredits}
+                        className="shrink-0 bg-gradient-to-r from-amber-400 to-pink-400 hover:from-amber-500 hover:to-pink-500 text-white"
+                      >
+                        {isClaimingCredits ? '...' : 'Claim ✨'}
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              )}
+
               {/* Format Tabs */}
               <div className="mt-4">
-                <Tabs value={selectedFormat} onValueChange={(v) => setSelectedFormat(v as OutputFormat)} className="w-full">
+                <Tabs value={selectedFormat} onValueChange={(v) => {
+                  // Block format change for first-day FREE users
+                  if (creditsStatus?.isFirstDay && !creditsStatus?.isPremium && v !== 'svg') {
+                    setErrorToast({
+                      title: '🌟 Coming Soon!',
+                      message: 'Static images and videos unlock on day 2. Enjoy your animated cards today!',
+                      type: 'info'
+                    });
+                    return;
+                  }
+                  setSelectedFormat(v as OutputFormat);
+                }} className="w-full">
                   <TabsList className="grid w-full grid-cols-3 mb-2">
                     <TabsTrigger value="svg">Animated</TabsTrigger>
-                    <TabsTrigger value="image">Static</TabsTrigger>
-                    <TabsTrigger value="video">Video</TabsTrigger>
+                    <TabsTrigger 
+                      value="image" 
+                      disabled={creditsStatus?.isFirstDay && !creditsStatus?.isPremium}
+                      className={creditsStatus?.isFirstDay && !creditsStatus?.isPremium ? 'opacity-50 cursor-not-allowed' : ''}
+                    >
+                      Static {creditsStatus?.isFirstDay && !creditsStatus?.isPremium && '🔒'}
+                    </TabsTrigger>
+                    <TabsTrigger 
+                      value="video" 
+                      disabled={creditsStatus?.isFirstDay && !creditsStatus?.isPremium}
+                      className={creditsStatus?.isFirstDay && !creditsStatus?.isPremium ? 'opacity-50 cursor-not-allowed' : ''}
+                    >
+                      Video {creditsStatus?.isFirstDay && !creditsStatus?.isPremium && '🔒'}
+                    </TabsTrigger>
                   </TabsList>
 
                   {(['svg','image','video'] as OutputFormat[]).map(fmt => (

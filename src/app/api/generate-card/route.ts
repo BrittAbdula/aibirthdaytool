@@ -12,11 +12,11 @@ import { stylePresets } from '@/lib/style-presets';
 
 // 获取用户可用积分
 async function getUserCredits(userId: string, planType: string, isFirstDay: boolean): Promise<number> {
-  // 根据计划类型确定每日积分限制（FREE 首日 10 分，每日 5 分）
-  const dailyCredits = planType === 'FREE' ? (isFirstDay ? 10 : 5) : Infinity;
+  // FREE users: first day = 4 credits (2 SVG cards), then 5 credits daily
+  const dailyCredits = planType === 'FREE' ? (isFirstDay ? 4 : 5) : Infinity;
 
   if (dailyCredits === Infinity) {
-    return Infinity; // PREMIUM 用户无限制
+    return Infinity; // PREMIUM users have unlimited credits
   }
 
   // 查询今日已使用的积分
@@ -111,17 +111,28 @@ export async function POST(request: Request) {
     }
     const modelLevel = modelTier === 'Premium' && planType === 'PREMIUM' ? 'PREMIUM' : 'FREE';
 
-    // 查询用户可用积分（FREE 用户首日 10 分）
+    // Check if user is on their first day (registration day)
     const todayStart = new Date(new Date().setHours(0, 0, 0, 0));
     const isFirstDay = !!user?.createdAt && user.createdAt >= todayStart;
+
+    // First-day FREE users can only generate SVG (animated) cards
+    if (isFirstDay && planType === 'FREE' && format !== 'svg') {
+      return NextResponse.json({
+        error: 'first_day_svg_only',
+        message: '✨ Welcome to your creative journey! On your first day, you can create 2 magical animated cards. Static images and videos unlock tomorrow — trust us, the wait will be worth it!'
+      }, { status: 403 });
+    }
+
     const availableCredits = await getUserCredits(userId, planType, isFirstDay);
 
-    // 检查积分是否足够
+    // Check if user has enough credits
     if (availableCredits < creditsUsed) {
       return NextResponse.json({
         error: 'rate_limit',
-        message: 'Daily limit reached. Free users can generate 1 card per day. Please try again tomorrow or upgrade to Premium for unlimited generations.'
-      }, { status: 429 }); // 429 Too Many Requests
+        message: isFirstDay
+          ? '🎨 You\'ve used your 2 welcome cards for today! Come back tomorrow to unlock more options and claim your daily credits.'
+          : 'Daily limit reached. Claim your credits tomorrow or upgrade to Premium for unlimited creations!'
+      }, { status: 429 });
     }
 
     // 处理用户使用情况（保留用于统计）
@@ -324,7 +335,7 @@ const createNaturalPrompt = (
   const size = opts?.size || 'portrait';
   const medium = opts?.medium || 'image';
   const base = (formData?.formData ?? formData) as any;
-  
+
   // Aliases and normalized fields
   const toResolved = (base?.to || base?.relationship || '').toString();
   const signedResolved = (base?.signed || base?.senderName || '').toString();
@@ -393,7 +404,7 @@ const createNaturalPrompt = (
   if (toResolved && recipientName) {
     const relationship = toResolved.toLowerCase() === 'myself' ? 'myself' : `my ${toResolved.toLowerCase()}`;
     prompt += `This is for ${relationship}, ${recipientName}. `;
-    
+
     // Add relationship-specific emotional context for SVG
     if (medium === 'svg') {
       const relationshipEmotions: Record<string, string> = {
@@ -411,7 +422,7 @@ const createNaturalPrompt = (
         'colleague': 'We spend our days together — recognize the human behind the role',
         'myself': 'Self-compassion is the foundation of all love — you deserve celebration'
       };
-      const relationshipKey = Object.keys(relationshipEmotions).find(key => 
+      const relationshipKey = Object.keys(relationshipEmotions).find(key =>
         toResolved.toLowerCase().includes(key)
       );
       if (relationshipKey) {
@@ -468,12 +479,12 @@ const createNaturalPrompt = (
         visual: 'stars being born, dawn breaking, seeds sprouting, delicate new leaves'
       }
     };
-    
+
     const context = messageContextDeep[cardType] || {
       emotion: 'heartfelt sentiment',
       visual: 'elegant thematic elements'
     };
-    
+
     prompt += `Core message: "${message}". `;
     if (medium === 'svg') {
       prompt += `Emotional essence: ${context.emotion}. `;
@@ -493,7 +504,7 @@ const createNaturalPrompt = (
   if (signedResolved && medium !== 'image') {
     prompt += `From ${signedResolved} — infuse personal warmth into the design. `;
   }
-  
+
   // Milestone context with meaning
   if (yearsTogether) {
     const yearsNum = parseInt(yearsTogether);
@@ -505,7 +516,7 @@ const createNaturalPrompt = (
       prompt += `Marking ${yearsTogether} years together — each year a chapter in an ongoing story. `;
     }
   }
-  
+
   if (age) {
     const ageNum = parseInt(age);
     if (ageNum >= 80) {
@@ -613,12 +624,12 @@ const createNaturalPrompt = (
       mood: 'humble hope, the courage of vulnerability'
     }
   };
-  
+
   const motifsConfig = motifsMapEnhanced[cardType] || {
     motifs: 'tasteful, meaningful thematic elements that serve the emotional core',
     mood: 'elegant and heartfelt'
   };
-  
+
   if (medium === 'svg') {
     prompt += `Visual metaphors to consider: ${motifsConfig.motifs}. `;
     prompt += `Emotional atmosphere: ${motifsConfig.mood}. `;
