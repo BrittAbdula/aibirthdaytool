@@ -302,7 +302,7 @@ export default function CardGallery({ initialCardsData, wishCardType, tabType }:
       {/* End Message */}
       {!hasMore && cards.length > 0 && (
         <div className="flex justify-center py-8">
-          <span className="text-sm text-gray-400">— 已经到底啦 —</span>
+          <span className="text-sm text-gray-400">— end of list —</span>
         </div>
       )}
 
@@ -312,7 +312,7 @@ export default function CardGallery({ initialCardsData, wishCardType, tabType }:
           <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mb-4">
             <span className="text-2xl">🎨</span>
           </div>
-          <p className="text-gray-500 text-sm">暂无内容</p>
+          <p className="text-gray-500 text-sm">No content available</p>
         </div>
       )}
     </div>
