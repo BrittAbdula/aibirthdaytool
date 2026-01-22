@@ -8,6 +8,7 @@ import SparklesText from '@/components/ui/sparkles-text'
 import { Menu, X, ChevronDown, Loader2, Crown, Search, SendHorizontal, Plus } from "lucide-react"
 import { useSession, signIn, signOut } from "next-auth/react"
 import { Button } from '@/components/ui/button'
+import { WarmButton } from '@/components/ui/warm-button'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,7 +16,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Input } from '@/components/ui/input'
-import { CardTypeOption } from '@/lib/card-constants'
 import { PremiumButton } from '@/components/PremiumModal'
 import { SubscriptionButton } from '@/components/SubscriptionModal'
 import { cn } from '@/lib/utils'
@@ -70,7 +70,6 @@ function Header() {
   const [isMobile, setIsMobile] = useState(false)
   const pathname = usePathname()
   const { data: session, status } = useSession()
-  const [isGeneratorMenuOpen, setIsGeneratorMenuOpen] = useState(false)
   const [isSearchOpen, setIsSearchOpen] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
   const [filteredGenerators, setFilteredGenerators] = useState(GENERATORS)
@@ -232,104 +231,83 @@ function Header() {
   }
 
   return (
-    <header className="bg-gradient-to-b from-white via-purple-50/50 to-white border-b border-purple-100/50 py-4">
+    <header className="sticky top-0 z-50 w-full border-b border-orange-100/50 bg-white/80 backdrop-blur-xl transition-all duration-300">
       <nav className="container mx-auto px-4">
-        <div className="flex justify-between items-center">
-          <Link href="/" className="flex items-center space-x-2">
-            <Image
-              src="/logo.png"
-              alt="MewTruCard Logo"
-              width={40}
-              height={40}
-            />
+        <div className="flex justify-between items-center h-16">
+          <Link href="/" className="flex items-center space-x-2 group">
+            <div className="relative transition-transform duration-300 group-hover:scale-110">
+              <Image
+                src="/logo.png"
+                alt="MewTruCard Logo"
+                width={40}
+                height={40}
+                className="drop-shadow-sm"
+              />
+            </div>
             <SparklesText
-              text='MewTruCard.com'
-              className="text-xl md:text-2xl font-serif font-bold text-[#4A4A4A]"
-              sparklesCount={20}
-              colors={{ first: "#A07CFE", second: "#FE8FB5" }}
+              text='MewTruCard'
+              className="text-2xl font-caveat font-bold text-gray-800"
+              sparklesCount={12}
+              colors={{ first: "#FF6B6B", second: "#FFD700" }}
             />
           </Link>
 
           {/* Desktop Menu */}
           <div className="hidden md:flex items-center space-x-6">
-            <Link href="/" className="text-[#4A4A4A] hover:text-[#FFC0CB] font-serif">Home</Link>
+            <Link href="/" className="text-gray-600 hover:text-primary font-quicksand font-medium transition-colors text-base relative after:content-[''] after:absolute after:w-full after:scale-x-0 after:h-0.5 after:bottom-0 after:left-0 after:bg-primary after:origin-bottom-right after:transition-transform after:duration-300 hover:after:scale-x-100 hover:after:origin-bottom-left">
+              Home
+            </Link>
 
-            {/* Generators Dropdown */}
-            {/* <DropdownMenu>
-              <DropdownMenuTrigger
-                className="text-[#4A4A4A] hover:text-[#FFC0CB] font-serif flex items-center"
-                onMouseEnter={() => !isMobile && setIsGeneratorMenuOpen(true)}
-                onMouseLeave={() => !isMobile && setIsGeneratorMenuOpen(false)}
-              >
-                Generators <ChevronDown className="ml-1 h-4 w-4" />
-              </DropdownMenuTrigger>
-              <DropdownMenuContent
-                className="w-[280px] p-2"
-                onMouseEnter={() => !isMobile && setIsGeneratorMenuOpen(true)}
-                onMouseLeave={() => !isMobile && setIsGeneratorMenuOpen(false)}
-              >
-                <div className="grid grid-cols-2 gap-1">
-                  <DropdownMenuItem asChild className="col-span-2">
-                    <Link href="/cards/" className="w-full font-medium text-[#4A4A4A]">
-                      All Generators
-                    </Link>
-                  </DropdownMenuItem>
-                  {GENERATORS.map((generator) => (
-                    <DropdownMenuItem key={generator.slug} asChild>
-                      <Link href={`/${generator.slug}/`} className="w-full">
-                        {generator.label}
-                      </Link>
-                    </DropdownMenuItem>
-                  ))}
-                </div>
-              </DropdownMenuContent>
-            </DropdownMenu> */}
+            <Link href="/cards/" className="text-gray-600 hover:text-primary font-quicksand font-medium transition-colors text-base relative after:content-[''] after:absolute after:w-full after:scale-x-0 after:h-0.5 after:bottom-0 after:left-0 after:bg-primary after:origin-bottom-right after:transition-transform after:duration-300 hover:after:scale-x-100 hover:after:origin-bottom-left">
+              Generators
+            </Link>
 
-            <Link href="/cards/" className="text-[#4A4A4A] hover:text-[#FFC0CB] font-serif">Generators</Link>
+            <Link href="/card-gallery/" className="text-gray-600 hover:text-primary font-quicksand font-medium transition-colors text-base relative after:content-[''] after:absolute after:w-full after:scale-x-0 after:h-0.5 after:bottom-0 after:left-0 after:bg-primary after:origin-bottom-right after:transition-transform after:duration-300 hover:after:scale-x-100 hover:after:origin-bottom-left">
+              Gallery
+            </Link>
 
-            {/* Gallery Link */}
-            <Link href="/card-gallery/" className="text-[#4A4A4A] hover:text-[#FFC0CB] font-serif">Gallery</Link>
-
-            <Link href="/my-cards/" className="text-[#4A4A4A] hover:text-[#FFC0CB] font-serif">My Cards</Link>
+            <Link href="/my-cards/" className="text-gray-600 hover:text-primary font-quicksand font-medium transition-colors text-base relative after:content-[''] after:absolute after:w-full after:scale-x-0 after:h-0.5 after:bottom-0 after:left-0 after:bg-primary after:origin-bottom-right after:transition-transform after:duration-300 hover:after:scale-x-100 hover:after:origin-bottom-left">
+              My Cards
+            </Link>
 
             {/* Search Icon & Dropdown */}
             <div className="relative" ref={searchRef}>
               <button
                 onClick={() => setIsSearchOpen(!isSearchOpen)}
-                className="text-[#4A4A4A] hover:text-[#FFC0CB] p-1 rounded-full hover:bg-purple-50 transition-colors"
+                className="text-gray-500 hover:text-primary p-2 rounded-full hover:bg-orange-50 transition-colors"
                 aria-label="Search generators"
               >
                 <Search className="h-5 w-5" />
               </button>
 
               {isSearchOpen && (
-                <div className="absolute right-0 top-full mt-2 w-80 bg-white rounded-lg shadow-lg border border-purple-100 overflow-hidden z-50">
-                  <form onSubmit={handleSearch} className="p-3 border-b border-purple-50">
+                <div className="absolute right-0 top-full mt-4 w-96 bg-white/95 backdrop-blur-xl rounded-2xl shadow-xl border border-orange-100 overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+                  <form onSubmit={handleSearch} className="p-4 border-b border-orange-50">
                     <div className="relative">
                       <Input
                         ref={inputRef}
                         type="text"
-                        placeholder="Search generators..."
-                        className="pl-9 pr-4 py-2 w-full bg-purple-50/30 border-purple-100 focus:ring-purple-300 focus:border-purple-300"
+                        placeholder="Search for specialized cards..."
+                        className="pl-10 pr-4 py-6 w-full bg-orange-50/50 border-orange-100 focus:ring-primary/20 focus:border-primary rounded-xl"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         autoFocus
                       />
-                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-purple-400" />
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
                       <button
                         type="submit"
-                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-purple-500 hover:text-purple-700"
+                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-primary hover:text-primary/80 transition-colors"
                         aria-label="Search"
                       >
-                        <SendHorizontal className="h-4 w-4" />
+                        <SendHorizontal className="h-5 w-5" />
                       </button>
                     </div>
                   </form>
 
-                  <div className="max-h-64 overflow-y-auto p-1">
+                  <div className="max-h-[300px] overflow-y-auto p-2 scrollbar-thin scrollbar-thumb-orange-200 scrollbar-track-transparent">
                     {showComingSoon ? (
-                      <div className="px-4 py-6 text-center">
-                        <div className="text-purple-600 font-medium mb-2">
+                      <div className="px-4 py-8 text-center bg-orange-50/30 rounded-xl mx-2">
+                        <div className="text-primary font-caveat text-xl mb-2">
                           Thanks for your suggestion!
                         </div>
                         <div className="text-sm text-gray-600 mb-4">
@@ -337,39 +315,42 @@ function Header() {
                         </div>
                         <Link
                           href="/cards/"
-                          className="text-sm text-purple-700 hover:underline"
+                          className="text-sm text-primary hover:underline font-medium"
                           onClick={() => setIsSearchOpen(false)}
                         >
                           Browse all available generators
                         </Link>
                       </div>
                     ) : filteredGenerators.length > 0 ? (
-                      filteredGenerators.map((generator) => (
-                        <Link
-                          key={generator.slug}
-                          href={`/${generator.slug}/`}
-                          className="block px-4 py-2 text-sm text-[#4A4A4A] hover:bg-purple-50 rounded-md"
-                          onClick={() => setIsSearchOpen(false)}
-                        >
-                          {generator.label}
-                        </Link>
-                      ))
+                      <div className="grid grid-cols-1 gap-1">
+                        {filteredGenerators.map((generator) => (
+                          <Link
+                            key={generator.slug}
+                            href={`/${generator.slug}/`}
+                            className="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-orange-50 hover:text-primary rounded-xl transition-colors group"
+                            onClick={() => setIsSearchOpen(false)}
+                          >
+                            <span className="w-1.5 h-1.5 rounded-full bg-orange-200 group-hover:bg-primary mr-3 transition-colors"></span>
+                            {generator.label}
+                          </Link>
+                        ))}
+                      </div>
                     ) : searchTerm.length >= 2 ? (
-                      <div className="px-4 py-3 text-center">
-                        <div className="text-sm text-gray-500 mb-3">
+                      <div className="px-4 py-6 text-center">
+                        <div className="text-sm text-gray-500 mb-4">
                           No matching generators found
                         </div>
                         <Button
                           size="sm"
                           variant="outline"
-                          className="text-purple-600 border-purple-300 hover:bg-purple-50"
+                          className="text-primary border-primary/20 hover:bg-orange-50 hover:text-primary hover:border-primary"
                           onClick={handleRequestGenerator}
                           disabled={isSubmitting}
                         >
                           {isSubmitting ? (
-                            <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                            <Loader2 className="h-3 w-3 animate-spin mr-2" />
                           ) : (
-                            <Plus className="h-3 w-3 mr-1" />
+                            <Plus className="h-3 w-3 mr-2" />
                           )}
                           Request &quot;{searchTerm}&quot; generator
                         </Button>
@@ -377,10 +358,10 @@ function Header() {
                     ) : null}
                   </div>
 
-                  <div className="p-2 border-t border-purple-50 bg-purple-50/30">
+                  <div className="p-3 border-t border-orange-50 bg-orange-50/20">
                     <Link
                       href="/cards/"
-                      className="block px-4 py-2 text-sm text-center text-purple-700 hover:bg-purple-100 rounded-md font-medium"
+                      className="block px-4 py-2 text-sm text-center text-primary hover:bg-orange-100/50 rounded-lg font-medium transition-colors"
                       onClick={() => setIsSearchOpen(false)}
                     >
                       View all generators
@@ -390,20 +371,17 @@ function Header() {
               )}
             </div>
 
-            {/* Premium Button - Only show for non-premium users */}
             {!isPremiumUser && <PremiumButton />}
-            
-            {/* Subscription Management - Only show for premium users */}
             {isPremiumUser && <SubscriptionButton />}
 
             {status === 'authenticated' && session ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button className="flex items-center space-x-2 hover:opacity-80">
+                  <button className="flex items-center space-x-2 hover:opacity-80 transition-opacity">
                     {session.user?.image && (
                       <div className={cn(
                         "relative",
-                        isPremiumUser && "ring-2 ring-purple-500 ring-offset-2 rounded-full"
+                        isPremiumUser && "ring-2 ring-primary ring-offset-2 rounded-full"
                       )}>
                         <Image
                           src={session.user.image}
@@ -411,36 +389,37 @@ function Header() {
                           width={32}
                           height={32}
                           className={cn(
-                            "rounded-full",
+                            "rounded-full border border-gray-100",
                             isPremiumUser && "border-2 border-white"
                           )}
                         />
                         {isPremiumUser && (
-                          <div className="absolute -top-1 -right-1 bg-purple-500 text-white rounded-full w-4 h-4 flex items-center justify-center">
-                            <Crown className="h-3 w-3" />
+                          <div className="absolute -top-1 -right-1 bg-primary text-white rounded-full w-4 h-4 flex items-center justify-center shadow-sm">
+                            <Crown className="h-2.5 w-2.5" />
                           </div>
                         )}
                       </div>
                     )}
-                    <ChevronDown className="h-4 w-4 text-gray-500" />
+                    <ChevronDown className="h-4 w-4 text-gray-400" />
                   </button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48">
-                  <DropdownMenuItem>
-                    <div className="text-center text-sm font-medium text-gray-700">
-                      {session.user?.name}
+                <DropdownMenuContent align="end" className="w-56 rounded-2xl p-2 bg-white/95 backdrop-blur shadow-xl border-orange-100">
+                  <DropdownMenuItem className="focus:bg-orange-50 rounded-xl cursor-default">
+                    <div className="flex flex-col text-sm">
+                      <span className="font-semibold text-gray-800">{session.user?.name}</span>
                       {isPremiumUser && (
-                        <div className="flex items-center justify-center mt-1 text-xs text-purple-600">
+                        <span className="flex items-center mt-1 text-xs text-primary font-medium">
                           <Crown className="h-3 w-3 mr-1" />
-                          <span>Premium user</span>
-                        </div>
+                          Premium user
+                        </span>
                       )}
                     </div>
                   </DropdownMenuItem>
+                  <div className="my-1 border-t border-orange-50" />
                   <DropdownMenuItem
                     onClick={handleLogout}
                     disabled={isLoading}
-                    className="relative"
+                    className="focus:bg-red-50 focus:text-red-600 rounded-xl cursor-pointer p-2"
                   >
                     {isLoading ? (
                       <>
@@ -454,11 +433,11 @@ function Header() {
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              <Button
+              <WarmButton
                 variant="outline"
                 onClick={handleLogin}
                 disabled={isLoading}
-                className="text-[#4A4A4A] hover:text-[#FFC0CB] relative"
+                className="rounded-full border-gray-200 text-gray-600 hover:text-primary hover:border-primary/20 hover:bg-orange-50 px-6 h-10"
               >
                 {isLoading ? (
                   <>
@@ -468,218 +447,182 @@ function Header() {
                 ) : (
                   'Sign In'
                 )}
-              </Button>
+              </WarmButton>
             )}
           </div>
 
-          {/* Mobile Menu Button and Search */}
-          <div className="md:hidden flex items-center space-x-2">
-            {/* Search Icon - Mobile */}
+          <div className="md:hidden flex items-center space-x-3">
             <button
               onClick={() => setIsSearchOpen(!isSearchOpen)}
-              className="text-[#4A4A4A] p-1 rounded-full hover:bg-purple-50/50"
+              className="text-gray-500 p-2 rounded-full hover:bg-orange-50 active:bg-orange-100 transition-colors"
               aria-label="Search generators"
             >
-              <Search className="h-5 w-5" />
+              <Search className="h-6 w-6" />
             </button>
 
-            {/* Mobile Menu Button */}
             <button
               aria-label="Toggle menu"
-              className="text-[#4A4A4A] relative w-6 h-6"
+              className="text-gray-600 relative w-10 h-10 flex items-center justify-center rounded-full hover:bg-orange-50 active:bg-orange-100 transition-colors"
               onClick={() => setIsMenuOpen(!isMenuOpen)}
             >
-              <div className="absolute inset-0 transition-transform duration-300 ease-in-out">
-                <Menu className={`h-6 w-6 absolute transition-all duration-300 ${isMenuOpen ? 'opacity-0 rotate-90 scale-0' : 'opacity-100 rotate-0 scale-100'}`} />
-                <X className={`h-6 w-6 absolute transition-all duration-300 ${isMenuOpen ? 'opacity-100 rotate-0 scale-100' : 'opacity-0 -rotate-90 scale-0'}`} />
+              <div className="relative w-6 h-6">
+                <Menu className={`absolute inset-0 h-6 w-6 transition-all duration-300 ${isMenuOpen ? 'opacity-0 rotate-90 scale-50' : 'opacity-100 rotate-0 scale-100'}`} />
+                <X className={`absolute inset-0 h-6 w-6 transition-all duration-300 ${isMenuOpen ? 'opacity-100 rotate-0 scale-100' : 'opacity-0 -rotate-90 scale-50'}`} />
               </div>
             </button>
           </div>
         </div>
 
-        {/* Mobile Search */}
         {isSearchOpen && isMobile && (
-          <div className="mt-4 md:hidden" ref={searchRef}>
-            <form onSubmit={handleSearch} className="mb-2">
+          <div className="mt-2 md:hidden animate-in slide-in-from-top-4 duration-300 pb-4" ref={searchRef}>
+            <form onSubmit={handleSearch} className="mb-4">
               <div className="relative">
                 <Input
                   ref={inputRef}
                   type="text"
                   placeholder="Search generators..."
-                  className="pl-9 pr-10 py-2 w-full bg-purple-50/30 border-purple-100 focus:ring-purple-300 focus:border-purple-300"
+                  className="pl-10 pr-10 py-3 w-full bg-orange-50/80 border-orange-100 focus:ring-primary focus:border-primary rounded-xl h-12 text-lg"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   autoFocus
                 />
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-purple-400" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
                 <button
                   type="submit"
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-purple-500 hover:text-purple-700"
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 p-2 text-primary active:scale-95 transition-transform"
                 >
-                  <SendHorizontal className="h-4 w-4" />
+                  <SendHorizontal className="h-5 w-5" />
                 </button>
               </div>
             </form>
 
-            {showComingSoon ? (
-              <div className="bg-white rounded-lg shadow border border-purple-100 overflow-hidden p-4 text-center">
-                <div className="text-purple-600 font-medium mb-2">
-                  Thanks for your suggestion!
+            <div className="bg-white/80 backdrop-blur-md rounded-2xl shadow-sm border border-orange-100 overflow-hidden">
+              {showComingSoon ? (
+                 <div className="p-6 text-center">
+                  <div className="text-primary font-medium mb-2">
+                    Thanks for your suggestion!
+                  </div>
+                  <div className="text-sm text-gray-600 mb-4">
+                    &quot;{searchTerm}&quot; generator is coming soon.
+                  </div>
+                  <Link
+                    href="/cards/"
+                    className="block w-full py-3 text-center text-primary font-medium border border-orange-100 rounded-xl hover:bg-orange-50 active:scale-[0.98] transition-all"
+                    onClick={() => setIsSearchOpen(false)}
+                  >
+                    Browse all available generators
+                  </Link>
                 </div>
-                <div className="text-sm text-gray-600 mb-3">
-                  &quot;{searchTerm}&quot; generator is coming soon.
-                </div>
-                <Link
-                  href="/cards/"
-                  className="text-sm text-purple-700 hover:underline"
-                  onClick={() => setIsSearchOpen(false)}
-                >
-                  Browse all available generators
-                </Link>
-              </div>
-            ) : filteredGenerators.length > 0 ? (
-              <div className="bg-white rounded-lg shadow border border-purple-100 overflow-hidden">
-                <div className="max-h-64 overflow-y-auto p-1">
+              ) : filteredGenerators.length > 0 ? (
+                <div className="max-h-[60vh] overflow-y-auto">
                   {filteredGenerators.map((generator) => (
                     <Link
                       key={generator.slug}
                       href={`/${generator.slug}/`}
-                      className="block px-4 py-2 text-sm text-[#4A4A4A] hover:bg-purple-50 rounded-md"
+                      className="flex items-center px-5 py-4 text-base text-gray-700 border-b border-orange-50 last:border-0 active:bg-orange-50"
                       onClick={() => setIsSearchOpen(false)}
                     >
+                      <span className="w-2 h-2 rounded-full bg-orange-200 mr-4"></span>
                       {generator.label}
                     </Link>
                   ))}
                 </div>
-              </div>
-            ) : searchTerm.length >= 2 ? (
-              <div className="bg-white rounded-lg shadow border border-purple-100 overflow-hidden p-4 text-center">
-                <div className="text-sm text-gray-500 mb-3">
-                  No matching generators found
+              ) : searchTerm.length >= 2 ? (
+                <div className="p-6 text-center">
+                  <div className="text-gray-500 mb-4">
+                    No matching generators found
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="w-full py-6 text-primary border-primary/20 hover:bg-orange-50 hover:border-primary"
+                    onClick={handleRequestGenerator}
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? (
+                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    ) : (
+                      <Plus className="h-4 w-4 mr-2" />
+                    )}
+                    Request &quot;{searchTerm}&quot; generator
+                  </Button>
                 </div>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="text-purple-600 border-purple-300 hover:bg-purple-50"
-                  onClick={handleRequestGenerator}
-                  disabled={isSubmitting}
-                >
-                  {isSubmitting ? (
-                    <Loader2 className="h-3 w-3 animate-spin mr-1" />
-                  ) : (
-                    <Plus className="h-3 w-3 mr-1" />
-                  )}
-                  Request &quot;{searchTerm}&quot; generator
-                </Button>
-              </div>
-            ) : null}
+              ) : null}
+            </div>
           </div>
         )}
 
-        {/* Mobile Menu */}
         {isMenuOpen && (
-          <div className="mt-4 md:hidden">
-            <Link href="/" className="block py-2.5 px-4 w-full text-right text-[#4A4A4A] hover:text-[#FFC0CB] hover:bg-gray-50 font-serif">Home</Link>
+          <div className="md:hidden py-4 animate-in slide-in-from-top-4 duration-300">
+            <div className="flex flex-col space-y-2 bg-white/80 backdrop-blur-xl rounded-2xl border border-orange-100 p-4 shadow-lg">
+              <Link href="/" className="flex items-center px-4 py-3 text-gray-700 hover:bg-orange-50 rounded-xl transition-colors font-medium text-lg">
+                Home
+              </Link>
+              <Link href="/cards/" className="flex items-center px-4 py-3 text-gray-700 hover:bg-orange-50 rounded-xl transition-colors font-medium text-lg">
+                Generators
+              </Link>
+              <Link href="/card-gallery/" className="flex items-center px-4 py-3 text-gray-700 hover:bg-orange-50 rounded-xl transition-colors font-medium text-lg">
+                Gallery
+              </Link>
+              <Link href="/my-cards/" className="flex items-center px-4 py-3 text-gray-700 hover:bg-orange-50 rounded-xl transition-colors font-medium text-lg">
+                My Cards
+              </Link>
 
-            {/* Generators Section - Mobile */}
-            {/* <div className="border-y border-purple-100/50 my-2 bg-purple-50/30">
-              <div className="py-2 px-4">
-                <div className="text-right font-serif text-[#4A4A4A] mb-2">Generators</div>
-                <div className="grid grid-cols-2 gap-2">
-                  <Link href="/cards/"
-                    className="block py-1.5 px-3 text-right text-[#4A4A4A]/80 hover:text-[#FFC0CB] hover:bg-white/50 rounded-md text-sm col-span-2 font-medium">
-                    All Generators
-                  </Link>
-                  {GENERATORS.map((generator) => (
-                    <Link
-                      key={generator.slug}
-                      href={`/${generator.slug}/`}
-                      className="block py-1.5 px-3 text-right text-[#4A4A4A]/80 hover:text-[#FFC0CB] hover:bg-white/50 rounded-md text-sm"
-                    >
-                      {generator.label}
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            </div> */}
-            <Link href="/cards/" className="block py-2.5 px-4 w-full text-right text-[#4A4A4A] hover:text-[#FFC0CB] hover:bg-gray-50 font-serif">Generators</Link>
+              <div className="my-2 border-t border-orange-100/50"></div>
 
-            {/* Gallery Link - Mobile */}
-            <Link href="/card-gallery/" className="block py-2.5 px-4 w-full text-right text-[#4A4A4A] hover:text-[#FFC0CB] hover:bg-gray-50 font-serif">Gallery</Link>
-
-            <Link href="/my-cards/" className="block py-2.5 px-4 w-full text-right text-[#4A4A4A] hover:text-[#FFC0CB] hover:bg-gray-50 font-serif">My Cards</Link>
-
-            {status === 'authenticated' && session ? (
-              <div className="p-4 border-t">
-                <div className="flex items-center justify-end space-x-2 mb-2">
-                  {session.user?.image && (
-                    <div className={cn(
-                      "relative",
-                      isPremiumUser && "ring-2 ring-purple-500 ring-offset-1 rounded-full"
-                    )}>
+              {status === 'authenticated' && session ? (
+                <div className="pt-2">
+                  <div className="flex items-center px-4 py-3 mb-2 bg-orange-50/50 rounded-xl">
+                    {session.user?.image && (
                       <Image
                         src={session.user.image}
                         alt={session.user.name || ''}
-                        width={24}
-                        height={24}
-                        className={cn(
-                          "rounded-full",
-                          isPremiumUser && "border border-white"
-                        )}
+                        width={40}
+                        height={40}
+                        className="rounded-full border border-white shadow-sm mr-3"
                       />
+                    )}
+                    <div className="flex flex-col">
+                      <span className="font-semibold text-gray-800">{session.user?.name}</span>
                       {isPremiumUser && (
-                        <div className="absolute -top-1 -right-1 bg-purple-500 text-white rounded-full w-3 h-3 flex items-center justify-center">
-                          <Crown className="h-2 w-2" />
-                        </div>
+                        <span className="text-xs text-primary font-medium flex items-center">
+                          <Crown className="h-3 w-3 mr-1" /> Premium Member
+                        </span>
                       )}
                     </div>
-                  )}
-                  <div className="text-center text-sm font-medium text-gray-700">
-                    {session.user?.name}
-                    {isPremiumUser && (
-                      <div className="flex items-center justify-end mt-1 text-xs text-purple-600">
-                        <Crown className="h-2 w-2 mr-1" />
-                        <span>Premium</span>
-                      </div>
+                  </div>
+                  
+                  <div className="grid gap-2">
+                    {!isPremiumUser ? (
+                      <div className="w-full"><PremiumButton /></div>
+                    ) : (
+                      <div className="w-full"><SubscriptionButton /></div>
                     )}
+                    
+                    <Button
+                      variant="ghost"
+                      onClick={handleLogout}
+                      disabled={isLoading}
+                      className="w-full justify-start text-red-500 hover:text-red-600 hover:bg-red-50 rounded-xl h-12 text-base"
+                    >
+                      {isLoading ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                          Signing out...
+                        </>
+                      ) : (
+                        'Sign Out'
+                      )}
+                    </Button>
                   </div>
                 </div>
-                <div className="flex flex-col space-y-2">
-                  <Button
-                    variant="outline"
-                    onClick={handleLogout}
-                    disabled={isLoading}
-                    className="w-full text-[#4A4A4A] hover:text-[#FFC0CB]"
-                  >
-                    {isLoading ? (
-                      <>
-                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                        Signing out...
-                      </>
-                    ) : (
-                      'Sign Out'
-                    )}
-                  </Button>
-                  
-                  {/* Premium Button - Mobile (only if not premium) */}
-                  {!isPremiumUser && (
-                    <PremiumButton />
-                  )}
-                  
-                  {/* Subscription Management - Mobile (only if premium) */}
-                  {isPremiumUser && (
-                    <SubscriptionButton />
-                  )}
-                </div>
-              </div>
-            ) : (
-              <div className="p-4 border-t">
-                <div className="flex flex-col space-y-2">
-                  <Button
+              ) : (
+                <div className="pt-2 flex flex-col gap-3">
+                  <WarmButton
                     variant="outline"
                     onClick={handleLogin}
                     disabled={isLoading}
-                    className="w-full text-[#4A4A4A] hover:text-[#FFC0CB]"
+                    className="w-full text-gray-700 border-gray-200 hover:bg-gray-50 rounded-xl h-12 text-base"
                   >
                     {isLoading ? (
                       <>
@@ -689,13 +632,14 @@ function Header() {
                     ) : (
                       'Sign In'
                     )}
-                  </Button>
+                  </WarmButton>
                   
-                  {/* Premium Button - Mobile (for non-authenticated users) */}
-                  <PremiumButton />
+                  <div className="w-full">
+                    <PremiumButton />
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         )}
       </nav>

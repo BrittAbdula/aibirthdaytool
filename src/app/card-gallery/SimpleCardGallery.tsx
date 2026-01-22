@@ -46,7 +46,7 @@ export default function SimpleCardGallery({ initialCardsData, wishCardType, tabT
       
       <div className="flex justify-center mt-12">
         <Link href={`/type/${wishCardType}/`}>
-          <Button className="bg-purple-500 hover:bg-purple-600 text-white px-8 py-2 rounded-full flex items-center gap-2 transition-all shadow-sm hover:shadow-md">
+          <Button className="bg-gradient-to-r from-warm-coral to-pink-500 hover:from-pink-500 hover:to-pink-600 text-white px-8 py-2 rounded-full flex items-center gap-2 transition-all shadow-sm hover:shadow-md">
             Find more AI {wishCardType} cards
             <ArrowRightIcon className="h-4 w-4" />
           </Button>

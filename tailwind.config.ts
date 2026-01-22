@@ -58,6 +58,12 @@ const config = {
 				md: 'calc(var(--radius) - 2px)',
 				sm: 'calc(var(--radius) - 4px)'
 			},
+			fontFamily: {
+				sans: ["var(--font-quicksand)", "sans-serif"],
+				serif: ["var(--font-caveat)", "cursive"],
+				caveat: ["var(--font-caveat)", "cursive"],
+				quicksand: ["var(--font-quicksand)", "sans-serif"],
+			},
 			keyframes: {
 				'accordion-down': {
 					from: {

@@ -3,8 +3,6 @@ import { TrendingCards } from "@/components/TrendingCards";
 import { Suspense } from 'react';
 import CardMarquee from '@/components/CardMarquee';
 import { getRecentCardsServer } from '@/lib/cards';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import Section from "@/components/section";
 import {
   Accordion,
   AccordionContent,
@@ -14,11 +12,15 @@ import {
 import CardTypeBubbles from "@/components/CardTypeBubbles";
 import Link from "next/link";
 import { getAllCardTypes, CardBadge } from "@/lib/card-config";
+import { Sparkles, Palette, Gift, Heart, Send, Download, PenTool, Search, MessageCircle } from "lucide-react";
+import { WarmButton } from "@/components/ui/warm-button";
+import { GlassCard } from "@/components/ui/glass-card";
+import SparklesText from "@/components/ui/sparkles-text";
 
 interface FeatureCardProps {
   title: string;
   description: string;
-  icon: string;
+  icon: React.ReactNode;
   benefits: string[];
 }
 
@@ -27,7 +29,7 @@ interface StepCardProps {
   title: string;
   description: string;
   details: string[];
-  icon: string;
+  icon: React.ReactNode;
 }
 
 export const metadata: Metadata = {
@@ -76,83 +78,81 @@ export default async function Home() {
   });
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-white to-purple-50">
-      <div className="container mx-auto px-4 py-12 relative">
-        {/* Decorative elements */}
-        <div className="absolute top-0 left-0 w-32 h-32 bg-purple-100 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
-        <div className="absolute top-0 right-0 w-32 h-32 bg-yellow-100 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
-        <div className="absolute -bottom-8 left-20 w-32 h-32 bg-pink-100 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-4000"></div>
+    <main className="min-h-screen bg-warm-cream overflow-x-hidden">
+      <div className="relative">
+        {/* Decorative elements - Warm Blobs */}
+        <div className="absolute top-0 left-0 w-64 h-64 bg-warm-peach rounded-full mix-blend-multiply filter blur-3xl opacity-60 animate-blob"></div>
+        <div className="absolute top-0 right-0 w-64 h-64 bg-warm-rose rounded-full mix-blend-multiply filter blur-3xl opacity-60 animate-blob animation-delay-2000"></div>
+        <div className="absolute -bottom-8 left-20 w-64 h-64 bg-warm-coral/20 rounded-full mix-blend-multiply filter blur-3xl opacity-60 animate-blob animation-delay-4000"></div>
 
-        {/* Main content */}
-        <div className="relative">
-          <div className="mb-8 items-center flex flex-col justify-center">
-            <a href="https://www.producthunt.com/posts/mewtrucard?embed=true&utm_source=badge-featured&utm_medium=badge&utm_source=badge-mewtrucard" target="_blank">
-              <img src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=969395&theme=light&t=1748048449150" alt="MewtruCard - AI&#0032;Greeting&#0032;Cards&#0032;That&#0032;Move&#0044;&#0032;Inspire&#0044;&#0032;and&#0032;Soon&#0032;Speak | Product Hunt" width="250" height="54" />
-            </a>
-            <p className="text-center text-gray-600 text-lg max-w-2xl mx-auto font-light">Please vote for us on Product Hunt :)</p>
-          </div>
-          <h1 className="text-4xl sm:text-6xl font-serif font-bold text-center mb-4 text-[#4A4A4A] tracking-tight">
-            <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-pink-600">
-              Free AI Greeting Card Generator
-            </span>
-          </h1>
-          <p className="text-center text-gray-600 text-lg max-w-2xl mx-auto font-light">
-            Design personalized digital cards with MewTruCard&apos;s smart AI card creator - perfect for birthdays, holidays, and special moments! 
-          </p>
-          <p className="text-center text-gray-600 mb-12 text-lg max-w-2xl mx-auto font-light">
-            MewTruCard offers 30000+ Templates for Instant Download or Share Online.
-          </p>
-
-          <div className="mb-16 items-center flex justify-center space-x-4">
-            <button className="bg-[#FFC0CB] text-white px-8 py-3 rounded-full hover:bg-pink-400 transition">
-              <a href="/cards/">Create AI Card</a>
-            </button>
-            <button className="bg-purple-400 text-white px-8 py-3 rounded-full hover:bg-purple-500 transition">
-            <a href="/card-gallery">Card Gallery</a>
-             </button>
-          </div>
-
-          <div className="mb-16 items-center flex justify-center">
-            <CardTypeBubbles currentType="holiday" />
-          </div>
-
-          {/* Feedback Section */}
-          <div className="text-center">
-            <p className="text-sm text-gray-500 max-w-2xl mx-auto">
-              We&apos;d love to hear your feedback and suggestions to help us improve MewtruCard.{' '}
-              <a
-                href="https://tally.so/r/mJXGvX"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-purple-600 hover:text-purple-700 underline"
-              >
-                Click here
+        {/* Hero Section */}
+        <div className="container mx-auto px-4 py-16 md:py-24 relative z-10">
+          <div className="flex flex-col items-center justify-center text-center">
+            <div className="mb-8 hover:scale-105 transition-transform duration-300">
+              <a href="https://www.producthunt.com/posts/mewtrucard?embed=true&utm_source=badge-featured&utm_medium=badge&utm_source=badge-mewtrucard" target="_blank">
+                <img src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=969395&theme=light&t=1748048449150" alt="MewtruCard on Product Hunt" width="250" height="54" className="rounded-lg shadow-sm" />
               </a>
-              {' '}to share your thoughts with us!
+            </div>
+            
+            <h1 className="text-5xl sm:text-7xl font-caveat font-bold mb-6 text-gray-800 tracking-tight leading-tight">
+              Create <span className="text-primary inline-block transform -rotate-2 hover:rotate-3 transition-transform duration-300 relative">
+                Magical
+                <svg className="absolute -bottom-2 left-0 w-full h-3 text-primary/30 -z-10" viewBox="0 0 100 10" preserveAspectRatio="none"><path d="M0 5 Q 50 10 100 5" stroke="currentColor" strokeWidth="3" fill="none" /></svg>
+              </span> Moments
+            </h1>
+            
+            <p className="text-xl sm:text-2xl text-gray-600 mb-10 max-w-2xl mx-auto font-quicksand font-medium leading-relaxed">
+              Design personalized digital cards with our AI-powered creator. 
+              Perfect for <span className="text-primary font-bold">birthdays</span>, <span className="text-primary font-bold">holidays</span>, and sharing your <span className="text-primary font-bold">love</span>.
             </p>
-          </div>
-          <div className="m-8 items-center flex justify-center">
-            <a
-              href="/will-you-be-my-valentine/"
-              className="bg-red-500 hover:bg-red-600 text-white px-8 py-3 rounded-full transition animate-pulse"
-            >
-              💕 Valentine&apos;s Special 💕
-            </a>
+
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16 w-full sm:w-auto">
+              <Link href="/cards/" className="w-full sm:w-auto">
+                <WarmButton size="lg" className="w-full sm:w-auto text-lg px-12 shadow-warm hover:shadow-warm-lg">
+                  Create AI Card <Sparkles className="ml-2 h-5 w-5" />
+                </WarmButton>
+              </Link>
+              <Link href="/card-gallery" className="w-full sm:w-auto">
+                <WarmButton variant="secondary" size="lg" className="w-full sm:w-auto text-lg px-12">
+                  Explore Gallery <Search className="ml-2 h-5 w-5" />
+                </WarmButton>
+              </Link>
             </div>
 
-          <div className="space-y-24">
-            <section className="relative">
+            <div className="mb-20 w-full max-w-4xl mx-auto transform hover:scale-[1.02] transition-transform duration-500">
+              <CardTypeBubbles currentType="holiday" />
+            </div>
+
+            {/* Valentine Banner */}
+            <div className="mb-24">
+               <Link href="/will-you-be-my-valentine/">
+                <GlassCard variant="warm" hoverEffect className="inline-flex items-center px-8 py-3 bg-red-50/80 border-red-100/50 hover:bg-red-50 cursor-pointer">
+                  <Heart className="text-red-500 fill-red-500 animate-pulse mr-3 h-6 w-6" />
+                  <span className="text-red-600 font-bold font-quicksand text-lg">Valentine&apos;s Special Collection</span>
+                  <Heart className="text-red-500 fill-red-500 animate-pulse ml-3 h-6 w-6" />
+                </GlassCard>
+              </Link>
+            </div>
+          </div>
+
+          <div className="space-y-32">
+            <section className="relative scroll-mt-24" id="trending">
               <TrendingCards />
             </section>
-            <Features />{/* Feedback CTA */}
+            
+            <Features />
 
             <section className="relative">
-              <h2 className="text-3xl sm:text-4xl font-bold mb-12 text-center">
-                Explore Our <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-pink-600">AI Card Templates</span>
-              </h2>
+              <div className="text-center mb-12">
+                <h2 className="text-4xl sm:text-5xl font-caveat font-bold mb-4 text-gray-800">
+                  Explore our <span className="text-primary">Inspiration</span>
+                </h2>
+                <p className="text-lg text-gray-600 max-w-2xl mx-auto font-medium">Over 30,000 templates generated by our community</p>
+              </div>
+              
               <Suspense fallback={
-                <div className="flex items-center justify-center h-48">
-                  <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500"></div>
+                <div className="flex items-center justify-center h-64 bg-white/50 rounded-2xl">
+                  <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
                 </div>
               }>
                 <CardMarquee wishCardType="" initialCardsData={initialCardsData} />
@@ -161,14 +161,14 @@ export default async function Home() {
 
             <HowToUse />
 
-            <div className="items-center flex justify-center space-x-4">
-              <button className="bg-[#FFC0CB] text-white px-8 py-3 rounded-full hover:bg-pink-400 transition">
-                <a href="/cards">Create AI Card</a>
-              </button>
-              <button className="bg-purple-400 text-white px-8 py-3 rounded-full hover:bg-purple-500 transition">
-                <a href="/card-gallery">Card Gallery</a>
-              </button>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 py-8">
+              <Link href="/cards/">
+                <WarmButton size="lg" className="w-full sm:w-auto px-10">
+                  Start Creating Now <PenTool className="ml-2 h-5 w-5" />
+                </WarmButton>
+              </Link>
             </div>
+            
             <FAQ />
           </div>
         </div>
@@ -179,43 +179,46 @@ export default async function Home() {
 
 // Features Section
 const Features: React.FC = () => (
-  <section className="py-16 bg-white">
+  <section className="relative py-12">
     <div className="max-w-6xl mx-auto px-4">
-      <h2 className="text-3xl font-serif font-semibold mb-4 text-center text-[#4A4A4A]">
-        Why MewTruCard AI Greeting Card Maker Is Awesome
-      </h2>
-      <p className="text-center text-[#666] mb-12 max-w-2xl mx-auto">
-        No design skills needed - MewTruCard virtual card generator does all the work for you
-      </p>
+      <div className="text-center mb-16">
+        <h2 className="text-4xl font-caveat font-bold mb-6 text-gray-800">
+          Why MewTruCard is <span className="text-primary">Magical</span>
+        </h2>
+        <p className="text-xl text-gray-600 max-w-2xl mx-auto font-quicksand">
+          No design skills needed - just your feelings and our AI magic ✨
+        </p>
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         <FeatureCard
-          title="Quick AI Card Creation"
-          description="Design a custom e-card in seconds with MewTruCard"
-          icon="✨"
+          title="Quick AI Generation"
+          description="Transform your thoughts into heartfelt messages instantly"
+          icon={<Sparkles className="h-8 w-8 text-primary" />}
           benefits={[
             "Simple inputs for perfect cards",
-            "MewTruCard AI generates heartfelt messages",
-            "Instant digital card preview"
+            "Emotional & personalized text",
+            "Instant digital preview"
           ]}
         />
         <FeatureCard
-          title="Beautiful Digital Designs"
-          description="Online cards that look professionally made"
-          icon="🎨"
+          title="Beautiful Aesthetics"
+          description="Professionally designed templates that look stunning"
+          icon={<Palette className="h-8 w-8 text-primary" />}
           benefits={[
-            "Millions of greeting card styles",
-            "High-quality digital cards",
-            "Thoughtfully designed templates"
+            "Millions of unique styles",
+            "High-quality visuals",
+            "Thoughtful compositions"
           ]}
         />
         <FeatureCard
-          title="Easy E-Card Sharing"
-          description="Multiple ways to send your digital greetings"
-          icon="🎁"
+          title="Share the Love"
+          description="Send your greetings anywhere, anyhow"
+          icon={<Send className="h-8 w-8 text-primary" />}
           benefits={[
-            "Instant online card delivery",
-            "Download printable card formats",
-            "Share e-cards on social media"
+            "Instant web link sharing",
+            "High-res image download",
+            "Direct social media posting"
           ]}
         />
       </div>
@@ -224,315 +227,206 @@ const Features: React.FC = () => (
 );
 
 const FeatureCard: React.FC<FeatureCardProps> = ({ title, description, icon, benefits }) => (
-  <div className="p-6 rounded-lg bg-gradient-to-b from-pink-50 to-white border border-pink-100 hover:shadow-lg transition duration-300">
-    <div className="text-4xl mb-4 bg-pink-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto">
+  <GlassCard 
+    variant="warm" 
+    hoverEffect 
+    className="p-8 flex flex-col items-center text-center h-full border-white/60 bg-white/60"
+  >
+    <div className="mb-6 p-4 bg-orange-100/50 rounded-full text-primary ring-4 ring-orange-50">
       {icon}
     </div>
-    <h3 className="text-xl font-serif font-semibold mb-3 text-[#4A4A4A] text-center">
+    <h3 className="text-2xl font-caveat font-bold mb-4 text-gray-800">
       {title}
     </h3>
-    <p className="text-[#666] text-center mb-4">
+    <p className="text-gray-600 mb-6 font-medium leading-relaxed">
       {description}
     </p>
-    <ul className="space-y-2">
+    <ul className="space-y-3 mt-auto w-full text-left">
       {benefits.map((benefit, index) => (
         <li
           key={index}
-          className="flex items-center text-sm text-[#666]"
+          className="flex items-center text-sm text-gray-600 bg-white/50 p-2 rounded-lg"
         >
-          <span className="text-pink-400 mr-2">•</span>
+          <span className="w-1.5 h-1.5 rounded-full bg-primary mr-3 flex-shrink-0" />
           {benefit}
         </li>
       ))}
     </ul>
-  </div>
+  </GlassCard>
 );
 
 // How To Use Section
 const HowToUse: React.FC = () => (
-  <section className="pt-16 bg-gradient-to-r from-purple-50 to-pink-50">
+  <section className="py-8">
     <div className="max-w-6xl mx-auto px-4">
-      <h2 className="text-3xl font-serif font-semibold mb-4 text-center text-[#4A4A4A]">
-        Create Digital Cards With MewTruCard Virtual Card Designer
-      </h2>
-      <p className="text-center text-[#666] mb-12 max-w-2xl mx-auto">
-        Two easy methods to make the perfect MewTruCard AI greeting cards online - totally free!
-      </p>
+      <div className="text-center mb-16">
+        <h2 className="text-4xl font-caveat font-bold mb-6 text-gray-800">
+          Create Magic in <span className="text-primary">3 Simple Steps</span>
+        </h2>
+        <p className="text-xl text-gray-600 max-w-2xl mx-auto font-quicksand">
+          Choose between creating something new or exploring our gallery
+        </p>
+      </div>
 
-      <div className="flex flex-col md:flex-row mb-16">
-        <div className="md:w-1/2 p-4">
-          <div className="text-center mb-8">
-            <h3 className="text-xl font-serif font-semibold mb-2 text-pink-600">
-              Method 1: MewTruCard AI-Generated Custom Cards
-            </h3>
-            <p className="text-[#666] text-sm">
-              Let MewTruCard smart card generator create a personalized digital greeting card
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 gap-6 relative">
-            <div className="absolute top-0 bottom-0 left-10 w-[2px] bg-pink-200 -z-10"></div>
-
+      <div className="grid md:grid-cols-2 gap-12 lg:gap-20">
+        <div className="relative">
+          <div className="absolute -left-4 -top-4 w-20 h-20 bg-primary/10 rounded-full blur-2xl"></div>
+          <h3 className="text-2xl font-caveat font-bold mb-8 text-primary flex items-center justify-center md:justify-start">
+            <span className="w-8 h-8 rounded-full bg-primary text-white text-sm flex items-center justify-center mr-3 font-sans">1</span>
+            Method: Create Custom AI Card
+          </h3>
+          
+          <div className="space-y-6 relative">
+             <div className="absolute left-6 top-8 bottom-8 w-0.5 bg-gradient-to-b from-primary/30 to-transparent -z-10 md:block hidden"></div>
+            
             <StepCard
               number="1"
-              title="Choose Card Category"
-              description="Select from our e-card templates collection"
-              icon="📝"
-              details={[
-                "Virtual birthday card maker",
-                "Digital anniversary cards",
-                "AI love card generator",
-                "Online holiday greeting cards",
-                "Custom occasion e-cards"
-              ]}
+              title="Choose Category"
+              description="Select the perfect occasion"
+              icon={<MessageCircle className="h-6 w-6 text-white" />}
+              details={["Birthday, Holiday, Love", "Custom occasions supported"]}
             />
-
             <StepCard
               number="2"
-              title="Customize Your E-Card"
-              description="Tell MewTruCard AI about your recipient"
-              icon="✨"
-              details={[
-                "Specify your relationship",
-                "Describe the special occasion",
-                "Add your personalized message",
-                "Choose sentiment for your MewTruCard e-card"
-              ]}
+              title="Add Personal Touch"
+              description="Tell us who it's for"
+              icon={<Heart className="h-6 w-6 text-white" />}
+              details={["Recipient name & relation", "Tone of message"]}
             />
-
             <StepCard
               number="3"
-              title="Generate & Share Your Card"
-              description="MewTruCard AI creates your perfect digital greeting"
-              icon="🎁"
-              details={[
-                "One-click MewTruCard AI card generation",
-                "Edit your virtual card design",
-                "Download high-quality e-card",
-                "Share your MewTruCard digital card online"
-              ]}
+              title="Generate & Share"
+              description="Get your unique card instantly"
+              icon={<Gift className="h-6 w-6 text-white" />}
+              details={["AI writes the message", "Download or copy link"]}
             />
           </div>
         </div>
 
-        <div className="md:w-1/2 p-4 mt-12 md:mt-0">
-          <div className="text-center mb-8">
-            <h3 className="text-xl font-serif font-semibold mb-2 text-purple-600">
-              Method 2: Browse MewTruCard Pre-Made AI Cards
-            </h3>
-            <p className="text-[#666] text-sm">
-              Choose from MewTruCard gallery of AI-designed greeting card templates
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 gap-6 relative">
-            <div className="absolute top-0 bottom-0 left-10 w-[2px] bg-purple-200 -z-10"></div>
+        <div className="relative">
+          <div className="absolute -right-4 -top-4 w-20 h-20 bg-accent/10 rounded-full blur-2xl"></div>
+          <h3 className="text-2xl font-caveat font-bold mb-8 text-accent flex items-center justify-center md:justify-start">
+            <span className="w-8 h-8 rounded-full bg-accent text-white text-sm flex items-center justify-center mr-3 font-sans">2</span>
+            Method: Browse Templates
+          </h3>
+          
+          <div className="space-y-6 relative">
+            <div className="absolute left-6 top-8 bottom-8 w-0.5 bg-gradient-to-b from-accent/30 to-transparent -z-10 md:block hidden"></div>
 
             <StepCard
               number="1"
-              title="Explore E-Card Templates"
-              description="Browse MewTruCard AI greeting card collection"
-              icon="🔍"
-              details={[
-                "Curated MewTruCard digital card designs",
-                "Filter by card occasion or style",
-                "Preview AI-generated templates",
-                "Find popular MewTruCard e-card designs"
-              ]}
+              title="Explore Gallery"
+              description="Browse 30,000+ designs"
+              icon={<Search className="h-6 w-6 text-white" />}
+              details={["Filter by occasion", "Find popular styles"]}
             />
-
             <StepCard
               number="2"
-              title="Customize Your Digital Card"
-              description="Make the e-card uniquely yours"
-              icon="✏️"
-              details={[
-                "Edit AI greeting text",
-                "Personalize virtual card elements",
-                "Add recipient details",
-                "Create a one-of-a-kind design"
-              ]}
+              title="Customize"
+              description="Make it yours"
+              icon={<PenTool className="h-6 w-6 text-white" />}
+              details={["Edit text & names", "Adjust visuals"]}
             />
-
             <StepCard
               number="3"
-              title="Send Your E-Card"
-              description="Share your digital greeting instantly"
-              icon="💌"
-              details={[
-                "Download as high-quality image",
-                "Share via unique card link",
-                "Post to social media directly",
-                "Email your digital greeting card"
-              ]}
+              title="Send It"
+              description="Share the joy"
+              icon={<Download className="h-6 w-6 text-white" />}
+              details={["High-quality download", "Social sharing"]}
             />
           </div>
         </div>
       </div>
-
-
     </div>
   </section>
 );
 
 const StepCard: React.FC<StepCardProps> = ({ number, title, description, details, icon }) => (
-  <div className="bg-white border border-pink-100 rounded-lg p-5 pl-12 relative shadow-sm hover:shadow-md transition duration-300">
-    <div className="absolute -left-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-gradient-to-r from-pink-400 to-purple-400 text-white flex items-center justify-center text-lg font-semibold">
-      {number}
+  <GlassCard className="p-5 flex items-start gap-4 hover:border-primary/30 transition-colors bg-white/80">
+    <div className="p-3 bg-gradient-to-br from-primary to-warm-coral rounded-xl shadow-warm flex-shrink-0">
+      {icon}
     </div>
-    <div className="text-2xl absolute top-5 left-4">{icon}</div>
-    <h4 className="font-serif text-[#4A4A4A] font-medium mb-1">{title}</h4>
-    <p className="text-[#666] text-sm mb-3">{description}</p>
-    <ul className="space-y-1.5">
-      {details.map((detail, index) => (
-        <li
-          key={index}
-          className="flex items-center text-xs text-[#666]"
-        >
-          <span className="w-1.5 h-1.5 rounded-full bg-pink-300 mr-2 flex-shrink-0" />
-          {detail}
-        </li>
-      ))}
-    </ul>
-  </div>
+    <div>
+      <h4 className="font-bold text-gray-800 text-lg mb-1">{title}</h4>
+      <p className="text-sm text-gray-600 mb-3">{description}</p>
+      <div className="flex flex-wrap gap-2">
+        {details.map((detail, index) => (
+          <span key={index} className="text-xs bg-orange-50 text-gray-600 px-2 py-1 rounded-md border border-orange-100">
+            {detail}
+          </span>
+        ))}
+      </div>
+    </div>
+  </GlassCard>
 );
 
 // FAQ Section
 const faqs = [
   {
     question: "What is MewTruCard's AI Greeting Card Generator?",
-    answer: (
-      <span>
-        MewTruCard offers a next-gen AI card maker that helps you create digital greeting cards for any occasion. MewTruCard virtual card creator uses artificial intelligence to transform your thoughts into beautifully designed e-cards. What makes MewTruCard online greeting card generator special is how it combines emotional messaging with stunning designs - just tell us your feelings and MewTruCard AI does the rest!
-      </span>
-    ),
+    answer: "MewTruCard uses advanced AI to create personalized, emotionally resonant greeting cards in seconds. Simply choose an occasion and provide a few details, and our magical engine writes the perfect message and designs a stunning card."
   },
   {
-    question: "How do I create digital cards with MewTruCard's tool?",
-    answer: (
-      <span>
-        Making e-cards with MewTruCard AI greeting card generator is super easy:
-        <ol className="mt-2 space-y-1">
-          <li>1. Browse MewTruCard digital card templates and pick your favorite style</li>
-          <li>2. Enter details about who the virtual card is for</li>
-          <li>3. Let MewTruCard AI card maker generate your perfect online greeting</li>
-        </ol>
-        The whole MewTruCard e-card creation process takes less than a minute!
-      </span>
-    ),
+    question: "Is it free to use?",
+    answer: "Yes! You can generate standard cards for free. We also offer a Premium plan for exclusive designs, unlimited generation, and advanced customization features."
   },
   {
-    question: "What sharing options does MewTruCard digital card maker provide?",
-    answer: (
-      <span>
-        MewTruCard AI greeting card generator offers multiple ways to share your virtual cards:
-        <ul className="mt-2 space-y-1">
-          <li>• Each MewTruCard digital card gets its own unique sharing link</li>
-          <li>• Download your MewTruCard AI-created cards in high resolution</li>
-          <li>• Share your e-cards directly to social platforms</li>
-          <li>• Send your MewTruCard digital greetings via email</li>
-        </ul>
-      </span>
-    ),
+    question: "Can I use it on my phone?",
+    answer: "Absolutely. MewTruCard is designed 'mobile-first', meaning you get a beautiful app-like experience right in your mobile browser."
   },
   {
-    question: "What makes MewTruCard's AI-generated designs unique?",
-    answer: (
-      <span>
-        MewTruCard digital greeting card maker stands out because:
-        <ul className="mt-2 space-y-1">
-          <li>• Every MewTruCard AI card features clean, modern aesthetics</li>
-          <li>• MewTruCard virtual card designs have professional-grade layouts</li>
-          <li>• The MewTruCard AI greeting card generator perfectly captures emotions</li>
-        </ul>
-      </span>
-    ),
+    question: "How do I share my card?",
+    answer: "Once generated, you can download the card as a high-quality image, or copy a unique link to send via WhatsApp, Messenger, or email."
   },
   {
-    question: "Can I customize cards from MewTruCard online greeting card maker?",
-    answer: (
-      <span>
-        MewTruCard AI card creator gives you complete creative control:
-        <ul className="mt-2 space-y-1">
-          <li>• Personalize your MewTruCard digital greeting card message</li>
-          <li>• Access exclusive fonts for your MewTruCard virtual cards</li>
-          <li>• Adjust color themes in your MewTruCard e-card design</li>
-          <li>• Add personal touches to make the MewTruCard digital card yours</li>
-        </ul>
-      </span>
-    ),
-  },
-  {
-    question: "Is MewTruCard AI greeting card generator free to use?",
-    answer: (
-      <span>
-        We believe in flexible options for MewTruCard online card maker:
-        <ul className="mt-2 space-y-1">
-          <li>• Create basic MewTruCard digital greeting cards completely free</li>
-          <li>• Unlock premium MewTruCard virtual card features with subscription</li>
-          <li>• Adjust your MewTruCard e-card creation plan anytime</li>
-        </ul>
-      </span>
-    ),
-  },
-  {
-    question: "Can I use MewTruCard AI card generator on my phone?",
-    answer: (
-      <span>
-        MewTruCard digital greeting card maker is totally mobile-friendly:
-        <ul className="mt-2 space-y-1">
-          <li>• Create MewTruCard e-cards on any device</li>
-          <li>• Design MewTruCard virtual cards with easy touch controls</li>
-          <li>• Make MewTruCard AI greeting cards wherever you are</li>
-        </ul>
-      </span>
-    ),
-  },
+    question: "Can I customize the message?",
+    answer: "Yes, you have full control. You can edit the AI-generated message, change the recipient's name, or write your own heartfelt note from scratch."
+  }
 ];
 
 const FAQ: React.FC = () => (
-  <Section>
+  <section className="py-12">
     <div className="text-center mb-12">
-      <h2 className="text-4xl sm:text-5xl md:text-6xl font-serif font-bold mb-4 tracking-tight">
-        <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-pink-600">
-          AI Greeting Card Generator FAQ
-        </span>
+      <h2 className="text-4xl font-caveat font-bold mb-4 text-gray-800">
+        Frequently Asked <span className="text-primary">Questions</span>
       </h2>
-      <p className="text-lg sm:text-xl text-gray-600 max-w-2xl mx-auto px-4">
-        Common questions about MewTruCard digital card maker and online greeting card tool ✨
+      <p className="text-lg text-gray-600 max-w-2xl mx-auto px-4 font-quicksand">
+        Everything you need to know about creating magic with MewTruCard
       </p>
     </div>
 
-    <div className="mx-auto md:max-w-[800px]">
+    <div className="mx-auto max-w-2xl px-4">
       <Accordion
         type="single"
         collapsible
-        className="flex w-full flex-col items-center justify-center space-y-4"
+        className="space-y-4"
       >
         {faqs.map((faq, idx) => (
           <AccordionItem
             key={idx}
             value={`question-${idx}`}
-            className="w-full border rounded-lg overflow-hidden hover:shadow-md transition-shadow duration-200"
+            className="border-none"
           >
-            <AccordionTrigger className="px-6 py-4 text-left">
-              <span className="font-medium text-gray-800">{faq.question}</span>
-            </AccordionTrigger>
-            <AccordionContent className="px-6 py-4 text-gray-600">
-              {faq.answer}
-            </AccordionContent>
+            <GlassCard className="px-1 overflow-hidden">
+              <AccordionTrigger className="px-6 py-4 text-left hover:no-underline font-medium text-gray-800 group">
+                <span className="group-hover:text-primary transition-colors">{faq.question}</span>
+              </AccordionTrigger>
+              <AccordionContent className="px-6 pb-4 text-gray-600 leading-relaxed bg-white/40">
+                {faq.answer}
+              </AccordionContent>
+            </GlassCard>
           </AccordionItem>
         ))}
       </Accordion>
     </div>
 
     <div className="mt-12 text-center">
-      <p className="text-lg text-gray-600">
-        Have more questions about MewTruCard AI card generator?{" "}
-        <a href="mailto:support@mewtrucard.com" className="text-purple-600 hover:text-purple-700 underline font-medium">
-          Contact MewTruCard support team
+      <p className="text-lg text-gray-600 font-quicksand">
+        Have more questions?{" "}
+        <a href="mailto:support@mewtrucard.com" className="text-primary hover:underline font-bold">
+          Contact Support
         </a>
       </p>
     </div>
-  </Section>
+  </section>
 );

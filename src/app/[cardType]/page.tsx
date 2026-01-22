@@ -107,7 +107,7 @@ export default async function CardGeneratorPage({ params }: CardGeneratorPagePro
     };
 
     return (
-        <main className="min-h-screen bg-gradient-to-b from-white via-purple-50 to-white">
+        <main className="min-h-screen bg-gradient-to-b from-warm-cream via-rose-50 to-white">
             {/* JSON-LD structured data */}
             <Script
                 id="json-ld"
@@ -126,7 +126,7 @@ export default async function CardGeneratorPage({ params }: CardGeneratorPagePro
                 {/* Header Section */}
                 <header className="text-center mb-6">
                     <h1 className="text-2xl font-serif font-bold tracking-tight">
-                        <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-pink-600">
+                        <span className="bg-clip-text text-transparent bg-gradient-to-r from-warm-coral to-pink-600">
                             AI {cardName} Generator - MewTruCard
                         </span>
                     </h1>
@@ -137,7 +137,7 @@ export default async function CardGeneratorPage({ params }: CardGeneratorPagePro
                     <Suspense
                         fallback={
                             <div className="flex flex-col items-center justify-center h-64 space-y-4">
-                                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500"></div>
+                                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-warm-coral"></div>
                                 <p className="text-gray-500">Creating magic...</p>
                             </div>
                         }
@@ -155,7 +155,7 @@ export default async function CardGeneratorPage({ params }: CardGeneratorPagePro
                 {/* How to Create Section */}
                 <section className="mb-16 sm:mb-24">
                     <h2 className="text-3xl sm:text-4xl font-bold text-center mb-4">
-                        <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-pink-600">
+                        <span className="bg-clip-text text-transparent bg-gradient-to-r from-warm-coral to-pink-600">
                             How to Create Your Perfect AI {cardName} in 3 Simple Steps
                         </span>
                     </h2>
@@ -167,7 +167,7 @@ export default async function CardGeneratorPage({ params }: CardGeneratorPagePro
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
                         <div className="bg-white p-6 rounded-xl shadow-sm border border-purple-100 flex flex-col items-center text-center relative">
-                            <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center mb-4 text-white font-bold text-2xl">
+                            <div className="w-16 h-16 bg-gradient-to-r from-warm-coral to-pink-500 rounded-full flex items-center justify-center mb-4 text-white font-bold text-2xl">
                                 1
                             </div>
                             <h3 className="text-xl font-semibold mb-3 text-gray-800">Enter Personal Details</h3>
@@ -181,7 +181,7 @@ export default async function CardGeneratorPage({ params }: CardGeneratorPagePro
                         </div>
 
                         <div className="bg-white p-6 rounded-xl shadow-sm border border-purple-100 flex flex-col items-center text-center relative">
-                            <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center mb-4 text-white font-bold text-2xl">
+                            <div className="w-16 h-16 bg-gradient-to-r from-warm-coral to-pink-500 rounded-full flex items-center justify-center mb-4 text-white font-bold text-2xl">
                                 2
                             </div>
                             <h3 className="text-xl font-semibold mb-3 text-gray-800">Unleash Your Creative Vision</h3>
@@ -195,7 +195,7 @@ export default async function CardGeneratorPage({ params }: CardGeneratorPagePro
                         </div>
 
                         <div className="bg-white p-6 rounded-xl shadow-sm border border-purple-100 flex flex-col items-center text-center relative">
-                            <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center mb-4 text-white font-bold text-2xl">
+                            <div className="w-16 h-16 bg-gradient-to-r from-warm-coral to-pink-500 rounded-full flex items-center justify-center mb-4 text-white font-bold text-2xl">
                                 3
                             </div>
                             <h3 className="text-xl font-semibold mb-3 text-gray-800">Generate & Share Instantly</h3>
@@ -214,7 +214,7 @@ export default async function CardGeneratorPage({ params }: CardGeneratorPagePro
                 {/* Templates Section */}
                 <section className="text-center mb-16 sm:mb-24">
                     <h2 className="text-3xl sm:text-4xl font-bold text-center mb-4">
-                        <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-pink-600">
+                        <span className="bg-clip-text text-transparent bg-gradient-to-r from-warm-coral to-pink-600">
                             Stunning {cardName} Templates Created by AI
                         </span>
                     </h2>
@@ -269,7 +269,7 @@ export default async function CardGeneratorPage({ params }: CardGeneratorPagePro
 
                 {/* New features highlight section */}
                 <section className="mb-16 sm:mb-24">
-                    <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-2xl p-8 max-w-5xl mx-auto">
+                    <div className="bg-gradient-to-r from-orange-50 to-pink-50 rounded-2xl p-8 max-w-5xl mx-auto">
                         <h3 className="text-2xl font-bold text-center mb-8 text-gray-800">
                             Why MewTruCard AI {cardName} Generator Leads the Market
                         </h3>
@@ -336,7 +336,7 @@ export default async function CardGeneratorPage({ params }: CardGeneratorPagePro
                 {cardConfig.why && (
                     <section className="mb-16 sm:mb-24">
                         <h2 className="text-3xl sm:text-4xl font-bold text-center mb-4">
-                            <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-pink-600">
+                            <span className="bg-clip-text text-transparent bg-gradient-to-r from-warm-coral to-pink-600">
                                 Why MewTruCard AI {cardName} Generator is the Best Choice
                             </span>
                         </h2>
@@ -359,7 +359,7 @@ export default async function CardGeneratorPage({ params }: CardGeneratorPagePro
                             ))}
                         </div>
 
-                        <div className="bg-gradient-to-r from-purple-50 to-pink-50 p-8 rounded-xl max-w-4xl mx-auto">
+                        <div className="bg-gradient-to-r from-orange-50 to-pink-50 p-8 rounded-xl max-w-4xl mx-auto">
                             <div className="text-center">
                                 <h3 className="text-xl font-semibold mb-4 text-gray-800">
                                     What Sets MewTruCard AI {cardName} Generator Apart?
@@ -397,7 +397,7 @@ export default async function CardGeneratorPage({ params }: CardGeneratorPagePro
                 {/* Enhanced FAQ Section */}
                 <section className="mb-16 sm:mb-24 max-w-4xl mx-auto">
                     <h2 className="text-3xl sm:text-4xl font-bold text-center mb-4">
-                        <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-pink-600">
+                        <span className="bg-clip-text text-transparent bg-gradient-to-r from-warm-coral to-pink-600">
                             Frequently Asked Questions - AI {cardName} Generator
                         </span>
                     </h2>

@@ -2,10 +2,12 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from "@/components/ui/button"
+import { WarmButton } from "@/components/ui/warm-button"
+import { GlassCard } from "@/components/ui/glass-card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select"
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Slider } from "@/components/ui/slider"
 import { Textarea } from "@/components/ui/textarea"
 import { Alert, AlertDescription } from "@/components/ui/alert"
@@ -13,28 +15,41 @@ import { ImageViewer } from '@/components/ImageViewer'
 import { cn, fetchSvgContent } from '@/lib/utils'
 import { CardType, CardConfig, CARD_SIZES } from '@/lib/card-config'
 import { useSession, signIn } from "next-auth/react"
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { Loader2, Crown } from 'lucide-react'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Loader2, Crown, AlertCircle, Info, ChevronRight, ChevronLeft, Check, Sparkles, Wand2 } from 'lucide-react'
 import { useCardGeneration } from '@/hooks/useCardGeneration'
-import { AlertCircle, Info } from 'lucide-react'
 import { PremiumModal } from '@/components/PremiumModal'
 import { modelConfigs, type ModelConfig } from '@/lib/model-config'
-import { stylePresets, getPresetsForFormat, type StylePreset, type OutputFormat } from '@/lib/style-presets'
+import { stylePresets, getPresetsForFormat, type OutputFormat } from '@/lib/style-presets'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { Switch } from "@/components/ui/switch"
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover"
 
 const MagicalCardCreation = () => {
-  // Richer status messages
   const [loadingText, setLoadingText] = useState("Weaving your magical words...");
+  const [progress, setProgress] = useState(0);
   
+  // Progress simulation
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setProgress(old => {
+        if (old >= 95) return 95;
+        // Slow down as we get closer to 100
+        const increment = Math.max(0.5, (100 - old) / 20);
+        return old + increment;
+      });
+    }, 200);
+    return () => clearInterval(timer);
+  }, []);
+  
+  // Text rotation
   useEffect(() => {
     const messages = [
-      "Weaving your magical words...",
-      "Mixing colors from the rainbow...",
-      "Sprinkling stardust...",
-      "Asking the AI fairies...",
-      "Almost ready...",
+      "Weaving your magical words... ✨",
+      "Mixing rainbow colors... 🎨",
+      "Sprinkling stardust... 🌟",
+      "Asking AI fairies... 🧚‍♀️",
+      "Almost ready... 🎁",
     ];
     let i = 0;
     const interval = setInterval(() => {
@@ -45,266 +60,115 @@ const MagicalCardCreation = () => {
   }, []);
 
   return (
-    <div className="w-full h-full relative overflow-hidden bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50">
-      {/* Background Ambience */}
+    <div className="w-full h-full relative overflow-hidden bg-gradient-to-br from-warm-cream via-pink-50 to-blue-50 flex items-center justify-center">
+      {/* Background Blobs */}
       <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-pink-200/40 rounded-full blur-[100px] animate-blob mix-blend-multiply"></div>
       <div className="absolute top-1/3 right-1/4 w-[400px] h-[400px] bg-purple-200/40 rounded-full blur-[100px] animate-blob animation-delay-2000 mix-blend-multiply"></div>
       
-      {/* "AI Wisdom" Particles */}
-      {[...Array(20)].map((_, i) => (
-        <div
-          key={`wisdom-${i}`}
-          className="absolute rounded-full bg-gradient-to-r from-yellow-300 to-pink-300 blur-[1px]"
-          style={{
-             width: Math.random() * 4 + 2 + 'px',
-             height: Math.random() * 4 + 2 + 'px',
-             left: '50%',
-             top: '50%',
-             transform: `rotate(${i * 18}deg) translateY(-${Math.random() * 200 + 100}px)`,
-             opacity: 0,
-             animation: `wisdom-flow 3s ease-in-out infinite`,
-             animationDelay: `${Math.random() * 2}s`
-          }}
-        />
-      ))}
-
-      {/* Floating Icon Bubbles (Richer Animation) */}
-      {[...Array(12)].map((_, i) => (
-         <div 
-            key={`icon-${i}`}
-            className="absolute animate-float-up opacity-0"
-            style={{
-               left: `${Math.random() * 100}%`,
-               bottom: '-50px',
-               animationDelay: `${Math.random() * 5}s`,
-               animationDuration: `${Math.random() * 5 + 5}s`,
-               fontSize: `${Math.random() * 1.5 + 1}rem`
-            }}
-         >
-            {['❤️', '✨', '🎵', '🌟', '🦋', '🌸'][Math.floor(Math.random() * 6)]}
-         </div>
-      ))}
-
-      {/* Central Glowing Card Construction */}
-      <div className="absolute inset-0 flex items-center justify-center">
-         <div className="relative">
-            {/* Halo Glow */}
-            <div className="absolute -inset-10 bg-gradient-to-tr from-pink-300 via-purple-300 to-blue-300 rounded-full blur-3xl opacity-40 animate-pulse"></div>
+      {/* Central Content */}
+      <div className="relative z-10 flex flex-col items-center">
+         {/* Card Container */}
+         <div className="relative w-48 h-64 bg-white/60 backdrop-blur-md rounded-2xl border border-white/60 shadow-[0_0_50px_10px_rgba(255,192,203,0.3)] overflow-hidden animate-float-dreamy">
             
-            {/* Card Silhouette */}
-            <div className="w-48 h-64 bg-white/40 backdrop-blur-md rounded-xl border border-white/60 shadow-[0_0_50px_10px_rgba(255,192,203,0.5)] flex items-center justify-center overflow-hidden relative animate-bounce-gentle">
-               
-               {/* Internal Scanning Effect */}
-               <div className="absolute inset-0 bg-gradient-to-b from-transparent via-white/50 to-transparent w-full h-[20%] animate-scan"></div>
-               
-               {/* Traveling Light Beam Orbit */}
-               <div className="absolute inset-0 pointer-events-none">
-                  <div className="absolute top-0 left-0 w-full h-full animate-orbit-beam">
-                      <div className="w-20 h-20 bg-gradient-to-r from-transparent via-white to-transparent opacity-50 blur-sm transform rotate-45 translate-x-10 translate-y-10"></div>
-                  </div>
-               </div>
-               
-               {/* Growing Content */}
-               <div className="flex flex-col items-center gap-3 relative z-10">
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-pink-400 to-purple-400 animate-pulse shadow-lg flex items-center justify-center">
-                     <span className="text-xl animate-spin-slow">✨</span>
-                  </div>
-                  <div className="h-2 w-24 bg-pink-100 rounded-full overflow-hidden">
-                     <div className="h-full bg-pink-400 w-1/2 animate-progress"></div>
+            {/* Shimmer Effect */}
+            <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/40 to-transparent w-[200%] h-full animate-shimmer-slide"></div>
+            
+            {/* Progress Circular Indicator */}
+            <div className="absolute inset-0 flex items-center justify-center">
+               <div className="relative">
+                  {/* Outer Ring */}
+                  <svg className="w-24 h-24 transform -rotate-90">
+                     <circle cx="48" cy="48" r="40" stroke="rgba(255, 182, 193, 0.2)" strokeWidth="4" fill="transparent" />
+                     <circle 
+                        cx="48" cy="48" r="40" 
+                        stroke="url(#gradient)" 
+                        strokeWidth="4" 
+                        fill="transparent" 
+                        strokeDasharray="251.2" 
+                        strokeDashoffset={251.2 * (1 - progress / 100)} 
+                        strokeLinecap="round"
+                        className="transition-all duration-300 ease-out"
+                     />
+                     <defs>
+                        <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                           <stop offset="0%" stopColor="#FF6B6B" />
+                           <stop offset="100%" stopColor="#FFB4A8" />
+                        </linearGradient>
+                     </defs>
+                  </svg>
+                  
+                  {/* Center Icon */}
+                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+                     <div className="w-16 h-16 rounded-full bg-white/80 flex items-center justify-center shadow-lg animate-pulse-soft">
+                        <Sparkles className="w-8 h-8 text-warm-coral animate-spin-slow-reverse" />
+                     </div>
                   </div>
                </div>
             </div>
 
-            {/* Orbiting Elements */}
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-72 h-72 border border-pink-200/30 rounded-full animate-spin-slow">
-               <div className="absolute -top-1 left-1/2 w-3 h-3 bg-pink-400 rounded-full shadow-[0_0_10px_rgba(255,105,180,0.8)]"></div>
+            {/* Bottom Decor */}
+            <div className="absolute bottom-0 left-0 right-0 h-1/3 bg-gradient-to-t from-pink-100/50 to-transparent"></div>
+         </div>
+
+         {/* Loading Text */}
+         <div className="mt-8 text-center space-y-2">
+            <h3 className="text-xl font-caveat font-bold text-gray-800 animate-fade-in">{loadingText}</h3>
+            <div className="flex items-center justify-center gap-1">
+               <span className="w-2 h-2 bg-warm-coral rounded-full animate-bounce delay-0"></span>
+               <span className="w-2 h-2 bg-warm-coral rounded-full animate-bounce delay-150"></span>
+               <span className="w-2 h-2 bg-warm-coral rounded-full animate-bounce delay-300"></span>
             </div>
          </div>
       </div>
 
-      {/* Rotating Status Text */}
-      <div className="absolute bottom-20 left-0 right-0 text-center px-4">
-         <p className="text-lg font-medium bg-clip-text text-transparent bg-gradient-to-r from-pink-500 to-purple-600 animate-fade-in-out">
-            {loadingText}
-         </p>
-      </div>
-      
       <style jsx>{`
-        @keyframes wisdom-flow {
-          0% { transform: rotate(var(--r)) translateY(-300px); opacity: 0; }
-          50% { opacity: 1; }
-          100% { transform: rotate(var(--r)) translateY(0); opacity: 0; }
-        }
-        @keyframes float-up {
-           0% { transform: translateY(0) rotate(0deg); opacity: 0; }
-           10% { opacity: 0.7; }
-           100% { transform: translateY(-80vh) rotate(360deg); opacity: 0; }
-        }
-        @keyframes scan {
-          0% { top: -20%; }
-          100% { top: 120%; }
-        }
-        @keyframes bounce-gentle {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-10px); }
-        }
-        @keyframes spin-slow {
-          from { transform: translate(-50%, -50%) rotate(0deg); }
-          to { transform: translate(-50%, -50%) rotate(360deg); }
-        }
-        @keyframes progress {
-           0% { width: 0%; left: 0; }
-           50% { width: 100%; left: 0; }
-           100% { width: 0%; left: 100%; }
-        }
-        @keyframes fade-in-out {
-           0%, 100% { opacity: 0.7; transform: scale(0.98); }
-           50% { opacity: 1; transform: scale(1); }
-        }
-        @keyframes orbit-beam {
-           0% { transform: rotate(0deg); }
-           100% { transform: rotate(360deg); }
-        }
+        @keyframes blob { 0% { transform: translate(0px, 0px) scale(1); } 33% { transform: translate(30px, -50px) scale(1.1); } 66% { transform: translate(-20px, 20px) scale(0.9); } 100% { transform: translate(0px, 0px) scale(1); } }
+        @keyframes float-dreamy { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        @keyframes shimmer-slide { 0% { transform: translateX(-150%) skewX(-15deg); } 100% { transform: translateX(150%) skewX(-15deg); } }
+        @keyframes pulse-soft { 0%, 100% { transform: translate(-50%, -50%) scale(1); } 50% { transform: translate(-50%, -50%) scale(1.05); } }
+        @keyframes spin-slow-reverse { from { transform: rotate(360deg); } to { transform: rotate(0deg); } }
       `}</style>
     </div>
   )
 }
 
 const AgeSelector = ({ age, setAge }: { age: number | null, setAge: (age: number | null) => void }) => {
-  const handleSliderChange = (value: number[]) => {
-    setAge(value[0] || null)
-  }
-
+  const handleSliderChange = (value: number[]) => { setAge(value[0] || null) }
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value === '' ? null : parseInt(e.target.value)
-    if (value === null || (!isNaN(value) && value >= 0 && value <= 120)) {
-      setAge(value)
-    }
+    if (value === null || (!isNaN(value) && value >= 0 && value <= 120)) { setAge(value) }
   }
-
   return (
-    <div className="space-y-2">
-      <div className="flex items-center space-x-4">
-        <Slider
-          id="age-slider"
-          min={0}
-          max={120}
-          step={1}
-          value={[age || 0]}
-          onValueChange={handleSliderChange}
-          className="flex-grow custom-slider text-base [&_[role=slider]]:bg-[#FFC0CB] [&_[role=slider]]:border-[#FFC0CB] [&_[role=slider]]:hover:bg-[#FFD1DC] [&_[role=track]]:bg-[#FFC0CB]"
-        />
-        <Input
-          id="age-input"
-          type="number"
-          min={0}
-          max={120}
-          value={age === null ? '' : age}
-          onChange={handleInputChange}
-          className="w-16 text-center focus-visible:ring-[#FFC0CB] focus-visible:border-[#FFC0CB]"
-        />
+    <div className="space-y-4 pt-2">
+      <div className="flex items-center space-x-6">
+        <Slider id="age-slider" min={0} max={120} step={1} value={[age || 0]} onValueChange={handleSliderChange} className="flex-grow custom-slider" />
+        <div className="bg-orange-50 border border-orange-100 rounded-xl px-3 py-2 w-20 text-center font-bold text-gray-700">{age || 0}</div>
       </div>
-      <div className="flex justify-between text-xs text-gray-500">
-        <span>0</span>
-        <span>30</span>
-        <span>60</span>
-        <span>90</span>
-        <span>120</span>
-      </div>
+      <div className="flex justify-between text-xs text-gray-400 font-medium px-1"><span>Newborn</span><span>Adult</span><span>Elderly</span></div>
     </div>
   )
 }
 
-const CustomSelect = ({
-  value,
-  onValueChange,
-  placeholder,
-  options,
-  customValue,
-  onCustomValueChange,
-  required,
-  label
-}: {
-  value: string,
-  onValueChange: (value: string) => void,
-  placeholder: string,
-  options: string[],
-  customValue: string,
-  onCustomValueChange: (value: string) => void,
-  required?: boolean,
-  label: string
-}) => {
+const CustomSelect = ({ value, onValueChange, placeholder, options, customValue, onCustomValueChange, required, label }: any) => {
   const [isCustom, setIsCustom] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    if (isCustom && inputRef.current) {
-      inputRef.current.focus();
-    }
-  }, [isCustom]);
-
-  const handleCustomValueChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    onCustomValueChange(e.target.value);
-    onValueChange(e.target.value);
-  };
-
+  useEffect(() => { if (isCustom && inputRef.current) inputRef.current.focus(); }, [isCustom]);
   return (
     <div className="relative">
-      <div className={cn(
-        "transition-all duration-300",
-        isCustom ? "hidden" : "block"
-      )}>
-        <Select
-          value={isCustom ? "" : value}
-          onValueChange={(val) => {
-            if (val === "custom") {
-              setIsCustom(true);
-            } else {
-              onValueChange(val);
-            }
-          }}
-          required={required && !isCustom}
-        >
-          <SelectTrigger className="w-full">
-            <SelectValue placeholder={placeholder} />
-          </SelectTrigger>
+      {!isCustom ? (
+        <Select value={value} onValueChange={(val) => { if (val === "custom") setIsCustom(true); else onValueChange(val); }} required={required && !isCustom}>
+          <SelectTrigger className="w-full h-12 bg-white/50 border-orange-100/50 backdrop-blur-sm focus:ring-primary/20"><SelectValue placeholder={placeholder} /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="custom" className="text-[#b19bff]">✨ Custom </SelectItem>
-            {options.map((option) => (
-              <SelectItem key={option} value={option}>{option}</SelectItem>
-            ))}
+            <SelectItem value="custom" className="text-primary font-medium">✨ Custom {label}</SelectItem>
+            {options.map((option: string) => (<SelectItem key={option} value={option}>{option}</SelectItem>))}
           </SelectContent>
         </Select>
-      </div>
-
-      <div className={cn(
-        "transition-all duration-300",
-        !isCustom ? "hidden" : "block"
-      )}>
-        <div className="relative">
-          <Input
-            ref={inputRef}
-            value={customValue}
-            onChange={handleCustomValueChange}
-            placeholder={`Enter custom ${label.toLowerCase()}`}
-            className="pr-10 border-[#b19bff]"
-            required={required && isCustom}
-          />
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            className="absolute right-1.5 top-1/2 -translate-y-1/2 h-7 w-7 p-0 hover:bg-gray-100 rounded-full"
-            onClick={() => {
-              setIsCustom(false);
-              onCustomValueChange("");
-              onValueChange("");
-            }}
-          >
-            ×
-          </Button>
+      ) : (
+        <div className="relative animate-in fade-in zoom-in duration-200">
+          <Input ref={inputRef} value={customValue} onChange={(e) => { onCustomValueChange(e.target.value); onValueChange(e.target.value); }} placeholder={`Enter custom ${label.toLowerCase()}`} className="pr-10 border-primary focus-visible:ring-primary h-12 bg-white" required={required} />
+          <Button type="button" variant="ghost" size="sm" className="absolute right-1.5 top-1/2 -translate-y-1/2 h-8 w-8 p-0 hover:bg-red-50 text-red-400 hover:text-red-500 rounded-full" onClick={() => { setIsCustom(false); onCustomValueChange(""); onValueChange(""); }}>×</Button>
         </div>
-      </div>
+      )}
     </div>
   );
 };
@@ -320,10 +184,8 @@ export default function CardGenerator({
   initialImgUrl: string,
   cardConfig: CardConfig
 }) {
-  // Persist user inputs across OAuth redirects
   const AUTH_DRAFT_KEY = 'mewtrucard.authDraft.v1'
   const { data: session, status } = useSession()
-  const [usageCount, setUsageCount] = useState<number>(0)
   const [currentCardType, setCurrentCardType] = useState<CardType>(wishCardType)
   const [formData, setFormData] = useState<Record<string, any>>({})
   const [imageCount, setImageCount] = useState<number>(1)
@@ -332,19 +194,15 @@ export default function CardGenerator({
   const [submited, setSubmited] = useState(false)
   const [customValues, setCustomValues] = useState<Record<string, string>>({})
   const [selectedSize, setSelectedSize] = useState('portrait')
-  // Unified input lives in the main form as `message`
-  // Default to Static Image (Free_Image) instead of Animated SVG
   const [selectedModel, setSelectedModel] = useState<ModelConfig>(
     modelConfigs.find(m => m.id === 'Free_Image') || modelConfigs[0]
   )
   const [showModelSelector, setShowModelSelector] = useState(false)
-  // Simplified format + style selection
   const [selectedFormat, setSelectedFormat] = useState<OutputFormat>('image')
   const [selectedStyleId, setSelectedStyleId] = useState<string | null>(null)
   const [selectedTier, setSelectedTier] = useState<'base' | 'pro'>('base')
   const [styleDialogOpen, setStyleDialogOpen] = useState(false)
   const [styleSearch, setStyleSearch] = useState('')
-  // Reference image upload state
   const [uploadedRefUrls, setUploadedRefUrls] = useState<string[]>([])
   const [isRefUploading, setIsRefUploading] = useState(false)
   const [refError, setRefError] = useState<string | null>(null)
@@ -353,103 +211,17 @@ export default function CardGenerator({
   const [isPremiumModalOpen, setIsPremiumModalOpen] = useState(false)
   const [isPremiumUser, setIsPremiumUser] = useState(false)
   const [isPrivateCard, setIsPrivateCard] = useState(false)
-  const [errorToast, setErrorToast] = useState<{
-    title: string;
-    message: string;
-    type: 'error' | 'warning' | 'info';
-  } | null>(null);
+  const [errorToast, setErrorToast] = useState<{title: string; message: string; type: 'error' | 'warning' | 'info'} | null>(null);
   const [isVideoMode, setIsVideoMode] = useState(false);
-
-  // Credits system state
-  const [creditsStatus, setCreditsStatus] = useState<{
-    isFirstDay: boolean;
-    isPremium: boolean;
-    availableCredits: number | 'unlimited';
-    hasClaimed: boolean;
-    message: string;
-  } | null>(null);
+  const [creditsStatus, setCreditsStatus] = useState<any | null>(null);
   const [isClaimingCredits, setIsClaimingCredits] = useState(false);
-
-  // Pick default model for a given output format aligning with product rules
-  const pickDefaultModelForFormat = (fmt: OutputFormat): ModelConfig => {
-    if (fmt === 'video') {
-      // Video is Premium-only by product rule; prefer fast option
-      return modelConfigs.find(m => m.format === 'video' && m.tier === 'Premium' && m.id.includes('Fast'))
-        || modelConfigs.find(m => m.format === 'video' && m.tier === 'Premium')
-        || modelConfigs.find(m => m.format === 'video')
-        || modelConfigs[0];
-    }
-    if (fmt === 'image') {
-      return modelConfigs.find(m => m.format === 'image' && m.tier === 'Free')
-        || modelConfigs.find(m => m.format === 'image')
-        || modelConfigs[0];
-    }
-    // svg
-    return modelConfigs.find(m => m.format === 'svg' && m.tier === 'Free')
-      || modelConfigs.find(m => m.format === 'svg')
-      || modelConfigs[0];
-  };
-
-  // Return base/pro choices per format using existing modelConfigs
-  const getTierOptionsForFormat = (fmt: OutputFormat): { base: ModelConfig; pro?: ModelConfig } => {
-    if (fmt === 'svg') {
-      const base = modelConfigs.find(m => m.id === 'Free_SVG') || pickDefaultModelForFormat('svg');
-      const pro = modelConfigs.find(m => m.id === 'Premium_SVG');
-      return { base, pro };
-    }
-    if (fmt === 'image') {
-      const base = modelConfigs.find(m => m.id === 'Free_Image') || pickDefaultModelForFormat('image');
-      const pro = modelConfigs.find(m => m.id === 'Premium_Image');
-      return { base, pro };
-    }
-    // video
-    const base = modelConfigs.find(m => m.id === 'Premium_Video_Fast') || pickDefaultModelForFormat('video');
-    const pro = modelConfigs.find(m => m.id === 'Premium_Video_Pro');
-    return { base, pro };
-  };
-
-  // Initialize format/model/style sensible defaults
-  useEffect(() => {
-    // Ensure selectedFormat follows current model on mount
-    setSelectedFormat(prev => selectedModel?.format || prev);
-    // Note: We deliberately do NOT select a default style here anymore.
-    // We want "Auto" (null) to be the default.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // React to format/tier change by swapping the model automatically
-  useEffect(() => {
-    if (!selectedFormat) return;
-    const tiers = getTierOptionsForFormat(selectedFormat);
-    const nextModel = selectedTier === 'pro' && tiers.pro ? tiers.pro : tiers.base;
-    setSelectedModel(nextModel);
-    // If current style not compatible, reset to null ("Auto")
-    if (selectedFormat === 'svg') {
-      // Animated has no style selection per product rule
-      setSelectedStyleId(null);
-    } else if (selectedStyleId) {
-      const style = stylePresets.find(s => s.id === selectedStyleId);
-      if (style && !style.formats.includes(selectedFormat)) {
-        // Incompatible style for this format, reset to Auto
-        setSelectedStyleId(null);
-      }
-    }
-    // Note: We no longer force a default style if selectedStyleId is null.
-    // Null means "Auto", which is a valid state now.
-  }, [selectedFormat, selectedTier]);
-
-  // Add ref to track if we're waiting for authentication
   const pendingAuthRef = useRef<boolean>(false)
-  // Add state to store form data before authentication
-  const [savedFormData, setSavedFormData] = useState<{
-    formData: Record<string, any>,
-    customValues: Record<string, string>,
-    selectedSize: string,
-    selectedModel: ModelConfig,
-    isPrivate: boolean
-  } | null>(null)
+  const [savedFormData, setSavedFormData] = useState<any | null>(null)
+  
+  // Wizard State
+  const [currentStep, setCurrentStep] = useState(1);
+  const TOTAL_STEPS = 4;
 
-  // Use the card generation hook
   const {
     generateCards,
     imageStates,
@@ -463,247 +235,82 @@ export default function CardGenerator({
     initializeImageStates
   } = useCardGeneration()
 
-  // Combine errors from both sources
   const error = generationError || null;
   const isLoading = globalLoading;
 
-  // Card type selectable options (include current type + common types)
   const cardTypeOptions = React.useMemo(() => {
     const defaults = ['birthday','anniversary','valentine','sorry','thank-you','congratulations','love','get-well','graduation','wedding','holiday','baby'];
     const withCurrent = [wishCardType, ...defaults].filter(Boolean) as string[];
     return Array.from(new Set(withCurrent));
   }, [wishCardType]);
 
+  // Existing logic for auth, effects, etc.
   useEffect(() => {
     setCurrentCardType(wishCardType)
-    // Reset form data and set default values
     const initialFormData: Record<string, any> = {};
-
-    // Initialize with the correct default values based on card config
     cardConfig.fields.forEach(field => {
       if (field.type === 'select' && !field.optional && field.defaultValue) {
         initialFormData[field.name] = field.defaultValue;
       }
     });
-
     setFormData(initialFormData);
-
-    // Set default image URL based on whether it's a system card
     const defaultImgUrl = cardConfig.isSystem ? `https://store.celeprime.com/${wishCardType}.svg` : sampleCard;
-
-    // Initialize image states with the default URL
     initializeImageStates(imageCount, defaultImgUrl);
-
   }, [wishCardType, cardConfig, sampleCard, imageCount, initializeImageStates]);
 
-  // Reference prompt handled on backend; no prompt UI here
-
-  // Add effect to watch for auth status changes
   useEffect(() => {
-    // If we were waiting for auth and now the user is authenticated
     if (pendingAuthRef.current && session && savedFormData) {
       pendingAuthRef.current = false;
-      // Restore saved form data
       setFormData(savedFormData.formData);
       setCustomValues(savedFormData.customValues);
       setSelectedSize(savedFormData.selectedSize);
-      if (savedFormData.selectedModel) {
-        setSelectedModel(savedFormData.selectedModel);
-      }
+      if (savedFormData.selectedModel) setSelectedModel(savedFormData.selectedModel);
       setIsPrivateCard(savedFormData.isPrivate ?? false);
-
-      // Close the auth dialog
       setShowAuthDialog(false);
-
-      // Optionally, trigger card generation automatically
-      setTimeout(() => {
-        handleGenerateCard();
-      }, 500);
+      setTimeout(() => handleGenerateCard(), 500);
     }
   }, [session, savedFormData, setShowAuthDialog]);
 
-  // Restore draft after OAuth redirect (and optionally auto-generate)
   useEffect(() => {
-    try {
-      const raw = typeof window !== 'undefined' ? window.localStorage.getItem(AUTH_DRAFT_KEY) : null
-      if (!raw) return
-      const draft = JSON.parse(raw || '{}') as {
-        shouldAutoGenerate?: boolean;
-        formData?: Record<string, any>;
-        customValues?: Record<string, string>;
-        selectedSize?: string;
-        selectedModelId?: string;
-        selectedFormat?: OutputFormat;
-        cardType?: string;
-        isPrivateCard?: boolean;
-      }
-
-      if (draft.formData) setFormData(draft.formData)
-      if (draft.customValues) setCustomValues(draft.customValues)
-      if (draft.selectedSize) setSelectedSize(draft.selectedSize)
-      if (draft.cardType) setCurrentCardType(draft.cardType as CardType)
-      if (draft.selectedModelId) {
-        const m = modelConfigs.find(m => m.id === draft.selectedModelId)
-        if (m) setSelectedModel(m)
-      }
-      if (draft.selectedFormat) setSelectedFormat(draft.selectedFormat)
-      if (typeof draft.isPrivateCard === 'boolean') {
-        setIsPrivateCard(draft.isPrivateCard)
-      }
-
-      // If logged in and flagged, auto-generate then clear
-      if (session && draft.shouldAutoGenerate) {
-        window.localStorage.removeItem(AUTH_DRAFT_KEY)
-        setTimeout(() => handleGenerateCard(), 400)
-      }
-    } catch (e) {
-      // Ignore parse errors
-    }
-  }, [session])
-
-  // Add effect to set premium status when session changes
-  useEffect(() => {
-    if (session?.user) {
-      setIsPremiumUser((session as any).user?.plan === 'PREMIUM');
-    } else {
-      setIsPremiumUser(false);
-    }
+    if (session?.user) setIsPremiumUser((session as any).user?.plan === 'PREMIUM');
+    else setIsPremiumUser(false);
   }, [session]);
 
-  // Fetch credits status when session changes
-  useEffect(() => {
-    const fetchCreditsStatus = async () => {
-      if (!session?.user) {
-        setCreditsStatus(null);
-        return;
-      }
-      try {
-        const res = await fetch('/api/claim-credits');
-        if (res.ok) {
-          const data = await res.json();
-          setCreditsStatus({
-            isFirstDay: data.isFirstDay,
-            isPremium: data.isPremium,
-            availableCredits: data.availableCredits,
-            hasClaimed: data.hasClaimed,
-            message: data.message,
-          });
-        }
-      } catch (e) {
-        console.error('Failed to fetch credits status:', e);
-      }
-    };
-    fetchCreditsStatus();
-  }, [session]);
+  const pickDefaultModelForFormat = (fmt: OutputFormat): ModelConfig => {
+    if (fmt === 'video') return modelConfigs.find(m => m.format === 'video' && m.tier === 'Premium' && m.id.includes('Fast')) || modelConfigs[0];
+    if (fmt === 'image') return modelConfigs.find(m => m.format === 'image' && m.tier === 'Free') || modelConfigs[0];
+    return modelConfigs.find(m => m.format === 'svg' && m.tier === 'Free') || modelConfigs[0];
+  };
 
-  // Force SVG format for first-day FREE users
+  const getTierOptionsForFormat = (fmt: OutputFormat) => {
+    if (fmt === 'svg') return { base: modelConfigs.find(m => m.id === 'Free_SVG') || pickDefaultModelForFormat('svg'), pro: modelConfigs.find(m => m.id === 'Premium_SVG') };
+    if (fmt === 'image') return { base: modelConfigs.find(m => m.id === 'Free_Image') || pickDefaultModelForFormat('image'), pro: modelConfigs.find(m => m.id === 'Premium_Image') };
+    return { base: modelConfigs.find(m => m.id === 'Premium_Video_Fast') || pickDefaultModelForFormat('video'), pro: modelConfigs.find(m => m.id === 'Premium_Video_Pro') };
+  };
+
+  useEffect(() => { setSelectedFormat(prev => selectedModel?.format || prev); }, []);
+
   useEffect(() => {
-    if (creditsStatus?.isFirstDay && !creditsStatus?.isPremium && selectedFormat !== 'svg') {
-      setSelectedFormat('svg');
+    if (!selectedFormat) return;
+    const tiers = getTierOptionsForFormat(selectedFormat);
+    const nextModel = selectedTier === 'pro' && tiers.pro ? tiers.pro : tiers.base;
+    setSelectedModel(nextModel);
+    if (selectedFormat === 'svg') setSelectedStyleId(null);
+    else if (selectedStyleId) {
+      const style = stylePresets.find(s => s.id === selectedStyleId);
+      if (style && !style.formats.includes(selectedFormat)) setSelectedStyleId(null);
     }
-  }, [creditsStatus, selectedFormat]);
-
-  useEffect(() => {
-    if (!isPremiumUser && isPrivateCard) {
-      setIsPrivateCard(false);
-    }
-  }, [isPremiumUser, isPrivateCard]);
-
-  // Sync video mode with selected model format
-  useEffect(() => {
-    const currentFormat = selectedModel.format;
-    
-    // Update video mode based on selected model format
-    if (currentFormat === 'video' && !isVideoMode) {
-      setIsVideoMode(true);
-    } else if (currentFormat !== 'video' && isVideoMode) {
-      setIsVideoMode(false);
-    }
-  }, [selectedModel.format, isVideoMode]);
-
-  // Initialize AdSense ads when they are rendered
-  useEffect(() => {
-    if (!isPremiumUser && globalLoading) {
-      // 等待一小段时间确保广告元素已渲染
-      const timer = setTimeout(() => {
-        try {
-          ((window as any).adsbygoogle = (window as any).adsbygoogle || []).push({});
-        } catch (e) {
-          console.log('AdSense initialization:', e);
-        }
-      }, 100);
-      
-      return () => clearTimeout(timer);
-    }
-  }, [isPremiumUser, globalLoading]);
-
-  useEffect(() => {
-    fetchSvgContent(sampleCard)
-  }, [])
+  }, [selectedFormat, selectedTier]);
 
   const handleInputChange = (name: string, value: string | number) => {
     setFormData(prev => ({ ...prev, [name]: value }))
   }
 
-  const handleImageCountChange = (count: number) => {
-    setImageCount(count);
-
-    // Update image-related arrays based on the new count
-    // This is needed to properly initialize the UI before the first generation
-    const defaultImgUrl = cardConfig.isSystem
-      ? `https://store.celeprime.com/${wishCardType}.svg`
-      : sampleCard;
-
-    // Re-initialize image states with the new count
-    initializeImageStates(count, defaultImgUrl);
-  };
-
   const handleGenerateCard = async () => {
-    // Validate required fields for selected format
-    const requiredFields = cardConfig.fields.filter((field) => {
-      const fmts = (field as any).formats as OutputFormat[] | undefined;
-      const applies = !fmts || fmts.includes(selectedFormat);
-      return applies && !field.optional;
-    });
-    const missingFields = requiredFields.filter(field => !formData[field.name]);
-
-    if (missingFields.length > 0) {
-      setErrorToast({
-        title: 'Required Fields Missing',
-        message: `Please fill in the following required fields: ${missingFields.map(f => f.label || f.placeholder).join(', ')}`,
-        type: 'error'
-      });
-      return;
-    }
-
-    // If user not authenticated, save form data and show auth dialog
     if (!session) {
-      setSavedFormData({
-        formData: { ...formData },
-        customValues: { ...customValues },
-        selectedSize,
-        selectedModel,
-        isPrivate: isPrivateCard
-      });
-      // Persist to localStorage so a redirect won't lose inputs
-      try {
-        const payload = {
-          shouldAutoGenerate: true,
-          formData: { ...formData },
-          customValues: { ...customValues },
-          selectedSize,
-          selectedModelId: selectedModel.id,
-          selectedFormat,
-          cardType: currentCardType,
-          ts: Date.now(),
-          isPrivateCard
-        }
-        if (typeof window !== 'undefined') {
-          window.localStorage.setItem(AUTH_DRAFT_KEY, JSON.stringify(payload))
-        }
-      } catch {}
+      setSavedFormData({ formData: { ...formData }, customValues: { ...customValues }, selectedSize, selectedModel, isPrivate: isPrivateCard });
       pendingAuthRef.current = true;
-      setIsPremiumUser(false) // User is not logged in, so definitely not premium
+      setIsPremiumUser(false);
       setShowAuthDialog(true);
       return;
     }
@@ -711,9 +318,9 @@ export default function CardGenerator({
     const options = {
       cardType: currentCardType,
       size: selectedSize,
-      modelId: selectedModel.id, // 只传递模型ID
+      modelId: selectedModel.id,
       formData: { ...formData, isPublic: !isPrivateCard },
-      imageCount,
+      imageCount: 1, // Force 1 for simplicity in wizard
       referenceImageUrls: uploadedRefUrls,
       styleId: selectedFormat === 'image' ? (selectedStyleId || undefined) : undefined,
       outputFormat: selectedFormat
@@ -721,112 +328,27 @@ export default function CardGenerator({
 
     try {
       const result = await generateCards(options);
-
-      if (result.success) {
-        try { if (typeof window !== 'undefined') window.localStorage.removeItem(AUTH_DRAFT_KEY) } catch {}
-        setSubmited(true);
-      } else if (result.error === 'rate_limit') {
-        setErrorToast({
-          title: 'Daily Limit Reached',
-          message: 'Free users can generate 1 card per day. Please try again tomorrow or explore our Card Gallery.',
-          type: 'warning'
-        });
-      } else if (result.error === 'auth') {
-        setErrorToast({
-          title: 'Sign In Required',
-          message: 'Please sign in to continue generating cards.',
-          type: 'info'
-        });
-      } else {
-        setErrorToast({
-          title: 'Generation Failed',
-          message: result.error || 'An error occurred while generating your card. Please try again.',
-          type: 'error'
-        });
-      }
+      if (result.success) setSubmited(true);
+      else if (result.error === 'rate_limit') setErrorToast({ title: 'Daily Limit Reached', message: 'Free users can generate 1 card per day.', type: 'warning' });
+      else setErrorToast({ title: 'Generation Failed', message: result.error || 'Error generating card', type: 'error' });
     } catch (err) {
-      setErrorToast({
-        title: 'System Error',
-        message: 'Sorry, something went wrong. Please try again later.',
-        type: 'error'
-      });
+      setErrorToast({ title: 'System Error', message: 'Something went wrong', type: 'error' });
     }
   };
 
-  const handlePrivateToggle = (checked: boolean) => {
-    if (checked && !isPremiumUser) {
-      setIsPremiumModalOpen(true)
-      return
-    }
-    setIsPrivateCard(checked)
-  }
-
-  const handleClaimCredits = async () => {
-    if (isClaimingCredits) return;
-    setIsClaimingCredits(true);
-    try {
-      const res = await fetch('/api/claim-credits', { method: 'POST' });
-      const data = await res.json();
-      if (data.success) {
-        setCreditsStatus(prev => prev ? {
-          ...prev,
-          hasClaimed: true,
-          availableCredits: data.availableCredits,
-          message: data.message,
-        } : null);
-        setErrorToast({
-          title: '🎉 Credits Claimed!',
-          message: data.message,
-          type: 'info'
-        });
-      } else {
-        setErrorToast({
-          title: 'Could not claim credits',
-          message: data.message || 'Please try again.',
-          type: 'warning'
-        });
-      }
-    } catch (e) {
-      setErrorToast({
-        title: 'Error',
-        message: 'Failed to claim credits. Please try again.',
-        type: 'error'
-      });
-    } finally {
-      setIsClaimingCredits(false);
-    }
-  }
-
   const handleLogin = async () => {
     try {
-      setIsAuthLoading(true)
-      // Ensure latest draft is saved before redirecting to Google
-      try {
-        const payload = {
-          shouldAutoGenerate: true,
-          formData: { ...formData },
-          customValues: { ...customValues },
-          selectedSize,
-          selectedModelId: selectedModel.id,
-          selectedFormat,
-          cardType: currentCardType,
-          ts: Date.now(),
-          isPrivateCard
-        }
-        if (typeof window !== 'undefined') {
-          window.localStorage.setItem(AUTH_DRAFT_KEY, JSON.stringify(payload))
-        }
-      } catch {}
-      await signIn('google', { callbackUrl: window.location.href })
-    } catch (error) {
-      console.error('Login failed:', error)
-      setIsAuthLoading(false)
-    }
+      setIsAuthLoading(true);
+      await signIn('google', { callbackUrl: window.location.href });
+    } catch (error) { setIsAuthLoading(false); }
   }
 
   const renderField = (field: CardConfig['fields'][0]) => {
     const isRequired = !field.optional;
-    const labelClass = `${isRequired ? 'after:content-["*"] after:ml-0.5 after:text-red-500' : ''}`;
+    const labelClass = `${isRequired ? 'after:content-["*"] after:ml-0.5 after:text-primary font-medium text-gray-700' : 'font-medium text-gray-700'}`;
+    
+    // Filter out fields not relevant to current format
+    if (Array.isArray((field as any).formats) && !(field as any).formats.includes(selectedFormat)) return null;
 
     const inputComponent = (() => {
       switch (field.type) {
@@ -839,7 +361,7 @@ export default function CardGenerator({
               value={formData[field.name] || ''}
               onChange={(e) => handleInputChange(field.name, e.target.value)}
               placeholder={field.placeholder}
-              className="text-base"
+              className="text-base h-12 bg-white/50 border-orange-100/50 backdrop-blur-sm focus:ring-primary/20"
               required={isRequired}
             />
           );
@@ -849,1328 +371,319 @@ export default function CardGenerator({
               id={field.name}
               value={formData[field.name] || ''}
               onChange={(e) => handleInputChange(field.name, e.target.value)}
-              placeholder={field.name === 'message' ? (field.placeholder || 'Enter your message and any design requirements') : field.placeholder}
-              rows={field.name === 'message' ? 3 : 2}
-              className="resize-none text-base"
+              placeholder={field.placeholder}
+              rows={3}
+              className="resize-none text-base bg-white/50 border-orange-100/50 backdrop-blur-sm focus:ring-primary/20 min-h-[100px]"
               required={isRequired}
-              onKeyPress={(e) => {
-                if (field.name === 'message' && e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault();
-                  handleGenerateCard();
-                }
-              }}
             />
           );
         case 'select':
           return (
             <CustomSelect
               value={formData[field.name] || ''}
-              onValueChange={(value) => handleInputChange(field.name, value)}
+              onValueChange={(value: string) => handleInputChange(field.name, value)}
               customValue={customValues[field.name] || ''}
-              onCustomValueChange={(value) => {
-                setCustomValues(prev => ({ ...prev, [field.name]: value }));
-              }}
-              placeholder={(field.placeholder || `Select ${field.label}`).replace('(optional)', '')}
+              onCustomValueChange={(value: string) => setCustomValues(prev => ({ ...prev, [field.name]: value }))}
+              placeholder={field.placeholder?.replace('(optional)', '')}
               options={field.options || []}
               required={isRequired}
               label={field.label}
             />
           );
         case 'age':
-          return (
-            <AgeSelector
-              age={formData[field.name] || null}
-              setAge={(value: number | null) => handleInputChange(field.name, value || '')}
-            />
-          );
-        default:
-          return null;
+          return <AgeSelector age={formData[field.name] || null} setAge={(value) => handleInputChange(field.name, value || '')} />;
+        default: return null;
       }
     })();
 
     return (
-      <div key={field.name} className="space-y-2">
+      <div key={field.name} className="space-y-2 animate-in slide-in-from-bottom-2 duration-300">
         {field.label && <Label htmlFor={field.name} className={labelClass}>{field.label}</Label>}
         {inputComponent}
       </div>
     );
   }
 
-  // Add error toast component
-  const ErrorToast = () => {
-    if (!errorToast) return null;
+  const nextStep = () => setCurrentStep(prev => Math.min(prev + 1, TOTAL_STEPS));
+  const prevStep = () => setCurrentStep(prev => Math.max(prev - 1, 1));
 
-    const icons = {
-      error: <AlertCircle className="h-5 w-5 text-red-500" />,
-      warning: <AlertCircle className="h-5 w-5 text-yellow-500" />,
-      info: <Info className="h-5 w-5 text-blue-500" />
-    };
-
-    const colors = {
-      error: 'bg-red-50 border-red-200',
-      warning: 'bg-yellow-50 border-yellow-200',
-      info: 'bg-blue-50 border-blue-200'
-    };
-
-    return (
-      <div className={cn(
-        "fixed top-4 right-4 z-50 w-96 p-4 rounded-lg border shadow-lg",
-        colors[errorToast.type]
-      )}>
-        <div className="flex items-start space-x-3">
-          {icons[errorToast.type]}
-          <div className="flex-1">
-            <h3 className="font-medium text-gray-900">{errorToast.title}</h3>
-            <p className="mt-1 text-sm text-gray-600">{errorToast.message}</p>
-          </div>
-          <button
-            onClick={() => setErrorToast(null)}
-            className="text-gray-400 hover:text-gray-500"
-          >
-            <span className="sr-only">Close</span>
-            <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-            </svg>
-          </button>
-        </div>
-      </div>
-    );
-  };
-
-  // Add auto-dismiss effect for error toast
-  useEffect(() => {
-    if (errorToast) {
-      const timer = setTimeout(() => {
-        setErrorToast(null);
-      }, 5000);
-      return () => clearTimeout(timer);
-    }
-  }, [errorToast]);
-
-  // No floating input; unified input is in main form
-
-  if (!cardConfig) {
-    return <div>Invalid card type</div>
-  }
+  if (!cardConfig) return <div>Invalid card type</div>
 
   return (
     <>
-      <ErrorToast />
-      {/* Style selection dialog */}
-      <Dialog open={styleDialogOpen} onOpenChange={setStyleDialogOpen}>
-        <DialogContent className="sm:max-w-[900px]">
-          <DialogHeader>
-            <DialogTitle>Select Style</DialogTitle>
-            <DialogDescription>Choose a visual style preset for {selectedFormat === 'image' ? 'Static' : 'Video'}.</DialogDescription>
-          </DialogHeader>
-          <div className="flex items-center justify-between mb-2">
-            <div className="text-xs text-gray-500">{getPresetsForFormat(selectedFormat).length} styles</div>
-            <Input
-              placeholder="Search style"
-              value={styleSearch}
-              onChange={(e) => setStyleSearch(e.target.value)}
-              className="w-60"
-            />
+      <div className="min-h-screen bg-warm-cream pb-24 lg:pb-0">
+        <GlassCard className="max-w-4xl mx-auto my-8 p-0 overflow-hidden shadow-2xl bg-white/80 border-white/60">
+          
+          {/* Progress Header */}
+          <div className="bg-white/50 border-b border-orange-100/50 p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h1 className="text-2xl font-caveat font-bold text-gray-800">
+                Create Magical Card <span className="text-base font-sans font-normal text-gray-500 ml-2">Step {currentStep} of {TOTAL_STEPS}</span>
+              </h1>
+              <div className="text-xs font-bold px-2 py-1 bg-primary/10 text-primary rounded-full uppercase tracking-wider">
+                {currentStep === 1 ? 'Format' : currentStep === 2 ? 'Details' : currentStep === 3 ? 'Message' : 'Magic'}
+              </div>
+            </div>
+            <div className="h-2 w-full bg-gray-100 rounded-full overflow-hidden">
+               <div className="h-full bg-gradient-to-r from-primary to-warm-coral transition-all duration-500 ease-out" style={{ width: `${(currentStep / TOTAL_STEPS) * 100}%` }}></div>
+            </div>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 max-h-[75vh] overflow-y-auto p-1 pb-16">
-            {/* Auto option */}
-            <button
-              type="button"
-              onClick={() => { setSelectedStyleId(null); setStyleDialogOpen(false); }}
-              className={cn('relative rounded-lg border overflow-hidden text-left group transition-all flex flex-col',
-                !selectedStyleId ? 'border-[#b19bff] ring-2 ring-[#b19bff]' : 'border-gray-200 hover:border-[#b19bff]')}
-            >
-              <div className="relative w-full aspect-[3/4] overflow-hidden bg-gradient-to-br from-purple-50 to-pink-50 flex items-center justify-center">
-                <span className="text-sm text-gray-700">Auto</span>
-              </div>
-              <div className="p-3 flex-1 flex flex-col justify-between">
-                <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <div className="text-sm font-medium text-gray-800 truncate">Automatic</div>
-                    <div className="text-[10px] px-1.5 py-0.5 rounded-full bg-purple-50 text-purple-700 border border-purple-200 shrink-0 ml-1">
-                      0 pts
-                    </div>
-                  </div>
-                  <div className="text-[11px] text-gray-500 truncate">Balanced</div>
-                </div>
-              </div>
-              {!selectedStyleId && (<div className="absolute inset-0 ring-2 ring-[#b19bff] pointer-events-none" />)}
-            </button>
-            {getPresetsForFormat(selectedFormat)
-              .filter(p => !styleSearch || p.name.toLowerCase().includes(styleSearch.toLowerCase()) || p.category.toLowerCase().includes(styleSearch.toLowerCase()))
-              .map(preset => {
-                const active = selectedStyleId === preset.id;
-                return (
-                  <button
-                    key={preset.id}
-                    type="button"
-                    onClick={() => { setSelectedStyleId(preset.id); setStyleDialogOpen(false); }}
-                    className={cn('relative rounded-lg border overflow-hidden text-left group transition-all flex flex-col',
-                      active ? 'border-[#b19bff] ring-2 ring-[#b19bff]' : 'border-gray-200 hover:border-[#b19bff]')}
-                  >
-                    <div className="relative w-full aspect-[3/4] overflow-hidden bg-gray-100">
-                      {preset.sample ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={preset.sample} alt={preset.name} className="absolute inset-0 w-full h-full object-cover" />
-                      ) : (
-                        <div className="absolute inset-0 w-full h-full bg-gradient-to-br from-purple-50 to-pink-50" />
-                      )}
-                    </div>
-                    <div className="p-3 flex-1 flex flex-col justify-between">
-                      <div>
-                        <div className="flex items-center justify-between mb-1">
-                          <div className="text-sm font-medium text-gray-800 truncate" title={preset.name}>{preset.name}</div>
-                          <div className="text-[10px] px-1.5 py-0.5 rounded-full bg-purple-50 text-purple-700 border border-purple-200 shrink-0 ml-1">
-                            {preset.cost} pts
-                          </div>
-                        </div>
-                        <div className="text-[11px] text-gray-500 truncate">{preset.category}</div>
-                      </div>
-                    </div>
-                    {active && (<div className="absolute inset-0 ring-2 ring-[#b19bff] pointer-events-none" />)}
-                  </button>
-                )
-              })}
-          </div>
-        </DialogContent>
-      </Dialog>
-      <main className="mx-auto pb-32">
-        {error && (
-          <Alert variant="destructive" className="mb-4">
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        )}
-        <div className="flex flex-col lg:flex-row justify-center items-center gap-8 lg:gap-16">
-          <Card className="p-4 sm:p-6 bg-white border border-[#FFC0CB] shadow-md w-full max-w-md relative">
-            <CardContent className="space-y-4">
-              {/* Card Type Selector */}
-              <div className="space-y-2">
-                <Label htmlFor="card-type" className="flex justify-between items-center">
-                  <span>Card Type</span>
-                </Label>
-                <CustomSelect
-                  value={currentCardType}
-                  onValueChange={(value) => setCurrentCardType(value as CardType)}
-                  customValue={customValues['cardType'] || ''}
-                  onCustomValueChange={(value) => {
-                    setCustomValues(prev => ({ ...prev, cardType: value }));
-                    setCurrentCardType((value || '') as CardType);
-                  }}
-                  placeholder="Select card type"
-                  options={cardTypeOptions}
-                  label="Card Type"
-                />
-              </div>
+
+          <div className="flex flex-col lg:flex-row min-h-[600px]">
+            {/* Left/Top Panel: Inputs */}
+            <div className="w-full lg:w-1/2 p-6 lg:p-8 space-y-6 overflow-y-auto max-h-[70vh] lg:max-h-[800px]">
               
-              {/* First: To / Relationship */}
-              {(() => {
-                const toField = cardConfig.fields.find((f) => f.name === 'to' && !Array.isArray((f as any).formats));
-                const relField = cardConfig.fields.find((f) => f.name === 'relationship' && !Array.isArray((f as any).formats));
-                const firstField = toField || relField;
-                return firstField ? (
-                  <div key={(firstField as any).name + '-top'}>{renderField(firstField)}</div>
-                ) : null;
-              })()}
+              {/* Step 1: Format & Type */}
+              {currentStep === 1 && (
+                <div className="space-y-6 animate-in slide-in-from-right-4 duration-300">
+                   <div className="space-y-2">
+                     <Label className="text-lg font-bold text-gray-800">Choose Format</Label>
+                     <Tabs value={selectedFormat} onValueChange={(v) => setSelectedFormat(v as OutputFormat)} className="w-full">
+                       <TabsList className="grid w-full grid-cols-3 h-14 bg-orange-50/50 p-1 rounded-xl">
+                         <TabsTrigger value="svg" className="rounded-lg h-12 data-[state=active]:bg-white data-[state=active]:shadow-warm">Animated</TabsTrigger>
+                         <TabsTrigger value="image" className="rounded-lg h-12 data-[state=active]:bg-white data-[state=active]:shadow-warm">Static</TabsTrigger>
+                         <TabsTrigger value="video" className="rounded-lg h-12 data-[state=active]:bg-white data-[state=active]:shadow-warm">Video</TabsTrigger>
+                       </TabsList>
+                     </Tabs>
+                   </div>
+                   
+                   <div className="space-y-2">
+                      <Label className="text-lg font-bold text-gray-800">Card Occasion</Label>
+                      <CustomSelect
+                        value={currentCardType}
+                        onValueChange={(val: string) => setCurrentCardType(val as CardType)}
+                        customValue={customValues['cardType'] || ''}
+                        onCustomValueChange={(val: string) => setCustomValues(prev=>({...prev, cardType: val}))}
+                        options={cardTypeOptions}
+                        placeholder="Select occasion"
+                        label="Occasion"
+                      />
+                   </div>
 
-              {/* Then: Recipient's Name */}
-              {(() => {
-                const recipientField = cardConfig.fields.find((f) => f.name === 'recipientName' && !Array.isArray((f as any).formats));
-                return recipientField ? (
-                  <div key="recipientName-top">{renderField(recipientField)}</div>
-                ) : null;
-              })()}
-
-              {/* Public inputs: Message + Signed (below Recipient's Name) */}
-              {(() => {
-                const messageField = cardConfig.fields.find((f) => f.name === 'message');
-                return messageField ? (
-                  <div key="message-top">{renderField(messageField)}</div>
-                ) : (
-                  <div key="message" className="space-y-2">
-                    <Label htmlFor="message">Message</Label>
-                    <Textarea
-                      id="message"
-                      value={formData['message'] || ''}
-                      onChange={(e) => handleInputChange('message', e.target.value)}
-                      placeholder="Enter your message and any design requirements"
-                      rows={3}
-                      className="resize-none text-base"
-                      onKeyPress={(e) => {
-                        if (e.key === 'Enter' && !e.shiftKey) {
-                          e.preventDefault();
-                          handleGenerateCard();
-                        }
-                      }}
-                    />
-                  </div>
-                );
-              })()}
-
-              {(() => {
-                const signedField = cardConfig.fields.find((f) => f.name === 'signed');
-                return signedField ? (
-                  <div key="signed-top">{renderField(signedField)}</div>
-                ) : (
-                  <div key="signed" className="space-y-2">
-                    <Label htmlFor="signed">Signed (optional)</Label>
-                    <Input
-                      id="signed"
-                      type="text"
-                      value={formData['signed'] || ''}
-                      onChange={(e) => handleInputChange('signed', e.target.value)}
-                      placeholder="Your name or nickname to sign the card"
-                      className="text-base"
-                    />
-                  </div>
-                );
-              })()}
-
-              {/* Common dynamic fields (no formats specified) - required only (excluding to/relationship/recipientName/message/signed) */}
-              {cardConfig.fields
-                .filter((field) => !Array.isArray((field as any).formats) && !field.optional && !['to','relationship','recipientName','message','signed'].includes(field.name))
-                .map((field) => renderField(field))}
-
-              {/* Credits Status Banner */}
-              {session && creditsStatus && !creditsStatus.isPremium && (
-                <div className={cn(
-                  "rounded-lg p-3 text-sm border",
-                  creditsStatus.isFirstDay 
-                    ? "bg-gradient-to-r from-purple-50 to-pink-50 border-purple-200" 
-                    : creditsStatus.hasClaimed 
-                      ? "bg-green-50 border-green-200"
-                      : "bg-amber-50 border-amber-200"
-                )}>
-                  <div className="flex items-center justify-between gap-2">
-                    <div className="flex-1">
-                      <p className="font-medium text-gray-800">
-                        {creditsStatus.isFirstDay 
-                          ? "✨ Welcome to your creative journey!" 
-                          : creditsStatus.hasClaimed 
-                            ? `🎨 ${creditsStatus.availableCredits} credits available`
-                            : "🎁 Daily credits ready!"}
-                      </p>
-                      <p className="text-xs text-gray-600 mt-0.5">
-                        {creditsStatus.isFirstDay 
-                          ? "Create 2 animated cards today. More options unlock tomorrow!"
-                          : creditsStatus.hasClaimed 
-                            ? "Create something magical today!"
-                            : "Claim your 5 credits to unlock today's creations."}
-                      </p>
-                    </div>
-                    {!creditsStatus.isFirstDay && !creditsStatus.hasClaimed && (
-                      <Button 
-                        type="button"
-                        size="sm"
-                        onClick={handleClaimCredits}
-                        disabled={isClaimingCredits}
-                        className="shrink-0 bg-gradient-to-r from-amber-400 to-pink-400 hover:from-amber-500 hover:to-pink-500 text-white"
-                      >
-                        {isClaimingCredits ? '...' : 'Claim ✨'}
-                      </Button>
-                    )}
-                  </div>
+                   {/* Model Selection Simplified */}
+                   <div className="space-y-2">
+                      <Label className="text-lg font-bold text-gray-800">Quality Tier</Label>
+                      <div className="grid grid-cols-1 gap-3">
+                         {(() => {
+                            const tiers = getTierOptionsForFormat(selectedFormat);
+                            return (
+                              <>
+                                <div onClick={() => setSelectedTier('base')} 
+                                     className={cn("p-4 rounded-xl border-2 cursor-pointer transition-all flex items-center justify-between", selectedTier === 'base' ? "border-primary bg-primary/5" : "border-transparent bg-gray-50 hover:bg-gray-100")}>
+                                   <div>
+                                     <div className="font-bold text-gray-800">{tiers.base.name}</div>
+                                     <div className="text-xs text-gray-500">{tiers.base.time} • Balanced</div>
+                                   </div>
+                                   {selectedTier === 'base' && <Check className="text-primary w-5 h-5"/>}
+                                </div>
+                                <div onClick={() => setSelectedTier('pro')} 
+                                     className={cn("p-4 rounded-xl border-2 cursor-pointer transition-all flex items-center justify-between", selectedTier === 'pro' ? "border-primary bg-primary/5" : "border-transparent bg-gray-50 hover:bg-gray-100", !tiers.pro && "opacity-50 cursor-not-allowed")}>
+                                   <div>
+                                     <div className="font-bold text-gray-800 flex items-center">{tiers.pro?.name || "Pro"} <Crown className="w-3 h-3 ml-1 text-amber-500"/></div>
+                                     <div className="text-xs text-gray-500">{tiers.pro?.time || "N/A"} • High Quality</div>
+                                   </div>
+                                   {selectedTier === 'pro' && <Check className="text-primary w-5 h-5"/>}
+                                </div>
+                              </>
+                            )
+                         })()}
+                      </div>
+                   </div>
                 </div>
               )}
 
-              {/* Format Tabs */}
-              <div className="mt-4">
-                <Tabs value={selectedFormat} onValueChange={(v) => {
-                  // Block format change for first-day FREE users
-                  if (creditsStatus?.isFirstDay && !creditsStatus?.isPremium && v !== 'svg') {
-                    setErrorToast({
-                      title: '🌟 Coming Soon!',
-                      message: 'Static images and videos unlock on day 2. Enjoy your animated cards today!',
-                      type: 'info'
-                    });
-                    return;
-                  }
-                  setSelectedFormat(v as OutputFormat);
-                }} className="w-full">
-                  <TabsList className="grid w-full grid-cols-3 mb-2">
-                    <TabsTrigger value="svg">Animated</TabsTrigger>
-                    <TabsTrigger 
-                      value="image" 
-                      disabled={creditsStatus?.isFirstDay && !creditsStatus?.isPremium}
-                      className={creditsStatus?.isFirstDay && !creditsStatus?.isPremium ? 'opacity-50 cursor-not-allowed' : ''}
-                    >
-                      Static {creditsStatus?.isFirstDay && !creditsStatus?.isPremium && '🔒'}
-                    </TabsTrigger>
-                    <TabsTrigger 
-                      value="video" 
-                      disabled={creditsStatus?.isFirstDay && !creditsStatus?.isPremium}
-                      className={creditsStatus?.isFirstDay && !creditsStatus?.isPremium ? 'opacity-50 cursor-not-allowed' : ''}
-                    >
-                      Video {creditsStatus?.isFirstDay && !creditsStatus?.isPremium && '🔒'}
-                    </TabsTrigger>
-                  </TabsList>
-
-                  {(['svg','image','video'] as OutputFormat[]).map(fmt => (
-                    <TabsContent key={fmt} value={fmt}>
-                      {fmt === 'image' && (
-                        <div className="space-y-2">
-                          <Label>Style</Label>
-                          <div className="flex items-center justify-between">
-                            <div className="text-sm text-gray-700">
-                              {(() => {
-                                const cur = stylePresets.find(s => s.id === selectedStyleId);
-                                return cur ? `${cur.name} · +${cur.cost} pts` : 'Auto · 0 pts';
-                              })()}
-                            </div>
-                            <Button type="button" variant="outline" size="sm" onClick={() => setStyleDialogOpen(true)}>
-                              Choose Style
-                            </Button>
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Format-specific dynamic fields (required only) */}
-                      <div className="mt-4 space-y-3">
-                        {cardConfig.fields
-                          .filter((field) => Array.isArray((field as any).formats) && (field as any).formats.includes(fmt) && !field.optional && !['message','signed','recipientName','to','relationship'].includes(field.name))
-                          .map((field) => renderField(field))}
-                      </div>
-
-                      {/* SVG extra options (keep original richness) */}
-                      {fmt === 'svg' && (
-                        <div className="mt-4 space-y-4">
-                          {/* Optional mood/tone if not provided by config */}
-                          {!cardConfig.fields.some((f) => f.name === 'tone') && (
-                            <div key="tone" className="space-y-2">
-                              <Label htmlFor="tone">Mood (optional)</Label>
-                              <CustomSelect
-                                value={(formData['tone'] as string) || ''}
-                                onValueChange={(value) => handleInputChange('tone', value)}
-                                customValue={''}
-                                onCustomValueChange={() => {}}
-                                placeholder="Choose mood: surprise, touching or humor"
-                                options={[ 'surprise', 'touching', 'humor' ]}
-                                label="Mood"
-                              />
-                            </div>
-                          )}
-
-                          {/* Optional common dynamic fields (exclude message/signed to avoid duplicates) */}
-                          <div className="space-y-3">
-                            {cardConfig.fields
-                              .filter((field) => !Array.isArray((field as any).formats) && field.optional && !['message','signed','to','relationship','recipientName'].includes(field.name))
-                               .map((field) => renderField(field))}
-                          </div>
-
-                          {/* Color / Custom design */}
-                          <div key="card-design" className="space-y-2">
-                            <Label htmlFor="card-design" className="flex justify-between items-center">
-                              <span>Color</span>
-                            </Label>
-                            <div className="grid grid-cols-8 gap-2 w-full">
-                              {[
-                                { id: "black", name: "Black", color: "#000000" },
-                                { id: "gray", name: "Gray", color: "#BDBDBD" },
-                                { id: "white", name: "White", color: "#FFFFFF", border: true },
-                                { id: "red", name: "Red", color: "#D32F2F" },
-                                { id: "purple", name: "Purple", color: "#7B1FA2" },
-                                { id: "pink", name: "Pink", color: "#FF80AB" },
-                                { id: "green", name: "Green", color: "#388E3C" },
-                                { id: "light-green", name: "Light Green", color: "#A5D6A7" },
-                                { id: "blue", name: "Blue", color: "#1976D2" },
-                                { id: "navy", name: "Navy", color: "#283593" },
-                                { id: "sky", name: "Sky Blue", color: "#B3E5FC" },
-                                { id: "gold", name: "Gold", color: "#D4AF37" },
-                                { id: "beige", name: "Beige", color: "#F5F5DC" },
-                                { id: "yellow", name: "Yellow", color: "#FFF176" },
-                                { id: "brown", name: "Brown", color: "#8D5524" },
-                                { id: "peach", name: "Peach", color: "#FFCC99" },
-                              ].map((color) => {
-                                const colorValue = `${color.id}`;
-                                const isSelected = formData["design"] === colorValue;
-                                return (
-                                  <button
-                                    key={color.id}
-                                    type="button"
-                                    onClick={() => handleInputChange("design", isSelected ? '' : colorValue)}
-                                    className={cn(
-                                      "h-8 w-8 rounded-full border-2 flex items-center justify-center transition-all duration-200",
-                                      isSelected
-                                        ? "border-[#b19bff] ring-2 ring-[#b19bff]"
-                                        : color.border ? "border-gray-300" : "border-transparent"
-                                    )}
-                                    style={{ backgroundColor: color.color }}
-                                    aria-label={color.name}
-                                  >
-                                    {isSelected && (
-                                      <span className="block w-3 h-3 rounded-full border-2 border-white bg-white" />
-                                    )}
-                                  </button>
-                                );
-                              })}
-                            </div>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setCustomValues(prev => ({
-                                  ...prev,
-                                  design: formData["design"] === "custom" ? "" : (prev.design || "")
-                                }));
-                                handleInputChange("design", formData["design"] === "custom" ? "" : "custom");
-                              }}
-                              className={cn(
-                                "mt-1 w-full py-1.5 px-2 border rounded-md flex items-center justify-center gap-1 transition-all duration-200 text-sm",
-                                formData["design"] === "custom"
-                                  ? "border-[#b19bff] bg-[#b19bff]/10"
-                                  : "border-gray-200 hover:border-[#b19bff] hover:bg-[#b19bff]/5"
-                              )}
-                            >
-                              <span className="text-sm">✨</span>
-                              <span className={formData["design"] === "custom" ? "text-[#b19bff] font-medium" : "text-gray-600"}>
-                                Custom Design
-                              </span>
-                            </button>
-                            {formData["design"] === "custom" && (
-                              <div className="mt-1">
-                                <Input
-                                  value={customValues["design"] || ''}
-                                  onChange={(e) => {
-                                    setCustomValues(prev => ({ ...prev, design: e.target.value }));
-                                    handleInputChange("design", "custom");
-                                  }}
-                                  placeholder="Describe any design you want: colors, patterns, style, layout..."
-                                  className="border-[#b19bff] focus-visible:ring-[#b19bff] text-sm"
-                                />
-                                <p className="text-xs text-gray-500 mt-1">
-                                  Examples: “pastel watercolor with flowers”, “modern minimalist”, “hand-drawn cartoon style”
-                                </p>
-                              </div>
-                            )}
-                          </div>
-
-                          {/* Optional format-specific dynamic fields (SVG only) */}
-                          <div className="space-y-3">
-                            {cardConfig.fields
-                              .filter((field) => Array.isArray((field as any).formats) && (field as any).formats.includes('svg') && field.optional)
-                              .map((field) => renderField(field))}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Reference Image Upload (Static/Video only) */}
-                      {fmt !== 'svg' && (
-                        <div className="mt-4 space-y-2">
-                          <Label className="flex justify-between items-center">
-                            <span>Subject Photo (optional)</span>
-                          </Label>
-                          {refError && (
-                            <Alert variant="destructive"><AlertDescription>{refError}</AlertDescription></Alert>
-                          )}
-                          <div
-                            className={cn(
-                              'relative border-2 border-dashed rounded-lg p-3 transition-colors cursor-pointer flex items-center justify-center min-h-28',
-                              isRefUploading ? 'border-[#b19bff] bg-[#f8f5ff] animate-pulse' : 'border-gray-300 hover:border-[#b19bff]'
-                            )}
-                            onClick={() => refPhotoInputRef.current?.click()}
-                            role="button"
-                            aria-label="Upload subject photo"
-                          >
-                            <input
-                              ref={refPhotoInputRef}
-                              type="file"
-                              accept="image/jpeg,image/png,image/webp"
-                              className="hidden"
-                              onChange={async (e) => {
-                                try {
-                                  setRefError(null)
-                                  setIsRefUploading(true)
-                                  const file = (e.target.files && e.target.files[0]) || null
-                                  if (!file) { setIsRefUploading(false); return }
-                                  const fd = new FormData()
-                                  fd.append('file', file)
-                                  fd.append('uploadPath', 'images/user-uploads')
-                                  fd.append('fileName', file.name)
-                                  const resp = await fetch('/api/reference/upload', { method: 'POST', body: fd })
-                                  if (!resp.ok) {
-                                    const txt = await resp.text(); throw new Error(txt)
-                                  }
-                                  const data = await resp.json()
-                                  const url = data?.data?.downloadUrl
-                                  if (!url) throw new Error('Upload failed: no URL')
-                                  setUploadedRefUrls([url])
-                                } catch (e: any) {
-                                  setRefError(e?.message || 'Upload failed')
-                                  setUploadedRefUrls([])
-                                } finally {
-                                  setIsRefUploading(false)
-                                  if (e.target) {
-                                    (e.target as HTMLInputElement).value = ''
-                                  }
-                                }
-                              }}
-                            />
-                            {uploadedRefUrls.length > 0 ? (
-                              <div className="w-full">
-                                <img src={uploadedRefUrls[0]} alt="Subject photo" className="w-full max-h-56 object-contain rounded-md border bg-white" />
-                              </div>
-                            ) : (
-                              <div className="text-center text-sm text-gray-500">
-                                Click to upload subject photo (JPG/PNG/WebP)
-                              </div>
-                            )}
-
-                            {isRefUploading && (
-                              <div className="absolute inset-0 bg-white/70 backdrop-blur-sm rounded-lg flex flex-col items-center justify-center">
-                                <Loader2 className="h-5 w-5 animate-spin text-[#b19bff]" />
-                                <span className="text-xs text-gray-600 mt-2">Uploading…</span>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Removed Advanced Options group; keep hidden container to avoid large diff */}
-                      <div className="hidden">
-                        <div className="hidden">
-                          <div className="hidden"></div>
-                          <div className="hidden">
-                            {/* Size selector */}
-                            <div className="space-y-2">
-                              <Label htmlFor="size">Size</Label>
-                              <Select value={selectedSize} onValueChange={setSelectedSize}>
-                                <SelectTrigger className="w-full">
-                                  <SelectValue placeholder="Select size" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {Object.values(CARD_SIZES).map((s) => (
-                                    <SelectItem key={s.id} value={s.id}>{s.name} · {s.width}x{s.height}</SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            </div>
-
-                            {/* Fallback message field if not defined in config */}
-                            {!cardConfig.fields.some((f) => f.name === 'message') && (
-                              <div key="message" className="space-y-2">
-                                <Label htmlFor="message">Message</Label>
-                                <Textarea
-                                  id="message"
-                                  value={formData['message'] || ''}
-                                  onChange={(e) => handleInputChange('message', e.target.value)}
-                                  placeholder="Enter your message and any design requirements"
-                                  rows={3}
-                                  className="resize-none text-base"
-                                  onKeyPress={(e) => {
-                                    if (e.key === 'Enter' && !e.shiftKey) {
-                                      e.preventDefault();
-                                      handleGenerateCard();
-                                    }
-                                  }}
-                                />
-                              </div>
-                            )}
-
-                            {/* Optional mood/tone (SVG only) if not provided by config */}
-                            {fmt === 'svg' && !cardConfig.fields.some((f) => f.name === 'tone') && (
-                              <div key="tone" className="space-y-2">
-                                <Label htmlFor="tone">Mood (optional)</Label>
-                                <CustomSelect
-                                  value={(formData['tone'] as string) || ''}
-                                  onValueChange={(value) => handleInputChange('tone', value)}
-                                  customValue={''}
-                                  onCustomValueChange={() => {}}
-                                  placeholder="Choose mood: surprise, touching or humor"
-                                  options={[ 'surprise', 'touching', 'humor' ]}
-                                  label="Mood"
-                                />
-                              </div>
-                            )}
-
-                            {/* Optional common dynamic fields (SVG only) */}
-                            {fmt === 'svg' && (
-                              <div className="space-y-3">
-                                {cardConfig.fields
-                                  .filter((field) => !Array.isArray((field as any).formats) && field.optional && !['message','signed','to','relationship','recipientName'].includes(field.name))
-                                  .map((field) => renderField(field))}
-                              </div>
-                            )}
-
-                            {/* Color/Custom design (SVG only) */}
-                            {fmt === 'svg' && (
-                              <div key="card-design" className="space-y-2">
-                                <Label htmlFor="card-design" className="flex justify-between items-center">
-                                  <span>Color</span>
-                                </Label>
-                                <div className="grid grid-cols-8 gap-2 w-full">
-                                  {[
-                                    { id: "black", name: "Black", color: "#000000" },
-                                    { id: "gray", name: "Gray", color: "#BDBDBD" },
-                                    { id: "white", name: "White", color: "#FFFFFF", border: true },
-                                    { id: "red", name: "Red", color: "#D32F2F" },
-                                    { id: "purple", name: "Purple", color: "#7B1FA2" },
-                                    { id: "pink", name: "Pink", color: "#FF80AB" },
-                                    { id: "green", name: "Green", color: "#388E3C" },
-                                    { id: "light-green", name: "Light Green", color: "#A5D6A7" },
-                                    { id: "blue", name: "Blue", color: "#1976D2" },
-                                    { id: "navy", name: "Navy", color: "#283593" },
-                                    { id: "sky", name: "Sky Blue", color: "#B3E5FC" },
-                                    { id: "gold", name: "Gold", color: "#D4AF37" },
-                                    { id: "beige", name: "Beige", color: "#F5F5DC" },
-                                    { id: "yellow", name: "Yellow", color: "#FFF176" },
-                                    { id: "brown", name: "Brown", color: "#8D5524" },
-                                    { id: "peach", name: "Peach", color: "#FFCC99" },
-                                  ].map((color) => {
-                                    const colorValue = `${color.id}`;
-                                    const isSelected = formData["design"] === colorValue;
-                                    return (
-                                      <button
-                                        key={color.id}
-                                        type="button"
-                                        onClick={() => handleInputChange("design", isSelected ? '' : colorValue)}
-                                        className={cn(
-                                          "h-8 w-8 rounded-full border-2 flex items-center justify-center transition-all duration-200",
-                                          isSelected
-                                            ? "border-[#b19bff] ring-2 ring-[#b19bff]"
-                                            : color.border ? "border-gray-300" : "border-transparent"
-                                        )}
-                                        style={{ backgroundColor: color.color }}
-                                        aria-label={color.name}
-                                      >
-                                        {isSelected && (
-                                          <span className="block w-3 h-3 rounded-full border-2 border-white bg-white" />
-                                        )}
-                                      </button>
-                                    );
-                                  })}
-                                </div>
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    setCustomValues(prev => ({
-                                      ...prev,
-                                      design: formData["design"] === "custom" ? "" : (prev.design || "")
-                                    }));
-                                    handleInputChange("design", formData["design"] === "custom" ? "" : "custom");
-                                  }}
-                                  className={cn(
-                                    "mt-1 w-full py-1.5 px-2 border rounded-md flex items-center justify-center gap-1 transition-all duration-200 text-sm",
-                                    formData["design"] === "custom"
-                                      ? "border-[#b19bff] bg-[#b19bff]/10"
-                                      : "border-gray-200 hover:border-[#b19bff] hover:bg-[#b19bff]/5"
-                                  )}
-                                >
-                                  <span className="text-sm">✨</span>
-                                  <span className={formData["design"] === "custom" ? "text-[#b19bff] font-medium" : "text-gray-600"}>
-                                    Custom Design
-                                  </span>
-                                </button>
-                                {formData["design"] === "custom" && (
-                                  <div className="mt-1">
-                                    <Input
-                                      value={customValues["design"] || ''}
-                                      onChange={(e) => {
-                                        setCustomValues(prev => ({ ...prev, design: e.target.value }));
-                                        handleInputChange("design", "custom");
-                                      }}
-                                      placeholder="Describe any design you want: colors, patterns, style, layout..."
-                                      className="border-[#b19bff] focus-visible:ring-[#b19bff] text-sm"
-                                    />
-                                    <p className="text-xs text-gray-500 mt-1">
-                                      Examples: “pastel watercolor with flowers”, “modern minimalist”, “hand-drawn cartoon style”
-                                    </p>
-                                  </div>
-                                )}
-                              </div>
-                            )}
-
-                            {/* Reference Image Upload (Static/Video only) */}
-                            {fmt !== 'svg' && (
-                            <div className="mt-3 space-y-2">
-                              <Label className="flex justify-between items-center">
-                                <span>Subject Photo (optional)</span>
-                              </Label>
-                              {refError && (
-                                <Alert variant="destructive"><AlertDescription>{refError}</AlertDescription></Alert>
-                              )}
-                              <div
-                                className={cn(
-                                  'relative border-2 border-dashed rounded-lg p-3 transition-colors cursor-pointer flex items-center justify-center min-h-28',
-                                  isRefUploading ? 'border-[#b19bff] bg-[#f8f5ff] animate-pulse' : 'border-gray-300 hover:border-[#b19bff]'
-                                )}
-                                onClick={() => refPhotoInputRef.current?.click()}
-                                role="button"
-                                aria-label="Upload subject photo"
-                              >
-                                <input
-                                  ref={refPhotoInputRef}
-                                  type="file"
-                                  accept="image/jpeg,image/png,image/webp"
-                                  className="hidden"
-                                  onChange={async (e) => {
-                                    try {
-                                      setRefError(null)
-                                      setIsRefUploading(true)
-                                      const file = (e.target.files && e.target.files[0]) || null
-                                      if (!file) { setIsRefUploading(false); return }
-                                      const fd = new FormData()
-                                      fd.append('file', file)
-                                      fd.append('uploadPath', 'images/user-uploads')
-                                      fd.append('fileName', file.name)
-                                      const resp = await fetch('/api/reference/upload', { method: 'POST', body: fd })
-                                      if (!resp.ok) {
-                                        const txt = await resp.text(); throw new Error(txt)
-                                      }
-                                      const data = await resp.json()
-                                      const url = data?.data?.downloadUrl
-                                      if (!url) throw new Error('Upload failed: no URL')
-                                      setUploadedRefUrls([url])
-                                    } catch (e: any) {
-                                      setRefError(e?.message || 'Upload failed')
-                                      setUploadedRefUrls([])
-                                    } finally {
-                                      setIsRefUploading(false)
-                                      if (e.target) {
-                                        (e.target as HTMLInputElement).value = ''
-                                      }
-                                    }
-                                  }}
-                                />
-                                {uploadedRefUrls.length > 0 ? (
-                                  <div className="w-full">
-                                    <img src={uploadedRefUrls[0]} alt="Subject photo" className="w-full max-h-56 object-contain rounded-md border bg-white" />
-                                  </div>
-                                ) : (
-                                  <div className="text-center text-sm text-gray-500">
-                                    Click to upload subject photo (JPG/PNG/WebP)
-                                  </div>
-                                )}
-
-                                {isRefUploading && (
-                                  <div className="absolute inset-0 bg-white/70 backdrop-blur-sm rounded-lg flex flex-col items-center justify-center">
-                                    <Loader2 className="h-5 w-5 animate-spin text-[#b19bff]" />
-                                    <span className="text-xs text-gray-600 mt-2">Uploading…</span>
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                            )}
-
-                            {/* Optional format-specific dynamic fields (SVG only) */}
-                            {fmt === 'svg' && (
-                              <div className="space-y-3">
-                                {cardConfig.fields
-                                  .filter((field) => Array.isArray((field as any).formats) && (field as any).formats.includes(fmt) && field.optional)
-                                  .map((field) => renderField(field))}
-                              </div>
-                            )}
-
-                          </div>
-                        </div>
-                      </div>
-                    </TabsContent>
-                  ))}
-                </Tabs>
-              </div>
-
-              {/* Controls */}
-              {/* Model row (single line) */}
-              <div className="mt-4">
-                <Label className="text-xs text-gray-500">Model</Label>
-                <div className="mt-1">
-                  <Select value={selectedTier} onValueChange={(v) => setSelectedTier(v as 'base'|'pro')}>
-                    <SelectTrigger className="w-full bg-gray-50">
-                      <SelectValue placeholder="Choose model" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {(() => {
-                        const tiers = getTierOptionsForFormat(selectedFormat);
-                        return (
-                          <>
-                            <SelectItem value="base">
-                              <div className="flex items-center justify-between w-full">
-                                <span className="text-sm">{tiers.base.name}</span>
-                                <span className="text-xs text-gray-500">{tiers.base.time}</span>
-                              </div>
-                            </SelectItem>
-                            <SelectItem value="pro" disabled={!tiers.pro}>
-                              <div className="flex items-center justify-between w-full">
-                                <span className="text-sm">{tiers.pro ? tiers.pro.name : 'Pro (N/A)'}</span>
-                                <span className="text-xs text-gray-500">{tiers.pro ? tiers.pro.time : ''}</span>
-                              </div>
-                            </SelectItem>
-                          </>
-                        )
-                      })()}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              {/* Visibility control above generate button */}
-              <div className="mt-6">
-                <div className="flex items-center justify-between rounded-2xl border border-purple-100 bg-white/80 px-4 py-3 shadow-sm">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-semibold text-gray-800">Public Visibility</span>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <button
-                          type="button"
-                          className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-gray-200 text-gray-500 hover:text-gray-700"
-                          aria-label="Visibility info"
-                        >
-                          <Info className="w-3.5 h-3.5" />
-                        </button>
-                      </PopoverTrigger>
-                      <PopoverContent side="top" align="start" className="max-w-xs text-sm text-gray-600">
-                        When this option is enabled, the output may be selected by MewTruCard.com and published to the Explore feed.
-                      </PopoverContent>
-                    </Popover>
+              {/* Step 2: Recipient Details */}
+              {currentStep === 2 && (
+                <div className="space-y-6 animate-in slide-in-from-right-4 duration-300">
+                  <div className="text-center mb-6">
+                    <h2 className="text-xl font-bold text-gray-800">Who is this for?</h2>
+                    <p className="text-gray-500">Tell us about the lucky person</p>
                   </div>
-                  <div className="flex items-center gap-3">
-                    {!isPremiumUser && (
-                      <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-r from-amber-400 to-pink-400 text-white">
-                        <Crown className="w-3 h-3" />
-                      </span>
-                    )}
-                    <Switch
-                      checked={!isPrivateCard}
-                      onCheckedChange={(checked) => handlePrivateToggle(!checked)}
-                      className="data-[state=checked]:bg-[#f5427f] data-[state=unchecked]:bg-gray-300"
-                    />
-                  </div>
+                  {['to', 'relationship', 'recipientName', 'age'].map(fieldName => {
+                    const field = cardConfig.fields.find(f => f.name === fieldName);
+                    return field ? renderField(field) : null;
+                  })}
                 </div>
-              </div>
+              )}
 
-              {/* Points row removed; button shows points */}
-
-              {/* Generate button row (single line) */}
-              <div className="mt-3">
-                <Button
-                  type="button"
-                  onClick={handleGenerateCard}
-                  disabled={isLoading}
-                  className="w-full bg-gradient-to-r from-[#FFC0CB] to-[#b19bff] hover:from-[#FFD1DC] hover:to-[#FFB6C1] text-[#4A4A4A] transition-all"
-                >
-                  {isLoading ? 'Generating…' : (() => {
-                    const styleCost = selectedFormat !== 'svg' ? ((stylePresets.find(s=>s.id===selectedStyleId)?.cost) || 0) : 0;
-                    const total = (uploadedRefUrls.length > 0) ? 6 : ((selectedModel?.credits || 0) + styleCost);
-                    return `Generate · ${total} pts`;
-                  })()}
-                </Button>
-              </div>
-
-              {/* Image Count Selection */}
-              {/* <div className="w-full">
-                <Label htmlFor="image-count" className="mb-2 block flex items-center justify-between">
-                  <span>Number of Images</span>
-                  <span className="text-xs text-gray-500">{imageCount} image{imageCount > 1 ? 's' : ''}</span>
-                </Label>
-                <div className="grid grid-cols-4 gap-2">
-                  {[1, 2, 3, 4].map((count) => (
-                    <button
-                      key={count}
-                      type="button"
-                      onClick={() => handleImageCountChange(count)}
-                      className={cn(
-                        "flex flex-col items-center justify-center p-3 rounded-md border transition-all relative text-sm font-medium",
-                        imageCount === count
-                          ? "border-[#FFC0CB] bg-[#FFF5F6] ring-1 ring-[#FFC0CB] text-[#4A4A4A]"
-                          : "border-gray-200 hover:border-[#FFC0CB] text-gray-700"
-                      )}
-                    >
-                      {count}
-                      {count > 1 && (
-                        <div className="absolute -top-1 -right-1">
-                          <div className="flex items-center justify-center bg-gradient-to-r from-[#a786ff] to-[#b19bff] text-white text-[8px] font-bold px-1 py-0.5 rounded-full">
-                            ✨
-                          </div>
-                        </div>
-                      )}
-                    </button>
-                  ))}
-                </div>
-                <p className="text-xs text-gray-500 mt-2">
-                  Generate multiple variations at once to compare different styles
-                </p>
-              </div> */}
-            </CardContent>
-          </Card>
-
-          <div className="flex flex-col lg:flex-row items-center justify-center my-4 lg:my-0">
-            <svg className="w-12 h-12 lg:w-16 lg:h-16 text-[#b19bff] transform rotate-90 lg:rotate-0" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M4 12H20M20 12L14 6M20 12L14 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </div>
-
-          <div className="w-full max-w-md">
-            <div className={cn(
-              "grid gap-3",
-              imageCount === 1 ? "grid-cols-1" :
-                imageCount === 2 ? "grid-cols-2" :
-                imageCount === 3 ? "grid-cols-2" :
-                  "grid-cols-2"
-            )}>
-              {imageStates.map((imageState, index) => (
-                <div
-                  key={index}
-                  ref={(el) => { imageRefs.current[index] = el }}
-                  className={cn(
-                    "bg-white p-2 sm:p-3 rounded-lg shadow-lg flex items-center justify-center relative border border-[#FFC0CB]",
-                    "aspect-[2/3]",
-                    imageCount === 3 && index === 2 ? "col-span-2" : "",
-                    imageCount === 4 && index >= 2 ? "col-span-1" : ""
-                  )}
-                >
-                  {imageState.isLoading ? (
-                    <div className="w-full h-full relative">
-                      <MagicalCardCreation />
-                      {/* AdSense广告 - 非会员用户在生成过程中显示 */}
-                      {!isPremiumUser && (
-                        <div className="absolute top-3 left-3 right-3 z-10">
-                          <ins 
-                            className="adsbygoogle block"
-                            style={{ display: 'block' }}
-                            data-ad-client="ca-pub-1555702340859042"
-                            data-ad-slot="1314903207"
-                            data-ad-format="auto"
-                            data-full-width-responsive="true"
+              {/* Step 3: Message & Tone */}
+              {currentStep === 3 && (
+                 <div className="space-y-6 animate-in slide-in-from-right-4 duration-300">
+                    <div className="text-center mb-6">
+                      <h2 className="text-xl font-bold text-gray-800">The Message</h2>
+                      <p className="text-gray-500">Customize the heartfelt words</p>
+                    </div>
+                    {['message', 'tone', 'language', 'signed'].map(fieldName => {
+                      const field = cardConfig.fields.find(f => f.name === fieldName);
+                      // Fallbacks if config is missing common fields
+                      if (!field && fieldName === 'message') return (
+                         <div key="message" className="space-y-2">
+                           <Label className="font-medium">Message</Label>
+                           <Textarea 
+                              value={formData['message']||''} 
+                              onChange={e=>handleInputChange('message', e.target.value)}
+                              placeholder="Describe what you want to say..." 
+                              className="text-base min-h-[120px]"
+                           />
+                         </div>
+                      );
+                      if (!field && fieldName === 'signed') return (
+                        <div key="signed" className="space-y-2">
+                          <Label className="font-medium">Signed (Optional)</Label>
+                          <Input 
+                            value={formData['signed']||''}
+                            onChange={e=>handleInputChange('signed', e.target.value)}
+                            placeholder="e.g. Your Bestie"
+                            className="bg-white/50"
                           />
                         </div>
-                      )}
-                      <div className="absolute bottom-3 left-3 right-3 z-10">
-                        <div className="w-full bg-white/30 backdrop-blur-sm rounded-full h-2 border border-pink-200">
-                          <div
-                            className="bg-gradient-to-r from-pink-400 via-purple-400 to-blue-400 h-full rounded-full transition-all duration-500 ease-out shadow-sm"
-                            style={{ width: `${imageState.progress}%` }}
-                          ></div>
-                        </div>
-                        <div className="mt-1 text-center">
-                          <span className="text-xs text-purple-600 font-medium bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full shadow-sm border border-purple-100">
-                            {imageState.progress < 20 ? '🎨 Sketching ideas...' : 
-                             imageState.progress < 40 ? '🌈 Mixing colors...' :
-                             imageState.progress < 60 ? '✨ Sprinkling magic...' : 
-                             imageState.progress < 80 ? '🎭 Adding personality...' :
-                             imageState.progress < 95 ? '🌟 Final touches...' : '🎉 Masterpiece ready!'}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center overflow-hidden">
-                      {imageState.url && (
-                        <ImageViewer
-                          alt={`${currentCardType}-${index}`}
-                          cardId={imageState.id || '1'}
-                          cardType={currentCardType}
-                          imgUrl={imageState.url}
-                          isNewCard={true}
-                          svgContent={imageState.svgContent}
-                        />
-                      )}
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </main>
-
-      {/* Custom animations for magical card creation */}
-      <style jsx global>{`
-        @keyframes float-gentle {
-          0%, 100% { transform: translateY(0px) translateX(0px) rotate(0deg); }
-          33% { transform: translateY(-8px) translateX(2px) rotate(2deg); }
-          66% { transform: translateY(4px) translateX(-2px) rotate(-1deg); }
-        }
-        
-        @keyframes sparkle-dance {
-          0%, 100% { transform: scale(1) rotate(0deg); opacity: 1; }
-          25% { transform: scale(1.2) rotate(90deg); opacity: 0.8; }
-          50% { transform: scale(0.8) rotate(180deg); opacity: 1; }
-          75% { transform: scale(1.1) rotate(270deg); opacity: 0.9; }
-        }
-        
-        @keyframes magic-glow {
-          0%, 100% { box-shadow: 0 0 5px rgba(255, 182, 193, 0.3); }
-          50% { box-shadow: 0 0 20px rgba(255, 182, 193, 0.8), 0 0 30px rgba(221, 160, 221, 0.4); }
-        }
-        
-        @keyframes wand-wave {
-          0% { transform: rotate(45deg) translateY(0px); }
-          50% { transform: rotate(55deg) translateY(-3px); }
-          100% { transform: rotate(45deg) translateY(0px); }
-        }
-        
-        .animate-float-gentle { animation: float-gentle 3s ease-in-out infinite; }
-        .animate-sparkle-dance { animation: sparkle-dance 2s ease-in-out infinite; }
-        .animate-magic-glow { animation: magic-glow 2s ease-in-out infinite; }
-        .animate-wand-wave { animation: wand-wave 1.5s ease-in-out infinite; }
-      `}</style>
-
-      {/* Model Selection Dropdown */}
-      {showModelSelector && (
-        <div 
-          className="fixed inset-0 bg-black/20 backdrop-blur-sm z-50" 
-          onClick={(e) => {
-            if (e.currentTarget === e.target) {
-              setShowModelSelector(false);
-            }
-          }}
-        >
-          <div className="fixed bottom-44 left-1/2 transform -translate-x-1/2 w-full max-w-4xl px-4">
-            <div className="bg-white rounded-xl shadow-2xl border border-gray-200 max-h-[calc(100vh-12rem)] overflow-y-auto">
-              <div className="p-4 border-b bg-gray-50 rounded-t-xl">
-                <div className="flex items-center justify-between mb-1">
-                  <h3 className="font-medium text-gray-900">Choose Generation Model</h3>
-                  <div className="flex items-center space-x-2">
-                    <span className="text-lg">{selectedModel.icon}</span>
-                    <span className="text-sm font-medium text-gray-700">{selectedModel.name}</span>
-                  </div>
-                </div>
-                <p className="text-xs text-gray-500">Select the perfect model for your card creation needs</p>
-              </div>
-              
-              <div className="p-4">
-                {/* Image & Animation Models */}
-                <div className="mb-6">
-                  <div className="flex items-center mb-3">
-                    <span className="text-lg mr-2">🎨</span>
-                    <h4 className="font-medium text-gray-800">Image & Animation Models</h4>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {modelConfigs
-                      .filter(model => model.format === 'svg' || model.format === 'image')
-                      .map((model) => (
-                      <button
-                        key={model.id}
-                        onClick={() => {
-                          if (model.tier === 'Premium' && !isPremiumUser) {
-                            setIsPremiumModalOpen(true);
-                          } else {
-                            setSelectedModel(model);
-                            setIsVideoMode(false); // Ensure we're in image mode
-                            setShowModelSelector(false);
-                          }
-                        }}
-                        disabled={false} // Always allow clicking
-                        className={cn(
-                          "p-4 rounded-lg border-2 transition-all duration-200 text-left relative",
-                          model.tier === 'Premium' && !isPremiumUser 
-                            ? "border-gray-200 bg-gray-50 cursor-pointer" // Changed from cursor-not-allowed to cursor-pointer
-                            : selectedModel.id === model.id && !isVideoMode
-                            ? "border-[#FFC0CB] bg-[#FFF5F6] shadow-sm"
-                            : "border-gray-100 hover:border-[#FFC0CB] hover:bg-gray-50"
-                        )}
-                      >
-                        <div className="flex items-start space-x-3">
-                          <div className="flex-shrink-0">
-                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-pink-100 to-purple-100 flex items-center justify-center text-lg">
-                              {model.icon}
-                            </div>
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center space-x-2 mb-2">
-                              <h4 className="font-medium text-gray-900 text-sm">{model.name}</h4>
-                              {model.badge && (
-                                <span className="bg-gradient-to-r from-[#a786ff] to-[#FF6B94] text-white text-xs px-2 py-0.5 rounded-full font-medium">
-                                  {model.badge}
-                                </span>
-                              )}
-                            </div>
-                            <p className="text-xs text-gray-600 mb-2">{model.description}</p>
-                            <div className="flex items-center flex-wrap gap-2 text-xs text-gray-500">
-                              <div className="flex items-center space-x-1">
-                                <span>⏱️</span>
-                                <span>{model.time}</span>
-                              </div>
-                              <div className="flex items-center space-x-1">
-                                <span>{model.format === 'svg' ? '🎞️' : '🖼️'}</span>
-                                <span>{model.format === 'svg' ? 'Animated' : 'Static'}</span>
-                              </div>
-                              <div className="flex items-center space-x-1">
-                                <span>💳</span>
-                                <span>{model.credits} credit{model.credits > 1 ? 's' : ''}</span>
-                              </div>
-                            </div>
-                          </div>
-                          {selectedModel.id === model.id && !isVideoMode && (model.tier !== 'Premium' || isPremiumUser) && (
-                            <div className="flex-shrink-0 text-[#FFC0CB]">
-                              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                              </svg>
-                            </div>
-                          )}
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Video Models */}
-                <div>
-                  <div className="flex items-center mb-3">
-                    <span className="text-lg mr-2">🎬</span>
-                    <h4 className="font-medium text-gray-800">Video Models</h4>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {modelConfigs
-                      .filter(model => model.format === 'video')
-                      .map((model) => (
-                      <button
-                        key={model.id}
-                        onClick={() => {
-                          if (model.tier === 'Premium' && !isPremiumUser) {
-                            setIsPremiumModalOpen(true);
-                          } else {
-                            setSelectedModel(model);
-                            setIsVideoMode(true); // Ensure we're in video mode
-                            setShowModelSelector(false);
-                          }
-                        }}
-                        disabled={false} // Always allow clicking
-                        className={cn(
-                          "p-4 rounded-lg border-2 transition-all duration-200 text-left relative",
-                          model.tier === 'Premium' && !isPremiumUser 
-                            ? "border-gray-200 bg-gray-50 cursor-pointer" // Changed to match other Premium models
-                            : selectedModel.id === model.id && isVideoMode
-                            ? "border-[#FFC0CB] bg-[#FFF5F6] shadow-sm"
-                            : "border-gray-100 hover:border-[#FFC0CB] hover:bg-gray-50"
-                        )}
-                      >
-                        <div className="flex items-start space-x-3">
-                          <div className="flex-shrink-0">
-                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-100 to-pink-100 flex items-center justify-center text-lg">
-                              {model.icon}
-                            </div>
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center space-x-2 mb-2">
-                              <h4 className="font-medium text-gray-900 text-sm">{model.name}</h4>
-                              {model.badge && (
-                                <span className="bg-gradient-to-r from-[#a786ff] to-[#FF6B94] text-white text-xs px-2 py-0.5 rounded-full font-medium">
-                                  {model.badge}
-                                </span>
-                              )}
-                            </div>
-                            <p className="text-xs text-gray-600 mb-2">{model.description}</p>
-                            <div className="flex items-center flex-wrap gap-2 text-xs text-gray-500">
-                              <div className="flex items-center space-x-1">
-                                <span>⏱️</span>
-                                <span>{model.time}</span>
-                              </div>
-                              <div className="flex items-center space-x-1">
-                                <span>🎬</span>
-                                <span>Video</span>
-                              </div>
-                              <div className="flex items-center space-x-1">
-                                <span>💳</span>
-                                <span>{model.credits} credits</span>
-                              </div>
-                            </div>
-                          </div>
-                          {selectedModel.id === model.id && isVideoMode && (model.tier !== 'Premium' || isPremiumUser) && (
-                            <div className="flex-shrink-0 text-[#FFC0CB]">
-                              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                              </svg>
-                            </div>
-                          )}
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Floating input removed; controls moved into form */}
-
-      <Dialog open={showAuthDialog} onOpenChange={setShowAuthDialog}>
-        <DialogContent className="border border-[#FFC0CB] shadow-lg">
-          <DialogHeader>
-            <DialogTitle className="text-2xl font-semibold text-[#4A4A4A]">Sign in Required</DialogTitle>
-            <DialogDescription className="text-gray-600 mt-2">
-              Please sign in with Google to generate your card.
-              Alternatively, you can browse our <a href="/card-gallery/" className="text-[#FFC0CB] hover:text-[#FFD1DC] hover:underline transition-colors">Card Templates</a> to use existing templates.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="flex justify-end space-x-4 mt-6">
-            <Button
-              variant="outline"
-              onClick={() => router.push('/card-gallery/')}
-              className="border-[#FFC0CB] text-[#4A4A4A] hover:bg-[#FFF5F6] hover:text-[#4A4A4A]"
-            >
-              View Templates
-            </Button>
-            <Button
-              onClick={handleLogin}
-              disabled={isAuthLoading}
-              className="bg-[#FFC0CB] text-[#4A4A4A] hover:bg-[#FFD1DC] transition-colors relative"
-            >
-              {isAuthLoading ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                  Signing in...
-                </>
-              ) : (
-                'Sign in with Google'
+                      )
+                      return field ? renderField(field) : null;
+                    })}
+                 </div>
               )}
-            </Button>
+
+              {/* Step 4: Finalize */}
+              {currentStep === 4 && (
+                 <div className="space-y-6 animate-in slide-in-from-right-4 duration-300">
+                    <div className="text-center mb-6">
+                      <h2 className="text-xl font-bold text-gray-800">Add some Magic</h2>
+                      <p className="text-gray-500">Final touches before generation</p>
+                    </div>
+                    
+                    {/* Style Selector (Static only) */}
+                    {selectedFormat === 'image' && (
+                       <GlassCard className="p-4 flex items-center justify-between cursor-pointer hover:bg-white transition-colors" onClick={() => setStyleDialogOpen(true)}>
+                          <div className="flex items-center gap-3">
+                             <div className="p-2 bg-purple-100 rounded-lg text-purple-600"><Wand2 size={20}/></div>
+                             <div>
+                                <div className="font-bold text-gray-700">Visual Style</div>
+                                <div className="text-xs text-gray-500">{selectedStyleId ? stylePresets.find(s=>s.id===selectedStyleId)?.name : 'Auto (Smart Choice)'}</div>
+                             </div>
+                          </div>
+                          <ChevronRight className="text-gray-400"/>
+                       </GlassCard>
+                    )}
+
+                    {/* Design Field (Color/Desc) */}
+                    {renderField({ name: 'design', label: 'Color / Theme Details', type: 'select', optional: true, options: ['Pastel', 'Vibrant', 'Minimalist', 'Watercolor'] } as any)}
+
+                    {/* Reference Image */}
+                    {selectedFormat !== 'svg' && (
+                       <div className="space-y-2">
+                          <Label className="font-medium">Reference Photo (Optional)</Label>
+                          <div className={cn("border-2 border-dashed border-gray-200 rounded-xl p-6 text-center hover:border-primary/50 cursor-pointer transition-colors bg-white/50", uploadedRefUrls.length > 0 && "border-primary bg-primary/5")} onClick={() => refPhotoInputRef.current?.click()}>
+                             <input ref={refPhotoInputRef} type="file" className="hidden" onChange={async (e) => {
+                                 // Simple inline upload handler logic from original
+                                 const file = e.target.files?.[0];
+                                 if(!file) return;
+                                 setIsRefUploading(true);
+                                 try {
+                                    const fd = new FormData(); fd.append('file', file); fd.append('uploadPath', 'images/user-uploads'); fd.append('fileName', file.name);
+                                    const res = await fetch('/api/reference/upload', {method:'POST', body:fd});
+                                    const data = await res.json();
+                                    if(data?.data?.downloadUrl) setUploadedRefUrls([data.data.downloadUrl]);
+                                 } catch(err) { console.error(err); } finally { setIsRefUploading(false); }
+                             }}/>
+                             {isRefUploading ? <Loader2 className="animate-spin mx-auto text-primary"/> : uploadedRefUrls.length ? <img src={uploadedRefUrls[0]} className="h-20 mx-auto object-contain rounded"/> : <div className="text-sm text-gray-500">Tap to upload a photo</div>}
+                          </div>
+                       </div>
+                    )}
+
+                    {/* Privacy Toggle */}
+                    <div className="flex items-center justify-between bg-gray-50 p-4 rounded-xl">
+                       <div className="flex items-center gap-2">
+                          <Label className="cursor-pointer">Public Gallery</Label>
+                          {!isPremiumUser && <Crown size={14} className="text-amber-500"/>}
+                       </div>
+                       <Switch checked={!isPrivateCard} onCheckedChange={(c) => { if(c || isPremiumUser) setIsPrivateCard(!c); else setIsPremiumModalOpen(true); }} />
+                    </div>
+                 </div>
+              )}
+            </div>
+
+            {/* Right Panel: Preview / Actions */}
+            <div className="w-full lg:w-1/2 bg-gray-50/50 p-6 flex flex-col justify-between border-t lg:border-t-0 lg:border-l border-gray-100">
+               <div className="flex-1 flex flex-col items-center justify-center min-h-[300px]">
+                  {/* Result Display */}
+                  {imageStates[0]?.isLoading ? (
+                     <div className="w-full max-w-sm aspect-[2/3] rounded-xl overflow-hidden shadow-2xl relative">
+                        <MagicalCardCreation />
+                     </div>
+                  ) : imageStates[0]?.url ? (
+                     <div className="w-full max-w-sm">
+                        <ImageViewer
+                          alt="Generated Card"
+                          cardId={imageStates[0].id || '1'}
+                          cardType={currentCardType}
+                          imgUrl={imageStates[0].url}
+                          isNewCard={true}
+                          svgContent={imageStates[0].svgContent}
+                        />
+                     </div>
+                  ) : (
+                     <div className="text-center opacity-50">
+                        <div className="w-48 h-64 bg-gray-200 rounded-xl mx-auto mb-4 animate-pulse"></div>
+                        <p className="text-sm">Your masterpiece will appear here</p>
+                     </div>
+                  )}
+               </div>
+
+               <div className="mt-8 flex gap-3">
+                  {currentStep > 1 && (
+                     <WarmButton variant="outline" onClick={prevStep} className="flex-1" disabled={isLoading}>
+                        Back
+                     </WarmButton>
+                  )}
+                  {currentStep < TOTAL_STEPS ? (
+                     <WarmButton onClick={nextStep} className="flex-[2]" disabled={isLoading}>
+                        Next Step <ChevronRight size={16} className="ml-2"/>
+                     </WarmButton>
+                  ) : (
+                     <WarmButton onClick={handleGenerateCard} className="flex-[2] py-6 text-lg shadow-warm hover:shadow-warm-lg" disabled={isLoading}>
+                        {isLoading ? <Loader2 className="animate-spin mr-2"/> : <Sparkles className="mr-2"/>}
+                        Generate Magic
+                     </WarmButton>
+                  )}
+               </div>
+            </div>
           </div>
+        </GlassCard>
+      </div>
+
+       {/* Modals */}
+       <Dialog open={showAuthDialog} onOpenChange={setShowAuthDialog}>
+        <DialogContent>
+          <DialogTitle>Sign in Required</DialogTitle>
+          <DialogDescription>Please sign in to generate your card.</DialogDescription>
+          <Button onClick={handleLogin} disabled={isAuthLoading}>
+            {isAuthLoading ? <Loader2 className="animate-spin"/> : 'Sign in with Google'}
+          </Button>
         </DialogContent>
       </Dialog>
-
+      
       <Dialog open={showLimitDialog} onOpenChange={setShowLimitDialog}>
-        <DialogContent className="border border-[#FFC0CB] shadow-lg max-w-md">
-          <DialogHeader>
-            <DialogTitle className="text-2xl font-semibold text-[#4A4A4A]">Daily Limit Reached</DialogTitle>
-            <DialogDescription className="text-gray-600 mt-2 space-y-4">
-              <p>You&apos;ve reached your daily limit for card generation. Free users can generate 1 card per day.</p>
-
-              <div className="bg-[#FFF5F6] p-4 rounded-lg border border-[#FFC0CB]">
-                <p className="text-[#4A4A4A] font-medium">Don&apos;t worry! You can still create beautiful cards by:</p>
-                <ul className="list-disc list-inside mt-2 space-y-1 text-[#4A4A4A]">
-                  <li>Using our pre-made templates</li>
-                  <li>Customizing existing designs</li>
-                  <li>Saving your favorites for later</li>
-                </ul>
-              </div>
-
-              <div className="mt-4 bg-[#f0f4ff] p-4 rounded-lg border border-[#a786ff]">
-                <p className="text-[#4A4A4A] font-medium flex items-center">
-                  <span className="text-lg mr-2">✨</span>
-                  Get 10 Extra Generations!
-                </p>
-                <div className="mt-2 space-y-2 text-[#4A4A4A]">
-                  <p className="text-sm">Share MewTruCard.com on your favorite platform:</p>
-                  <ol className="list-decimal list-inside text-sm space-y-1.5">
-                    <li>Share a link to mewtrucard.com on a forum, blog, or social media</li>
-                    <li>Email the shared URL and your account email to:
-                      <span className="font-medium text-[#a786ff]"> support@mewtrucard.com</span>
-                    </li>
-                    <li>We&apos;ll add 10 extra generations to your account!</li>
-                  </ol>
-                </div>
-              </div>
-            </DialogDescription>
-          </DialogHeader>
-          <div className="flex justify-end space-x-4 mt-6">
-            <Button
-              onClick={() => {
-                setShowLimitDialog(false)
-                router.push('/card-gallery/')
-              }}
-              className="bg-[#FFC0CB] text-[#4A4A4A] hover:bg-[#FFD1DC] transition-colors w-full"
-            >
-              Browse Card Templates
-            </Button>
-          </div>
-        </DialogContent>
+         <DialogContent><DialogTitle>Limit Reached</DialogTitle><p>You have reached the daily limit.</p></DialogContent>
       </Dialog>
 
-      {!isPremiumUser && (
-        <PremiumModal isOpen={isPremiumModalOpen} onOpenChange={setIsPremiumModalOpen} />
-      )}
+      <PremiumModal isOpen={isPremiumModalOpen} onOpenChange={setIsPremiumModalOpen} />
 
-      {/* Reference Image Modal removed; now inline under Color */}
+      {/* Style Dialog Re-implementation */}
+      <Dialog open={styleDialogOpen} onOpenChange={setStyleDialogOpen}>
+         <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+            <DialogHeader><DialogTitle>Choose a Style</DialogTitle></DialogHeader>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+               <div onClick={() => { setSelectedStyleId(null); setStyleDialogOpen(false); }} className="aspect-[3/4] bg-gray-100 rounded-lg flex items-center justify-center cursor-pointer border hover:border-primary">Auto</div>
+               {getPresetsForFormat(selectedFormat).map(p => (
+                  <div key={p.id} onClick={() => { setSelectedStyleId(p.id); setStyleDialogOpen(false); }} className="relative aspect-[3/4] rounded-lg overflow-hidden cursor-pointer group">
+                     <img src={p.sample} className="absolute inset-0 w-full h-full object-cover"/>
+                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-2 text-white text-sm font-bold">{p.name}</div>
+                  </div>
+               ))}
+            </div>
+         </DialogContent>
+      </Dialog>
     </>
   )
 }
+

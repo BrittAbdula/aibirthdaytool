@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Playfair_Display } from "next/font/google";
+import { Caveat, Quicksand } from "next/font/google";
 import "./globals.css";
 import { Header } from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -10,7 +10,17 @@ import { SessionProvider } from "next-auth/react"
 import GoogleAdsense from "@/components/GoogleAdsense";
 import Script from "next/script";
 
-const playfair = Playfair_Display({ subsets: ["latin"] });
+const caveat = Caveat({ 
+  subsets: ["latin"],
+  variable: '--font-caveat',
+  display: 'swap',
+});
+
+const quicksand = Quicksand({ 
+  subsets: ["latin"],
+  variable: '--font-quicksand',
+  display: 'swap',
+});
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL || 'https://mewtrucard.com/'),
@@ -50,7 +60,7 @@ export default function RootLayout({
         {/* Google Tag Manager should be inside <head> */}
         <GoogleTagManager gtmId="GTM-57P7BF4D" />
       </head>
-      <body className={`${playfair.className} text-[#4A4A4A]`}>
+      <body className={`${caveat.variable} ${quicksand.variable} font-sans text-[#2D2D2D]`}>
         <SessionProvider>
         <GoogleAdsense />
           <div className="flex flex-col min-h-screen">
