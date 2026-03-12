@@ -8,6 +8,10 @@ import { useSession } from 'next-auth/react'
 const DISALLOW_PATHS = [
   '/',
   '/to/*',
+  '/will-you-be-my-valentine',
+  '/open-your-birthday-surprise',
+  '/forgive-me',
+  '/will-you-be-my-bridesmaid',
 ]
 
 // Function to check if the current path matches any disallowed path

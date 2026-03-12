@@ -164,6 +164,7 @@ export default function CardGalleryContent({
             <CardGallery 
               initialCardsData={cardsData} 
               wishCardType={selectedType}
+              relationship={selectedRelationship}
               tabType={currentTab}
             />
           )}

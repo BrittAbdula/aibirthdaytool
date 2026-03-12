@@ -3,7 +3,9 @@ import { Suspense } from 'react'
 import { CardType } from '@/lib/card-config'
 import TypeGalleryContent from './TypeGalleryContent'
 import { ScrollToTop } from '@/components/ScrollToTop'
-import { getRecentCardsServer, getPopularCardsServer, getLikedCardsServer, TabType } from '@/lib/cards'
+import GalleryComboLinkSection from '@/components/gallery/GalleryComboLinkSection'
+import { Card, getRecentCardsServer, getPopularCardsServer, getLikedCardsServer, TabType } from '@/lib/cards'
+import { getCardTypeLabel, getGalleryComboHref, getRelationshipLabel, getSeoRelationshipsForType } from '@/lib/gallery-combos'
 
 interface Props {
   params: { type: CardType }
@@ -63,11 +65,19 @@ export default async function TypePage({ params, searchParams }: Props) {
   const type = decodeURIComponent(params.type) as CardType
   const relationship = searchParams.relationship || null
   const activeTab = (searchParams.tab as TabType) || 'recent'
+  const cardTypeLabel = getCardTypeLabel(type)
   
-  // Fetch all card data at build time or during revalidation
-  const recentCardsData = await getRecentCardsServer(1, 24, type, relationship)
-  const popularCardsData = await getPopularCardsServer(1, 24, type, relationship)
-  const likedCardsData = await getLikedCardsServer(1, 24, type, relationship)
+  let recentCardsData: { cards: Card[]; totalPages: number } = { cards: [], totalPages: 0 }
+  let popularCardsData: { cards: Card[]; totalPages: number } = { cards: [], totalPages: 0 }
+  let likedCardsData: { cards: Card[]; totalPages: number } = { cards: [], totalPages: 0 }
+
+  try {
+    recentCardsData = await getRecentCardsServer(1, 24, type, relationship)
+    popularCardsData = await getPopularCardsServer(1, 24, type, relationship)
+    likedCardsData = await getLikedCardsServer(1, 24, type, relationship)
+  } catch (error) {
+    console.error(`Failed to load type gallery for ${type}`, error)
+  }
   
   // Select the appropriate data based on active tab
   let initialCardsData;
@@ -81,6 +91,12 @@ export default async function TypePage({ params, searchParams }: Props) {
     default:
       initialCardsData = recentCardsData;
   }
+
+  const comboLinks = getSeoRelationshipsForType(type).slice(0, 6).map((comboRelationship) => ({
+    href: getGalleryComboHref(type, comboRelationship),
+    title: `${cardTypeLabel} Cards for ${getRelationshipLabel(comboRelationship)}`,
+    description: `Browse public ${cardTypeLabel.toLowerCase()} card examples for your ${getRelationshipLabel(comboRelationship).toLowerCase()}.`,
+  }))
 
   return (
     <article className="min-h-screen bg-gradient-to-br from-white via-purple-50 to-pink-50">
@@ -102,6 +118,12 @@ export default async function TypePage({ params, searchParams }: Props) {
             <span className="px-3 py-1 bg-purple-50 rounded-full">❤️ From the Heart</span>
           </div>
         </header>
+
+        <GalleryComboLinkSection
+          title={`Popular ${cardTypeLabel} Combinations`}
+          description={`These are the strongest relationship-led gallery pages for ${cardTypeLabel.toLowerCase()} intent, and they are better SEO landing pages than query-string filters.`}
+          links={comboLinks}
+        />
 
         <section aria-label={`${type} Card Gallery`}>
           <Suspense 

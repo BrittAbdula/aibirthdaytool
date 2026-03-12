@@ -8,6 +8,7 @@ import CardGallery from '@/app/card-gallery/CardGallery'
 import { CardType } from '@/lib/card-config'
 import { CARD_TYPES } from '@/lib/card-constants'
 import { TabType } from '@/lib/cards'
+import { getGalleryComboHref, getRelationshipValue, hasSeoGalleryCombo } from '@/lib/gallery-combos'
 
 interface Props {
   params: { relationship: string }
@@ -27,8 +28,8 @@ export default function RelationshipGalleryContent({
 }: Props) {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const relationship = decodeURIComponent(params.relationship)
-    .charAt(0).toUpperCase() + decodeURIComponent(params.relationship).slice(1)
+  const relationshipValue = getRelationshipValue(params.relationship)
+  const relationship = relationshipValue.charAt(0).toUpperCase() + relationshipValue.slice(1)
   
   const [selectedType, setSelectedType] = useState<CardType | null>(
     defaultType || (searchParams.get('type') as CardType | null)
@@ -43,7 +44,34 @@ export default function RelationshipGalleryContent({
     setCurrentTab(tab)
     
     const params = new URLSearchParams(searchParams.toString())
-    params.set('tab', tab)
+    if (tab === 'recent') params.delete('tab')
+    else params.set('tab', tab)
+    const query = params.toString()
+    router.push(query ? `/relationship/${relationship.toLowerCase()}?${query}` : `/relationship/${relationship.toLowerCase()}/`)
+  }
+
+  const handleTypeChange = (value: CardType | null) => {
+    setSelectedType(value)
+
+    const params = new URLSearchParams(searchParams.toString())
+    if (currentTab === 'recent') params.delete('tab')
+    else params.set('tab', currentTab)
+
+    if (!value) {
+      params.delete('type')
+      const query = params.toString()
+      router.push(query ? `/relationship/${relationship.toLowerCase()}?${query}` : `/relationship/${relationship.toLowerCase()}/`)
+      return
+    }
+
+    if (hasSeoGalleryCombo(value, relationshipValue)) {
+      const query = params.toString()
+      const href = getGalleryComboHref(value, relationshipValue)
+      router.push(query ? `${href}?${query}` : href)
+      return
+    }
+
+    params.set('type', value)
     router.push(`/relationship/${relationship.toLowerCase()}?${params.toString()}`)
   }
 
@@ -122,7 +150,7 @@ export default function RelationshipGalleryContent({
         options={typeOptions}
         currentValue={selectedType}
         type="type"
-        onFilterChange={setSelectedType}
+        onFilterChange={handleTypeChange}
       />
 
       <section aria-label={`${relationship} Card Gallery`}>
@@ -135,6 +163,7 @@ export default function RelationshipGalleryContent({
           cardsData && <CardGallery 
             initialCardsData={cardsData} 
             wishCardType={selectedType} 
+            relationship={relationship}
             tabType={currentTab}
           />
         )}

@@ -2,8 +2,10 @@ import { Metadata } from 'next'
 import { Suspense } from 'react'
 import RelationshipGalleryContent from './RelationshipGalleryContent'
 import { ScrollToTop } from '@/components/ScrollToTop'
-import { getRecentCardsServer, getPopularCardsServer, getLikedCardsServer, TabType } from '@/lib/cards'
+import GalleryComboLinkSection from '@/components/gallery/GalleryComboLinkSection'
+import { Card, getRecentCardsServer, getPopularCardsServer, getLikedCardsServer, TabType } from '@/lib/cards'
 import { CardType } from '@/lib/card-config'
+import { getCardTypeLabel, getGalleryComboHref, getRelationshipLabel, getRelationshipValue, getSeoTypesForRelationship } from '@/lib/gallery-combos'
 
 interface Props {
   params: { relationship: string }
@@ -67,15 +69,22 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function RelationshipPage({ params, searchParams }: Props) {
-  const relationship = decodeURIComponent(params.relationship)
-    .charAt(0).toUpperCase() + decodeURIComponent(params.relationship).slice(1)
+  const relationshipValue = getRelationshipValue(params.relationship)
+  const relationship = getRelationshipLabel(relationshipValue)
   const cardType = searchParams.type || null
   const activeTab = (searchParams.tab as TabType) || 'recent'
   
-  // Fetch all card data at build time or during revalidation
-  const recentCardsData = await getRecentCardsServer(1, 24, cardType, relationship)
-  const popularCardsData = await getPopularCardsServer(1, 24, cardType, relationship)
-  const likedCardsData = await getLikedCardsServer(1, 24, cardType, relationship)
+  let recentCardsData: { cards: Card[]; totalPages: number } = { cards: [], totalPages: 0 }
+  let popularCardsData: { cards: Card[]; totalPages: number } = { cards: [], totalPages: 0 }
+  let likedCardsData: { cards: Card[]; totalPages: number } = { cards: [], totalPages: 0 }
+
+  try {
+    recentCardsData = await getRecentCardsServer(1, 24, cardType, relationship)
+    popularCardsData = await getPopularCardsServer(1, 24, cardType, relationship)
+    likedCardsData = await getLikedCardsServer(1, 24, cardType, relationship)
+  } catch (error) {
+    console.error(`Failed to load relationship gallery for ${relationshipValue}`, error)
+  }
   
   // Select the appropriate data based on active tab
   let initialCardsData;
@@ -89,6 +98,12 @@ export default async function RelationshipPage({ params, searchParams }: Props) 
     default:
       initialCardsData = recentCardsData;
   }
+
+  const comboLinks = getSeoTypesForRelationship(relationshipValue).slice(0, 6).map((type) => ({
+    href: getGalleryComboHref(type, relationshipValue),
+    title: `${getCardTypeLabel(type)} Cards for ${relationship}`,
+    description: `Browse public ${getCardTypeLabel(type).toLowerCase()} card examples for your ${relationship.toLowerCase()}.`,
+  }))
 
   return (
     <article className="min-h-screen bg-gradient-to-br from-white via-purple-50 to-pink-50">
@@ -110,6 +125,12 @@ export default async function RelationshipPage({ params, searchParams }: Props) 
             <span className="px-3 py-1 bg-purple-50 rounded-full">❤️ From the Heart</span>
           </div>
         </header>
+
+        <GalleryComboLinkSection
+          title={`Popular Card Types for ${relationship}`}
+          description={`These combination pages turn the broad ${relationship.toLowerCase()} gallery into stronger occasion-led landing pages with clearer search intent.`}
+          links={comboLinks}
+        />
 
         <section aria-label={`${relationship} Card Gallery`}>
           <Suspense 

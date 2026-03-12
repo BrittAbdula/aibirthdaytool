@@ -1,6 +1,6 @@
 import { Suspense } from 'react'
 import { Metadata } from 'next'
-import { getRecentCardsServer, getPopularCardsServer } from '@/lib/cards'
+import { getRecentCardsServer, getPopularCardsServer, getLikedCardsServer } from '@/lib/cards'
 import CardGalleryContent from './CardGalleryContent'
 import { CardType } from '@/lib/card-config'
 import { TabType } from '@/lib/cards'
@@ -60,8 +60,14 @@ export default async function CardGalleryPage({ searchParams }: PageProps) {
   // Fetch card data at build time or during revalidation
   const recentCardsData = await getRecentCardsServer(1, 24, defaultType)
   const popularCardsData = await getPopularCardsServer(1, 24, defaultType)
-    
-  const initialCardsData = activeTab === 'recent' ? recentCardsData : popularCardsData
+  const likedCardsData = await getLikedCardsServer(1, 24, defaultType)
+
+  const initialCardsData =
+    activeTab === 'recent'
+      ? recentCardsData
+      : activeTab === 'liked'
+        ? likedCardsData
+        : popularCardsData
   
   return (
     <article className="min-h-screen bg-gradient-to-br from-white via-purple-50 to-pink-50">

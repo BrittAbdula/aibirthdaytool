@@ -14,6 +14,7 @@ interface CardGalleryProps {
     totalPages: number;
   };
   wishCardType: CardType | null;
+  relationship?: string | null;
   tabType: TabType;
 }
 
@@ -58,7 +59,7 @@ const typeEmojis: Record<string, string> = {
   easter: '🐰',
 }
 
-export default function CardGallery({ initialCardsData, wishCardType, tabType }: CardGalleryProps) {
+export default function CardGallery({ initialCardsData, wishCardType, relationship = null, tabType }: CardGalleryProps) {
   const [cards, setCards] = useState<Card[]>(initialCardsData.cards)
   const [currentPage, setCurrentPage] = useState(1)
   const [totalPages, setTotalPages] = useState(initialCardsData.totalPages)
@@ -68,12 +69,12 @@ export default function CardGallery({ initialCardsData, wishCardType, tabType }:
   const observerTarget = useRef<HTMLDivElement>(null)
   const [likedMap, setLikedMap] = useState<Record<string, boolean>>({})
 
-  const preloadImage = (url: string) => {
+  const preloadImage = useCallback((url: string) => {
     if (!url || preloadedImages.has(url)) return
     const img = new Image()
     img.src = url
     setPreloadedImages(prev => new Set(prev).add(url))
-  }
+  }, [preloadedImages])
 
   const loadMore = useCallback(() => {
     if (!isLoading && hasMore) {
@@ -109,29 +110,16 @@ export default function CardGallery({ initialCardsData, wishCardType, tabType }:
         setLikedMap(local)
       }
     } catch {}
-  }, [wishCardType, initialCardsData, tabType])
+  }, [wishCardType, relationship, initialCardsData, tabType])
 
-  useEffect(() => {
-    if (currentPage > 1) {
-      fetchCards(currentPage)
-    }
-  }, [currentPage, wishCardType, tabType])
-
-  useEffect(() => {
-    cards.forEach(card => {
-      if (card.r2Url) {
-        preloadImage(card.r2Url)
-      }
-    })
-  }, [cards])
-
-  const fetchCards = async (page: number) => {
+  const fetchCards = useCallback(async (page: number) => {
     setIsLoading(true)
     try {
       const params = new URLSearchParams({
         page: page.toString(),
         pageSize: CARDS_PER_PAGE.toString(),
         tab: tabType,
+        ...(relationship ? { relationship } : {}),
         ...(wishCardType ? { wishCardType } : {})
       })
       
@@ -148,7 +136,21 @@ export default function CardGallery({ initialCardsData, wishCardType, tabType }:
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [relationship, tabType, wishCardType])
+
+  useEffect(() => {
+    if (currentPage > 1) {
+      void fetchCards(currentPage)
+    }
+  }, [currentPage, fetchCards])
+
+  useEffect(() => {
+    cards.forEach(card => {
+      if (card.r2Url) {
+        preloadImage(card.r2Url)
+      }
+    })
+  }, [cards, preloadImage])
 
   const getTypeLabel = (type: string | undefined) =>
     CARD_TYPES.find(t => t.type === type)?.label || (type ? String(type) : 'Card')
@@ -208,12 +210,16 @@ export default function CardGallery({ initialCardsData, wishCardType, tabType }:
                         className="w-full h-auto block group-hover:scale-[1.02] transition-transform duration-500"
                       />
                     ) : (
-                      <img
-                        src={card.r2Url}
-                        alt={`${typeLabel} card`}
-                        loading="lazy"
-                        className="w-full h-auto block group-hover:scale-[1.02] transition-transform duration-500"
-                      />
+                      <>
+                        {/* Card images can come from multiple remote storage providers. */}
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={card.r2Url}
+                          alt={`${typeLabel} card`}
+                          loading="lazy"
+                          className="w-full h-auto block group-hover:scale-[1.02] transition-transform duration-500"
+                        />
+                      </>
                     )
                   ) : (
                     <div className="w-full aspect-[3/4] flex items-center justify-center text-sm text-gray-400 bg-gradient-to-br from-purple-50 to-pink-50">

@@ -5,7 +5,7 @@ import { CardType, getCardConfig, getAllCardTypes } from "@/lib/card-config";
 import CardTypeBubbles from "@/components/CardTypeBubbles";
 import CardGenerator from "@/components/CardGenerator";
 import SimpleCardGallery from '@/app/card-gallery/SimpleCardGallery'
-import { getRecentCardsServer } from '@/lib/cards';
+import { Card, getRecentCardsServer } from '@/lib/cards';
 
 import {
     Accordion,
@@ -43,16 +43,25 @@ export async function generateMetadata({ params }: CardGeneratorPageProps): Prom
 
     const cardName = cardConfig.label;
     const imageUrl = `https://mewtrucard.com/mewtrucard-generator.jpg`;
+    const isBirthdayPage = cardType === 'birthday';
 
     return {
-        title: `AI ${cardName} Generator | Free Online ${cardType} E‑Card Maker - MewTruCard`,
-        description: `Create personalized ${cardType} cards with MewTruCard's AI-powered generator online. MewTruCard designs with any style and theme. Download and share with your friends and family using MewTruCard.`,
+        title: isBirthdayPage
+            ? `Free AI Birthday Card Generator | Online Birthday Card Maker - MewTruCard`
+            : `AI ${cardName} Generator | Free Online ${cardType} E‑Card Maker - MewTruCard`,
+        description: isBirthdayPage
+            ? `Create a free online birthday card, personalize the message, and copy a birthday card link or download it. Sign in to create, save, and send with MewTruCard.`
+            : `Create personalized ${cardType} cards with MewTruCard's AI-powered generator online. Sign in to create, edit, download, and share with friends and family.`,
         alternates: {
             canonical: `https://mewtrucard.com/${cardType}/`,
         },
         openGraph: {
-            title: `AI ${cardName} Generator | Free Online E‑Card Maker`,
-            description: `Create personalized AI-generated ${cardType} cards with any style. Easy to customize, download and share.`,
+            title: isBirthdayPage
+                ? `Free AI Birthday Card Generator | MewTruCard`
+                : `AI ${cardName} Generator | Free Online E‑Card Maker`,
+            description: isBirthdayPage
+                ? `Create a birthday card online, personalize it, then copy a shareable birthday card link or download it.`
+                : `Create personalized AI-generated ${cardType} cards with any style. Easy to customize, download and share.`,
             images: [{
                 url: imageUrl,
                 width: 1200,
@@ -64,8 +73,12 @@ export async function generateMetadata({ params }: CardGeneratorPageProps): Prom
         },
         twitter: {
             card: 'summary_large_image',
-            title: `AI ${cardName} Generator | Free Online E‑Card Maker`,
-            description: `Create personalized AI-generated ${cardType} cards with any style. Easy to customize, download and share.`,
+            title: isBirthdayPage
+                ? `Free AI Birthday Card Generator | MewTruCard`
+                : `AI ${cardName} Generator | Free Online E‑Card Maker`,
+            description: isBirthdayPage
+                ? `Create a birthday card online, personalize it, then share the card by link or download it.`
+                : `Create personalized AI-generated ${cardType} cards with any style. Easy to customize, download and share.`,
             images: [imageUrl],
         },
     };
@@ -80,12 +93,14 @@ export default async function CardGeneratorPage({ params }: CardGeneratorPagePro
     }
 
     const cardName = cardConfig.label;
+    const isBirthdayPage = cardType === 'birthday';
     // Get initial cards data
-    const { cards, totalPages } = await getRecentCardsServer(1, 20, cardType);
-    const initialCardsData = {
-        cards,
-        totalPages
-    };
+    let initialCardsData: { cards: Card[]; totalPages: number } = { cards: [], totalPages: 0 };
+    try {
+        initialCardsData = await getRecentCardsServer(1, 20, cardType);
+    } catch (error) {
+        console.error(`Failed to load public cards for ${cardType}`, error);
+    }
 
     // Prepare JSON-LD structured data
     const imageUrl = `https://store.celeprime.com/${cardType}.svg`;
@@ -99,7 +114,9 @@ export default async function CardGeneratorPage({ params }: CardGeneratorPagePro
             "price": "0",
             "priceCurrency": "USD"
         },
-        "description": `Create personalized, AI-generated ${cardType} cards online. unlimited creative style, customize, and share instantly.`,
+        "description": isBirthdayPage
+            ? `Create a free online birthday card, personalize the message, and share it by link or download.`
+            : `Create personalized, AI-generated ${cardType} cards online, customize them, and share instantly.`,
         "image": imageUrl,
         "screenshot": imageUrl,
         "operatingSystem": "Web browser",
@@ -124,12 +141,32 @@ export default async function CardGeneratorPage({ params }: CardGeneratorPagePro
 
             <div className="relative container mx-auto px-4 sm:px-6 py-2 sm:py-6">
                 {/* Header Section */}
-                <header className="text-center mb-6">
-                    <h1 className="text-2xl font-serif font-bold tracking-tight">
+                <header className="mx-auto mb-10 max-w-4xl text-center">
+                    <div className="mb-4 flex flex-wrap items-center justify-center gap-2 text-xs sm:text-sm">
+                        <span className="rounded-full bg-white/80 px-4 py-2 font-semibold text-orange-700 shadow-sm">
+                            Sign in required to create, save, and send
+                        </span>
+                        {isBirthdayPage && (
+                            <span className="rounded-full bg-white/80 px-4 py-2 font-semibold text-orange-700 shadow-sm">
+                                Shareable birthday card links
+                            </span>
+                        )}
+                    </div>
+                    <h1 className="text-4xl font-serif font-bold tracking-tight sm:text-5xl">
                         <span className="bg-clip-text text-transparent bg-gradient-to-r from-warm-coral to-pink-600">
-                            AI {cardName} Generator - MewTruCard
+                            {isBirthdayPage ? "Free Online Birthday Card Maker" : `AI ${cardName} Generator - MewTruCard`}
                         </span>
                     </h1>
+                    <p className="mx-auto mt-4 max-w-2xl text-base leading-7 text-gray-600 sm:text-lg">
+                        {isBirthdayPage
+                            ? "Create a birthday card with AI, personalize the message, then copy a shareable birthday card link or download the final card."
+                            : `Create a ${cardName.toLowerCase()} card with AI, personalize the message, then save, edit, and share it from your account.`}
+                    </p>
+                    <div className="mt-5 flex flex-wrap justify-center gap-2 text-sm text-gray-600">
+                        <span className="rounded-full bg-orange-50 px-3 py-1">Recipient-first form</span>
+                        <span className="rounded-full bg-orange-50 px-3 py-1">Editable after generation</span>
+                        <span className="rounded-full bg-orange-50 px-3 py-1">Link sharing + download</span>
+                    </div>
                 </header>
 
                 {/* Card Generator Section */}
@@ -161,8 +198,8 @@ export default async function CardGeneratorPage({ params }: CardGeneratorPagePro
                     </h2>
 
                     <p className="text-center text-gray-600 max-w-2xl mx-auto mb-12">
-                        MewTruCard AI {cardType} card generator makes creating personalized e-cards effortless.
-                        No design skills needed - just follow these three easy steps with MewTruCard.
+                        Sign in, fill in the recipient details, generate the card, then edit and send it.
+                        MewTruCard keeps the path simple so you can move from idea to card link quickly.
                     </p>
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
@@ -173,7 +210,7 @@ export default async function CardGeneratorPage({ params }: CardGeneratorPagePro
                             <h3 className="text-xl font-semibold mb-3 text-gray-800">Enter Personal Details</h3>
                             <p className="text-gray-600 mb-4">
                                 Input the recipient&apos;s name, your relationship, and specific occasion details.
-                                MewTruCard AI analyzes these to create meaningful, personalized content.
+                                MewTruCard AI uses this to create more relevant content from the start.
                             </p>
                             <div className="text-sm text-purple-600 bg-purple-50 px-3 py-1 rounded-full">
                                 Takes 30 seconds
@@ -187,7 +224,7 @@ export default async function CardGeneratorPage({ params }: CardGeneratorPagePro
                             <h3 className="text-xl font-semibold mb-3 text-gray-800">Unleash Your Creative Vision</h3>
                             <p className="text-gray-600 mb-4">
                                 Describe any style you can imagine - vintage watercolor, modern minimalist, fantasy art,
-                                or anything else. MewTruCard AI brings your creative vision to life with unlimited possibilities.
+                                or anything else. Keep it simple if you want a faster path, or add more direction for a more tailored result.
                             </p>
                             <div className="text-sm text-purple-600 bg-purple-50 px-3 py-1 rounded-full">
                                 Unlimited styles
@@ -201,7 +238,7 @@ export default async function CardGeneratorPage({ params }: CardGeneratorPagePro
                             <h3 className="text-xl font-semibold mb-3 text-gray-800">Generate & Share Instantly</h3>
                             <p className="text-gray-600 mb-4">
                                 Click generate and watch MewTruCard AI create your unique {cardType} card with custom
-                                artwork, heartfelt messages, and smooth animations. Share via MewTruCard link or download.
+                                artwork and heartfelt messages. Then edit it, copy a link, or download it.
                             </p>
                             <div className="text-sm text-purple-600 bg-purple-50 px-3 py-1 rounded-full">
                                 Ready in 10-30 seconds
@@ -281,8 +318,8 @@ export default async function CardGeneratorPage({ params }: CardGeneratorPagePro
                                 </div>
                                 <h4 className="font-semibold text-gray-800 mb-2">Forever Free Core</h4>
                                 <p className="text-sm text-gray-600">
-                                    Essential MewTruCard features permanently free. Create unlimited {cardType} cards
-                                    with MewTruCard core templates and basic AI generation.
+                                    Core MewTruCard flows are available on the free plan with a daily allowance,
+                                    while premium options unlock more models, privacy controls, and higher-end outputs.
                                 </p>
                             </div>
 
@@ -303,8 +340,8 @@ export default async function CardGeneratorPage({ params }: CardGeneratorPagePro
                                 </div>
                                 <h4 className="font-semibold text-gray-800 mb-2">Unlimited Creativity</h4>
                                 <p className="text-sm text-gray-600">
-                                    Complete style customization. From colors to animations -
-                                    unleash your imagination without limits.
+                                    Add as little or as much direction as you want, from a quick birthday card idea
+                                    to a more specific style or message prompt.
                                 </p>
                             </div>
 
@@ -314,8 +351,8 @@ export default async function CardGeneratorPage({ params }: CardGeneratorPagePro
                                 </div>
                                 <h4 className="font-semibold text-gray-800 mb-2">Multiple Formats</h4>
                                 <p className="text-sm text-gray-600">
-                                    Dynamic animations & stunning static designs available now.
-                                    Audio & video cards coming soon!
+                                    Choose between animated, static image, and supported premium output modes,
+                                    depending on the card you want to create.
                                 </p>
                             </div>
                         </div>
@@ -323,11 +360,7 @@ export default async function CardGeneratorPage({ params }: CardGeneratorPagePro
                         <div className="mt-8 text-center">
                             <div className="inline-flex items-center gap-2 bg-white/80 backdrop-blur px-4 py-2 rounded-full text-sm text-gray-600">
                                 <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-                                Currently Available: Dynamic Cards • Designer Images
-                            </div>
-                            <div className="inline-flex items-center gap-2 bg-white/80 backdrop-blur px-4 py-2 rounded-full text-sm text-gray-600 ml-2">
-                                <span className="w-2 h-2 bg-orange-500 rounded-full animate-pulse"></span>
-                                Coming Soon: Audio Cards • Video Cards
+                                Currently Available: Animated cards • Static images • Shareable links
                             </div>
                         </div>
                     </div>
@@ -367,8 +400,8 @@ export default async function CardGeneratorPage({ params }: CardGeneratorPagePro
                                 <p className="text-gray-600 text-lg leading-relaxed mb-6">
                                     MewTruCard has revolutionized digital card creation with blazing-fast AI that delivers
                                     <span className="font-semibold text-purple-600"> professional-quality results in seconds, not minutes</span>.
-                                    MewTruCard platform combines lightning speed with unlimited creative freedom - generate animated cards
-                                    in 10-30 seconds or stunning designer images in under 2 minutes.
+                                    MewTruCard platform combines speed with a simple create-edit-share loop so you can move
+                                    from prompt to finished card quickly.
                                 </p>
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
@@ -386,9 +419,6 @@ export default async function CardGeneratorPage({ params }: CardGeneratorPagePro
                                     </div>
                                 </div>
 
-                                <p className="text-sm text-purple-600 mt-4 font-medium">
-                                    The future is even brighter: Audio-enhanced cards and full video experiences launching soon!
-                                </p>
                             </div>
                         </div>
                     </section>
@@ -411,18 +441,18 @@ export default async function CardGeneratorPage({ params }: CardGeneratorPagePro
                         {/* Enhanced FAQ items with corrected pricing */}
                         <AccordionItem value="item-1" className="border border-gray-200 rounded-lg px-6">
                             <AccordionTrigger className="text-left text-lg font-medium hover:no-underline">
-                                What features are permanently free with MewTruCard AI {cardType} card generator?
+                                What does the free plan include for MewTruCard AI {cardType} cards?
                             </AccordionTrigger>
                             <AccordionContent className="text-gray-600 pt-4">
-                                <strong>MewTruCard core features remain permanently free:</strong>
+                                <strong>The free plan covers the main create-edit-share flow:</strong>
                                 <ul className="mt-3 space-y-2 list-disc list-inside">
-                                    <li><strong>Unlimited template access</strong> - Edit, customize, and download all pre-made MewTruCard {cardType} templates</li>
-                                    <li><strong>Basic AI generation</strong> - Up to 10 MewTruCard AI-generated cards per day with essential styles</li>
-                                    <li><strong>Full customization</strong> - Edit text, music, and create custom MewTruCard sharing URLs</li>
-                                    <li><strong>Multiple download formats</strong> - High-resolution images, GIFs, and MewTruCard sharing links</li>
+                                    <li><strong>Free plan access</strong> - Create cards with a daily allowance on the standard flow</li>
+                                    <li><strong>Saved editing flow</strong> - Sign in, generate, then return to edit and send</li>
+                                    <li><strong>Shareable links</strong> - Create direct card links for sending online</li>
+                                    <li><strong>Download support</strong> - Export the finished card when you are ready to send it</li>
                                 </ul>
                                 <div className="mt-3 p-3 bg-purple-50 rounded-lg">
-                                    <p className="text-sm"><strong>Premium features available:</strong> Exclusive premium models, priority processing, and advanced customization options.</p>
+                                    <p className="text-sm"><strong>Premium features available:</strong> Higher-end models, added privacy options, and broader output choices.</p>
                                 </div>
                             </AccordionContent>
                         </AccordionItem>
@@ -447,9 +477,6 @@ export default async function CardGeneratorPage({ params }: CardGeneratorPagePro
                                     Compare this to traditional design tools that take hours, or other AI platforms that take 5-10 minutes.
                                     MewTruCard optimized AI pipeline delivers professional results at unprecedented speed.
                                 </p>
-                                <div className="mt-3 p-3 bg-purple-50 rounded-lg">
-                                    <p className="text-sm"><strong>Coming Soon:</strong> Audio-enhanced cards and full video experiences to give you even more creative options!</p>
-                                </div>
                             </AccordionContent>
                         </AccordionItem>
 
@@ -486,8 +513,8 @@ export default async function CardGeneratorPage({ params }: CardGeneratorPagePro
                                     <li><strong>URL customization</strong> - Create memorable sharing links</li>
                                 </ul>
                                 <p className="mt-3">
-                                    For MewTruCard AI-generated cards: unlimited edits and regenerations with free daily allowance.
-                                    For MewTruCard templates: full text, music, and URL customization always available.
+                                    For generated cards, the standard flow is: sign in, generate, edit, save, then send.
+                                    Sharing links and recipient details are part of the core editing experience.
                                 </p>
                             </AccordionContent>
                         </AccordionItem>
@@ -555,7 +582,7 @@ export default async function CardGeneratorPage({ params }: CardGeneratorPagePro
                                 Can I create any style I imagine for my MewTruCard {cardType} card?
                             </AccordionTrigger>
                             <AccordionContent className="text-gray-600 pt-4">
-                                <strong>Absolutely! MewTruCard AI has unlimited creative potential:</strong>
+                                <strong>Absolutely. MewTruCard AI supports a wide range of visual directions:</strong>
                                 <div className="mt-3 space-y-3">
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
                                         <div>

@@ -1,3 +1,5 @@
+"use client";
+
 import Link from 'next/link';
 import { CARD_TYPES, RELATIONSHIPS } from '@/lib/card-constants';
 

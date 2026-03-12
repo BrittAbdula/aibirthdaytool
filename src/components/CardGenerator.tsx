@@ -1,6 +1,6 @@
 'use client'
 import React, { useState, useEffect, useRef } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { Button } from "@/components/ui/button"
 import { WarmButton } from "@/components/ui/warm-button"
 import { GlassCard } from "@/components/ui/glass-card"
@@ -30,6 +30,8 @@ const MagicalCardCreation = () => {
   const [progress, setProgress] = useState(0);
   
   // Progress simulation
+  // Resume the saved generation attempt after authentication restores session state.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     const timer = setInterval(() => {
       setProgress(old => {
@@ -149,6 +151,18 @@ const AgeSelector = ({ age, setAge }: { age: number | null, setAge: (age: number
   )
 }
 
+const pickDefaultModelForFormat = (fmt: OutputFormat): ModelConfig => {
+  if (fmt === 'video') return modelConfigs.find(m => m.format === 'video' && m.tier === 'Premium' && m.id.includes('Fast')) || modelConfigs[0]
+  if (fmt === 'image') return modelConfigs.find(m => m.format === 'image' && m.tier === 'Free') || modelConfigs[0]
+  return modelConfigs.find(m => m.format === 'svg' && m.tier === 'Free') || modelConfigs[0]
+}
+
+const getTierOptionsForFormat = (fmt: OutputFormat) => {
+  if (fmt === 'svg') return { base: modelConfigs.find(m => m.id === 'Free_SVG') || pickDefaultModelForFormat('svg'), pro: modelConfigs.find(m => m.id === 'Premium_SVG') }
+  if (fmt === 'image') return { base: modelConfigs.find(m => m.id === 'Free_Image') || pickDefaultModelForFormat('image'), pro: modelConfigs.find(m => m.id === 'Premium_Image') }
+  return { base: modelConfigs.find(m => m.id === 'Premium_Video_Fast') || pickDefaultModelForFormat('video'), pro: modelConfigs.find(m => m.id === 'Premium_Video_Pro') }
+}
+
 const CustomSelect = ({ value, onValueChange, placeholder, options, customValue, onCustomValueChange, required, label }: any) => {
   const [isCustom, setIsCustom] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -186,6 +200,8 @@ export default function CardGenerator({
 }) {
   const AUTH_DRAFT_KEY = 'mewtrucard.authDraft.v1'
   const { data: session, status } = useSession()
+  const searchParams = useSearchParams()
+  const searchParamString = searchParams.toString()
   const [currentCardType, setCurrentCardType] = useState<CardType>(wishCardType)
   const [formData, setFormData] = useState<Record<string, any>>({})
   const [imageCount, setImageCount] = useState<number>(1)
@@ -194,11 +210,10 @@ export default function CardGenerator({
   const [submited, setSubmited] = useState(false)
   const [customValues, setCustomValues] = useState<Record<string, string>>({})
   const [selectedSize, setSelectedSize] = useState('portrait')
-  const [selectedModel, setSelectedModel] = useState<ModelConfig>(
-    modelConfigs.find(m => m.id === 'Free_Image') || modelConfigs[0]
-  )
+  const defaultSelectedModel = modelConfigs.find(m => m.id === 'Free_Image') || modelConfigs[0]
+  const [selectedModel, setSelectedModel] = useState<ModelConfig>(defaultSelectedModel)
   const [showModelSelector, setShowModelSelector] = useState(false)
-  const [selectedFormat, setSelectedFormat] = useState<OutputFormat>('image')
+  const [selectedFormat, setSelectedFormat] = useState<OutputFormat>(defaultSelectedModel.format)
   const [selectedStyleId, setSelectedStyleId] = useState<string | null>(null)
   const [selectedTier, setSelectedTier] = useState<'base' | 'pro'>('base')
   const [styleDialogOpen, setStyleDialogOpen] = useState(false)
@@ -216,6 +231,7 @@ export default function CardGenerator({
   const [creditsStatus, setCreditsStatus] = useState<any | null>(null);
   const [isClaimingCredits, setIsClaimingCredits] = useState(false);
   const pendingAuthRef = useRef<boolean>(false)
+  const generateAfterAuthRef = useRef<(() => void) | null>(null)
   const [savedFormData, setSavedFormData] = useState<any | null>(null)
   
   // Wizard State
@@ -244,6 +260,30 @@ export default function CardGenerator({
     return Array.from(new Set(withCurrent));
   }, [wishCardType]);
 
+  const normalizedRelationship = React.useMemo(() => {
+    const params = new URLSearchParams(searchParamString);
+    const rawValue = params.get('relationship') || params.get('to') || '';
+    return rawValue
+      .split(/[-_\s]+/)
+      .filter(Boolean)
+      .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
+      .join(' ');
+  }, [searchParamString]);
+
+  const prefilledValues = React.useMemo(() => {
+    const params = new URLSearchParams(searchParamString);
+    const signedValue = params.get('signed') || params.get('senderName') || '';
+    const recipientValue = params.get('recipientName') || '';
+    const messageValue = params.get('message') || '';
+
+    return {
+      ...(normalizedRelationship && { relationship: normalizedRelationship, to: normalizedRelationship }),
+      ...(recipientValue && { recipientName: recipientValue }),
+      ...(signedValue && { signed: signedValue, senderName: signedValue }),
+      ...(messageValue && { message: messageValue }),
+    };
+  }, [normalizedRelationship, searchParamString]);
+
   // Existing logic for auth, effects, etc.
   useEffect(() => {
     setCurrentCardType(wishCardType)
@@ -253,10 +293,10 @@ export default function CardGenerator({
         initialFormData[field.name] = field.defaultValue;
       }
     });
-    setFormData(initialFormData);
+    setFormData({ ...initialFormData, ...prefilledValues });
     const defaultImgUrl = cardConfig.isSystem ? `https://store.celeprime.com/${wishCardType}.svg` : sampleCard;
     initializeImageStates(imageCount, defaultImgUrl);
-  }, [wishCardType, cardConfig, sampleCard, imageCount, initializeImageStates]);
+  }, [wishCardType, cardConfig, sampleCard, imageCount, initializeImageStates, prefilledValues]);
 
   useEffect(() => {
     if (pendingAuthRef.current && session && savedFormData) {
@@ -267,7 +307,8 @@ export default function CardGenerator({
       if (savedFormData.selectedModel) setSelectedModel(savedFormData.selectedModel);
       setIsPrivateCard(savedFormData.isPrivate ?? false);
       setShowAuthDialog(false);
-      setTimeout(() => handleGenerateCard(), 500);
+      const timeout = window.setTimeout(() => generateAfterAuthRef.current?.(), 500);
+      return () => window.clearTimeout(timeout);
     }
   }, [session, savedFormData, setShowAuthDialog]);
 
@@ -275,20 +316,6 @@ export default function CardGenerator({
     if (session?.user) setIsPremiumUser((session as any).user?.plan === 'PREMIUM');
     else setIsPremiumUser(false);
   }, [session]);
-
-  const pickDefaultModelForFormat = (fmt: OutputFormat): ModelConfig => {
-    if (fmt === 'video') return modelConfigs.find(m => m.format === 'video' && m.tier === 'Premium' && m.id.includes('Fast')) || modelConfigs[0];
-    if (fmt === 'image') return modelConfigs.find(m => m.format === 'image' && m.tier === 'Free') || modelConfigs[0];
-    return modelConfigs.find(m => m.format === 'svg' && m.tier === 'Free') || modelConfigs[0];
-  };
-
-  const getTierOptionsForFormat = (fmt: OutputFormat) => {
-    if (fmt === 'svg') return { base: modelConfigs.find(m => m.id === 'Free_SVG') || pickDefaultModelForFormat('svg'), pro: modelConfigs.find(m => m.id === 'Premium_SVG') };
-    if (fmt === 'image') return { base: modelConfigs.find(m => m.id === 'Free_Image') || pickDefaultModelForFormat('image'), pro: modelConfigs.find(m => m.id === 'Premium_Image') };
-    return { base: modelConfigs.find(m => m.id === 'Premium_Video_Fast') || pickDefaultModelForFormat('video'), pro: modelConfigs.find(m => m.id === 'Premium_Video_Pro') };
-  };
-
-  useEffect(() => { setSelectedFormat(prev => selectedModel?.format || prev); }, []);
 
   useEffect(() => {
     if (!selectedFormat) return;
@@ -300,13 +327,25 @@ export default function CardGenerator({
       const style = stylePresets.find(s => s.id === selectedStyleId);
       if (style && !style.formats.includes(selectedFormat)) setSelectedStyleId(null);
     }
-  }, [selectedFormat, selectedTier]);
+  }, [selectedFormat, selectedStyleId, selectedTier]);
 
   const handleInputChange = (name: string, value: string | number) => {
     setFormData(prev => ({ ...prev, [name]: value }))
   }
 
-  const handleGenerateCard = async () => {
+  const getMissingFieldsForStep = () => {
+    if (currentStep !== 2) return [];
+
+    return ['to', 'relationship', 'recipientName']
+      .map((fieldName) => cardConfig.fields.find((field) => field.name === fieldName))
+      .filter((field): field is NonNullable<typeof cardConfig.fields[number]> => Boolean(field && !field.optional))
+      .filter((field) => {
+        const value = formData[field.name];
+        return typeof value !== 'string' || value.trim().length === 0;
+      });
+  };
+
+  const handleGenerateCard = React.useCallback(async () => {
     if (!session) {
       setSavedFormData({ formData: { ...formData }, customValues: { ...customValues }, selectedSize, selectedModel, isPrivate: isPrivateCard });
       pendingAuthRef.current = true;
@@ -334,7 +373,26 @@ export default function CardGenerator({
     } catch (err) {
       setErrorToast({ title: 'System Error', message: 'Something went wrong', type: 'error' });
     }
-  };
+  }, [
+    currentCardType,
+    customValues,
+    formData,
+    generateCards,
+    isPrivateCard,
+    selectedFormat,
+    selectedModel,
+    selectedSize,
+    selectedStyleId,
+    session,
+    setShowAuthDialog,
+    uploadedRefUrls,
+  ]);
+
+  useEffect(() => {
+    generateAfterAuthRef.current = () => {
+      void handleGenerateCard()
+    }
+  }, [handleGenerateCard])
 
   const handleLogin = async () => {
     try {
@@ -404,7 +462,20 @@ export default function CardGenerator({
     );
   }
 
-  const nextStep = () => setCurrentStep(prev => Math.min(prev + 1, TOTAL_STEPS));
+  const nextStep = () => {
+    const missingFields = getMissingFieldsForStep();
+    if (missingFields.length > 0) {
+      setErrorToast({
+        title: 'Missing details',
+        message: `Add ${missingFields.map((field) => field.label).join(', ')} before continuing.`,
+        type: 'warning'
+      });
+      return;
+    }
+
+    setErrorToast(null);
+    setCurrentStep(prev => Math.min(prev + 1, TOTAL_STEPS));
+  };
   const prevStep = () => setCurrentStep(prev => Math.max(prev - 1, 1));
 
   if (!cardConfig) return <div>Invalid card type</div>
@@ -427,7 +498,34 @@ export default function CardGenerator({
             <div className="h-2 w-full bg-gray-100 rounded-full overflow-hidden">
                <div className="h-full bg-gradient-to-r from-primary to-warm-coral transition-all duration-500 ease-out" style={{ width: `${(currentStep / TOTAL_STEPS) * 100}%` }}></div>
             </div>
+            <div className="mt-4 flex flex-wrap gap-2 text-xs text-gray-600">
+              <span className="rounded-full bg-orange-50 px-3 py-1 font-semibold text-orange-700">
+                Sign in required to create, save, and send
+              </span>
+              {(prefilledValues.recipientName || prefilledValues.relationship) && (
+                <span className="rounded-full bg-white px-3 py-1 font-medium text-gray-700">
+                  Prefilled for {prefilledValues.recipientName || 'your recipient'}
+                  {prefilledValues.relationship ? ` • ${prefilledValues.relationship}` : ''}
+                </span>
+              )}
+            </div>
           </div>
+
+          {errorToast && (
+            <div className="px-6 pt-6">
+              <Alert className={cn(
+                "border",
+                errorToast.type === 'error' && "border-red-200 bg-red-50 text-red-700",
+                errorToast.type === 'warning' && "border-amber-200 bg-amber-50 text-amber-800",
+                errorToast.type === 'info' && "border-blue-200 bg-blue-50 text-blue-800"
+              )}>
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>
+                  <span className="font-semibold">{errorToast.title}.</span> {errorToast.message}
+                </AlertDescription>
+              </Alert>
+            </div>
+          )}
 
           <div className="flex flex-col lg:flex-row min-h-[600px]">
             {/* Left/Top Panel: Inputs */}
@@ -585,7 +683,13 @@ export default function CardGenerator({
                                     if(data?.data?.downloadUrl) setUploadedRefUrls([data.data.downloadUrl]);
                                  } catch(err) { console.error(err); } finally { setIsRefUploading(false); }
                              }}/>
-                             {isRefUploading ? <Loader2 className="animate-spin mx-auto text-primary"/> : uploadedRefUrls.length ? <img src={uploadedRefUrls[0]} className="h-20 mx-auto object-contain rounded"/> : <div className="text-sm text-gray-500">Tap to upload a photo</div>}
+                             {isRefUploading ? <Loader2 className="animate-spin mx-auto text-primary"/> : uploadedRefUrls.length ? (
+                               <>
+                                 {/* Arbitrary upload URLs are previewed directly here. */}
+                                 {/* eslint-disable-next-line @next/next/no-img-element */}
+                                 <img src={uploadedRefUrls[0]} alt="Reference upload preview" className="h-20 mx-auto object-contain rounded"/>
+                               </>
+                             ) : <div className="text-sm text-gray-500">Tap to upload a photo</div>}
                           </div>
                        </div>
                     )}
@@ -676,7 +780,9 @@ export default function CardGenerator({
                <div onClick={() => { setSelectedStyleId(null); setStyleDialogOpen(false); }} className="aspect-[3/4] bg-gray-100 rounded-lg flex items-center justify-center cursor-pointer border hover:border-primary">Auto</div>
                {getPresetsForFormat(selectedFormat).map(p => (
                   <div key={p.id} onClick={() => { setSelectedStyleId(p.id); setStyleDialogOpen(false); }} className="relative aspect-[3/4] rounded-lg overflow-hidden cursor-pointer group">
-                     <img src={p.sample} className="absolute inset-0 w-full h-full object-cover"/>
+                     {/* Style preset samples may come from mixed remote sources. */}
+                     {/* eslint-disable-next-line @next/next/no-img-element */}
+                     <img src={p.sample} alt={`${p.name} style sample`} className="absolute inset-0 w-full h-full object-cover"/>
                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-2 text-white text-sm font-bold">{p.name}</div>
                   </div>
                ))}
@@ -686,4 +792,3 @@ export default function CardGenerator({
     </>
   )
 }
-

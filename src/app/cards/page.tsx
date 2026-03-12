@@ -4,23 +4,35 @@ import { Metadata } from "next";
 import Image from 'next/image'
 import Link from 'next/link'
 import { getAllCardPreviews } from '@/lib/card-config'
-import { PlusIcon } from '@radix-ui/react-icons'
+import ViralMicrositeGrid from '@/components/viral/ViralMicrositeGrid'
 
 export const metadata: Metadata = {
-  title: "Card Generators | MewTruCard",
-  description: "Explore our collection of AI-powered greeting card generators to create personalized messages for birthdays, anniversaries, thank-yous, and special occasions. Design beautiful custom cards in seconds with intelligent message generation.",
+  title: "Card Generators | Birthday, Valentine, Sorry & More - MewTruCard",
+  description: "Browse MewTruCard generators with a birthday-first path, plus valentine, sorry, anniversary, thank-you, and interactive microsite experiences for shareable moments.",
 };
 
 export default async function GeneratorsPage() {
-  const allGenerators = await getAllCardPreviews();
+  let allGenerators: Awaited<ReturnType<typeof getAllCardPreviews>> = [];
+  try {
+    allGenerators = await getAllCardPreviews();
+  } catch (error) {
+    console.error('Failed to load generators', error);
+  }
   
   // 分离官方和用户生成器
+  const featuredSlugs = ['birthday', 'valentine', 'sorry', 'anniversary', 'thankyou', 'love'];
   const officialGenerators = allGenerators.filter(gen => gen.isSystem);
-  const communityGenerators = allGenerators.filter(gen => !gen.isSystem);
+  const featuredGenerators = featuredSlugs
+    .map((slug) => officialGenerators.find((generator) => generator.link === `/${slug}/`))
+    .filter((generator): generator is NonNullable<typeof officialGenerators[number]> => Boolean(generator));
+  const remainingOfficialGenerators = officialGenerators.filter(
+    (generator) => !featuredGenerators.some((featured) => featured.link === generator.link)
+  );
+  const communityGenerators = allGenerators.filter(gen => !gen.isSystem).slice(0, 8);
   // 渲染生成器卡片的组件
   const GeneratorCard = ({ card }: { card: any }) => (
     <Link href={card.link} className="group block">
-      <div className="bg-purple-100 rounded-lg p-4 transition-all duration-300 group-hover:shadow-lg h-full">
+      <div className="h-full rounded-[24px] border border-white/70 bg-white/80 p-4 transition-all duration-300 group-hover:-translate-y-1 group-hover:shadow-xl">
         <div className="relative w-full pb-[133.33%] mb-4">
           <div className="absolute inset-0 transition-transform duration-300 ease-in-out group-hover:scale-105">
             <Image
@@ -32,14 +44,14 @@ export default async function GeneratorsPage() {
           </div>
         </div>
         <div className="space-y-2">
-          <h3 className="text-lg font-medium text-center">{card.title}</h3>
-          <p className="text-sm text-gray-600 text-center">
+          <h3 className="text-lg font-medium text-center text-gray-800">{card.title}</h3>
+          <p className="text-sm text-gray-600 text-center min-h-10">
             {/* Create personalized {card.title.toLowerCase()} */}
             {card.description}
           </p>
-          <button className="w-full py-2 text-sm text-purple-600 border border-purple-300 rounded-full hover:bg-purple-200 transition-colors">
-            Start Creating →
-          </button>
+          <div className="w-full rounded-full border border-purple-200 px-4 py-3 text-center text-sm font-semibold text-purple-700 transition-colors group-hover:bg-purple-50">
+            Open generator
+          </div>
         </div>
       </div>
     </Link>
@@ -63,29 +75,64 @@ export default async function GeneratorsPage() {
             </span>
           </h1>
           <p className="text-lg sm:text-xl text-gray-600 max-w-2xl mx-auto px-4 mb-6">
-            Choose a card type to start creating your personalized message ✨
+            Start with birthday cards first, then branch into valentine, sorry, anniversary, and other shareable greeting card flows.
           </p>
+          <div className="flex flex-wrap justify-center gap-2 text-sm">
+            <span className="rounded-full bg-white/80 px-3 py-2 font-medium text-purple-700 shadow-sm">Birthday-first entry point</span>
+            <span className="rounded-full bg-white/80 px-3 py-2 font-medium text-purple-700 shadow-sm">Sign in to create, save, and send</span>
+            <span className="rounded-full bg-white/80 px-3 py-2 font-medium text-purple-700 shadow-sm">Direct link sharing</span>
+          </div>
+          <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+            <Link href="/birthday/" className="w-full rounded-full bg-gradient-to-r from-orange-500 to-pink-500 px-8 py-3 text-center text-sm font-semibold text-white shadow-lg transition hover:scale-[1.02] sm:w-auto">
+              Start with Birthday Cards
+            </Link>
+            <Link href="/type/birthday/" className="w-full rounded-full border border-purple-200 bg-white/80 px-8 py-3 text-center text-sm font-semibold text-purple-700 transition hover:bg-purple-50 sm:w-auto">
+              Browse Birthday Ideas
+            </Link>
+          </div>
         </div>
 
-        {/* Official Generators Section */}
+        {/* Featured Generators Section */}
         <section className="mb-16">
-          <h2 className="text-2xl font-bold mb-6 text-[#4A4A4A]">
-            Official Generators
+          <h2 className="mb-2 text-2xl font-bold text-[#4A4A4A]">
+            Start Here
           </h2>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {officialGenerators.map((card, index) => (
+          <p className="mb-6 max-w-2xl text-sm text-gray-600">
+            These are the highest-value entry points based on current search demand and sharing behavior.
+          </p>
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-6">
+            {featuredGenerators.map((card, index) => (
               <GeneratorCard key={index} card={card} />
             ))}
           </div>
         </section>
 
+        {/* Official Generators Section */}
+        <section className="mb-16">
+          <h2 className="text-2xl font-bold mb-6 text-[#4A4A4A]">
+            More Official Generators
+          </h2>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {remainingOfficialGenerators.map((card, index) => (
+              <GeneratorCard key={index} card={card} />
+            ))}
+          </div>
+        </section>
+
+        <div className="mb-16">
+          <ViralMicrositeGrid
+            title="Interactive Viral Microsites"
+            description="Use reusable surprise-link pages for asks, reveals, apologies, and wedding moments, then hand users into the matching generator."
+          />
+        </div>
+
         {/* Community Generators Section */}
         {communityGenerators.length > 0 && (
           <section className="mb-16">
             <h2 className="text-2xl font-bold mb-6 text-[#4A4A4A] flex items-center">
-              Community Generators
+              Community Generator Experiments
               <span className="ml-3 text-sm font-normal text-gray-500">
-                Created by our community
+                Curated examples from the community
               </span>
             </h2>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-4">
@@ -95,10 +142,13 @@ export default async function GeneratorsPage() {
             </div>
           </section>
         )}
-        <div className="mb-16 items-center flex justify-center space-x-4">
-          <button className="bg-[#FFC0CB] text-white px-8 py-3 rounded-full hover:bg-pink-400 transition">
-            <a href="/create-generator">Create Your Generator</a>
-          </button>
+        <div className="mb-16 flex items-center justify-center space-x-4">
+          <Link
+            href="/create-generator"
+            className="rounded-full bg-[#FFC0CB] px-8 py-3 text-white transition hover:bg-pink-400"
+          >
+            Create Your Generator
+          </Link>
         </div>
 
         {/* Features Section */}

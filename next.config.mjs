@@ -9,6 +9,10 @@ const nextConfig = {
             },
             {
                 protocol: 'https',
+                hostname: 'api.producthunt.com'
+            },
+            {
+                protocol: 'https',
                 hostname: 'lh3.googleusercontent.com'
             },
             {

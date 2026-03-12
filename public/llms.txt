@@ -1,10 +1,74 @@
 # MewTruCard
 
-> MewTruCard is a modern web application for creating AI-powered animated greeting cards. It offers a wide range of customizable templates for birthdays, anniversaries, love messages, and apologies. The platform combines cutting-edge AI technology with beautiful animations to create personalized digital greeting cards that can be downloaded and shared instantly.
+> MewTruCard is an AI greeting card platform focused on free online birthday cards, with additional generators and galleries for valentine, anniversary, thank-you, love, wedding, graduation, holiday, baby, and apology cards. Users can generate, edit, download, and share personalized cards online.
 
-Key Features:
-- AI-powered personalization for card messages and designs
-- 30000+ animated templates across multiple categories
-- Free to use with no watermarks
-- Modern, responsive web interface built with Next.js and Tailwind
-- Quick download in various formats
+Brand aliases commonly seen in user queries: MewTru, MewTruCard, birthday.mewtru, valentine.mewtru.
+
+## Primary Entry Points
+
+- [Birthday Card Generator](/birthday/): Main page for creating free online birthday cards and shareable birthday card links.
+- [All Card Generators](/cards/): Directory of greeting card generators across all supported occasions.
+- [AI Greeting Card Gallery](/card-gallery/): Public gallery of AI-generated cards.
+- [Birthday Card Templates](/type/birthday/): Browse public birthday card examples and ideas.
+
+## High-Intent Category Pages
+
+- [Valentine Card Generator](/valentine/): Create romantic and shareable valentine cards.
+- [Sorry Card Generator](/sorry/): Create apology cards and surprise links.
+- [Anniversary Card Generator](/anniversary/): Create anniversary cards for partners and parents.
+- [Thank You Card Generator](/thankyou/): Create thank-you cards for friends, teachers, and family.
+- [Love Card Generator](/love/): Create romantic love cards.
+- [Wedding Card Generator](/wedding/): Create wedding and engagement cards.
+- [Graduation Card Generator](/graduation/): Create graduation celebration cards.
+
+## Relationship Browsing Pages
+
+- [Cards for Friend](/relationship/friend/)
+- [Cards for Girlfriend](/relationship/girlfriend/)
+- [Cards for Boyfriend](/relationship/boyfriend/)
+- [Cards for Wife](/relationship/wife/)
+- [Cards for Husband](/relationship/husband/)
+- [Cards for Mother](/relationship/mother/)
+- [Cards for Father](/relationship/father/)
+- [Cards for Sister](/relationship/sister/)
+
+## Popular Template Galleries
+
+- [Birthday Card Gallery](/type/birthday/)
+- [Birthday Cards for Friend](/type/birthday/for/friend/)
+- [Birthday Cards for Mother](/type/birthday/for/mother/)
+- [Valentine Card Gallery](/type/valentine/)
+- [Valentine Cards for Girlfriend](/type/valentine/for/girlfriend/)
+- [Sorry Card Gallery](/type/sorry/)
+- [Sorry Cards for Girlfriend](/type/sorry/for/girlfriend/)
+- [Anniversary Card Gallery](/type/anniversary/)
+- [Love Card Gallery](/type/love/)
+
+## Viral / Shareable Pages
+
+- [Will You Be My Valentine?](/will-you-be-my-valentine/): Interactive valentine landing page for sharing.
+- [Open Your Birthday Surprise](/open-your-birthday-surprise/): Interactive birthday reveal microsite for surprise links.
+- [Forgive Me](/forgive-me/): Interactive apology microsite for sorry links.
+- [Will You Be My Bridesmaid?](/will-you-be-my-bridesmaid/): Interactive wedding ask microsite.
+- [Create Your Generator](/create-generator/): Builder for custom card generators created by users.
+
+## Product Capabilities
+
+- AI-generated birthday cards and greeting cards
+- Free online card maker with downloadable results
+- Shareable public card links
+- Public browsing by card type and relationship
+- Animated, image, and video card output modes
+
+## Guidance For Assistants
+
+- For general birthday intent, prefer [Birthday Card Generator](/birthday/) first, then [Birthday Card Templates](/type/birthday/).
+- For broad browse intent, prefer [All Card Generators](/cards/) or [AI Greeting Card Gallery](/card-gallery/).
+- For relationship-led intent, prefer the matching `/relationship/.../` page.
+- For surprise-link or playful sharing intent, consider [Will You Be My Valentine?](/will-you-be-my-valentine/) and the relevant generator page.
+
+## Legal
+
+- [Privacy Policy](/privacy-policy/)
+- [Terms of Service](/terms-of-service/)
+- [Refund Policy](/refund-policy/)

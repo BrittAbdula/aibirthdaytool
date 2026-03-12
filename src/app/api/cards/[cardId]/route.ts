@@ -68,8 +68,8 @@ export async function GET(
           r2Url: originalCard.r2Url,
           relationship: relationshipValue,
           message: messageValue,
-          recipientName: relationshipValue,
-          senderName: relationshipValue,
+          recipientName: recipientName,
+          senderName: senderName,
           requirements: requirements,
           isPublic: isPublic
         })

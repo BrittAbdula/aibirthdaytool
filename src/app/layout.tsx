@@ -1,14 +1,13 @@
 import type { Metadata } from "next";
 import { Caveat, Quicksand } from "next/font/google";
 import "./globals.css";
-import { Header } from "@/components/Header";
-import Footer from "@/components/Footer";
 import '@/styles/globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import { GoogleAnalytics, GoogleTagManager } from '@next/third-parties/google'
 import { SessionProvider } from "next-auth/react"
 import GoogleAdsense from "@/components/GoogleAdsense";
 import Script from "next/script";
+import AppShell from "@/components/AppShell";
 
 const caveat = Caveat({ 
   subsets: ["latin"],
@@ -62,13 +61,9 @@ export default function RootLayout({
       </head>
       <body className={`${caveat.variable} ${quicksand.variable} font-sans text-[#2D2D2D]`}>
         <SessionProvider>
-        <GoogleAdsense />
-          <div className="flex flex-col min-h-screen">
-            <Header />
-            <main className="flex-grow">{children}</main>
-            <Footer />
-            <Toaster />
-          </div>
+          <GoogleAdsense />
+          <AppShell>{children}</AppShell>
+          <Toaster />
         </SessionProvider>
         <GoogleAnalytics gaId="G-TR8BTB7YVW" />
       </body>

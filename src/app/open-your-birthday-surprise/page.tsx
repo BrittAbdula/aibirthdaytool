@@ -5,7 +5,7 @@ import {
   getViralMicrosite,
 } from "@/lib/viral-microsites";
 
-const microsite = getViralMicrosite("will-you-be-my-valentine");
+const microsite = getViralMicrosite("open-your-birthday-surprise");
 
 export const metadata: Metadata = microsite
   ? buildViralMicrositeMetadata(microsite)
