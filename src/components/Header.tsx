@@ -13,11 +13,14 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Input } from '@/components/ui/input'
 import { PremiumButton } from '@/components/PremiumModal'
 import { SubscriptionButton } from '@/components/SubscriptionModal'
+import { getGalleryComboHref } from '@/lib/gallery-combos'
 import { cn } from '@/lib/utils'
 
 // 定义生成器类型
@@ -41,6 +44,20 @@ const GENERATORS = [
   { slug: 'teacher', label: 'Teacher' },
   { slug: 'easter', label: 'Easter' },
   { slug: 'womensday', label: 'Women\'s Day' },
+]
+
+const IDEA_GALLERY_LINKS = [
+  { href: getGalleryComboHref('birthday', 'friend'), label: 'Birthday for Friend' },
+  { href: getGalleryComboHref('birthday', 'mother'), label: 'Birthday for Mother' },
+  { href: getGalleryComboHref('valentine', 'girlfriend'), label: 'Valentine for Girlfriend' },
+  { href: getGalleryComboHref('sorry', 'girlfriend'), label: 'Sorry for Girlfriend' },
+]
+
+const IDEA_MICROSITE_LINKS = [
+  { href: '/will-you-be-my-valentine/', label: 'Valentine Ask' },
+  { href: '/open-your-birthday-surprise/', label: 'Birthday Surprise' },
+  { href: '/forgive-me/', label: 'Forgive Me' },
+  { href: '/will-you-be-my-bridesmaid/', label: 'Bridesmaid Ask' },
 ]
 
 // 记录搜索不存在的生成器类型
@@ -73,12 +90,12 @@ function Header() {
   const [isSearchOpen, setIsSearchOpen] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
   const [filteredGenerators, setFilteredGenerators] = useState(GENERATORS)
-  const [typingTimeout, setTypingTimeout] = useState<NodeJS.Timeout | null>(null)
   const [hasExactMatch, setHasExactMatch] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showComingSoon, setShowComingSoon] = useState(false)
   const searchRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
+  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   
   // 检查用户是否为Premium会员
   const isPremiumUser = session?.user?.plan === "PREMIUM"
@@ -114,9 +131,9 @@ function Header() {
 
   // 处理搜索输入变化
   useEffect(() => {
-    // 清除前一个定时器
-    if (typingTimeout) {
-      clearTimeout(typingTimeout)
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current)
+      typingTimeoutRef.current = null
     }
 
     if (searchTerm) {
@@ -137,14 +154,12 @@ function Header() {
 
       // 设置定时器，当用户停止输入3秒后，如果没有匹配项且输入长度足够，自动上报
       if (filtered.length === 0 && searchTerm.length >= 3) {
-        const timeout = setTimeout(() => {
+        typingTimeoutRef.current = setTimeout(() => {
           // 只有当搜索框仍然打开且内容未变时才上报
           if (isSearchOpen && searchTerm.length >= 3) {
             reportMissingGenerator(searchTerm)
           }
         }, 3000)
-
-        setTypingTimeout(timeout)
       }
     } else {
       setFilteredGenerators(GENERATORS) // Show all generators as recommendations
@@ -155,8 +170,9 @@ function Header() {
     setShowComingSoon(false)
 
     return () => {
-      if (typingTimeout) {
-        clearTimeout(typingTimeout)
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current)
+        typingTimeoutRef.current = null
       }
     }
   }, [searchTerm, isSearchOpen])
@@ -262,9 +278,37 @@ function Header() {
               Generators
             </Link>
 
-            <Link href="/card-gallery/" className="text-gray-600 hover:text-primary font-quicksand font-medium transition-colors text-base relative after:content-[''] after:absolute after:w-full after:scale-x-0 after:h-0.5 after:bottom-0 after:left-0 after:bg-primary after:origin-bottom-right after:transition-transform after:duration-300 hover:after:scale-x-100 hover:after:origin-bottom-left">
-              Gallery
-            </Link>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="inline-flex items-center gap-1 text-gray-600 hover:text-primary font-quicksand font-medium transition-colors text-base">
+                  Ideas
+                  <ChevronDown className="h-4 w-4" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-72 rounded-2xl border-orange-100 bg-white/95 p-2 shadow-xl backdrop-blur">
+                <DropdownMenuLabel className="px-3 pt-2 pb-1 text-xs uppercase tracking-[0.18em] text-gray-400">
+                  SEO Galleries
+                </DropdownMenuLabel>
+                {IDEA_GALLERY_LINKS.map((link) => (
+                  <DropdownMenuItem key={link.href} asChild className="rounded-xl px-3 py-2.5 focus:bg-orange-50">
+                    <Link href={link.href}>{link.label}</Link>
+                  </DropdownMenuItem>
+                ))}
+                <DropdownMenuSeparator className="bg-orange-100/60" />
+                <DropdownMenuLabel className="px-3 pt-2 pb-1 text-xs uppercase tracking-[0.18em] text-gray-400">
+                  Viral Microsites
+                </DropdownMenuLabel>
+                {IDEA_MICROSITE_LINKS.map((link) => (
+                  <DropdownMenuItem key={link.href} asChild className="rounded-xl px-3 py-2.5 focus:bg-orange-50">
+                    <Link href={link.href}>{link.label}</Link>
+                  </DropdownMenuItem>
+                ))}
+                <DropdownMenuSeparator className="bg-orange-100/60" />
+                <DropdownMenuItem asChild className="rounded-xl px-3 py-2.5 font-medium text-primary focus:bg-orange-50">
+                  <Link href="/card-gallery/">Open ideas hub</Link>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
 
             <Link href="/my-cards/" className="text-gray-600 hover:text-primary font-quicksand font-medium transition-colors text-base relative after:content-[''] after:absolute after:w-full after:scale-x-0 after:h-0.5 after:bottom-0 after:left-0 after:bg-primary after:origin-bottom-right after:transition-transform after:duration-300 hover:after:scale-x-100 hover:after:origin-bottom-left">
               My Cards
@@ -562,11 +606,41 @@ function Header() {
                 Generators
               </Link>
               <Link href="/card-gallery/" className="flex items-center px-4 py-3 text-gray-700 hover:bg-orange-50 rounded-xl transition-colors font-medium text-lg">
-                Gallery
+                Ideas Hub
               </Link>
               <Link href="/my-cards/" className="flex items-center px-4 py-3 text-gray-700 hover:bg-orange-50 rounded-xl transition-colors font-medium text-lg">
                 My Cards
               </Link>
+
+              <div className="px-4 pt-3">
+                <div className="text-xs font-semibold uppercase tracking-[0.18em] text-gray-400">
+                  SEO Galleries
+                </div>
+              </div>
+              {IDEA_GALLERY_LINKS.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className="flex items-center px-4 py-3 text-gray-700 hover:bg-orange-50 rounded-xl transition-colors font-medium"
+                >
+                  {link.label}
+                </Link>
+              ))}
+
+              <div className="px-4 pt-3">
+                <div className="text-xs font-semibold uppercase tracking-[0.18em] text-gray-400">
+                  Viral Microsites
+                </div>
+              </div>
+              {IDEA_MICROSITE_LINKS.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className="flex items-center px-4 py-3 text-gray-700 hover:bg-orange-50 rounded-xl transition-colors font-medium"
+                >
+                  {link.label}
+                </Link>
+              ))}
 
               <div className="my-2 border-t border-orange-100/50"></div>
 
