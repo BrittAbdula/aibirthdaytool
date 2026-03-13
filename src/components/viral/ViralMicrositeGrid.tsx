@@ -46,7 +46,7 @@ export default function ViralMicrositeGrid({
               <h3 className="text-xl font-semibold text-gray-800">{microsite.prompt}</h3>
               <p className="text-sm leading-6 text-gray-600">{microsite.description}</p>
               <div className="text-sm font-semibold text-primary">
-                Open microsite
+                Try this surprise link
               </div>
             </div>
           </Link>

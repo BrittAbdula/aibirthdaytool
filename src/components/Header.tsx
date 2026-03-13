@@ -20,7 +20,11 @@ import {
 import { Input } from '@/components/ui/input'
 import { PremiumButton } from '@/components/PremiumModal'
 import { SubscriptionButton } from '@/components/SubscriptionModal'
-import { getGalleryComboHref } from '@/lib/gallery-combos'
+import {
+  EXPLORE_OCCASION_LINKS,
+  EXPLORE_RECIPIENT_LINKS,
+  EXPLORE_SURPRISE_LINKS,
+} from '@/lib/discovery-links'
 import { cn } from '@/lib/utils'
 
 // 定义生成器类型
@@ -44,20 +48,6 @@ const GENERATORS = [
   { slug: 'teacher', label: 'Teacher' },
   { slug: 'easter', label: 'Easter' },
   { slug: 'womensday', label: 'Women\'s Day' },
-]
-
-const IDEA_GALLERY_LINKS = [
-  { href: getGalleryComboHref('birthday', 'friend'), label: 'Birthday for Friend' },
-  { href: getGalleryComboHref('birthday', 'mother'), label: 'Birthday for Mother' },
-  { href: getGalleryComboHref('valentine', 'girlfriend'), label: 'Valentine for Girlfriend' },
-  { href: getGalleryComboHref('sorry', 'girlfriend'), label: 'Sorry for Girlfriend' },
-]
-
-const IDEA_MICROSITE_LINKS = [
-  { href: '/will-you-be-my-valentine/', label: 'Valentine Ask' },
-  { href: '/open-your-birthday-surprise/', label: 'Birthday Surprise' },
-  { href: '/forgive-me/', label: 'Forgive Me' },
-  { href: '/will-you-be-my-bridesmaid/', label: 'Bridesmaid Ask' },
 ]
 
 // 记录搜索不存在的生成器类型
@@ -275,37 +265,55 @@ function Header() {
             </Link>
 
             <Link href="/cards/" className="text-gray-600 hover:text-primary font-quicksand font-medium transition-colors text-base relative after:content-[''] after:absolute after:w-full after:scale-x-0 after:h-0.5 after:bottom-0 after:left-0 after:bg-primary after:origin-bottom-right after:transition-transform after:duration-300 hover:after:scale-x-100 hover:after:origin-bottom-left">
-              Generators
+              Create
             </Link>
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button className="inline-flex items-center gap-1 text-gray-600 hover:text-primary font-quicksand font-medium transition-colors text-base">
-                  Ideas
+                  Explore
                   <ChevronDown className="h-4 w-4" />
                 </button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="w-72 rounded-2xl border-orange-100 bg-white/95 p-2 shadow-xl backdrop-blur">
+              <DropdownMenuContent align="start" className="w-[22rem] rounded-2xl border-orange-100 bg-white/95 p-2 shadow-xl backdrop-blur">
                 <DropdownMenuLabel className="px-3 pt-2 pb-1 text-xs uppercase tracking-[0.18em] text-gray-400">
-                  SEO Galleries
+                  Popular moments
                 </DropdownMenuLabel>
-                {IDEA_GALLERY_LINKS.map((link) => (
-                  <DropdownMenuItem key={link.href} asChild className="rounded-xl px-3 py-2.5 focus:bg-orange-50">
-                    <Link href={link.href}>{link.label}</Link>
+                {EXPLORE_OCCASION_LINKS.map((link) => (
+                  <DropdownMenuItem key={link.href} asChild className="rounded-xl p-0 focus:bg-transparent">
+                    <Link href={link.href} className="block rounded-xl px-3 py-3 transition-colors hover:bg-orange-50">
+                      <div className="text-sm font-semibold text-gray-800">{link.label}</div>
+                      <div className="mt-1 text-xs leading-5 text-gray-500">{link.description}</div>
+                    </Link>
                   </DropdownMenuItem>
                 ))}
                 <DropdownMenuSeparator className="bg-orange-100/60" />
                 <DropdownMenuLabel className="px-3 pt-2 pb-1 text-xs uppercase tracking-[0.18em] text-gray-400">
-                  Viral Microsites
+                  Cards for someone
                 </DropdownMenuLabel>
-                {IDEA_MICROSITE_LINKS.map((link) => (
-                  <DropdownMenuItem key={link.href} asChild className="rounded-xl px-3 py-2.5 focus:bg-orange-50">
-                    <Link href={link.href}>{link.label}</Link>
+                {EXPLORE_RECIPIENT_LINKS.map((link) => (
+                  <DropdownMenuItem key={link.href} asChild className="rounded-xl p-0 focus:bg-transparent">
+                    <Link href={link.href} className="block rounded-xl px-3 py-3 transition-colors hover:bg-orange-50">
+                      <div className="text-sm font-semibold text-gray-800">{link.label}</div>
+                      <div className="mt-1 text-xs leading-5 text-gray-500">{link.description}</div>
+                    </Link>
+                  </DropdownMenuItem>
+                ))}
+                <DropdownMenuSeparator className="bg-orange-100/60" />
+                <DropdownMenuLabel className="px-3 pt-2 pb-1 text-xs uppercase tracking-[0.18em] text-gray-400">
+                  Surprise links
+                </DropdownMenuLabel>
+                {EXPLORE_SURPRISE_LINKS.map((link) => (
+                  <DropdownMenuItem key={link.href} asChild className="rounded-xl p-0 focus:bg-transparent">
+                    <Link href={link.href} className="block rounded-xl px-3 py-3 transition-colors hover:bg-orange-50">
+                      <div className="text-sm font-semibold text-gray-800">{link.label}</div>
+                      <div className="mt-1 text-xs leading-5 text-gray-500">{link.description}</div>
+                    </Link>
                   </DropdownMenuItem>
                 ))}
                 <DropdownMenuSeparator className="bg-orange-100/60" />
                 <DropdownMenuItem asChild className="rounded-xl px-3 py-2.5 font-medium text-primary focus:bg-orange-50">
-                  <Link href="/card-gallery/">Open ideas hub</Link>
+                  <Link href="/card-gallery/">See all card ideas</Link>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -319,7 +327,7 @@ function Header() {
               <button
                 onClick={() => setIsSearchOpen(!isSearchOpen)}
                 className="text-gray-500 hover:text-primary p-2 rounded-full hover:bg-orange-50 transition-colors"
-                aria-label="Search generators"
+                aria-label="Search card ideas"
               >
                 <Search className="h-5 w-5" />
               </button>
@@ -331,7 +339,7 @@ function Header() {
                       <Input
                         ref={inputRef}
                         type="text"
-                        placeholder="Search for specialized cards..."
+                        placeholder="Search birthdays, apologies, weddings..."
                         className="pl-10 pr-4 py-6 w-full bg-orange-50/50 border-orange-100 focus:ring-primary/20 focus:border-primary rounded-xl"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
@@ -355,14 +363,14 @@ function Header() {
                           Thanks for your suggestion!
                         </div>
                         <div className="text-sm text-gray-600 mb-4">
-                          &quot;{searchTerm}&quot; generator is coming soon.
+                          &quot;{searchTerm}&quot; card idea is coming soon.
                         </div>
                         <Link
                           href="/cards/"
                           className="text-sm text-primary hover:underline font-medium"
                           onClick={() => setIsSearchOpen(false)}
                         >
-                          Browse all available generators
+                          Browse all card ideas
                         </Link>
                       </div>
                     ) : filteredGenerators.length > 0 ? (
@@ -382,7 +390,7 @@ function Header() {
                     ) : searchTerm.length >= 2 ? (
                       <div className="px-4 py-6 text-center">
                         <div className="text-sm text-gray-500 mb-4">
-                          No matching generators found
+                          No matching card ideas found
                         </div>
                         <Button
                           size="sm"
@@ -396,7 +404,7 @@ function Header() {
                           ) : (
                             <Plus className="h-3 w-3 mr-2" />
                           )}
-                          Request &quot;{searchTerm}&quot; generator
+                          Request &quot;{searchTerm}&quot; card idea
                         </Button>
                       </div>
                     ) : null}
@@ -408,7 +416,7 @@ function Header() {
                       className="block px-4 py-2 text-sm text-center text-primary hover:bg-orange-100/50 rounded-lg font-medium transition-colors"
                       onClick={() => setIsSearchOpen(false)}
                     >
-                      View all generators
+                      View all card ideas
                     </Link>
                   </div>
                 </div>
@@ -499,7 +507,7 @@ function Header() {
             <button
               onClick={() => setIsSearchOpen(!isSearchOpen)}
               className="text-gray-500 p-2 rounded-full hover:bg-orange-50 active:bg-orange-100 transition-colors"
-              aria-label="Search generators"
+              aria-label="Search card ideas"
             >
               <Search className="h-6 w-6" />
             </button>
@@ -524,7 +532,7 @@ function Header() {
                 <Input
                   ref={inputRef}
                   type="text"
-                  placeholder="Search generators..."
+                  placeholder="Search birthdays, apologies, weddings..."
                   className="pl-10 pr-10 py-3 w-full bg-orange-50/80 border-orange-100 focus:ring-primary focus:border-primary rounded-xl h-12 text-lg"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
@@ -547,14 +555,14 @@ function Header() {
                     Thanks for your suggestion!
                   </div>
                   <div className="text-sm text-gray-600 mb-4">
-                    &quot;{searchTerm}&quot; generator is coming soon.
+                    &quot;{searchTerm}&quot; card idea is coming soon.
                   </div>
                   <Link
                     href="/cards/"
                     className="block w-full py-3 text-center text-primary font-medium border border-orange-100 rounded-xl hover:bg-orange-50 active:scale-[0.98] transition-all"
                     onClick={() => setIsSearchOpen(false)}
                   >
-                    Browse all available generators
+                    Browse all card ideas
                   </Link>
                 </div>
               ) : filteredGenerators.length > 0 ? (
@@ -574,7 +582,7 @@ function Header() {
               ) : searchTerm.length >= 2 ? (
                 <div className="p-6 text-center">
                   <div className="text-gray-500 mb-4">
-                    No matching generators found
+                    No matching card ideas found
                   </div>
                   <Button
                     size="sm"
@@ -588,7 +596,7 @@ function Header() {
                     ) : (
                       <Plus className="h-4 w-4 mr-2" />
                     )}
-                    Request &quot;{searchTerm}&quot; generator
+                    Request &quot;{searchTerm}&quot; card idea
                   </Button>
                 </div>
               ) : null}
@@ -603,10 +611,10 @@ function Header() {
                 Home
               </Link>
               <Link href="/cards/" className="flex items-center px-4 py-3 text-gray-700 hover:bg-orange-50 rounded-xl transition-colors font-medium text-lg">
-                Generators
+                Create
               </Link>
               <Link href="/card-gallery/" className="flex items-center px-4 py-3 text-gray-700 hover:bg-orange-50 rounded-xl transition-colors font-medium text-lg">
-                Ideas Hub
+                Explore ideas
               </Link>
               <Link href="/my-cards/" className="flex items-center px-4 py-3 text-gray-700 hover:bg-orange-50 rounded-xl transition-colors font-medium text-lg">
                 My Cards
@@ -614,31 +622,55 @@ function Header() {
 
               <div className="px-4 pt-3">
                 <div className="text-xs font-semibold uppercase tracking-[0.18em] text-gray-400">
-                  SEO Galleries
+                  Popular moments
                 </div>
               </div>
-              {IDEA_GALLERY_LINKS.map((link) => (
+              {EXPLORE_OCCASION_LINKS.map((link) => (
                 <Link
                   key={link.href}
                   href={link.href}
                   className="flex items-center px-4 py-3 text-gray-700 hover:bg-orange-50 rounded-xl transition-colors font-medium"
                 >
-                  {link.label}
+                  <div>
+                    <div>{link.label}</div>
+                    <div className="mt-1 text-xs font-normal leading-5 text-gray-500">{link.description}</div>
+                  </div>
                 </Link>
               ))}
 
               <div className="px-4 pt-3">
                 <div className="text-xs font-semibold uppercase tracking-[0.18em] text-gray-400">
-                  Viral Microsites
+                  Cards for someone
                 </div>
               </div>
-              {IDEA_MICROSITE_LINKS.map((link) => (
+              {EXPLORE_RECIPIENT_LINKS.map((link) => (
                 <Link
                   key={link.href}
                   href={link.href}
                   className="flex items-center px-4 py-3 text-gray-700 hover:bg-orange-50 rounded-xl transition-colors font-medium"
                 >
-                  {link.label}
+                  <div>
+                    <div>{link.label}</div>
+                    <div className="mt-1 text-xs font-normal leading-5 text-gray-500">{link.description}</div>
+                  </div>
+                </Link>
+              ))}
+
+              <div className="px-4 pt-3">
+                <div className="text-xs font-semibold uppercase tracking-[0.18em] text-gray-400">
+                  Surprise links
+                </div>
+              </div>
+              {EXPLORE_SURPRISE_LINKS.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className="flex items-center px-4 py-3 text-gray-700 hover:bg-orange-50 rounded-xl transition-colors font-medium"
+                >
+                  <div>
+                    <div>{link.label}</div>
+                    <div className="mt-1 text-xs font-normal leading-5 text-gray-500">{link.description}</div>
+                  </div>
                 </Link>
               ))}
 

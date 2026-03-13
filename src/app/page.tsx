@@ -1,9 +1,22 @@
 import { Metadata } from "next";
-import Image from "next/image";
+import Link from "next/link";
+import { Suspense } from "react";
+import {
+  Download,
+  Gift,
+  Heart,
+  Link2,
+  MessageCircle,
+  Palette,
+  PenTool,
+  Search,
+  Send,
+  Sparkles,
+  Users,
+} from "lucide-react";
 import { TrendingCards } from "@/components/TrendingCards";
-import { Suspense } from 'react';
-import CardMarquee from '@/components/CardMarquee';
-import { Card, getRecentCardsServer } from '@/lib/cards';
+import CardMarquee from "@/components/CardMarquee";
+import { Card, getRecentCardsServer } from "@/lib/cards";
 import {
   Accordion,
   AccordionContent,
@@ -11,11 +24,15 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import CardTypeBubbles from "@/components/CardTypeBubbles";
-import Link from "next/link";
-import { Sparkles, Palette, Gift, Send, Download, PenTool, Search, MessageCircle, Heart } from "lucide-react";
 import { WarmButton } from "@/components/ui/warm-button";
 import { GlassCard } from "@/components/ui/glass-card";
 import ViralMicrositeGrid from "@/components/viral/ViralMicrositeGrid";
+import DiscoveryPanel from "@/components/discovery/DiscoveryPanel";
+import {
+  EXPLORE_RECIPIENT_LINKS,
+  EXPLORE_SURPRISE_LINKS,
+  FEATURED_GENERATOR_LINKS,
+} from "@/lib/discovery-links";
 
 interface FeatureCardProps {
   title: string;
@@ -25,16 +42,17 @@ interface FeatureCardProps {
 }
 
 interface StepCardProps {
-  number: string;
   title: string;
   description: string;
   details: string[];
   icon: React.ReactNode;
+  tone: "primary" | "accent";
 }
 
 export const metadata: Metadata = {
   title: "Free AI Birthday Card Generator | Online Birthday Card Maker - MewTruCard",
-  description: "Create a free online birthday card with AI, personalize the message, then download it or share a birthday card link. Explore birthday, valentine, sorry, and anniversary cards on MewTruCard.",
+  description:
+    "Create a free online birthday card with AI, personalize the message, then download it or share a birthday card link. Explore birthday, valentine, sorry, and anniversary cards on MewTruCard.",
   alternates: {
     canonical: "/",
   },
@@ -42,29 +60,34 @@ export const metadata: Metadata = {
     type: "website",
     url: "https://mewtrucard.com/",
     title: "Free AI Birthday Card Generator | MewTruCard",
-    description: "Create a free online birthday card, copy a shareable link, and browse public birthday templates and viral card ideas.",
+    description:
+      "Create a free online birthday card, copy a shareable link, and browse birthday, apology, and surprise-link ideas.",
     images: [
       {
         url: "https://mewtrucard.com/og-cover.jpg",
         width: 1200,
         height: 630,
-        alt: "MewTruCard Preview"
-      }
-    ]
+        alt: "MewTruCard Preview",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     creator: "@MewTruCard",
     title: "Free AI Birthday Card Generator | MewTruCard",
-    description: "Create birthday cards online with AI, share them by link, and explore viral valentine, sorry, and celebration microsites.",
-    images: ["https://mewtrucard.com/og-cover.jpg"]
-  }
+    description:
+      "Create birthday cards online with AI, share them by link, and explore valentine, sorry, and celebration ideas.",
+    images: ["https://mewtrucard.com/og-cover.jpg"],
+  },
 };
 
-export const revalidate = 300; // 每5分钟重新验证页面
+export const revalidate = 300;
 
 export default async function Home() {
-  let initialCardsData: { cards: Card[]; totalPages: number } = { cards: [], totalPages: 0 };
+  let initialCardsData: { cards: Card[]; totalPages: number } = {
+    cards: [],
+    totalPages: 0,
+  };
 
   try {
     initialCardsData = await getRecentCardsServer(1, 12, "");
@@ -73,118 +96,150 @@ export default async function Home() {
   }
 
   return (
-    <main className="min-h-screen bg-warm-cream overflow-x-hidden">
+    <main className="min-h-screen overflow-x-hidden bg-warm-cream">
       <div className="relative">
-        {/* Decorative elements - Warm Blobs */}
-        <div className="absolute top-0 left-0 w-64 h-64 bg-warm-peach rounded-full mix-blend-multiply filter blur-3xl opacity-60 animate-blob"></div>
-        <div className="absolute top-0 right-0 w-64 h-64 bg-warm-rose rounded-full mix-blend-multiply filter blur-3xl opacity-60 animate-blob animation-delay-2000"></div>
-        <div className="absolute -bottom-8 left-20 w-64 h-64 bg-warm-coral/20 rounded-full mix-blend-multiply filter blur-3xl opacity-60 animate-blob animation-delay-4000"></div>
+        <div className="absolute left-0 top-0 h-64 w-64 animate-blob rounded-full bg-warm-peach opacity-60 mix-blend-multiply blur-3xl" />
+        <div className="absolute right-0 top-0 h-64 w-64 animate-blob rounded-full bg-warm-rose opacity-60 mix-blend-multiply blur-3xl animation-delay-2000" />
+        <div className="absolute bottom-0 left-20 h-64 w-64 animate-blob rounded-full bg-warm-coral/20 opacity-60 mix-blend-multiply blur-3xl animation-delay-4000" />
 
-        {/* Hero Section */}
-        <div className="container mx-auto px-4 py-16 md:py-24 relative z-10">
-          <div className="flex flex-col items-center justify-center text-center">
-            <div className="mb-8 hover:scale-105 transition-transform duration-300">
-              <a href="https://www.producthunt.com/posts/mewtrucard?embed=true&utm_source=badge-featured&utm_medium=badge&utm_source=badge-mewtrucard" target="_blank" rel="noopener noreferrer">
-                <Image
-                  src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=969395&theme=light&t=1748048449150"
-                  alt="MewtruCard on Product Hunt"
-                  width={250}
-                  height={54}
-                  unoptimized
-                  className="rounded-lg shadow-sm"
-                />
-              </a>
-            </div>
-            
-            <div className="mb-5 flex flex-wrap items-center justify-center gap-2 text-xs sm:text-sm">
-              <span className="rounded-full bg-white/70 px-4 py-2 font-semibold text-orange-700 shadow-sm">
-                Free online birthday card maker
-              </span>
-              <span className="rounded-full bg-white/70 px-4 py-2 font-semibold text-orange-700 shadow-sm">
-                Shareable card links
-              </span>
-              <span className="rounded-full bg-white/70 px-4 py-2 font-semibold text-orange-700 shadow-sm">
-                Sign in to create, save, and send
-              </span>
+        <div className="container relative z-10 mx-auto px-4 py-16 md:py-24">
+          <section className="mx-auto max-w-5xl text-center">
+            <div className="mb-4 inline-flex items-center rounded-full border border-orange-100 bg-white/80 px-4 py-2 text-sm font-medium text-orange-700 shadow-sm">
+              Birthday-first card maker with shareable links
             </div>
 
-            <h1 className="text-5xl sm:text-7xl font-caveat font-bold mb-6 text-gray-800 tracking-tight leading-tight">
-              Create a <span className="text-primary inline-block transform -rotate-2 hover:rotate-3 transition-transform duration-300 relative">
-                Birthday
-                <svg className="absolute -bottom-2 left-0 w-full h-3 text-primary/30 -z-10" viewBox="0 0 100 10" preserveAspectRatio="none"><path d="M0 5 Q 50 10 100 5" stroke="currentColor" strokeWidth="3" fill="none" /></svg>
-              </span> Card Online
+            <h1 className="text-5xl font-caveat font-bold leading-tight text-gray-800 sm:text-7xl">
+              Create a <span className="text-primary">birthday card</span> worth
+              sharing
             </h1>
-            
-            <p className="text-xl sm:text-2xl text-gray-600 mb-10 max-w-2xl mx-auto font-quicksand font-medium leading-relaxed">
-              MewTruCard is built first for <span className="text-primary font-bold">birthday cards</span>:
-              create the message, personalize the card, then <span className="text-primary font-bold">copy a link</span> or download it.
-              Also explore viral <span className="text-primary font-bold">valentine</span>, <span className="text-primary font-bold">sorry</span>, and celebration pages.
+
+            <p className="mx-auto mt-6 max-w-3xl text-lg font-medium leading-8 text-gray-600 sm:text-2xl">
+              Start with birthday cards, then move into valentine, apology, and
+              anniversary moments. Personalize the message, save it to your
+              account, and send it by link or download in minutes.
             </p>
 
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16 w-full sm:w-auto">
+            <div className="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
               <Link href="/birthday/" className="w-full sm:w-auto">
-                <WarmButton size="lg" className="w-full sm:w-auto text-lg px-12 shadow-warm hover:shadow-warm-lg">
-                  Make a Birthday Card <Sparkles className="ml-2 h-5 w-5" />
+                <WarmButton size="lg" className="w-full px-12 text-lg shadow-warm hover:shadow-warm-lg sm:w-auto">
+                  Start with Birthday
+                  <Sparkles className="ml-2 h-5 w-5" />
                 </WarmButton>
               </Link>
-              <Link href="/type/birthday/" className="w-full sm:w-auto">
-                <WarmButton variant="secondary" size="lg" className="w-full sm:w-auto text-lg px-12">
-                  Browse Birthday Ideas <Search className="ml-2 h-5 w-5" />
+              <Link href="/card-gallery/" className="w-full sm:w-auto">
+                <WarmButton variant="secondary" size="lg" className="w-full px-12 text-lg sm:w-auto">
+                  Browse card ideas
+                  <Search className="ml-2 h-5 w-5" />
                 </WarmButton>
               </Link>
             </div>
 
-            <div className="mb-20 w-full max-w-4xl mx-auto transform hover:scale-[1.02] transition-transform duration-500">
+            <div className="mt-10 grid gap-4 text-left md:grid-cols-3">
+              <TrustPoint
+                title="Make it personal"
+                description="Recipient name, relationship, signature, and message all stay easy to edit."
+                icon={<Heart className="h-5 w-5" />}
+              />
+              <TrustPoint
+                title="Keep it in your account"
+                description="Sign in once, save cards, reopen edits, and send again without starting over."
+                icon={<Users className="h-5 w-5" />}
+              />
+              <TrustPoint
+                title="Share the way people actually send"
+                description="Copy a card link, send a surprise page, or download the final image."
+                icon={<Link2 className="h-5 w-5" />}
+              />
+            </div>
+
+            <div className="mt-12">
               <CardTypeBubbles currentType="birthday" />
             </div>
-          </div>
+          </section>
 
-          <div className="space-y-32">
-            <section className="relative scroll-mt-24" id="trending">
+          <div className="mt-24 space-y-32">
+            <section>
+              <SectionIntro
+                title="Start your card your way"
+                description="The fastest path is not always the same. Pick the route that matches what the user is trying to do right now."
+              />
+              <div className="grid gap-6 lg:grid-cols-3">
+                <DiscoveryPanel
+                  title="Start with a moment"
+                  description="Jump straight into the occasion you need today."
+                  icon={<Sparkles className="h-6 w-6" />}
+                  links={FEATURED_GENERATOR_LINKS}
+                />
+                <DiscoveryPanel
+                  title="Make it personal for someone"
+                  description="Open ideas that already match the relationship."
+                  icon={<Heart className="h-6 w-6" />}
+                  links={EXPLORE_RECIPIENT_LINKS}
+                />
+                <DiscoveryPanel
+                  title="Send a surprise link"
+                  description="Use a playful interactive page before the final card."
+                  icon={<Send className="h-6 w-6" />}
+                  links={EXPLORE_SURPRISE_LINKS}
+                />
+              </div>
+            </section>
+
+            <section className="scroll-mt-24" id="trending">
               <TrendingCards />
             </section>
-            
+
             <Features />
 
             <ViralMicrositeGrid
-              title="Templateable Viral Microsites"
-              description="Launch playful share links for valentine asks, birthday reveals, apology links, and bridal party moments. These pages are now built from one reusable microsite system."
+              title="Interactive surprise links"
+              description="Borrow the strongest part of viral sharing: a lightweight landing moment before the card itself. These pages work well for birthday reveals, apology links, valentine asks, and wedding surprises."
             />
 
-            <section className="relative">
-              <div className="text-center mb-12">
-                <h2 className="text-4xl sm:text-5xl font-caveat font-bold mb-4 text-gray-800">
-                  Explore Public <span className="text-primary">Birthday & Greeting Card Ideas</span>
-                </h2>
-                <p className="text-lg text-gray-600 max-w-2xl mx-auto font-medium">
-                  Browse public examples for birthdays, valentine cards, apology cards, and more before you create your own.
-                </p>
-              </div>
-              
-              <Suspense fallback={
-                <div className="flex items-center justify-center h-64 bg-white/50 rounded-2xl">
-                  <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-                </div>
-              }>
+            <section>
+              <SectionIntro
+                title="See what other people create"
+                description="A quick way to get unstuck: browse real public cards first, then make your own version."
+              />
+
+              <Suspense
+                fallback={
+                  <div className="flex h-64 items-center justify-center rounded-2xl bg-white/50">
+                    <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-t-2 border-primary" />
+                  </div>
+                }
+              >
                 <CardMarquee wishCardType="birthday" initialCardsData={initialCardsData} />
               </Suspense>
             </section>
 
             <HowToUse />
 
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 py-8">
-              <Link href="/birthday/">
-                <WarmButton size="lg" className="w-full sm:w-auto px-10">
-                  Start with Birthday Cards <PenTool className="ml-2 h-5 w-5" />
-                </WarmButton>
-              </Link>
-              <Link href="/cards/">
-                <WarmButton variant="secondary" size="lg" className="w-full sm:w-auto px-10">
-                  Browse All Generators <Search className="ml-2 h-5 w-5" />
-                </WarmButton>
-              </Link>
-            </div>
-            
+            <section className="rounded-[32px] border border-orange-100 bg-white/80 px-6 py-10 text-center shadow-sm sm:px-10">
+              <h2 className="text-4xl font-caveat font-bold text-gray-800 sm:text-5xl">
+                Ready to send something thoughtful?
+              </h2>
+              <p className="mx-auto mt-4 max-w-2xl text-lg leading-8 text-gray-600">
+                If you want the fastest path, start with birthday. If you want
+                inspiration first, browse public ideas and relationship-based
+                examples.
+              </p>
+              <div className="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
+                <Link href="/birthday/">
+                  <WarmButton size="lg" className="px-10">
+                    Start with Birthday
+                    <PenTool className="ml-2 h-5 w-5" />
+                  </WarmButton>
+                </Link>
+                <Link href="/cards/">
+                  <WarmButton variant="secondary" size="lg" className="px-10">
+                    Browse card ideas
+                    <Search className="ml-2 h-5 w-5" />
+                  </WarmButton>
+                </Link>
+              </div>
+            </section>
+
             <FAQ />
           </div>
         </div>
@@ -193,49 +248,86 @@ export default async function Home() {
   );
 }
 
-// Features Section
+function SectionIntro({
+  title,
+  description,
+}: {
+  title: string;
+  description: string;
+}) {
+  return (
+    <div className="mb-12 text-center">
+      <h2 className="text-4xl font-caveat font-bold text-gray-800 sm:text-5xl">
+        {title}
+      </h2>
+      <p className="mx-auto mt-4 max-w-2xl text-lg leading-8 text-gray-600">
+        {description}
+      </p>
+    </div>
+  );
+}
+
+function TrustPoint({
+  title,
+  description,
+  icon,
+}: {
+  title: string;
+  description: string;
+  icon: React.ReactNode;
+}) {
+  return (
+    <GlassCard className="border-white/60 bg-white/75 p-5">
+      <div className="flex items-start gap-4">
+        <div className="rounded-2xl bg-orange-50 p-3 text-primary ring-1 ring-orange-100">
+          {icon}
+        </div>
+        <div>
+          <h2 className="text-base font-semibold text-gray-800">{title}</h2>
+          <p className="mt-2 text-sm leading-6 text-gray-600">{description}</p>
+        </div>
+      </div>
+    </GlassCard>
+  );
+}
+
 const Features: React.FC = () => (
   <section className="relative py-12">
-    <div className="max-w-6xl mx-auto px-4">
-      <div className="text-center mb-16">
-        <h2 className="text-4xl font-caveat font-bold mb-6 text-gray-800">
-          Why MewTruCard is <span className="text-primary">Magical</span>
-        </h2>
-        <p className="text-xl text-gray-600 max-w-2xl mx-auto font-quicksand">
-          No design skills needed - just your feelings and our AI magic ✨
-        </p>
-      </div>
+    <div className="mx-auto max-w-6xl px-4">
+      <SectionIntro
+        title="Why people keep using MewTruCard"
+        description="The goal is simple: help someone go from blank page to sent card without getting lost in tooling."
+      />
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
         <FeatureCard
-          title="Birthday-First Flow"
-          description="A clearer path from birthday idea to message to shareable link"
+          title="Start faster"
+          description="A birthday-first setup for the most common use case, with other occasions one click away."
           icon={<Sparkles className="h-8 w-8 text-primary" />}
           benefits={[
-            "Sign in, create, save, and send",
-            "Recipient-first input flow",
-            "Birthday card link sharing"
+            "Birthday path stays front and center",
+            "Popular occasions are easy to switch between",
+            "Public examples help users get unstuck",
           ]}
         />
         <FeatureCard
-          title="Templates + Generator"
-          description="Start from a generator or browse public templates before editing"
+          title="Make it feel personal"
+          description="Users should spend their time on the message and relationship, not on figuring out the interface."
           icon={<Palette className="h-8 w-8 text-primary" />}
           benefits={[
-            "Birthday, valentine, sorry, and more",
-            "Public galleries by type and relationship",
-            "Editable messages and visuals"
+            "Recipient-first editing flow",
+            "Message, names, and signature stay editable",
+            "Relationship-based inspiration pages",
           ]}
         />
         <FeatureCard
-          title="Built to Spread"
-          description="Use direct links or playful microsites to get shared faster"
+          title="Share it the right way"
+          description="The product is stronger when the sending format matches the moment."
           icon={<Send className="h-8 w-8 text-primary" />}
           benefits={[
-            "Interactive viral microsites",
-            "Direct generator handoff after the moment",
-            "High-res image download",
-            "Instant web link sharing"
+            "Copy a card link in seconds",
+            "Download a polished image",
+            "Use interactive surprise pages before the card",
           ]}
         />
       </div>
@@ -243,28 +335,33 @@ const Features: React.FC = () => (
   </section>
 );
 
-const FeatureCard: React.FC<FeatureCardProps> = ({ title, description, icon, benefits }) => (
-  <GlassCard 
-    variant="warm" 
-    hoverEffect 
-    className="p-8 flex flex-col items-center text-center h-full border-white/60 bg-white/60"
+const FeatureCard: React.FC<FeatureCardProps> = ({
+  title,
+  description,
+  icon,
+  benefits,
+}) => (
+  <GlassCard
+    variant="warm"
+    hoverEffect
+    className="flex h-full flex-col items-center border-white/60 bg-white/60 p-8 text-center"
   >
-    <div className="mb-6 p-4 bg-orange-100/50 rounded-full text-primary ring-4 ring-orange-50">
+    <div className="mb-6 rounded-full bg-orange-100/50 p-4 text-primary ring-4 ring-orange-50">
       {icon}
     </div>
-    <h3 className="text-2xl font-caveat font-bold mb-4 text-gray-800">
+    <h3 className="mb-4 text-2xl font-caveat font-bold text-gray-800">
       {title}
     </h3>
-    <p className="text-gray-600 mb-6 font-medium leading-relaxed">
+    <p className="mb-6 font-medium leading-relaxed text-gray-600">
       {description}
     </p>
-    <ul className="space-y-3 mt-auto w-full text-left">
+    <ul className="mt-auto w-full space-y-3 text-left">
       {benefits.map((benefit, index) => (
         <li
           key={index}
-          className="flex items-center text-sm text-gray-600 bg-white/50 p-2 rounded-lg"
+          className="flex items-center rounded-lg bg-white/50 p-2 text-sm text-gray-600"
         >
-          <span className="w-1.5 h-1.5 rounded-full bg-primary mr-3 flex-shrink-0" />
+          <span className="mr-3 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-primary" />
           {benefit}
         </li>
       ))}
@@ -272,84 +369,83 @@ const FeatureCard: React.FC<FeatureCardProps> = ({ title, description, icon, ben
   </GlassCard>
 );
 
-// How To Use Section
 const HowToUse: React.FC = () => (
   <section className="py-8">
-    <div className="max-w-6xl mx-auto px-4">
-      <div className="text-center mb-16">
-        <h2 className="text-4xl font-caveat font-bold mb-6 text-gray-800">
-          Create a Card in <span className="text-primary">3 Clear Steps</span>
-        </h2>
-        <p className="text-xl text-gray-600 max-w-2xl mx-auto font-quicksand">
-          Keep the path simple: sign in, add your details, generate, then share or download.
-        </p>
-      </div>
+    <div className="mx-auto max-w-6xl px-4">
+      <SectionIntro
+        title="From blank page to sent card in minutes"
+        description="There are two good starting points: generate from scratch or browse ideas first. Both should end in a clean send flow."
+      />
 
-      <div className="grid md:grid-cols-2 gap-12 lg:gap-20">
+      <div className="grid gap-12 md:grid-cols-2 lg:gap-20">
         <div className="relative">
-          <div className="absolute -left-4 -top-4 w-20 h-20 bg-primary/10 rounded-full blur-2xl"></div>
-          <h3 className="text-2xl font-caveat font-bold mb-8 text-primary flex items-center justify-center md:justify-start">
-            <span className="w-8 h-8 rounded-full bg-primary text-white text-sm flex items-center justify-center mr-3 font-sans">1</span>
-            Method: Create Custom AI Card
+          <div className="absolute -left-4 -top-4 h-20 w-20 rounded-full bg-primary/10 blur-2xl" />
+          <h3 className="mb-8 flex items-center justify-center text-2xl font-caveat font-bold text-primary md:justify-start">
+            <span className="mr-3 flex h-8 w-8 items-center justify-center rounded-full bg-primary text-sm font-sans text-white">
+              1
+            </span>
+            Start with the generator
           </h3>
-          
-          <div className="space-y-6 relative">
-             <div className="absolute left-6 top-8 bottom-8 w-0.5 bg-gradient-to-b from-primary/30 to-transparent -z-10 md:block hidden"></div>
-            
+
+          <div className="relative space-y-6">
+            <div className="absolute bottom-8 left-6 top-8 -z-10 hidden w-0.5 bg-gradient-to-b from-primary/30 to-transparent md:block" />
+
             <StepCard
-              number="1"
-              title="Start with Occasion"
-              description="Birthday first, then valentine, sorry, anniversary, and more"
+              title="Pick the occasion"
+              description="Birthday is the fastest entry point, with other occasions always nearby."
               icon={<MessageCircle className="h-6 w-6 text-white" />}
-              details={["Birthday generator", "Other occasion generators"]}
+              tone="primary"
+              details={["Birthday", "Valentine", "Sorry", "Anniversary"]}
             />
             <StepCard
-              number="2"
-              title="Add Recipient Details"
-              description="Tell us who it is for and what you want to say"
+              title="Add the relationship and message"
+              description="Tell us who the card is for and the feeling you want to send."
               icon={<Heart className="h-6 w-6 text-white" />}
-              details={["Recipient name & relationship", "Optional message or signature"]}
+              tone="primary"
+              details={["Recipient name", "Relationship", "Optional note", "Signature"]}
             />
             <StepCard
-              number="3"
-              title="Generate, Save, Share"
-              description="Create the card, then copy a link or download it"
+              title="Save and send"
+              description="Generate the card, then copy the link or download the finished version."
               icon={<Gift className="h-6 w-6 text-white" />}
-              details={["AI writes the message", "Download or copy birthday link"]}
+              tone="primary"
+              details={["Account save", "Card link", "Image download"]}
             />
           </div>
         </div>
 
         <div className="relative">
-          <div className="absolute -right-4 -top-4 w-20 h-20 bg-accent/10 rounded-full blur-2xl"></div>
-          <h3 className="text-2xl font-caveat font-bold mb-8 text-accent flex items-center justify-center md:justify-start">
-            <span className="w-8 h-8 rounded-full bg-accent text-white text-sm flex items-center justify-center mr-3 font-sans">2</span>
-            Method: Browse Templates
+          <div className="absolute -right-4 -top-4 h-20 w-20 rounded-full bg-accent/10 blur-2xl" />
+          <h3 className="mb-8 flex items-center justify-center text-2xl font-caveat font-bold text-accent md:justify-start">
+            <span className="mr-3 flex h-8 w-8 items-center justify-center rounded-full bg-accent text-sm font-sans text-white">
+              2
+            </span>
+            Start from inspiration
           </h3>
-          
-          <div className="space-y-6 relative">
-            <div className="absolute left-6 top-8 bottom-8 w-0.5 bg-gradient-to-b from-accent/30 to-transparent -z-10 md:block hidden"></div>
+
+          <div className="relative space-y-6">
+            <div className="absolute bottom-8 left-6 top-8 -z-10 hidden w-0.5 bg-gradient-to-b from-accent/30 to-transparent md:block" />
 
             <StepCard
-              number="1"
-              title="Browse Public Ideas"
-              description="Review public cards before you make your own"
+              title="Browse real ideas"
+              description="Public cards, relationship pages, and occasion pages help users choose a direction quickly."
               icon={<Search className="h-6 w-6 text-white" />}
-              details={["Birthday templates", "Filter by type or relationship"]}
+              tone="accent"
+              details={["Public cards", "By occasion", "By relationship"]}
             />
             <StepCard
-              number="2"
-              title="Customize"
-              description="Make it yours"
+              title="Customize the details"
+              description="Take the idea you like, then adapt it to the real person and moment."
               icon={<PenTool className="h-6 w-6 text-white" />}
-              details={["Edit text & names", "Adjust visuals"]}
+              tone="accent"
+              details={["Rewrite the message", "Adjust names", "Change the final feel"]}
             />
             <StepCard
-              number="3"
-              title="Send It"
-              description="Share the joy"
+              title="Choose the send format"
+              description="Send a normal card, or layer in a surprise link before it."
               icon={<Download className="h-6 w-6 text-white" />}
-              details={["High-quality download", "Direct share link"]}
+              tone="accent"
+              details={["Card link", "Download", "Interactive surprise link"]}
             />
           </div>
         </div>
@@ -358,17 +454,32 @@ const HowToUse: React.FC = () => (
   </section>
 );
 
-const StepCard: React.FC<StepCardProps> = ({ number, title, description, details, icon }) => (
-  <GlassCard className="p-5 flex items-start gap-4 hover:border-primary/30 transition-colors bg-white/80">
-    <div className="p-3 bg-gradient-to-br from-primary to-warm-coral rounded-xl shadow-warm flex-shrink-0">
+const StepCard: React.FC<StepCardProps> = ({
+  title,
+  description,
+  details,
+  icon,
+  tone,
+}) => (
+  <GlassCard className="flex items-start gap-4 bg-white/80 p-5 transition-colors hover:border-primary/30">
+    <div
+      className={`flex-shrink-0 rounded-xl p-3 shadow-warm ${
+        tone === "primary"
+          ? "bg-gradient-to-br from-primary to-warm-coral"
+          : "bg-gradient-to-br from-accent to-primary"
+      }`}
+    >
       {icon}
     </div>
     <div>
-      <h4 className="font-bold text-gray-800 text-lg mb-1">{title}</h4>
-      <p className="text-sm text-gray-600 mb-3">{description}</p>
+      <h4 className="mb-1 text-lg font-bold text-gray-800">{title}</h4>
+      <p className="mb-3 text-sm text-gray-600">{description}</p>
       <div className="flex flex-wrap gap-2">
         {details.map((detail, index) => (
-          <span key={index} className="text-xs bg-orange-50 text-gray-600 px-2 py-1 rounded-md border border-orange-100">
+          <span
+            key={index}
+            className="rounded-md border border-orange-100 bg-orange-50 px-2 py-1 text-xs text-gray-600"
+          >
             {detail}
           </span>
         ))}
@@ -377,58 +488,52 @@ const StepCard: React.FC<StepCardProps> = ({ number, title, description, details
   </GlassCard>
 );
 
-// FAQ Section
 const faqs = [
   {
     question: "What is MewTruCard best for right now?",
-    answer: "MewTruCard performs best today as a birthday card maker with additional flows for valentine, sorry, anniversary, thank-you, and celebration cards. The clearest path is to sign in, start with a birthday card, personalize the details, then share the card by link or download."
+    answer:
+      "MewTruCard performs best today as a birthday card maker with additional flows for valentine, sorry, anniversary, thank-you, and celebration cards. The clearest path is to sign in, start with a birthday card, personalize the details, then share the card by link or download.",
   },
   {
     question: "Do I need to sign in before creating a card?",
-    answer: "Yes. The current product flow requires sign-in before generation so you can save cards, reopen edits, and send shareable links from your account."
+    answer:
+      "Yes. The current product flow requires sign-in before generation so you can save cards, reopen edits, and send shareable links from your account.",
   },
   {
-    question: "Can I create birthday cards on my phone?",
-    answer: "Yes. The main generator flow, editing screens, and share links are mobile-friendly, so you can create and send birthday cards directly from your phone browser."
+    question: "Can I create cards on my phone?",
+    answer:
+      "Yes. The main generator flow, editing screens, and share links are mobile-friendly, so you can create and send cards directly from your phone browser.",
   },
   {
     question: "How do I share my card?",
-    answer: "After generation and editing, you can download the card as an image or copy a unique link to send through WhatsApp, Messenger, email, or other social channels."
+    answer:
+      "After generation and editing, you can download the card as an image or copy a unique link to send through WhatsApp, Messenger, email, or other social channels.",
   },
   {
-    question: "What are the viral microsites for?",
-    answer: "They are shareable landing pages for playful asks and surprise moments, like valentine prompts, apology links, birthday reveals, and bridesmaid asks. Each microsite now feeds back into the relevant MewTruCard generator."
-  }
+    question: "What are surprise links?",
+    answer:
+      "They are shareable pages for playful asks and reveal moments, like valentine prompts, apology links, birthday surprises, and bridesmaid asks. Each surprise link now feeds back into the relevant MewTruCard card flow.",
+  },
 ];
 
 const FAQ: React.FC = () => (
   <section className="py-12">
-    <div className="text-center mb-12">
-      <h2 className="text-4xl font-caveat font-bold mb-4 text-gray-800">
-        Frequently Asked <span className="text-primary">Questions</span>
-      </h2>
-      <p className="text-lg text-gray-600 max-w-2xl mx-auto px-4 font-quicksand">
-        Everything you need to know about creating magic with MewTruCard
-      </p>
-    </div>
+    <SectionIntro
+      title="Frequently asked questions"
+      description="Everything important, without making the user hunt for operational details."
+    />
 
     <div className="mx-auto max-w-2xl px-4">
-      <Accordion
-        type="single"
-        collapsible
-        className="space-y-4"
-      >
+      <Accordion type="single" collapsible className="space-y-4">
         {faqs.map((faq, idx) => (
-          <AccordionItem
-            key={idx}
-            value={`question-${idx}`}
-            className="border-none"
-          >
-            <GlassCard className="px-1 overflow-hidden">
-              <AccordionTrigger className="px-6 py-4 text-left hover:no-underline font-medium text-gray-800 group">
-                <span className="group-hover:text-primary transition-colors">{faq.question}</span>
+          <AccordionItem key={idx} value={`question-${idx}`} className="border-none">
+            <GlassCard className="overflow-hidden px-1">
+              <AccordionTrigger className="group px-6 py-4 text-left font-medium text-gray-800 hover:no-underline">
+                <span className="transition-colors group-hover:text-primary">
+                  {faq.question}
+                </span>
               </AccordionTrigger>
-              <AccordionContent className="px-6 pb-4 text-gray-600 leading-relaxed bg-white/40">
+              <AccordionContent className="bg-white/40 px-6 pb-4 leading-relaxed text-gray-600">
                 {faq.answer}
               </AccordionContent>
             </GlassCard>
@@ -438,10 +543,10 @@ const FAQ: React.FC = () => (
     </div>
 
     <div className="mt-12 text-center">
-      <p className="text-lg text-gray-600 font-quicksand">
+      <p className="font-quicksand text-lg text-gray-600">
         Have more questions?{" "}
-        <a href="mailto:support@mewtrucard.com" className="text-primary hover:underline font-bold">
-          Contact Support
+        <a href="mailto:support@mewtrucard.com" className="font-bold text-primary hover:underline">
+          Contact support
         </a>
       </p>
     </div>
