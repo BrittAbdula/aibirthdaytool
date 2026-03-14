@@ -5,7 +5,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import SparklesText from '@/components/ui/sparkles-text'
-import { Menu, X, ChevronDown, Loader2, Crown, Search, SendHorizontal, Plus } from "lucide-react"
+import { Menu, X, ChevronDown, Loader2, Crown, Search, SendHorizontal, Plus, Sparkles, Users, Send } from "lucide-react"
 import { useSession, signIn, signOut } from "next-auth/react"
 import { Button } from '@/components/ui/button'
 import { WarmButton } from '@/components/ui/warm-button'
@@ -48,6 +48,34 @@ const GENERATORS = [
   { slug: 'teacher', label: 'Teacher' },
   { slug: 'easter', label: 'Easter' },
   { slug: 'womensday', label: 'Women\'s Day' },
+]
+
+const EXPLORE_CATEGORY_LINKS = [
+  {
+    href: '/cards/#moments',
+    label: 'By moment',
+    description: 'Birthday, valentine, apology, anniversary',
+    icon: <Sparkles className="h-4 w-4" />,
+  },
+  {
+    href: '/cards/#recipient',
+    label: 'By recipient',
+    description: 'Friend, mom, partner, spouse',
+    icon: <Users className="h-4 w-4" />,
+  },
+  {
+    href: '/cards/#surprise',
+    label: 'Surprise links',
+    description: 'Playful reveal pages before the final card',
+    icon: <Send className="h-4 w-4" />,
+  },
+]
+
+const EXPLORE_QUICK_LINKS = [
+  { href: EXPLORE_OCCASION_LINKS[0].href, label: 'Birthday' },
+  { href: EXPLORE_RECIPIENT_LINKS[0].href, label: 'For a friend' },
+  { href: EXPLORE_SURPRISE_LINKS[0].href, label: 'Birthday surprise' },
+  { href: '/card-gallery/', label: 'All ideas' },
 ]
 
 // 记录搜索不存在的生成器类型
@@ -275,46 +303,45 @@ function Header() {
                   <ChevronDown className="h-4 w-4" />
                 </button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="w-[22rem] rounded-2xl border-orange-100 bg-white/95 p-2 shadow-xl backdrop-blur">
-                <DropdownMenuLabel className="px-3 pt-2 pb-1 text-xs uppercase tracking-[0.18em] text-gray-400">
-                  Popular moments
+              <DropdownMenuContent align="start" className="w-[26rem] rounded-2xl border-orange-100 bg-white/95 p-3 shadow-xl backdrop-blur">
+                <DropdownMenuLabel className="px-1 pt-1 pb-3 text-xs uppercase tracking-[0.18em] text-gray-400">
+                  Explore by category
                 </DropdownMenuLabel>
-                {EXPLORE_OCCASION_LINKS.map((link) => (
-                  <DropdownMenuItem key={link.href} asChild className="rounded-xl p-0 focus:bg-transparent">
-                    <Link href={link.href} className="block rounded-xl px-3 py-3 transition-colors hover:bg-orange-50">
-                      <div className="text-sm font-semibold text-gray-800">{link.label}</div>
-                      <div className="mt-1 text-xs leading-5 text-gray-500">{link.description}</div>
-                    </Link>
-                  </DropdownMenuItem>
-                ))}
-                <DropdownMenuSeparator className="bg-orange-100/60" />
-                <DropdownMenuLabel className="px-3 pt-2 pb-1 text-xs uppercase tracking-[0.18em] text-gray-400">
-                  Cards for someone
-                </DropdownMenuLabel>
-                {EXPLORE_RECIPIENT_LINKS.map((link) => (
-                  <DropdownMenuItem key={link.href} asChild className="rounded-xl p-0 focus:bg-transparent">
-                    <Link href={link.href} className="block rounded-xl px-3 py-3 transition-colors hover:bg-orange-50">
-                      <div className="text-sm font-semibold text-gray-800">{link.label}</div>
-                      <div className="mt-1 text-xs leading-5 text-gray-500">{link.description}</div>
-                    </Link>
-                  </DropdownMenuItem>
-                ))}
-                <DropdownMenuSeparator className="bg-orange-100/60" />
-                <DropdownMenuLabel className="px-3 pt-2 pb-1 text-xs uppercase tracking-[0.18em] text-gray-400">
-                  Surprise links
-                </DropdownMenuLabel>
-                {EXPLORE_SURPRISE_LINKS.map((link) => (
-                  <DropdownMenuItem key={link.href} asChild className="rounded-xl p-0 focus:bg-transparent">
-                    <Link href={link.href} className="block rounded-xl px-3 py-3 transition-colors hover:bg-orange-50">
-                      <div className="text-sm font-semibold text-gray-800">{link.label}</div>
-                      <div className="mt-1 text-xs leading-5 text-gray-500">{link.description}</div>
-                    </Link>
-                  </DropdownMenuItem>
-                ))}
-                <DropdownMenuSeparator className="bg-orange-100/60" />
-                <DropdownMenuItem asChild className="rounded-xl px-3 py-2.5 font-medium text-primary focus:bg-orange-50">
-                  <Link href="/card-gallery/">See all card ideas</Link>
-                </DropdownMenuItem>
+                <div className="grid gap-2">
+                  {EXPLORE_CATEGORY_LINKS.map((link) => (
+                    <DropdownMenuItem key={link.href} asChild className="rounded-2xl p-0 focus:bg-transparent">
+                      <Link
+                        href={link.href}
+                        className="flex items-start gap-3 rounded-2xl border border-orange-100/80 bg-white/80 px-4 py-3 transition-colors hover:bg-orange-50"
+                      >
+                        <div className="mt-0.5 rounded-xl bg-orange-50 p-2 text-primary ring-1 ring-orange-100">
+                          {link.icon}
+                        </div>
+                        <div>
+                          <div className="text-sm font-semibold text-gray-800">{link.label}</div>
+                          <div className="mt-1 text-xs leading-5 text-gray-500">{link.description}</div>
+                        </div>
+                      </Link>
+                    </DropdownMenuItem>
+                  ))}
+                </div>
+                <DropdownMenuSeparator className="my-3 bg-orange-100/60" />
+                <div className="px-1 pb-1">
+                  <div className="mb-3 text-xs uppercase tracking-[0.18em] text-gray-400">
+                    Quick picks
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {EXPLORE_QUICK_LINKS.map((link) => (
+                      <Link
+                        key={link.href}
+                        href={link.href}
+                        className="rounded-full border border-orange-100 bg-orange-50/60 px-3 py-2 text-xs font-semibold text-gray-700 transition-colors hover:border-primary/20 hover:bg-orange-50 hover:text-primary"
+                      >
+                        {link.label}
+                      </Link>
+                    ))}
+                  </div>
+                </div>
               </DropdownMenuContent>
             </DropdownMenu>
 
@@ -622,17 +649,20 @@ function Header() {
 
               <div className="px-4 pt-3">
                 <div className="text-xs font-semibold uppercase tracking-[0.18em] text-gray-400">
-                  Popular moments
+                  Explore by category
                 </div>
               </div>
-              {EXPLORE_OCCASION_LINKS.map((link) => (
+              {EXPLORE_CATEGORY_LINKS.map((link) => (
                 <Link
                   key={link.href}
                   href={link.href}
-                  className="flex items-center px-4 py-3 text-gray-700 hover:bg-orange-50 rounded-xl transition-colors font-medium"
+                  className="flex items-start gap-3 rounded-xl border border-orange-100/80 bg-white/70 px-4 py-3 text-gray-700 transition-colors hover:bg-orange-50"
                 >
+                  <div className="mt-0.5 rounded-xl bg-orange-50 p-2 text-primary ring-1 ring-orange-100">
+                    {link.icon}
+                  </div>
                   <div>
-                    <div>{link.label}</div>
+                    <div className="font-medium">{link.label}</div>
                     <div className="mt-1 text-xs font-normal leading-5 text-gray-500">{link.description}</div>
                   </div>
                 </Link>
@@ -640,39 +670,20 @@ function Header() {
 
               <div className="px-4 pt-3">
                 <div className="text-xs font-semibold uppercase tracking-[0.18em] text-gray-400">
-                  Cards for someone
+                  Quick picks
                 </div>
               </div>
-              {EXPLORE_RECIPIENT_LINKS.map((link) => (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className="flex items-center px-4 py-3 text-gray-700 hover:bg-orange-50 rounded-xl transition-colors font-medium"
-                >
-                  <div>
-                    <div>{link.label}</div>
-                    <div className="mt-1 text-xs font-normal leading-5 text-gray-500">{link.description}</div>
-                  </div>
-                </Link>
-              ))}
-
-              <div className="px-4 pt-3">
-                <div className="text-xs font-semibold uppercase tracking-[0.18em] text-gray-400">
-                  Surprise links
-                </div>
+              <div className="flex flex-wrap gap-2 px-4">
+                {EXPLORE_QUICK_LINKS.map((link) => (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    className="rounded-full border border-orange-100 bg-orange-50/60 px-3 py-2 text-xs font-semibold text-gray-700 transition-colors hover:border-primary/20 hover:bg-orange-50 hover:text-primary"
+                  >
+                    {link.label}
+                  </Link>
+                ))}
               </div>
-              {EXPLORE_SURPRISE_LINKS.map((link) => (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className="flex items-center px-4 py-3 text-gray-700 hover:bg-orange-50 rounded-xl transition-colors font-medium"
-                >
-                  <div>
-                    <div>{link.label}</div>
-                    <div className="mt-1 text-xs font-normal leading-5 text-gray-500">{link.description}</div>
-                  </div>
-                </Link>
-              ))}
 
               <div className="my-2 border-t border-orange-100/50"></div>
 

@@ -197,24 +197,30 @@ export default async function GeneratorsPage() {
               description="Borrowing from the best template libraries, this page now helps people discover a fitting starting point before asking them to create."
             />
             <div className="grid gap-6 lg:grid-cols-3">
-              <DiscoveryPanel
-                title="Start with a moment"
-                description="Jump straight into the occasion you need most often."
-                icon={<Sparkles className="h-6 w-6" />}
-                links={FEATURED_GENERATOR_LINKS}
-              />
-              <DiscoveryPanel
-                title="Cards for someone"
-                description="Pre-filtered inspiration for common relationship-based needs."
-                icon={<Users className="h-6 w-6" />}
-                links={EXPLORE_RECIPIENT_LINKS}
-              />
-              <DiscoveryPanel
-                title="Surprise links"
-                description="Interactive pages that set up the moment before the card."
-                icon={<Send className="h-6 w-6" />}
-                links={EXPLORE_SURPRISE_LINKS}
-              />
+              <div id="moments" className="scroll-mt-28">
+                <DiscoveryPanel
+                  title="Start with a moment"
+                  description="Jump straight into the occasion you need most often."
+                  icon={<Sparkles className="h-6 w-6" />}
+                  links={FEATURED_GENERATOR_LINKS}
+                />
+              </div>
+              <div id="recipient" className="scroll-mt-28">
+                <DiscoveryPanel
+                  title="Cards for someone"
+                  description="Pre-filtered inspiration for common relationship-based needs."
+                  icon={<Users className="h-6 w-6" />}
+                  links={EXPLORE_RECIPIENT_LINKS}
+                />
+              </div>
+              <div id="surprise" className="scroll-mt-28">
+                <DiscoveryPanel
+                  title="Surprise links"
+                  description="Interactive pages that set up the moment before the card."
+                  icon={<Send className="h-6 w-6" />}
+                  links={EXPLORE_SURPRISE_LINKS}
+                />
+              </div>
             </div>
           </section>
 
