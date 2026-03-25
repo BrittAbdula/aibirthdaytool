@@ -33,6 +33,8 @@ import {
   EXPLORE_SURPRISE_LINKS,
   FEATURED_GENERATOR_LINKS,
 } from "@/lib/discovery-links";
+import JsonLd from "@/components/JsonLd";
+import { buildFaqSchema, buildItemListSchema, type SeoFaq } from "@/lib/seo";
 
 interface FeatureCardProps {
   title: string;
@@ -50,18 +52,18 @@ interface StepCardProps {
 }
 
 export const metadata: Metadata = {
-  title: "Free AI Birthday Card Generator | Online Birthday Card Maker - MewTruCard",
+  title: "AI Greeting Card Generator & Birthday Card Maker | MewTruCard",
   description:
-    "Create a free online birthday card with AI, personalize the message, then download it or share a birthday card link. Explore birthday, valentine, sorry, and anniversary cards on MewTruCard.",
+    "Create free online birthday cards and AI greeting cards, then share them by link or download. Explore birthday, valentine, sorry, anniversary, and more on MewTruCard.",
   alternates: {
     canonical: "/",
   },
   openGraph: {
     type: "website",
     url: "https://mewtrucard.com/",
-    title: "Free AI Birthday Card Generator | MewTruCard",
+    title: "AI Greeting Card Generator & Birthday Card Maker | MewTruCard",
     description:
-      "Create a free online birthday card, copy a shareable link, and browse birthday, apology, and surprise-link ideas.",
+      "Create birthday cards, valentine cards, apology cards, and shareable greeting card links with AI.",
     images: [
       {
         url: "https://mewtrucard.com/og-cover.jpg",
@@ -74,9 +76,9 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     creator: "@MewTruCard",
-    title: "Free AI Birthday Card Generator | MewTruCard",
+    title: "AI Greeting Card Generator & Birthday Card Maker | MewTruCard",
     description:
-      "Create birthday cards online with AI, share them by link, and explore valentine, sorry, and celebration ideas.",
+      "Create birthday cards online with AI, share them by link, and explore valentine, apology, and celebration ideas.",
     images: ["https://mewtrucard.com/og-cover.jpg"],
   },
 };
@@ -95,8 +97,35 @@ export default async function Home() {
     console.error("Failed to load homepage card data", error);
   }
 
+  const homeEntryLinks = [
+    {
+      href: "/birthday/",
+      label: "Birthday card generator",
+      description: "Create a free online birthday card and share it by link.",
+    },
+    {
+      href: "/cards/",
+      label: "All card generators",
+      description: "Browse birthday, valentine, apology, anniversary, and more.",
+    },
+    {
+      href: "/type/birthday/",
+      label: "Birthday card templates",
+      description: "See public birthday card examples before you make your own.",
+    },
+    {
+      href: "/valentine/",
+      label: "Valentine card generator",
+      description: "Create romantic cards and playful surprise-link moments.",
+    },
+  ];
+
   return (
     <main className="min-h-screen overflow-x-hidden bg-warm-cream">
+      <JsonLd data={buildFaqSchema(homeFaqs)} />
+      <JsonLd
+        data={buildItemListSchema("MewTruCard main entry points", homeEntryLinks)}
+      />
       <div className="relative">
         <div className="absolute left-0 top-0 h-64 w-64 animate-blob rounded-full bg-warm-peach opacity-60 mix-blend-multiply blur-3xl" />
         <div className="absolute right-0 top-0 h-64 w-64 animate-blob rounded-full bg-warm-rose opacity-60 mix-blend-multiply blur-3xl animation-delay-2000" />
@@ -105,11 +134,11 @@ export default async function Home() {
         <div className="container relative z-10 mx-auto px-4 py-16 md:py-24">
           <section className="mx-auto max-w-5xl text-center">
             <div className="mb-4 inline-flex items-center rounded-full border border-orange-100 bg-white/80 px-4 py-2 text-sm font-medium text-orange-700 shadow-sm">
-              Birthday-first card maker with shareable links
+              Birthday-first AI greeting card maker
             </div>
 
             <h1 className="text-5xl font-caveat font-bold leading-tight text-gray-800 sm:text-7xl">
-              Create a <span className="text-primary">birthday card</span> worth
+              Create <span className="text-primary">greeting cards</span> worth
               sharing
             </h1>
 
@@ -126,9 +155,9 @@ export default async function Home() {
                   <Sparkles className="ml-2 h-5 w-5" />
                 </WarmButton>
               </Link>
-              <Link href="/card-gallery/" className="w-full sm:w-auto">
+              <Link href="/cards/" className="w-full sm:w-auto">
                 <WarmButton variant="secondary" size="lg" className="w-full px-12 text-lg sm:w-auto">
-                  Browse card ideas
+                  Explore all occasions
                   <Search className="ml-2 h-5 w-5" />
                 </WarmButton>
               </Link>
@@ -233,7 +262,7 @@ export default async function Home() {
                 </Link>
                 <Link href="/cards/">
                   <WarmButton variant="secondary" size="lg" className="px-10">
-                    Browse card ideas
+                    Explore all occasions
                     <Search className="ml-2 h-5 w-5" />
                   </WarmButton>
                 </Link>
@@ -488,7 +517,7 @@ const StepCard: React.FC<StepCardProps> = ({
   </GlassCard>
 );
 
-const faqs = [
+const homeFaqs: SeoFaq[] = [
   {
     question: "What is MewTruCard best for right now?",
     answer:
@@ -525,7 +554,7 @@ const FAQ: React.FC = () => (
 
     <div className="mx-auto max-w-2xl px-4">
       <Accordion type="single" collapsible className="space-y-4">
-        {faqs.map((faq, idx) => (
+        {homeFaqs.map((faq, idx) => (
           <AccordionItem key={idx} value={`question-${idx}`} className="border-none">
             <GlassCard className="overflow-hidden px-1">
               <AccordionTrigger className="group px-6 py-4 text-left font-medium text-gray-800 hover:no-underline">

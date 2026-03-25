@@ -7,6 +7,7 @@ import { Card, TabType } from '@/lib/cards'
 import { CardType } from '@/lib/card-config'
 import { Button } from '@/components/ui/button'
 import { ArrowRightIcon } from '@radix-ui/react-icons'
+import { buildCardPreviewAlt } from '@/lib/seo'
 
 interface SimpleCardGalleryProps {
   initialCardsData: {
@@ -30,10 +31,7 @@ export default function SimpleCardGallery({ initialCardsData, wishCardType, tabT
           >
             <div className="w-full relative">
               <ImageViewer
-                alt={
-                  `MewTruCard ${card.cardType} card for ${card.relationship}` +
-                  (card.message ? `: ${card.message}` : '')
-                }
+                alt={buildCardPreviewAlt(card.cardType, card.relationship)}
                 cardId={card.id}
                 cardType={card.cardType}
                 isNewCard={false}

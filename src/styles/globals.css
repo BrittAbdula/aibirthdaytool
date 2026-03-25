@@ -1,16 +1,7 @@
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&display=swap');
-
 :root {
   --background-color: #FFF9F0;
   --text-color: #4A4A4A;
   --accent-color: #FFC0CB;
-  --font-family: 'Playfair Display', serif;
-}
-
-body {
-  background-color: var(--background-color);
-  color: var(--text-color);
-  font-family: var(--font-family);
 }
 
 .card {

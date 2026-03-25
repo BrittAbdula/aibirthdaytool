@@ -24,6 +24,7 @@ import { stylePresets, getPresetsForFormat, type OutputFormat } from '@/lib/styl
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { Switch } from "@/components/ui/switch"
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover"
+import { getSeoCardTypeLabel } from '@/lib/seo'
 
 const MagicalCardCreation = () => {
   const [loadingText, setLoadingText] = useState("Weaving your magical words...");
@@ -488,9 +489,9 @@ export default function CardGenerator({
           {/* Progress Header */}
           <div className="bg-white/50 border-b border-orange-100/50 p-6">
             <div className="flex items-center justify-between mb-4">
-              <h1 className="text-2xl font-caveat font-bold text-gray-800">
+              <h2 className="text-2xl font-caveat font-bold text-gray-800">
                 Create Magical Card <span className="text-base font-sans font-normal text-gray-500 ml-2">Step {currentStep} of {TOTAL_STEPS}</span>
-              </h1>
+              </h2>
               <div className="text-xs font-bold px-2 py-1 bg-primary/10 text-primary rounded-full uppercase tracking-wider">
                 {currentStep === 1 ? 'Format' : currentStep === 2 ? 'Details' : currentStep === 3 ? 'Message' : 'Magic'}
               </div>
@@ -724,6 +725,23 @@ export default function CardGenerator({
                           isNewCard={true}
                           svgContent={imageStates[0].svgContent}
                         />
+                     </div>
+                  ) : initialImgUrl ? (
+                     <div className="w-full max-w-sm">
+                        <div className="overflow-hidden rounded-xl border border-gray-100 bg-white shadow-2xl">
+                           {/* Default generator preview should be visible in initial HTML for faster LCP discovery. */}
+                           {/* eslint-disable-next-line @next/next/no-img-element */}
+                           <img
+                             src={initialImgUrl}
+                             alt={`${getSeoCardTypeLabel(currentCardType)} card preview`}
+                             width={400}
+                             height={600}
+                             loading="eager"
+                             fetchPriority="high"
+                             decoding="async"
+                             className="h-auto w-full object-contain"
+                           />
+                        </div>
                      </div>
                   ) : (
                      <div className="text-center opacity-50">

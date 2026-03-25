@@ -40,3 +40,4 @@ next-env.d.ts
 .agent
 .shared
 .codex
+.codex-artifacts/

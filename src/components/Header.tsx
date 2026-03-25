@@ -49,6 +49,7 @@ const GENERATORS = [
   { slug: 'easter', label: 'Easter' },
   { slug: 'womensday', label: 'Women\'s Day' },
 ]
+const GENERATOR_SLUGS = new Set(GENERATORS.map((generator) => generator.slug))
 
 const EXPLORE_CATEGORY_LINKS = [
   {
@@ -114,6 +115,10 @@ function Header() {
   const searchRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const pathSegments = pathname.split('/').filter(Boolean)
+  const isGeneratorLandingPage = pathSegments.length === 1 && GENERATOR_SLUGS.has(pathSegments[0])
+  const galleryEntryHref = isGeneratorLandingPage ? `${pathname}#live-gallery` : '/card-gallery/'
+  const galleryEntryLabel = isGeneratorLandingPage ? 'See public ideas' : 'Public ideas'
   
   // 检查用户是否为Premium会员
   const isPremiumUser = session?.user?.plan === "PREMIUM"
@@ -264,6 +269,11 @@ function Header() {
     }
   }
 
+  const handleSurfaceLinkClick = () => {
+    setIsMenuOpen(false)
+    setIsSearchOpen(false)
+  }
+
   return (
     <header className="sticky top-0 z-50 w-full border-b border-orange-100/50 bg-white/80 backdrop-blur-xl transition-all duration-300">
       <nav className="container mx-auto px-4">
@@ -294,6 +304,14 @@ function Header() {
 
             <Link href="/cards/" className="text-gray-600 hover:text-primary font-quicksand font-medium transition-colors text-base relative after:content-[''] after:absolute after:w-full after:scale-x-0 after:h-0.5 after:bottom-0 after:left-0 after:bg-primary after:origin-bottom-right after:transition-transform after:duration-300 hover:after:scale-x-100 hover:after:origin-bottom-left">
               Create
+            </Link>
+
+            <Link
+              href={galleryEntryHref}
+              className="inline-flex items-center gap-2 rounded-full border border-orange-200 bg-orange-50/80 px-4 py-2 text-sm font-semibold text-orange-700 transition-all hover:border-orange-300 hover:bg-orange-100 hover:text-orange-800"
+            >
+              <Search className="h-4 w-4" />
+              {galleryEntryLabel}
             </Link>
 
             <DropdownMenu>
@@ -640,8 +658,19 @@ function Header() {
               <Link href="/cards/" className="flex items-center px-4 py-3 text-gray-700 hover:bg-orange-50 rounded-xl transition-colors font-medium text-lg">
                 Create
               </Link>
-              <Link href="/card-gallery/" className="flex items-center px-4 py-3 text-gray-700 hover:bg-orange-50 rounded-xl transition-colors font-medium text-lg">
-                Explore ideas
+              <Link
+                href={galleryEntryHref}
+                onClick={handleSurfaceLinkClick}
+                className="flex items-center justify-between rounded-xl border border-orange-200 bg-orange-50/80 px-4 py-3 text-orange-800 transition-colors hover:bg-orange-100"
+              >
+                <div className="flex items-center gap-3">
+                  <Search className="h-5 w-5" />
+                  <div>
+                    <div className="font-semibold text-lg">{galleryEntryLabel}</div>
+                    <div className="text-xs text-orange-700">Browse real cards before you generate</div>
+                  </div>
+                </div>
+                <ChevronDown className="-rotate-90 h-5 w-5 text-orange-500" />
               </Link>
               <Link href="/my-cards/" className="flex items-center px-4 py-3 text-gray-700 hover:bg-orange-50 rounded-xl transition-colors font-medium text-lg">
                 My Cards

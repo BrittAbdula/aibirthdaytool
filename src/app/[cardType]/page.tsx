@@ -1,11 +1,24 @@
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { Metadata } from "next/types";
-import { CardType, getCardConfig, getAllCardTypes } from "@/lib/card-config";
+import { getCardConfig, getAllCardTypes } from "@/lib/card-config";
 import CardTypeBubbles from "@/components/CardTypeBubbles";
 import CardGenerator from "@/components/CardGenerator";
 import SimpleCardGallery from '@/app/card-gallery/SimpleCardGallery'
 import { Card, getRecentCardsServer } from '@/lib/cards';
+import GalleryComboLinkSection from "@/components/gallery/GalleryComboLinkSection";
+import HeroCardProof from "@/components/gallery/HeroCardProof";
+import JsonLd from "@/components/JsonLd";
+import {
+    getGalleryComboHref,
+    getRelationshipLabel,
+    getSeoRelationshipsForType,
+} from "@/lib/gallery-combos";
+import {
+    buildFaqSchema,
+    buildItemListSchema,
+    buildSoftwareApplicationSchema,
+} from "@/lib/seo";
 
 import {
     Accordion,
@@ -13,7 +26,6 @@ import {
     AccordionItem,
     AccordionTrigger,
 } from "@/components/ui/accordion";
-import Script from "next/script";
 
 interface CardGeneratorPageProps {
     params: {
@@ -44,14 +56,15 @@ export async function generateMetadata({ params }: CardGeneratorPageProps): Prom
     const cardName = cardConfig.label;
     const imageUrl = `https://mewtrucard.com/mewtrucard-generator.jpg`;
     const isBirthdayPage = cardType === 'birthday';
+    const description = isBirthdayPage
+        ? `Create a free online birthday card, personalize the message, and copy a birthday card link or download it. Sign in to create, save, and send with MewTruCard.`
+        : `Create personalized ${cardType} cards with MewTruCard's AI-powered generator online. Sign in to create, edit, download, and share with friends and family.`;
 
     return {
         title: isBirthdayPage
             ? `Free AI Birthday Card Generator | Online Birthday Card Maker - MewTruCard`
             : `AI ${cardName} Generator | Free Online ${cardType} E‑Card Maker - MewTruCard`,
-        description: isBirthdayPage
-            ? `Create a free online birthday card, personalize the message, and copy a birthday card link or download it. Sign in to create, save, and send with MewTruCard.`
-            : `Create personalized ${cardType} cards with MewTruCard's AI-powered generator online. Sign in to create, edit, download, and share with friends and family.`,
+        description,
         alternates: {
             canonical: `https://mewtrucard.com/${cardType}/`,
         },
@@ -59,9 +72,7 @@ export async function generateMetadata({ params }: CardGeneratorPageProps): Prom
             title: isBirthdayPage
                 ? `Free AI Birthday Card Generator | MewTruCard`
                 : `AI ${cardName} Generator | Free Online E‑Card Maker`,
-            description: isBirthdayPage
-                ? `Create a birthday card online, personalize it, then copy a shareable birthday card link or download it.`
-                : `Create personalized AI-generated ${cardType} cards with any style. Easy to customize, download and share.`,
+            description,
             images: [{
                 url: imageUrl,
                 width: 1200,
@@ -76,9 +87,7 @@ export async function generateMetadata({ params }: CardGeneratorPageProps): Prom
             title: isBirthdayPage
                 ? `Free AI Birthday Card Generator | MewTruCard`
                 : `AI ${cardName} Generator | Free Online E‑Card Maker`,
-            description: isBirthdayPage
-                ? `Create a birthday card online, personalize it, then share the card by link or download it.`
-                : `Create personalized AI-generated ${cardType} cards with any style. Easy to customize, download and share.`,
+            description,
             images: [imageUrl],
         },
     };
@@ -94,6 +103,9 @@ export default async function CardGeneratorPage({ params }: CardGeneratorPagePro
 
     const cardName = cardConfig.label;
     const isBirthdayPage = cardType === 'birthday';
+    const generatorDescription = isBirthdayPage
+        ? `Create a free online birthday card, personalize the message, and share it by link or download.`
+        : `Create personalized, AI-generated ${cardType} cards online, customize them, and share instantly.`;
     // Get initial cards data
     let initialCardsData: { cards: Card[]; totalPages: number } = { cards: [], totalPages: 0 };
     try {
@@ -104,33 +116,53 @@ export default async function CardGeneratorPage({ params }: CardGeneratorPagePro
 
     // Prepare JSON-LD structured data
     const imageUrl = `https://store.celeprime.com/${cardType}.svg`;
-    const jsonLd = {
-        "@context": "https://schema.org",
-        "@type": "SoftwareApplication",
-        "name": `AI ${cardName} Generator`,
-        "applicationCategory": "UtilitiesApplication",
-        "offers": {
-            "@type": "Offer",
-            "price": "0",
-            "priceCurrency": "USD"
+    const comboLinks = getSeoRelationshipsForType(cardType).slice(0, 6).map((relationship) => ({
+        href: getGalleryComboHref(cardType, relationship),
+        title: `${cardName} Cards for ${getRelationshipLabel(relationship)}`,
+        description: `Browse public ${cardName.toLowerCase()} card ideas for ${getRelationshipLabel(relationship).toLowerCase()}, then create your own.`,
+    }));
+    const comboSchemaLinks = comboLinks.map((link) => ({
+        href: link.href,
+        label: link.title,
+        description: link.description,
+    }));
+    const faqEntries = [
+        {
+            question: `What does the free plan include for MewTruCard AI ${cardType} cards?`,
+            answer:
+                "The free plan covers the main create-edit-share flow, including basic generation, saved editing, shareable links, and downloads. Premium expands model access, privacy options, and higher-end outputs.",
         },
-        "description": isBirthdayPage
-            ? `Create a free online birthday card, personalize the message, and share it by link or download.`
-            : `Create personalized, AI-generated ${cardType} cards online, customize them, and share instantly.`,
-        "image": imageUrl,
-        "screenshot": imageUrl,
-        "operatingSystem": "Web browser",
-        "url": `https://mewtrucard.com/${cardType}/`
-    };
+        {
+            question: `How fast can I create a ${cardType} card with MewTruCard AI?`,
+            answer:
+                "Most cards are ready quickly: animated cards often take 10 to 30 seconds, while higher-quality static images can take a bit longer depending on the selected model.",
+        },
+        {
+            question: `Can I edit my MewTruCard ${cardType} card after it's generated?`,
+            answer:
+                "Yes. After generation you can reopen the card, update the message, change names or relationship details, and then download it or share it by link.",
+        },
+        {
+            question: `What are the best ways to share my MewTruCard AI ${cardType} card?`,
+            answer:
+                "You can share a direct card link, download the finished card, or use a surprise-link page when the moment benefits from a playful reveal first.",
+        },
+    ];
 
     return (
         <main className="min-h-screen bg-gradient-to-b from-warm-cream via-rose-50 to-white">
-            {/* JSON-LD structured data */}
-            <Script
-                id="json-ld"
-                type="application/ld+json"
-                dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+            <JsonLd
+                data={buildSoftwareApplicationSchema({
+                    name: `AI ${cardName} Generator`,
+                    description: generatorDescription,
+                    path: `/${cardType}/`,
+                    image: imageUrl,
+                })}
             />
+            <JsonLd data={buildFaqSchema(faqEntries)} />
+            {comboLinks.length > 0 && (
+                <JsonLd data={buildItemListSchema(`${cardName} card ideas`, comboSchemaLinks)} />
+            )}
 
             {/* Decorative Elements */}
             <div className="fixed inset-0 overflow-hidden pointer-events-none">
@@ -139,10 +171,10 @@ export default async function CardGeneratorPage({ params }: CardGeneratorPagePro
                 <div className="absolute bottom-0 right-0 w-72 h-72 bg-yellow-100 rounded-full mix-blend-multiply filter blur-xl opacity-50 animate-blob animation-delay-4000"></div>
             </div>
 
-            <div className="relative container mx-auto px-4 sm:px-6 py-2 sm:py-6">
-                {/* Header Section */}
-                <header className="mx-auto mb-10 max-w-4xl text-center">
-                    <div className="mb-4 flex flex-wrap items-center justify-center gap-2 text-xs sm:text-sm">
+            <div className="relative container mx-auto px-4 sm:px-6 py-3 sm:py-8">
+                <section className="mb-12 grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(320px,540px)] lg:items-center">
+                    <header className="mx-auto max-w-4xl text-center lg:mx-0 lg:max-w-none lg:text-left">
+                    <div className="mb-4 flex flex-wrap items-center justify-center gap-2 text-xs sm:text-sm lg:justify-start">
                         <span className="rounded-full bg-white/80 px-4 py-2 font-semibold text-orange-700 shadow-sm">
                             Sign in required to create, save, and send
                         </span>
@@ -152,25 +184,46 @@ export default async function CardGeneratorPage({ params }: CardGeneratorPagePro
                             </span>
                         )}
                     </div>
-                    <h1 className="text-4xl font-serif font-bold tracking-tight sm:text-5xl">
+                    <h1 className="text-4xl font-serif font-bold tracking-tight sm:text-5xl lg:max-w-3xl">
                         <span className="bg-clip-text text-transparent bg-gradient-to-r from-warm-coral to-pink-600">
                             {isBirthdayPage ? "Free Online Birthday Card Maker" : `AI ${cardName} Generator - MewTruCard`}
                         </span>
                     </h1>
-                    <p className="mx-auto mt-4 max-w-2xl text-base leading-7 text-gray-600 sm:text-lg">
+                    <p className="mx-auto mt-4 max-w-2xl text-base leading-7 text-gray-600 sm:text-lg lg:mx-0">
                         {isBirthdayPage
                             ? "Create a birthday card with AI, personalize the message, then copy a shareable birthday card link or download the final card."
                             : `Create a ${cardName.toLowerCase()} card with AI, personalize the message, then save, edit, and share it from your account.`}
                     </p>
-                    <div className="mt-5 flex flex-wrap justify-center gap-2 text-sm text-gray-600">
+                    <div className="mt-5 flex flex-wrap justify-center gap-2 text-sm text-gray-600 lg:justify-start">
                         <span className="rounded-full bg-orange-50 px-3 py-1">Recipient-first form</span>
                         <span className="rounded-full bg-orange-50 px-3 py-1">Editable after generation</span>
                         <span className="rounded-full bg-orange-50 px-3 py-1">Link sharing + download</span>
                     </div>
+                    <div className="mt-6 flex flex-wrap justify-center gap-3 lg:justify-start">
+                        <a
+                            href="#generator"
+                            className="inline-flex rounded-full bg-gradient-to-r from-warm-coral to-pink-500 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:from-pink-500 hover:to-pink-600"
+                        >
+                            Start creating now
+                        </a>
+                        <a
+                            href="#live-gallery"
+                            className="inline-flex rounded-full border border-orange-200 bg-white/80 px-5 py-3 text-sm font-semibold text-orange-700 transition hover:bg-orange-50"
+                        >
+                            See public card ideas
+                        </a>
+                    </div>
                 </header>
 
+                    <HeroCardProof
+                        cards={initialCardsData.cards}
+                        cardName={cardName}
+                        galleryHref="#live-gallery"
+                    />
+                </section>
+
                 {/* Card Generator Section */}
-                <section className="mb-16 sm:mb-24">
+                <section id="generator" className="mb-16 sm:mb-24">
                     <Suspense
                         fallback={
                             <div className="flex flex-col items-center justify-center h-64 space-y-4">
@@ -182,11 +235,61 @@ export default async function CardGeneratorPage({ params }: CardGeneratorPagePro
                         <CardGenerator
                             wishCardType={cardType}
                             initialCardId={''}
-                            initialImgUrl={''}
+                            initialImgUrl={imageUrl}
                             cardConfig={cardConfig}
                         />
                     </Suspense>
                 </section>
+
+                {/* Templates Section */}
+                <section id="live-gallery" className="text-center mb-16 sm:mb-24 scroll-mt-28">
+                    <h2 className="text-3xl sm:text-4xl font-bold text-center mb-4">
+                        <span className="bg-clip-text text-transparent bg-gradient-to-r from-warm-coral to-pink-600">
+                            Recent Public {cardName} Card Ideas
+                        </span>
+                    </h2>
+
+                    <div className="text-center mb-12">
+                        <p className="text-lg sm:text-xl text-gray-600 max-w-3xl mx-auto px-4 mb-6">
+                            Browse real public {cardName.toLowerCase()} cards for tone, layout, and message inspiration,
+                            then open the editor to create a version that fits your moment.
+                        </p>
+                    </div>
+
+                    <Suspense
+                        fallback={
+                            <div className="space-y-4">
+                                <div className="text-center">
+                                    <div className="inline-flex items-center gap-2 text-gray-600">
+                                        <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-purple-500"></div>
+                                        <span>Loading recent public {cardType} cards...</span>
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 px-4">
+                                    {[...Array(8)].map((_, i) => (
+                                        <div key={i} className="animate-pulse">
+                                            <div className="aspect-[2/3] bg-gray-200 rounded-lg mb-3"></div>
+                                            <div className="space-y-2">
+                                                <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                                                <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        }
+                    >
+                        <SimpleCardGallery wishCardType={cardType} initialCardsData={initialCardsData} tabType="recent" />
+                    </Suspense>
+                </section>
+
+                {comboLinks.length > 0 && (
+                    <GalleryComboLinkSection
+                        title={`${cardName} Card Ideas by Relationship`}
+                        description={`These pages capture stronger long-tail intent than a generic gallery alone. Use them to browse examples first, then open the generator when you are ready to make your own card.`}
+                        links={comboLinks}
+                    />
+                )}
 
 
                 {/* How to Create Section */}
@@ -247,68 +350,11 @@ export default async function CardGeneratorPage({ params }: CardGeneratorPagePro
                     </div>
                 </section>
 
-
-                {/* Templates Section */}
-                <section className="text-center mb-16 sm:mb-24">
-                    <h2 className="text-3xl sm:text-4xl font-bold text-center mb-4">
-                        <span className="bg-clip-text text-transparent bg-gradient-to-r from-warm-coral to-pink-600">
-                            Stunning {cardName} Templates Created by AI
-                        </span>
-                    </h2>
-
-                    <div className="text-center mb-12">
-                        {cardConfig.templateInfo ? (
-                            <p className="text-lg sm:text-xl text-gray-600 max-w-2xl mx-auto px-4 mb-6">
-                                {cardConfig.templateInfo}
-                            </p>
-                        ) : (
-                            <p className="text-lg sm:text-xl text-gray-600 max-w-2xl mx-auto px-4 mb-6">
-                                Explore MewTruCard collection of AI-generated {cardName.toLowerCase()} templates featuring
-                                stunning artwork and heartfelt messages. Each template showcases what MewTruCard AI {cardType}
-                                card generator can create for any relationship and occasion.
-                            </p>
-                        )}
-
-                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 max-w-2xl mx-auto">
-                            <p className="text-blue-800 text-sm">
-                                <strong>💡 Pro Tip:</strong> All templates are fully customizable! Modify text, music,
-                                and sharing URLs to create the perfect {cardType} card that expresses your unique feelings.
-                            </p>
-                        </div>
-                    </div>
-
-                    <Suspense
-                        fallback={
-                            <div className="space-y-4">
-                                <div className="text-center">
-                                    <div className="inline-flex items-center gap-2 text-gray-600">
-                                        <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-purple-500"></div>
-                                        <span>Loading beautiful {cardType} card templates...</span>
-                                    </div>
-                                </div>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 px-4">
-                                    {[...Array(8)].map((_, i) => (
-                                        <div key={i} className="animate-pulse">
-                                            <div className="aspect-[2/3] bg-gray-200 rounded-lg mb-3"></div>
-                                            <div className="space-y-2">
-                                                <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-                                                <div className="h-3 bg-gray-200 rounded w-1/2"></div>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        }
-                    >
-                        <SimpleCardGallery wishCardType={cardType} initialCardsData={initialCardsData} tabType="recent" />
-                    </Suspense>
-                </section>
-
                 {/* New features highlight section */}
                 <section className="mb-16 sm:mb-24">
                     <div className="bg-gradient-to-r from-orange-50 to-pink-50 rounded-2xl p-8 max-w-5xl mx-auto">
                         <h3 className="text-2xl font-bold text-center mb-8 text-gray-800">
-                            Why MewTruCard AI {cardName} Generator Leads the Market
+                            Why people use this {cardName} card maker
                         </h3>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -370,13 +416,12 @@ export default async function CardGeneratorPage({ params }: CardGeneratorPagePro
                     <section className="mb-16 sm:mb-24">
                         <h2 className="text-3xl sm:text-4xl font-bold text-center mb-4">
                             <span className="bg-clip-text text-transparent bg-gradient-to-r from-warm-coral to-pink-600">
-                                Why MewTruCard AI {cardName} Generator is the Best Choice
+                                Why this {cardName} flow works
                             </span>
                         </h2>
 
                         <p className="text-center text-gray-600 max-w-2xl mx-auto mb-12">
-                            Unlike generic card makers, MewTruCard AI technology creates truly personalized {cardType} cards
-                            that reflect your unique relationship and the special occasion.
+                            The goal is straightforward: help you move from idea to finished {cardName.toLowerCase()} card without losing the personal details that matter.
                         </p>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto mb-8">
@@ -395,13 +440,10 @@ export default async function CardGeneratorPage({ params }: CardGeneratorPagePro
                         <div className="bg-gradient-to-r from-orange-50 to-pink-50 p-8 rounded-xl max-w-4xl mx-auto">
                             <div className="text-center">
                                 <h3 className="text-xl font-semibold mb-4 text-gray-800">
-                                    What Sets MewTruCard AI {cardName} Generator Apart?
+                                    What you can do after generation
                                 </h3>
                                 <p className="text-gray-600 text-lg leading-relaxed mb-6">
-                                    MewTruCard has revolutionized digital card creation with blazing-fast AI that delivers
-                                    <span className="font-semibold text-purple-600"> professional-quality results in seconds, not minutes</span>.
-                                    MewTruCard platform combines speed with a simple create-edit-share loop so you can move
-                                    from prompt to finished card quickly.
+                                    After the first draft is ready, you can keep refining the card instead of starting over. That makes the generator more useful for real send-and-share moments, not just one-off experiments.
                                 </p>
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-left">

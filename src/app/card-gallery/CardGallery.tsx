@@ -4,9 +4,10 @@ import React, { useState, useEffect, useRef, useCallback } from 'react'
 import Link from 'next/link'
 import { Card, TabType } from '@/lib/cards'
 import { CardType } from '@/lib/card-config'
-import { Crown, Heart } from 'lucide-react'
+import { Heart } from 'lucide-react'
 import { CARD_TYPES, RELATIONSHIPS } from '@/lib/card-constants'
 import { recordUserAction } from '@/lib/action'
+import { buildCardPreviewAlt, buildCardPreviewTitle } from '@/lib/seo'
 
 interface CardGalleryProps {
   initialCardsData: {
@@ -182,6 +183,7 @@ export default function CardGallery({ initialCardsData, wishCardType, relationsh
           const typeLabel = getTypeLabel(card.cardType)
           const relationshipLabel = getRelationshipLabel(card.relationship)
           const emoji = typeEmojis[card.cardType] || '✨'
+          const previewTitle = buildCardPreviewTitle(card.cardType, card.relationship)
           
           return (
             <div
@@ -215,7 +217,7 @@ export default function CardGallery({ initialCardsData, wishCardType, relationsh
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
                           src={card.r2Url}
-                          alt={`${typeLabel} card`}
+                          alt={buildCardPreviewAlt(card.cardType, card.relationship)}
                           loading="lazy"
                           className="w-full h-auto block group-hover:scale-[1.02] transition-transform duration-500"
                         />
@@ -248,7 +250,7 @@ export default function CardGallery({ initialCardsData, wishCardType, relationsh
                 <div className="p-3">
                   {/* Title/Message - 2 lines max */}
                   <p className="text-[13px] text-gray-800 font-medium leading-[1.4] line-clamp-2 mb-2.5">
-                    {card.message || `${emoji} ${typeLabel} Card`}
+                    {previewTitle}
                   </p>
 
                   {/* Bottom Row: Avatar + Name | Heart + Count */}

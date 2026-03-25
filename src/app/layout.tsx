@@ -8,6 +8,8 @@ import { SessionProvider } from "next-auth/react"
 import GoogleAdsense from "@/components/GoogleAdsense";
 import Script from "next/script";
 import AppShell from "@/components/AppShell";
+import JsonLd from "@/components/JsonLd";
+import { buildOrganizationSchema, buildWebsiteSchema, toAbsoluteUrl } from "@/lib/seo";
 
 const caveat = Caveat({ 
   subsets: ["latin"],
@@ -23,8 +25,39 @@ const quicksand = Quicksand({
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL || 'https://mewtrucard.com/'),
-  title: "MewTruCard - AI Greeting Card Generator",
-  description: "Generate personalized Greeting cards using AI"
+  title: {
+    default: "AI Greeting Card Generator & Birthday Card Maker | MewTruCard",
+    template: "%s",
+  },
+  description:
+    "Create free online birthday cards, valentine cards, apology cards, and shareable greeting card links with MewTruCard's AI card maker.",
+  applicationName: "MewTruCard",
+  alternates: {
+    canonical: "/",
+  },
+  openGraph: {
+    type: "website",
+    url: "https://mewtrucard.com/",
+    siteName: "MewTruCard",
+    title: "AI Greeting Card Generator & Birthday Card Maker | MewTruCard",
+    description:
+      "Create birthday cards, greeting cards, and shareable card links with AI on MewTruCard.",
+    images: [
+      {
+        url: toAbsoluteUrl("/og-cover.jpg"),
+        width: 1200,
+        height: 630,
+        alt: "MewTruCard greeting card generator preview",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "AI Greeting Card Generator & Birthday Card Maker | MewTruCard",
+    description:
+      "Create birthday cards, greeting cards, and shareable card links with AI on MewTruCard.",
+    images: [toAbsoluteUrl("/og-cover.jpg")],
+  },
 };
 
 export default function RootLayout({
@@ -60,6 +93,8 @@ export default function RootLayout({
         <GoogleTagManager gtmId="GTM-57P7BF4D" />
       </head>
       <body className={`${caveat.variable} ${quicksand.variable} font-sans text-[#2D2D2D]`}>
+        <JsonLd data={buildOrganizationSchema()} />
+        <JsonLd data={buildWebsiteSchema()} />
         <SessionProvider>
           <GoogleAdsense />
           <AppShell>{children}</AppShell>
