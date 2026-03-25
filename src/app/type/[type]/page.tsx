@@ -3,7 +3,6 @@ import { Suspense } from 'react'
 import Link from 'next/link'
 import { CardType } from '@/lib/card-config'
 import TypeGalleryContent from './TypeGalleryContent'
-import { ScrollToTop } from '@/components/ScrollToTop'
 import GalleryComboLinkSection from '@/components/gallery/GalleryComboLinkSection'
 import GuidanceGridSection from '@/components/eeat/GuidanceGridSection'
 import TrustSignalsSection from '@/components/eeat/TrustSignalsSection'
@@ -214,7 +213,6 @@ export default async function TypePage({ params, searchParams }: Props) {
           </div>
         </section>
       </div>
-      <ScrollToTop />
     </article>
   )
 } 

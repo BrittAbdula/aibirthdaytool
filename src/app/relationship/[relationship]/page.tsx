@@ -1,7 +1,6 @@
 import { Metadata } from 'next'
 import { Suspense } from 'react'
 import RelationshipGalleryContent from './RelationshipGalleryContent'
-import { ScrollToTop } from '@/components/ScrollToTop'
 import GalleryComboLinkSection from '@/components/gallery/GalleryComboLinkSection'
 import { Card, getRecentCardsServer, getPopularCardsServer, getLikedCardsServer, TabType } from '@/lib/cards'
 import { CardType } from '@/lib/card-config'
@@ -150,7 +149,6 @@ export default async function RelationshipPage({ params, searchParams }: Props) 
           </Suspense>
         </section>
       </div>
-      <ScrollToTop />
     </article>
   )
-} 
+}

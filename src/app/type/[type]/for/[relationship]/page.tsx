@@ -1,7 +1,6 @@
 import { Metadata } from 'next'
 import { Suspense } from 'react'
 import Link from 'next/link'
-import { ScrollToTop } from '@/components/ScrollToTop'
 import GalleryComboLinkSection from '@/components/gallery/GalleryComboLinkSection'
 import { CardType } from '@/lib/card-config'
 import GuidanceGridSection from '@/components/eeat/GuidanceGridSection'
@@ -219,7 +218,6 @@ export default async function TypeRelationshipPage({ params, searchParams }: Pro
           ))}
         </div>
       </div>
-      <ScrollToTop />
     </article>
   )
 }

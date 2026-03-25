@@ -9,6 +9,7 @@ import GoogleAdsense from "@/components/GoogleAdsense";
 import Script from "next/script";
 import AppShell from "@/components/AppShell";
 import JsonLd from "@/components/JsonLd";
+import { ScrollToTop } from "@/components/ScrollToTop";
 import { buildOrganizationSchema, buildWebsiteSchema, toAbsoluteUrl } from "@/lib/seo";
 
 const caveat = Caveat({ 
@@ -98,6 +99,7 @@ export default function RootLayout({
         <SessionProvider>
           <GoogleAdsense />
           <AppShell>{children}</AppShell>
+          <ScrollToTop />
           <Toaster />
         </SessionProvider>
         <GoogleAnalytics gaId="G-TR8BTB7YVW" />
