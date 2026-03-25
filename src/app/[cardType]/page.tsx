@@ -9,15 +9,23 @@ import { Card, getRecentCardsServer } from '@/lib/cards';
 import GalleryComboLinkSection from "@/components/gallery/GalleryComboLinkSection";
 import HeroCardProof from "@/components/gallery/HeroCardProof";
 import JsonLd from "@/components/JsonLd";
+import GuidanceGridSection from "@/components/eeat/GuidanceGridSection";
+import TrustSignalsSection from "@/components/eeat/TrustSignalsSection";
 import {
     getGalleryComboHref,
     getRelationshipLabel,
     getSeoRelationshipsForType,
 } from "@/lib/gallery-combos";
 import {
+    getGeneratorTrustGuide,
+    getTrustHubRelatedLinks,
+} from "@/lib/eeat-content";
+import {
+    buildBreadcrumbSchema,
     buildFaqSchema,
     buildItemListSchema,
     buildSoftwareApplicationSchema,
+    buildWebPageSchema,
 } from "@/lib/seo";
 
 import {
@@ -126,6 +134,8 @@ export default async function CardGeneratorPage({ params }: CardGeneratorPagePro
         label: link.title,
         description: link.description,
     }));
+    const trustGuide = getGeneratorTrustGuide(cardType, cardName);
+    const trustLinks = getTrustHubRelatedLinks(cardType);
     const faqEntries = [
         {
             question: `What does the free plan include for MewTruCard AI ${cardType} cards?`,
@@ -159,6 +169,23 @@ export default async function CardGeneratorPage({ params }: CardGeneratorPagePro
                     image: imageUrl,
                 })}
             />
+            <JsonLd
+                data={buildBreadcrumbSchema([
+                    { name: "Home", href: "/" },
+                    { name: "Cards", href: "/cards/" },
+                    { name: `${cardName} generator`, href: `/${cardType}/` },
+                ])}
+            />
+            <JsonLd
+                data={buildWebPageSchema({
+                    name: `AI ${cardName} Generator`,
+                    description: generatorDescription,
+                    path: `/${cardType}/`,
+                    reviewedBy: trustGuide.reviewedBy,
+                    lastReviewed: trustGuide.lastReviewed,
+                    about: [cardName, "AI greeting card generator", "personalized card maker"],
+                })}
+            />
             <JsonLd data={buildFaqSchema(faqEntries)} />
             {comboLinks.length > 0 && (
                 <JsonLd data={buildItemListSchema(`${cardName} card ideas`, comboSchemaLinks)} />
@@ -172,8 +199,8 @@ export default async function CardGeneratorPage({ params }: CardGeneratorPagePro
             </div>
 
             <div className="relative container mx-auto px-4 sm:px-6 py-3 sm:py-8">
-                <section className="mb-12 grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(320px,540px)] lg:items-center">
-                    <header className="mx-auto max-w-4xl text-center lg:mx-0 lg:max-w-none lg:text-left">
+                <section className="mb-12 grid gap-8 overflow-hidden lg:grid-cols-[minmax(0,1fr)_minmax(320px,540px)] lg:items-center">
+                    <header className="mx-auto min-w-0 max-w-4xl text-center lg:mx-0 lg:max-w-none lg:text-left">
                     <div className="mb-4 flex flex-wrap items-center justify-center gap-2 text-xs sm:text-sm lg:justify-start">
                         <span className="rounded-full bg-white/80 px-4 py-2 font-semibold text-orange-700 shadow-sm">
                             Sign in required to create, save, and send
@@ -350,67 +377,24 @@ export default async function CardGeneratorPage({ params }: CardGeneratorPagePro
                     </div>
                 </section>
 
-                {/* New features highlight section */}
-                <section className="mb-16 sm:mb-24">
-                    <div className="bg-gradient-to-r from-orange-50 to-pink-50 rounded-2xl p-8 max-w-5xl mx-auto">
-                        <h3 className="text-2xl font-bold text-center mb-8 text-gray-800">
-                            Why people use this {cardName} card maker
-                        </h3>
+                <TrustSignalsSection
+                    title={`How this ${cardName} guide is prepared`}
+                    description={`This page is written to help visitors decide how to approach a ${cardName.toLowerCase()} card, using the real MewTruCard flow and public example patterns instead of generic greeting-card filler.`}
+                    reviewedBy={trustGuide.reviewedBy}
+                    lastReviewed={trustGuide.lastReviewed}
+                    purpose={trustGuide.purpose}
+                    methodology={trustGuide.methodology}
+                    links={trustLinks}
+                />
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                            <div className="text-center">
-                                <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                                    <span className="text-2xl">🆓</span>
-                                </div>
-                                <h4 className="font-semibold text-gray-800 mb-2">Forever Free Core</h4>
-                                <p className="text-sm text-gray-600">
-                                    Core MewTruCard flows are available on the free plan with a daily allowance,
-                                    while premium options unlock more models, privacy controls, and higher-end outputs.
-                                </p>
-                            </div>
-
-                            <div className="text-center">
-                                <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                                    <span className="text-2xl">⚡</span>
-                                </div>
-                                <h4 className="font-semibold text-gray-800 mb-2">Lightning Fast</h4>
-                                <p className="text-sm text-gray-600">
-                                    Animated cards in 10-30 seconds. Designer-quality static images
-                                    in under 2 minutes.
-                                </p>
-                            </div>
-
-                            <div className="text-center">
-                                <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                                    <span className="text-2xl">🎨</span>
-                                </div>
-                                <h4 className="font-semibold text-gray-800 mb-2">Unlimited Creativity</h4>
-                                <p className="text-sm text-gray-600">
-                                    Add as little or as much direction as you want, from a quick birthday card idea
-                                    to a more specific style or message prompt.
-                                </p>
-                            </div>
-
-                            <div className="text-center">
-                                <div className="w-16 h-16 bg-pink-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                                    <span className="text-2xl">🚀</span>
-                                </div>
-                                <h4 className="font-semibold text-gray-800 mb-2">Multiple Formats</h4>
-                                <p className="text-sm text-gray-600">
-                                    Choose between animated, static image, and supported premium output modes,
-                                    depending on the card you want to create.
-                                </p>
-                            </div>
-                        </div>
-
-                        <div className="mt-8 text-center">
-                            <div className="inline-flex items-center gap-2 bg-white/80 backdrop-blur px-4 py-2 rounded-full text-sm text-gray-600">
-                                <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-                                Currently Available: Animated cards • Static images • Shareable links
-                            </div>
-                        </div>
-                    </div>
-                </section>
+                {trustGuide.sections.map((section) => (
+                    <GuidanceGridSection
+                        key={section.title}
+                        title={section.title}
+                        description={section.description}
+                        cards={section.cards}
+                    />
+                ))}
 
                 {cardConfig.why && (
                     <section className="mb-16 sm:mb-24">
@@ -504,20 +488,19 @@ export default async function CardGeneratorPage({ params }: CardGeneratorPagePro
                                 How fast can I create a {cardType} card with MewTruCard AI?
                             </AccordionTrigger>
                             <AccordionContent className="text-gray-600 pt-4">
-                                <strong>MewTruCard is the fastest AI card generator on the market:</strong>
+                                <strong>Timing depends on the format, model, and amount of detail in the request.</strong>
                                 <div className="mt-3 space-y-3">
                                     <div className="bg-green-50 p-3 rounded-lg">
-                                        <strong>⚡ Animated Cards: 10-30 seconds</strong>
-                                        <p className="text-sm mt-1">Dynamic cards with smooth transitions, particle effects, and motion graphics</p>
+                                        <strong>⚡ Lighter image or SVG flows usually finish sooner</strong>
+                                        <p className="text-sm mt-1">These are the quickest paths when you want to draft, review, and iterate fast.</p>
                                     </div>
                                     <div className="bg-blue-50 p-3 rounded-lg">
-                                        <strong>🎨 Designer Images: 10 seconds to 2 minutes</strong>
-                                        <p className="text-sm mt-1">Studio-quality static images with professional composition and pixel-perfect details</p>
+                                        <strong>🎨 Heavier formats can take longer</strong>
+                                        <p className="text-sm mt-1">More detailed image requests and premium video outputs usually need more processing time.</p>
                                     </div>
                                 </div>
                                 <p className="mt-3 text-sm">
-                                    Compare this to traditional design tools that take hours, or other AI platforms that take 5-10 minutes.
-                                    MewTruCard optimized AI pipeline delivers professional results at unprecedented speed.
+                                    The fastest way to move quickly is to start with a simple brief, review the first draft, then use the editor to refine the result before sending.
                                 </p>
                             </AccordionContent>
                         </AccordionItem>
@@ -546,13 +529,13 @@ export default async function CardGeneratorPage({ params }: CardGeneratorPagePro
                                 Can I edit my MewTruCard {cardType} card after it&apos;s generated?
                             </AccordionTrigger>
                             <AccordionContent className="text-gray-600 pt-4">
-                                <strong>Absolutely!</strong> MewTruCard {cardType} card editor offers extensive customization:
+                                <strong>Yes.</strong> After generation, you can review the draft and update the parts that matter before sharing it:
                                 <ul className="mt-3 space-y-2 list-disc list-inside">
-                                    <li><strong>Text editing</strong> - Modify messages, names, and all written content</li>
-                                    <li><strong>Visual adjustments</strong> - Change colors, fonts, and layout elements</li>
-                                    <li><strong>Animation tweaks</strong> - Adjust timing and motion effects</li>
-                                    <li><strong>Music selection</strong> - Add or change background music</li>
-                                    <li><strong>URL customization</strong> - Create memorable sharing links</li>
+                                    <li><strong>Editable text fields</strong> - Update names and detected text content in the generated card</li>
+                                    <li><strong>Personal message</strong> - Add or revise the message that travels with the card</li>
+                                    <li><strong>Recipient and sender details</strong> - Adjust relationship context, recipient name, and sender name</li>
+                                    <li><strong>Share settings</strong> - Decide whether the finished card is public and, on supported plans, set a custom URL</li>
+                                    <li><strong>Optional music</strong> - Add a Spotify track when the flow supports it</li>
                                 </ul>
                                 <p className="mt-3">
                                     For generated cards, the standard flow is: sign in, generate, edit, save, then send.
@@ -566,23 +549,19 @@ export default async function CardGeneratorPage({ params }: CardGeneratorPagePro
                                 What are the best ways to share my MewTruCard AI {cardType} card?
                             </AccordionTrigger>
                             <AccordionContent className="text-gray-600 pt-4">
-                                MewTruCard offers multiple sharing options to suit every preference:
+                                MewTruCard supports a few practical share paths after you save the card:
                                 <div className="mt-3 space-y-3">
                                     <div>
                                         <strong>🔗 Instant Link Sharing</strong>
                                         <p className="text-sm ml-4">Get a unique URL to share via text, email, or social media. Recipients don&apos;t need an account.</p>
                                     </div>
                                     <div>
-                                        <strong>📱 Download Options</strong>
-                                        <p className="text-sm ml-4">High-resolution images, animated GIFs, or MP4 videos for offline sharing.</p>
+                                        <strong>📱 Download the result</strong>
+                                        <p className="text-sm ml-4">Depending on the output, you can download a PNG image or MP4 video for sending elsewhere.</p>
                                     </div>
                                     <div>
-                                        <strong>🖨️ Print-Ready Format</strong>
-                                        <p className="text-sm ml-4">PDF downloads perfect for physical keepsakes or traditional mailing.</p>
-                                    </div>
-                                    <div>
-                                        <strong>📧 Direct Email</strong>
-                                        <p className="text-sm ml-4">Send directly from MewTruCard platform with personalized subject lines.</p>
+                                        <strong>📧 Email or social sharing</strong>
+                                        <p className="text-sm ml-4">Use the share link in your mail app or social apps when you want to send the card through channels you already use.</p>
                                     </div>
                                 </div>
                             </AccordionContent>

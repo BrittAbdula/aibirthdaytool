@@ -1,11 +1,17 @@
 import { Metadata } from 'next'
 import { Suspense } from 'react'
+import Link from 'next/link'
 import { CardType } from '@/lib/card-config'
 import TypeGalleryContent from './TypeGalleryContent'
 import { ScrollToTop } from '@/components/ScrollToTop'
 import GalleryComboLinkSection from '@/components/gallery/GalleryComboLinkSection'
+import GuidanceGridSection from '@/components/eeat/GuidanceGridSection'
+import TrustSignalsSection from '@/components/eeat/TrustSignalsSection'
+import JsonLd from '@/components/JsonLd'
 import { Card, getRecentCardsServer, getPopularCardsServer, getLikedCardsServer, TabType } from '@/lib/cards'
 import { getCardTypeLabel, getGalleryComboHref, getRelationshipLabel, getSeoRelationshipsForType } from '@/lib/gallery-combos'
+import { getTrustHubRelatedLinks, getTypeGalleryTrustGuide } from '@/lib/eeat-content'
+import { buildBreadcrumbSchema, buildItemListSchema, buildWebPageSchema } from '@/lib/seo'
 
 interface Props {
   params: { type: CardType }
@@ -97,9 +103,36 @@ export default async function TypePage({ params, searchParams }: Props) {
     title: `${cardTypeLabel} Cards for ${getRelationshipLabel(comboRelationship)}`,
     description: `Browse public ${cardTypeLabel.toLowerCase()} card examples for your ${getRelationshipLabel(comboRelationship).toLowerCase()}.`,
   }))
+  const trustGuide = getTypeGalleryTrustGuide(type, cardTypeLabel)
+  const trustLinks = getTrustHubRelatedLinks(type)
+  const comboSchemaLinks = comboLinks.map((link) => ({
+    href: link.href,
+    label: link.title,
+    description: link.description,
+  }))
 
   return (
     <article className="min-h-screen bg-gradient-to-br from-white via-purple-50 to-pink-50">
+      <JsonLd
+        data={buildBreadcrumbSchema([
+          { name: 'Home', href: '/' },
+          { name: 'Cards', href: '/cards/' },
+          { name: `${cardTypeLabel} examples`, href: `/type/${type}/` },
+        ])}
+      />
+      <JsonLd
+        data={buildWebPageSchema({
+          name: `${cardTypeLabel} Card Templates`,
+          description: `Explore public ${cardTypeLabel.toLowerCase()} card examples, compare tone and style, and move into the generator when you are ready to personalize your own card.`,
+          path: `/type/${type}/`,
+          reviewedBy: trustGuide.reviewedBy,
+          lastReviewed: trustGuide.lastReviewed,
+          about: [cardTypeLabel, 'card templates', 'public card gallery'],
+        })}
+      />
+      {comboSchemaLinks.length > 0 && (
+        <JsonLd data={buildItemListSchema(`${cardTypeLabel} relationship galleries`, comboSchemaLinks)} />
+      )}
       <div className="container mx-auto px-4 py-8">
         <header className="text-center mb-12">
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-serif font-bold mb-4 tracking-tight">
@@ -125,6 +158,16 @@ export default async function TypePage({ params, searchParams }: Props) {
           links={comboLinks}
         />
 
+        <TrustSignalsSection
+          title={`How to use this ${cardTypeLabel} gallery`}
+          description={`This page is designed to help visitors compare public ${cardTypeLabel.toLowerCase()} examples, choose a tone faster, and move into the generator with a clearer plan.`}
+          reviewedBy={trustGuide.reviewedBy}
+          lastReviewed={trustGuide.lastReviewed}
+          purpose={trustGuide.purpose}
+          methodology={trustGuide.methodology}
+          links={trustLinks}
+        />
+
         <section aria-label={`${type} Card Gallery`}>
           <Suspense 
             fallback={
@@ -141,6 +184,34 @@ export default async function TypePage({ params, searchParams }: Props) {
               activeTab={activeTab}
             />
           </Suspense>
+        </section>
+
+        <div className="mt-12">
+          {trustGuide.sections.map((section) => (
+            <GuidanceGridSection
+              key={section.title}
+              title={section.title}
+              description={section.description}
+              cards={section.cards}
+            />
+          ))}
+        </div>
+
+        <section className="mb-12 rounded-[28px] border border-orange-100 bg-gradient-to-r from-orange-50 to-pink-50 p-6 shadow-sm sm:p-8">
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div className="max-w-2xl">
+              <h2 className="text-2xl font-bold text-gray-800">Ready to turn a direction into a real card?</h2>
+              <p className="mt-2 text-sm leading-6 text-gray-600 sm:text-base">
+                Use the examples above to choose the tone, then open the generator and personalize the result with your own recipient details and message.
+              </p>
+            </div>
+            <Link
+              href={`/${type}/`}
+              className="inline-flex rounded-full bg-gradient-to-r from-orange-500 to-pink-500 px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:opacity-90"
+            >
+              Open the {cardTypeLabel} generator
+            </Link>
+          </div>
         </section>
       </div>
       <ScrollToTop />

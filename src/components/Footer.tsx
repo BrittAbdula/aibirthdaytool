@@ -2,13 +2,14 @@
 
 import Link from 'next/link';
 import { CARD_TYPES, RELATIONSHIPS } from '@/lib/card-constants';
+import { TRUST_HUB_LINKS } from '@/lib/eeat-content';
 
 export default function Footer() {
   return (
     <footer className="bg-gradient-to-t from-white via-purple-50/50 to-white border-t border-purple-100/50">
       <div className="container mx-auto px-4 py-8">
         {/* Card Types and Relationships Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
           {/* Card Types */}
           <div>
             <h3 className="font-serif text-[#4A4A4A] text-lg mb-4">Card Types</h3>
@@ -42,6 +43,23 @@ export default function Footer() {
                   className="text-sm text-gray-600 hover:text-purple-600 transition-colors"
                 >
                   {relation.label}
+                </Link>
+              ))}
+            </div>
+          </div>
+
+          {/* Trust and product context */}
+          <div>
+            <h3 className="font-serif text-[#4A4A4A] text-lg mb-4">Learn & Trust</h3>
+            <div className="grid gap-3">
+              {TRUST_HUB_LINKS.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className="rounded-xl border border-purple-100/80 bg-white/70 px-4 py-3 transition-colors hover:border-purple-200 hover:bg-white"
+                >
+                  <div className="text-sm font-medium text-gray-700">{link.label}</div>
+                  <p className="mt-1 text-xs leading-5 text-gray-500">{link.description}</p>
                 </Link>
               ))}
             </div>

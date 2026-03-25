@@ -19,12 +19,89 @@ import {
   EXPLORE_SURPRISE_LINKS,
   FEATURED_GENERATOR_LINKS,
 } from "@/lib/discovery-links";
+import GuidanceGridSection from "@/components/eeat/GuidanceGridSection";
+import TrustSignalsSection from "@/components/eeat/TrustSignalsSection";
+import JsonLd from "@/components/JsonLd";
+import {
+  buildBreadcrumbSchema,
+  buildItemListSchema,
+  buildWebPageSchema,
+} from "@/lib/seo";
 
 export const metadata: Metadata = {
   title: "Card Ideas & Generators | Birthday, Valentine, Sorry & More - MewTruCard",
   description:
     "Browse MewTruCard by moment, relationship, or surprise-link flow. Start with birthday cards first, then explore valentine, sorry, anniversary, and more.",
+  alternates: {
+    canonical: "/cards/",
+  },
+  openGraph: {
+    title: "Card Ideas & Generators | Birthday, Valentine, Sorry & More - MewTruCard",
+    description:
+      "Browse MewTruCard by moment, relationship, or surprise-link flow. Start with birthday cards first, then explore valentine, sorry, anniversary, and more.",
+    type: "website",
+    url: "/cards/",
+  },
 };
+
+const HUB_METHODS = [
+  {
+    title: "Built to reduce blank-page friction",
+    description:
+      "This hub exists to help visitors choose a useful starting path before they enter the generator, not to make them scroll through an undifferentiated list.",
+  },
+  {
+    title: "Organized by real sending intent",
+    description:
+      "The main routes are grouped by occasion, relationship, and surprise-link use case because those are the clearest reasons people arrive here.",
+  },
+  {
+    title: "Reviewed against the live product flow",
+    description:
+      "We keep this page tied to the current create-edit-share workflow so the recommendations stay aligned with what users can actually do next.",
+  },
+];
+
+const HUB_GUIDANCE = [
+  {
+    title: "If you already know the occasion",
+    description:
+      "Go straight to the matching generator. This is usually the fastest path for birthday, valentine, apology, anniversary, and thank-you moments.",
+  },
+  {
+    title: "If you know the person but not the tone",
+    description:
+      "Use a relationship-led gallery first. It is easier to judge what feels right for a friend, spouse, parent, or partner before you write the final message.",
+  },
+  {
+    title: "If the reveal matters as much as the card",
+    description:
+      "Start with a surprise-link page. These flows work best when you want to stage the moment before the recipient sees the final card.",
+  },
+];
+
+const HUB_RELATED_LINKS = [
+  {
+    href: "/about/",
+    label: "About MewTruCard",
+    description: "Who the product is for and what the team is trying to improve.",
+  },
+  {
+    href: "/how-it-works/",
+    label: "How the workflow works",
+    description: "See the real create, edit, and share steps before you start.",
+  },
+  {
+    href: "/ai-and-editorial-policy/",
+    label: "AI and editorial policy",
+    description: "How AI is used and how search-facing guidance pages are reviewed.",
+  },
+  {
+    href: "/card-gallery/",
+    label: "Browse public card ideas",
+    description: "See public examples when you need visual or message inspiration first.",
+  },
+];
 
 function GeneratorCard({ card }: { card: any }) {
   return (
@@ -130,9 +207,37 @@ export default async function GeneratorsPage() {
   const communityGenerators = allGenerators
     .filter((generator) => !generator.isSystem)
     .slice(0, 8);
+  const featuredGeneratorLinks = featuredGenerators.map((generator) => ({
+    href: generator.link,
+    label: generator.title,
+    description: generator.description || undefined,
+  }));
 
   return (
     <div className="min-h-screen bg-warm-cream">
+      <JsonLd
+        data={buildBreadcrumbSchema([
+          { name: "Home", href: "/" },
+          { name: "Cards", href: "/cards/" },
+        ])}
+      />
+      <JsonLd
+        data={buildWebPageSchema({
+          name: "Card Ideas & Generators",
+          description:
+            "Browse MewTruCard by moment, relationship, or surprise-link flow. Start with birthday cards first, then explore valentine, sorry, anniversary, and more.",
+          path: "/cards/",
+          reviewedBy: "MewTruCard editorial team",
+          lastReviewed: "March 25, 2026",
+          about: ["greeting cards", "AI card generator", "card gallery"],
+        })}
+      />
+      {featuredGeneratorLinks.length > 0 && (
+        <JsonLd
+          data={buildItemListSchema("Featured card generator paths", featuredGeneratorLinks)}
+        />
+      )}
+
       <div className="pointer-events-none fixed inset-0 overflow-hidden">
         <div className="absolute -right-40 -top-40 h-96 w-96 rounded-full bg-warm-rose opacity-40 mix-blend-multiply blur-3xl" />
         <div className="absolute -left-20 top-0 h-72 w-72 rounded-full bg-warm-peach opacity-40 mix-blend-multiply blur-3xl" />
@@ -189,6 +294,23 @@ export default async function GeneratorsPage() {
             />
           </div>
         </section>
+
+        <div className="mt-12">
+          <TrustSignalsSection
+            title="How this card hub is reviewed"
+            description="This page is intentionally structured as a decision hub. It should help visitors pick the next useful page quickly and understand where to go if they need more product or trust context."
+            reviewedBy="MewTruCard editorial team"
+            lastReviewed="March 25, 2026"
+            purpose="Help visitors pick the right MewTruCard path based on occasion, relationship, or surprise-link intent instead of forcing every visitor into the same entry page."
+            methodology={HUB_METHODS}
+            links={HUB_RELATED_LINKS}
+          />
+          <GuidanceGridSection
+            title="How to choose your starting path"
+            description="The best first click depends on what the visitor already knows. Use the shortest path that still gives enough context to create a card that feels specific."
+            cards={HUB_GUIDANCE}
+          />
+        </div>
 
         <div className="mt-24 space-y-24">
           <section>

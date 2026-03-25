@@ -4,6 +4,9 @@ import Link from 'next/link'
 import { ScrollToTop } from '@/components/ScrollToTop'
 import GalleryComboLinkSection from '@/components/gallery/GalleryComboLinkSection'
 import { CardType } from '@/lib/card-config'
+import GuidanceGridSection from '@/components/eeat/GuidanceGridSection'
+import TrustSignalsSection from '@/components/eeat/TrustSignalsSection'
+import JsonLd from '@/components/JsonLd'
 import { Card, getLikedCardsServer, getPopularCardsServer, getRecentCardsServer, TabType } from '@/lib/cards'
 import {
   getCardTypeLabel,
@@ -13,6 +16,11 @@ import {
   getRelationshipValue,
   getSeoRelationshipsForType,
 } from '@/lib/gallery-combos'
+import {
+  getRelationshipGalleryTrustGuide,
+  getTrustHubRelatedLinks,
+} from '@/lib/eeat-content'
+import { buildBreadcrumbSchema, buildItemListSchema, buildWebPageSchema } from '@/lib/seo'
 import TypeRelationshipGalleryContent from './TypeRelationshipGalleryContent'
 
 interface Props {
@@ -105,9 +113,37 @@ export default async function TypeRelationshipPage({ params, searchParams }: Pro
     }))
 
   const generatorHref = `/${type}/?to=${relationshipValue}&relationship=${relationshipValue}`
+  const trustGuide = getRelationshipGalleryTrustGuide(type, cardTypeLabel, relationshipLabel)
+  const trustLinks = getTrustHubRelatedLinks(type)
+  const relatedSchemaLinks = relatedRelationshipLinks.map((link) => ({
+    href: link.href,
+    label: link.title,
+    description: link.description,
+  }))
 
   return (
     <article className="min-h-screen bg-gradient-to-br from-white via-purple-50 to-pink-50">
+      <JsonLd
+        data={buildBreadcrumbSchema([
+          { name: 'Home', href: '/' },
+          { name: 'Cards', href: '/cards/' },
+          { name: `${cardTypeLabel} examples`, href: `/type/${type}/` },
+          { name: `${cardTypeLabel} for ${relationshipLabel}`, href: getGalleryComboHref(type, relationshipValue) },
+        ])}
+      />
+      <JsonLd
+        data={buildWebPageSchema({
+          name: `${cardTypeLabel} Cards for ${relationshipLabel}`,
+          description: `Compare public ${cardTypeLabel.toLowerCase()} card examples for ${relationshipLabel.toLowerCase()}, then open the generator with a clearer tone and message direction.`,
+          path: getGalleryComboHref(type, relationshipValue),
+          reviewedBy: trustGuide.reviewedBy,
+          lastReviewed: trustGuide.lastReviewed,
+          about: [cardTypeLabel, relationshipLabel, 'relationship-specific card examples'],
+        })}
+      />
+      {relatedSchemaLinks.length > 0 && (
+        <JsonLd data={buildItemListSchema(`More ${cardTypeLabel} galleries`, relatedSchemaLinks)} />
+      )}
       <div className="container mx-auto px-4 py-8">
         <header className="mb-10 text-center">
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-serif font-bold mb-4 tracking-tight">
@@ -145,6 +181,16 @@ export default async function TypeRelationshipPage({ params, searchParams }: Pro
           links={relatedRelationshipLinks}
         />
 
+        <TrustSignalsSection
+          title={`How to use these ${cardTypeLabel} examples for ${relationshipLabel}`}
+          description={`This page is meant to narrow the writing tone and visual direction for a ${relationshipLabel.toLowerCase()} relationship before you open the generator.`}
+          reviewedBy={trustGuide.reviewedBy}
+          lastReviewed={trustGuide.lastReviewed}
+          purpose={trustGuide.purpose}
+          methodology={trustGuide.methodology}
+          links={trustLinks}
+        />
+
         <section aria-label={`${cardTypeLabel} cards for ${relationshipLabel}`}>
           <Suspense
             fallback={
@@ -161,6 +207,17 @@ export default async function TypeRelationshipPage({ params, searchParams }: Pro
             />
           </Suspense>
         </section>
+
+        <div className="mt-12">
+          {trustGuide.sections.map((section) => (
+            <GuidanceGridSection
+              key={section.title}
+              title={section.title}
+              description={section.description}
+              cards={section.cards}
+            />
+          ))}
+        </div>
       </div>
       <ScrollToTop />
     </article>

@@ -11,6 +11,11 @@ export interface SeoLink {
   description?: string;
 }
 
+export interface BreadcrumbLink {
+  name: string;
+  href: string;
+}
+
 const cardTypeMap = new Map(CARD_TYPES.map((item) => [item.type, item.label]));
 const relationshipMap = new Map(
   RELATIONSHIPS.map((item) => [item.value.toLowerCase(), item.label])
@@ -160,5 +165,58 @@ export function buildSoftwareApplicationSchema({
     image,
     screenshot: image,
     url: toAbsoluteUrl(path),
+  };
+}
+
+export function buildBreadcrumbSchema(items: BreadcrumbLink[]) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: items.map((item, index) => ({
+      "@type": "ListItem",
+      position: index + 1,
+      name: item.name,
+      item: toAbsoluteUrl(item.href),
+    })),
+  };
+}
+
+export function buildWebPageSchema({
+  name,
+  description,
+  path,
+  reviewedBy,
+  lastReviewed,
+  about,
+}: {
+  name: string;
+  description: string;
+  path: string;
+  reviewedBy?: string;
+  lastReviewed?: string;
+  about?: string[];
+}) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    name,
+    description,
+    url: toAbsoluteUrl(path),
+    isPartOf: {
+      "@type": "WebSite",
+      name: "MewTruCard",
+      url: toAbsoluteUrl("/"),
+    },
+    reviewedBy: reviewedBy
+      ? {
+          "@type": "Organization",
+          name: reviewedBy,
+        }
+      : undefined,
+    dateModified: lastReviewed,
+    about: about?.map((topic) => ({
+      "@type": "Thing",
+      name: topic,
+    })),
   };
 }
