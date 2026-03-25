@@ -4,6 +4,12 @@
   --accent-color: #FFC0CB;
 }
 
+html,
+body {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
 .card {
   background-color: white;
   border: 1px solid var(--accent-color);

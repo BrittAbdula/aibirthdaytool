@@ -67,9 +67,9 @@ export default function HeroCardProof({
   const [leadCard, ...supportCards] = featuredCards;
 
   return (
-    <section className="relative rounded-[32px] border border-white/70 bg-white/75 p-5 shadow-sm backdrop-blur sm:p-6">
-      <div className="mb-5 flex items-start justify-between gap-4">
-        <div>
+    <section className="relative w-full min-w-0 max-w-full overflow-hidden rounded-[32px] border border-white/70 bg-white/75 p-5 shadow-sm backdrop-blur sm:p-6">
+      <div className="mb-5 flex min-w-0 items-start justify-between gap-4">
+        <div className="min-w-0">
           <p className="text-xs font-semibold uppercase tracking-[0.24em] text-orange-700">
             Live gallery preview
           </p>
@@ -89,9 +89,9 @@ export default function HeroCardProof({
         </Link>
       </div>
 
-      <div className="flex gap-3 overflow-x-auto pb-2 md:hidden">
+      <div className="flex w-full max-w-full gap-3 overflow-x-auto pb-2 md:hidden">
         {featuredCards.map((card, index) => (
-          <div key={card.id} className="min-w-[152px] flex-none">
+          <div key={card.id} className="w-[152px] flex-none snap-start">
             <ProofCard card={card} priority={index === 0} />
           </div>
         ))}
