@@ -2,6 +2,7 @@ import { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
 import {
+  ArrowUpRight,
   Download,
   Gift,
   Heart,
@@ -163,6 +164,8 @@ export default async function Home() {
               </Link>
             </div>
 
+            <HomepageAdStrip />
+
             <div className="mt-10 grid gap-4 text-left md:grid-cols-3">
               <TrustPoint
                 title="Make it personal"
@@ -274,6 +277,40 @@ export default async function Home() {
         </div>
       </div>
     </main>
+  );
+}
+
+function HomepageAdStrip() {
+  return (
+    <a
+      href="https://www.skymakermodel.com"
+      target="_blank"
+      rel="noopener noreferrer sponsored"
+      aria-label="Visit Skymaker Model"
+      className="group mt-8 block"
+    >
+      <GlassCard className="overflow-hidden border-orange-200/80 bg-gradient-to-r from-orange-50 via-white to-amber-50 p-1 shadow-sm transition-all hover:border-orange-300 hover:shadow-warm">
+        <div className="flex flex-col gap-4 rounded-xl bg-white/80 px-5 py-4 text-left sm:flex-row sm:items-center sm:justify-between sm:px-6">
+          <div>
+            <div className="inline-flex items-center rounded-full border border-orange-100 bg-orange-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-orange-600">
+              Sponsored
+            </div>
+            <p className="mt-3 text-lg font-semibold text-gray-800 sm:text-xl">
+              Explore detailed model kits and maker builds at Skymaker Model.
+            </p>
+            <p className="mt-1 text-sm leading-6 text-gray-600 sm:text-base">
+              Visit skymakermodel.com for scale model products, project ideas,
+              and more.
+            </p>
+          </div>
+
+          <div className="inline-flex items-center gap-2 self-start rounded-2xl bg-gradient-to-r from-[#FF6B6B] to-[#FF8E53] px-4 py-3 text-sm font-semibold text-white shadow-md transition-transform duration-300 group-hover:-translate-y-0.5 sm:self-center">
+            Visit site
+            <ArrowUpRight className="h-4 w-4" />
+          </div>
+        </div>
+      </GlassCard>
+    </a>
   );
 }
 
