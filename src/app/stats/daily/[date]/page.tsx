@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { CollapsibleJson } from "@/components/ui/collapsible-json";
-import { useRouter } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { X, ArrowLeft, CheckCircle2, XCircle } from "lucide-react";
@@ -30,7 +30,8 @@ interface ApiCallDetail {
   responseSizeKB: number;
 }
 
-export default function DailyDetailPage({ params }: { params: { date: string } }) {
+export default function DailyDetailPage() {
+  const { date } = useParams<{ date: string }>();
   const router = useRouter();
   const [details, setDetails] = useState<ApiCallDetail[]>([]);
   const [loading, setLoading] = useState(true);
@@ -40,7 +41,7 @@ export default function DailyDetailPage({ params }: { params: { date: string } }
   useEffect(() => {
     const fetchDetails = async () => {
       try {
-        const response = await fetch(`/api/user-stats/daily/${params.date}`);
+        const response = await fetch(`/api/user-stats/daily/${date}`);
         if (!response.ok) {
           throw new Error('Failed to fetch daily details');
         }
@@ -54,7 +55,7 @@ export default function DailyDetailPage({ params }: { params: { date: string } }
     };
 
     fetchDetails();
-  }, [params.date]);
+  }, [date]);
 
   const filteredDetails = details.filter(detail => {
     switch (statusFilter) {

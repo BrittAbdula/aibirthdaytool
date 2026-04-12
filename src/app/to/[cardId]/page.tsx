@@ -7,7 +7,7 @@ import SpotifyPlayer from '@/components/SpotifyPlayer'
 import ChristmasBackground from './christmas-background'
 
 interface Props {
-  params: { cardId: string }
+  params: Promise<{ cardId: string }>
 }
 
 async function getCard(cardId: string) {
@@ -52,7 +52,8 @@ export async function generateMetadata(
   { params }: Props,
   parent: ResolvingMetadata
 ): Promise<Metadata> {
-  const card = await getCard(params.cardId)
+  const { cardId } = await params
+  const card = await getCard(cardId)
   
   if (!card) {
     return {
@@ -107,7 +108,8 @@ export async function generateMetadata(
 }
 
 export default async function EditedCardPage({ params }: Props) {
-  const card = await getCard(params.cardId)
+  const { cardId } = await params
+  const card = await getCard(cardId)
 
   if (!card) {
     notFound()

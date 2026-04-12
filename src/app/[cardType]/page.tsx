@@ -36,9 +36,9 @@ import {
 } from "@/components/ui/accordion";
 
 interface CardGeneratorPageProps {
-    params: {
+    params: Promise<{
         cardType: string;
-    };
+    }>;
 }
 
 // Generate static params for all card types at build time
@@ -54,7 +54,7 @@ export const dynamic = 'force-static';
 export const revalidate = 3600; // Revalidate every hour
 
 export async function generateMetadata({ params }: CardGeneratorPageProps): Promise<Metadata> {
-    const cardType = params.cardType;
+    const { cardType } = await params;
     const cardConfig = await getCardConfig(cardType);
 
     if (!cardConfig) {
@@ -102,7 +102,8 @@ export async function generateMetadata({ params }: CardGeneratorPageProps): Prom
 }
 
 export default async function CardGeneratorPage({ params }: CardGeneratorPageProps) {
-    const cardType = params.cardType;
+    const resolvedParams = await params;
+    const cardType = resolvedParams.cardType;
     const cardConfig = await getCardConfig(cardType);
 
     if (!cardConfig) {

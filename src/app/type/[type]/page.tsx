@@ -13,8 +13,8 @@ import { getTrustHubRelatedLinks, getTypeGalleryTrustGuide } from '@/lib/eeat-co
 import { buildBreadcrumbSchema, buildItemListSchema, buildWebPageSchema } from '@/lib/seo'
 
 interface Props {
-  params: { type: CardType }
-  searchParams: { relationship?: string; tab?: string }
+  params: Promise<{ type: CardType }>
+  searchParams: Promise<{ relationship?: string; tab?: string }>
 }
 
 // Set revalidation period to 1 hour (3600 seconds)
@@ -33,7 +33,8 @@ export async function generateStaticParams() {
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const type = decodeURIComponent(params.type)
+  const resolvedParams = await params
+  const type = decodeURIComponent(resolvedParams.type)
   const title = `AI ${type.charAt(0).toUpperCase() + type.slice(1)} Cards |  Free & Animated Templates - MewtruCard`
   const description = `Explore hundreds of free, animated, AI‑generated ${type.toLowerCase()} card designs. Personalise, download, and share unique e‑cards in seconds—no design skills needed.`
 
@@ -41,13 +42,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     title,
     description,
     alternates: {
-      canonical: `/type/${params.type}/`,
+      canonical: `/type/${resolvedParams.type}/`,
     },
     openGraph: {
       title,
       description,
       type: 'website',
-      url: `/type/${params.type}/`,
+      url: `/type/${resolvedParams.type}/`,
       images: [
         {
           url: 'https://mewtrucard.com/mewtrucard-generator.jpg',
@@ -67,9 +68,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function TypePage({ params, searchParams }: Props) {
-  const type = decodeURIComponent(params.type) as CardType
-  const relationship = searchParams.relationship || null
-  const activeTab = (searchParams.tab as TabType) || 'recent'
+  const resolvedParams = await params
+  const resolvedSearchParams = await searchParams
+  const type = decodeURIComponent(resolvedParams.type) as CardType
+  const relationship = resolvedSearchParams.relationship || null
+  const activeTab = (resolvedSearchParams.tab as TabType) || 'recent'
   const cardTypeLabel = getCardTypeLabel(type)
   
   let recentCardsData: { cards: Card[]; totalPages: number } = { cards: [], totalPages: 0 }
@@ -177,7 +180,7 @@ export default async function TypePage({ params, searchParams }: Props) {
             }
           >
             <TypeGalleryContent 
-              params={params} 
+              params={resolvedParams}
               initialCardsData={initialCardsData}
               defaultRelationship={relationship}
               activeTab={activeTab}

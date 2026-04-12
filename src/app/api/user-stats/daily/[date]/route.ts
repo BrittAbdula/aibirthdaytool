@@ -4,15 +4,15 @@ import { auth } from '@/auth';
 
 export async function GET(
   request: Request,
-  { params }: { params: { date: string } }
+  context: { params: Promise<{ date: string }> }
 ) {
   try {
+    const { date } = await context.params;
     const session = await auth();
     
     if (session?.user?.id !== 'cm56ic66y000110jijyw2ir8r') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-    const date = params.date;
     const startDate = new Date(date);
     const endDate = new Date(date);
     endDate.setDate(endDate.getDate() + 1);

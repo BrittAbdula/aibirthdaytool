@@ -13,9 +13,10 @@ async function checkPermission() {
 // 获取单个生成器
 export async function GET(
   req: Request,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await context.params
     // 检查权限
     const isAuthorized = await checkPermission()
     
@@ -25,7 +26,7 @@ export async function GET(
     }
     
     const generator = await prisma.cardGenerator.findUnique({
-      where: { id: params.id }
+      where: { id }
     })
 
     if (!generator) {
@@ -48,9 +49,10 @@ export async function GET(
 // 更新生成器
 export async function PATCH(
   req: Request,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await context.params
     // 检查权限
     const isAuthorized = await checkPermission()
     
@@ -67,7 +69,7 @@ export async function PATCH(
       const existing = await prisma.cardGenerator.findFirst({
         where: {
           slug: data.slug,
-          id: { not: params.id }
+          id: { not: id }
         }
       })
 
@@ -103,7 +105,7 @@ export async function PATCH(
 
     // 更新生成器
     const updatedGenerator = await prisma.cardGenerator.update({
-      where: { id: params.id },
+      where: { id },
       data: updateData
     })
 
@@ -120,9 +122,10 @@ export async function PATCH(
 // 删除生成器
 export async function DELETE(
   req: Request,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await context.params
     // 检查权限
     const isAuthorized = await checkPermission()
     
@@ -132,7 +135,7 @@ export async function DELETE(
     }
     
     await prisma.cardGenerator.delete({
-      where: { id: params.id }
+      where: { id }
     })
 
     return NextResponse.json({ success: true })
@@ -143,4 +146,4 @@ export async function DELETE(
       { status: 500 }
     )
   }
-} 
+}

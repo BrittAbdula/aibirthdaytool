@@ -46,16 +46,17 @@ export async function generateStaticParams() {
 }
 
 interface PageProps {
-  searchParams: { 
+  searchParams: Promise<{
     type?: CardType;
     tab?: TabType;
-  }
+  }>
 }
 
 // Server Component
 export default async function CardGalleryPage({ searchParams }: PageProps) {
-  const defaultType = searchParams.type || null
-  const activeTab = (searchParams.tab as TabType) || 'recent'
+  const resolvedSearchParams = await searchParams
+  const defaultType = resolvedSearchParams.type || null
+  const activeTab = (resolvedSearchParams.tab as TabType) || 'recent'
   
   // Fetch card data at build time or during revalidation
   const recentCardsData = await getRecentCardsServer(1, 24, defaultType)

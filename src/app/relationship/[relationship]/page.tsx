@@ -7,8 +7,8 @@ import { CardType } from '@/lib/card-config'
 import { getCardTypeLabel, getGalleryComboHref, getRelationshipLabel, getRelationshipValue, getSeoTypesForRelationship } from '@/lib/gallery-combos'
 
 interface Props {
-  params: { relationship: string }
-  searchParams: { type?: CardType; tab?: string }
+  params: Promise<{ relationship: string }>
+  searchParams: Promise<{ type?: CardType; tab?: string }>
 }
 
 // Set revalidation period to 1 hour (3600 seconds)
@@ -33,7 +33,8 @@ export async function generateStaticParams() {
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const relationship = decodeURIComponent(params.relationship)
+  const resolvedParams = await params
+  const relationship = decodeURIComponent(resolvedParams.relationship)
   const formattedRelationship = relationship.charAt(0).toUpperCase() + relationship.slice(1)
   const title = `Best ${formattedRelationship} Cards | Animated AI‑Generated Designs – MewTruCard`
   const description = `Create heartfelt cards for your best ${relationship.toLowerCase()} with our animated AI card maker. Customise artwork & text, then download or share instantly—free to start.`
@@ -42,13 +43,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     title,
     description,
     alternates: {
-      canonical: `/relationship/${params.relationship}/`,
+      canonical: `/relationship/${resolvedParams.relationship}/`,
     },
     openGraph: {
       title,
       description,
       type: 'website',
-      url: `/relationship/${params.relationship}/`,
+      url: `/relationship/${resolvedParams.relationship}/`,
       images: [
         {
           url: 'https://mewtrucard.com/mewtrucard-generator.jpg',
@@ -68,10 +69,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function RelationshipPage({ params, searchParams }: Props) {
-  const relationshipValue = getRelationshipValue(params.relationship)
+  const resolvedParams = await params
+  const resolvedSearchParams = await searchParams
+  const relationshipValue = getRelationshipValue(resolvedParams.relationship)
   const relationship = getRelationshipLabel(relationshipValue)
-  const cardType = searchParams.type || null
-  const activeTab = (searchParams.tab as TabType) || 'recent'
+  const cardType = resolvedSearchParams.type || null
+  const activeTab = (resolvedSearchParams.tab as TabType) || 'recent'
   
   let recentCardsData: { cards: Card[]; totalPages: number } = { cards: [], totalPages: 0 }
   let popularCardsData: { cards: Card[]; totalPages: number } = { cards: [], totalPages: 0 }
@@ -141,7 +144,7 @@ export default async function RelationshipPage({ params, searchParams }: Props) 
             }
           >
             <RelationshipGalleryContent 
-              params={params} 
+              params={resolvedParams}
               initialCardsData={initialCardsData}
               defaultType={cardType}
               activeTab={activeTab}

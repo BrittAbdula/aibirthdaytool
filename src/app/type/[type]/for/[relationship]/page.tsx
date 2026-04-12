@@ -23,8 +23,8 @@ import { buildBreadcrumbSchema, buildItemListSchema, buildWebPageSchema } from '
 import TypeRelationshipGalleryContent from './TypeRelationshipGalleryContent'
 
 interface Props {
-  params: { type: CardType; relationship: string }
-  searchParams: { tab?: string }
+  params: Promise<{ type: CardType; relationship: string }>
+  searchParams: Promise<{ tab?: string }>
 }
 
 export const revalidate = 3600
@@ -35,12 +35,13 @@ export async function generateStaticParams() {
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const type = decodeURIComponent(params.type) as CardType
-  const relationshipLabel = getRelationshipLabel(params.relationship)
+  const resolvedParams = await params
+  const type = decodeURIComponent(resolvedParams.type) as CardType
+  const relationshipLabel = getRelationshipLabel(resolvedParams.relationship)
   const cardTypeLabel = getCardTypeLabel(type)
   const title = `${cardTypeLabel} Cards for ${relationshipLabel} | Free AI Templates - MewTruCard`
   const description = `Browse AI-generated ${cardTypeLabel.toLowerCase()} card ideas for your ${relationshipLabel.toLowerCase()}, then create, edit, download, or share your own card link with MewTruCard.`
-  const canonical = getGalleryComboHref(type, params.relationship)
+  const canonical = getGalleryComboHref(type, resolvedParams.relationship)
 
   return {
     title,
@@ -72,11 +73,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function TypeRelationshipPage({ params, searchParams }: Props) {
-  const type = decodeURIComponent(params.type) as CardType
-  const relationshipValue = getRelationshipValue(params.relationship)
+  const resolvedParams = await params
+  const resolvedSearchParams = await searchParams
+  const type = decodeURIComponent(resolvedParams.type) as CardType
+  const relationshipValue = getRelationshipValue(resolvedParams.relationship)
   const relationshipLabel = getRelationshipLabel(relationshipValue)
   const cardTypeLabel = getCardTypeLabel(type)
-  const activeTab = (searchParams.tab as TabType) || 'recent'
+  const activeTab = (resolvedSearchParams.tab as TabType) || 'recent'
 
   let recentCardsData: { cards: Card[]; totalPages: number } = { cards: [], totalPages: 0 }
   let popularCardsData: { cards: Card[]; totalPages: number } = { cards: [], totalPages: 0 }
@@ -200,7 +203,7 @@ export default async function TypeRelationshipPage({ params, searchParams }: Pro
             }
           >
             <TypeRelationshipGalleryContent
-              params={params}
+              params={resolvedParams}
               initialCardsData={initialCardsData}
               activeTab={activeTab}
             />

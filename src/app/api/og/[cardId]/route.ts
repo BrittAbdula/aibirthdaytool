@@ -2,8 +2,12 @@ import { prisma } from '@/lib/prisma'
 
 // export const runtime = 'edge'
 
-export async function GET(request: Request, { params }: { params: { cardId: string } }) {
-  const card = await prisma.editedCard.findUnique({ where: { id: params.cardId } })
+export async function GET(
+  request: Request,
+  context: { params: Promise<{ cardId: string }> }
+) {
+  const { cardId } = await context.params
+  const card = await prisma.editedCard.findUnique({ where: { id: cardId } })
 
   if (!card) {
     return new Response('Card not found', { status: 404 })

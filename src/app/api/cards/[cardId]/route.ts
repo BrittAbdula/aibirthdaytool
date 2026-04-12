@@ -6,17 +6,18 @@ import { uploadSvgToR2 } from '@/lib/r2';
 
 export async function GET(
   request: Request,
-  { params }: { params: { cardId: string } }
+  context: { params: Promise<{ cardId: string }> }
 ) {
+  const { cardId } = await context.params
   const cardType = request.url.split('cardType=')[1]
   try {
     const card = await prisma.editedCard.findUnique({
-      where: { id: params.cardId },
+      where: { id: cardId },
     })
     if (!card) {
       // return NextResponse.json({ error: 'Card not found' }, { status: 404 })
       const originalCard = await prisma.apiLog.findUnique({
-        where: { cardId: params.cardId },
+        where: { cardId },
         select: {
           responseContent: true,
           cardId: true,
@@ -90,21 +91,22 @@ export async function GET(
 
 export async function PUT(
   request: Request,
-  { params }: { params: { cardId: string } }
+  context: { params: Promise<{ cardId: string }> }
 ) {
+  const { cardId } = await context.params
   const { responseContent } = await request.json()
 
   try {
     const existingCard = await prisma.apiLog.findUnique({
-      where: { cardId: params.cardId },
+      where: { cardId },
       select: { timestamp: true }
     });
 
     const createdAt = existingCard?.timestamp || new Date();
-    const r2Url = await uploadSvgToR2(responseContent, params.cardId, createdAt);
+    const r2Url = await uploadSvgToR2(responseContent, cardId, createdAt);
 
     const updatedCard = await prisma.apiLog.update({
-      where: { cardId: params.cardId },
+      where: { cardId },
       data: { responseContent: '', r2Url },
     })
 

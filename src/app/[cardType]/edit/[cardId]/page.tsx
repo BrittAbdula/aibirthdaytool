@@ -8,6 +8,10 @@ export const metadata: Metadata = {
   },
 }
 
-export default function EditCardPage({ params }: { params: { cardId: string, cardType: string } }) {
-  return <EditCardClient params={params} />
+export default async function EditCardPage({
+  params,
+}: {
+  params: Promise<{ cardId: string; cardType: string }>
+}) {
+  return <EditCardClient params={await params} />
 }

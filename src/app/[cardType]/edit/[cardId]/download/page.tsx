@@ -7,14 +7,10 @@ import { Button } from '@/components/ui/button'
 import { useToast } from '@/hooks/use-toast'
 import { recordUserAction } from '@/lib/action'
 import { CardType } from '@/lib/card-config'
-import { useSearchParams } from 'next/navigation'
+import { useParams, useSearchParams } from 'next/navigation'
 
-interface DownloadGatePageProps {
-  params: { cardId: string; cardType: CardType }
-}
-
-export default function DownloadGatePage({ params }: DownloadGatePageProps) {
-  const { cardId, cardType } = params
+export default function DownloadGatePage() {
+  const { cardId, cardType } = useParams<{ cardId: string; cardType: CardType }>()
   const { toast } = useToast()
   const [sourceUrl, setSourceUrl] = useState<string>('')
   const [isPreparing, setIsPreparing] = useState(false)
@@ -168,5 +164,3 @@ export default function DownloadGatePage({ params }: DownloadGatePageProps) {
     </div>
   )
 }
-
-
