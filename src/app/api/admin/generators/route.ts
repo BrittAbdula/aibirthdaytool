@@ -1,25 +1,13 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { auth } from '@/auth'
-
-// 管理员用户ID
-const ADMIN_USER_ID = 'cm56ic66y000110jijyw2ir8r'
-
-// 权限检查函数
-async function checkPermission() {
-  const session = await auth()
-  return session?.user?.id === ADMIN_USER_ID
-}
+import { requireAdminRequest } from '@/lib/admin-auth'
 
 // 获取所有生成器
 export async function GET() {
   try {
-    // 检查权限
-    const isAuthorized = await checkPermission()
-    
-    // 如果不是管理员用户，返回未授权错误
-    if (!isAuthorized) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    const access = await requireAdminRequest()
+    if (!access.ok) {
+      return access.response
     }
     
     const generators = await prisma.cardGenerator.findMany({
@@ -42,12 +30,9 @@ export async function GET() {
 // 创建新生成器
 export async function POST(req: Request) {
   try {
-    // 检查权限
-    const isAuthorized = await checkPermission()
-    
-    // 如果不是管理员用户，返回未授权错误
-    if (!isAuthorized) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    const access = await requireAdminRequest()
+    if (!access.ok) {
+      return access.response
     }
     
     const data = await req.json()

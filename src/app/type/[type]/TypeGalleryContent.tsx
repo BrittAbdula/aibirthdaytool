@@ -8,7 +8,7 @@ import CardGallery from '@/app/card-gallery/CardGallery'
 import { CardType } from '@/lib/card-config'
 import { RELATIONSHIPS } from '@/lib/card-constants'
 import { TabType } from '@/lib/cards'
-import { getGalleryComboHref, getRelationshipValue, hasSeoGalleryCombo } from '@/lib/gallery-combos'
+import { getGalleryComboHref, getRelationshipLabel, getRelationshipValue, hasSeoGalleryCombo } from '@/lib/gallery-combos'
 
 interface Props {
   params: { type: CardType }
@@ -29,9 +29,10 @@ export default function TypeGalleryContent({
   const router = useRouter()
   const searchParams = useSearchParams()
   const type = decodeURIComponent(params.type) as CardType
+  const relationshipFromQuery = searchParams.get('relationship')
   
   const [selectedRelationship, setSelectedRelationship] = useState<string | null>(
-    defaultRelationship || searchParams.get('relationship')
+    defaultRelationship || (relationshipFromQuery ? getRelationshipLabel(relationshipFromQuery) : null)
   )
   const [cardsData, setCardsData] = useState(initialCardsData)
   const [isLoading, setIsLoading] = useState(false)
@@ -76,6 +77,16 @@ export default function TypeGalleryContent({
   }
 
   useEffect(() => {
+    const isDefaultState =
+      currentTab === activeTab &&
+      (selectedRelationship ?? null) === (defaultRelationship ?? null)
+
+    if (isDefaultState) {
+      setCardsData(initialCardsData)
+      setIsLoading(false)
+      return
+    }
+
     const fetchCards = async () => {
       setIsLoading(true)
       try {
@@ -98,7 +109,7 @@ export default function TypeGalleryContent({
     }
 
     fetchCards()
-  }, [type, selectedRelationship, currentTab])
+  }, [activeTab, currentTab, defaultRelationship, initialCardsData, selectedRelationship, type])
 
   if (!cardsData && !isLoading) {
     notFound()

@@ -6,7 +6,7 @@ import { CardType } from '@/lib/card-config'
 import GuidanceGridSection from '@/components/eeat/GuidanceGridSection'
 import TrustSignalsSection from '@/components/eeat/TrustSignalsSection'
 import JsonLd from '@/components/JsonLd'
-import { Card, getLikedCardsServer, getPopularCardsServer, getRecentCardsServer, TabType } from '@/lib/cards'
+import { Card, getRecentCardsServer } from '@/lib/cards'
 import {
   getCardTypeLabel,
   getGalleryComboHref,
@@ -19,15 +19,15 @@ import {
   getRelationshipGalleryTrustGuide,
   getTrustHubRelatedLinks,
 } from '@/lib/eeat-content'
-import { buildBreadcrumbSchema, buildItemListSchema, buildWebPageSchema } from '@/lib/seo'
+import { buildBreadcrumbSchema, buildItemListSchema, buildWebPageSchema, toAbsoluteUrl } from '@/lib/seo'
 import TypeRelationshipGalleryContent from './TypeRelationshipGalleryContent'
 
 interface Props {
   params: Promise<{ type: CardType; relationship: string }>
-  searchParams: Promise<{ tab?: string }>
 }
 
 export const revalidate = 3600
+export const dynamic = 'force-static'
 export const dynamicParams = false
 
 export async function generateStaticParams() {
@@ -39,9 +39,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const type = decodeURIComponent(resolvedParams.type) as CardType
   const relationshipLabel = getRelationshipLabel(resolvedParams.relationship)
   const cardTypeLabel = getCardTypeLabel(type)
-  const title = `${cardTypeLabel} Cards for ${relationshipLabel} | Free AI Templates - MewTruCard`
-  const description = `Browse AI-generated ${cardTypeLabel.toLowerCase()} card ideas for your ${relationshipLabel.toLowerCase()}, then create, edit, download, or share your own card link with MewTruCard.`
-  const canonical = getGalleryComboHref(type, resolvedParams.relationship)
+  const title = `${cardTypeLabel} Card Ideas for ${relationshipLabel} | MewTruCard`
+  const description = `Browse ${cardTypeLabel.toLowerCase()} card ideas for your ${relationshipLabel.toLowerCase()}, compare public examples, then make your own personalized card with MewTruCard.`
+  const canonical = toAbsoluteUrl(getGalleryComboHref(type, resolvedParams.relationship))
 
   return {
     title,
@@ -72,37 +72,19 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 }
 
-export default async function TypeRelationshipPage({ params, searchParams }: Props) {
+export default async function TypeRelationshipPage({ params }: Props) {
   const resolvedParams = await params
-  const resolvedSearchParams = await searchParams
   const type = decodeURIComponent(resolvedParams.type) as CardType
   const relationshipValue = getRelationshipValue(resolvedParams.relationship)
   const relationshipLabel = getRelationshipLabel(relationshipValue)
   const cardTypeLabel = getCardTypeLabel(type)
-  const activeTab = (resolvedSearchParams.tab as TabType) || 'recent'
 
-  let recentCardsData: { cards: Card[]; totalPages: number } = { cards: [], totalPages: 0 }
-  let popularCardsData: { cards: Card[]; totalPages: number } = { cards: [], totalPages: 0 }
-  let likedCardsData: { cards: Card[]; totalPages: number } = { cards: [], totalPages: 0 }
+  let initialCardsData: { cards: Card[]; totalPages: number } = { cards: [], totalPages: 0 }
 
   try {
-    recentCardsData = await getRecentCardsServer(1, 24, type, relationshipLabel)
-    popularCardsData = await getPopularCardsServer(1, 24, type, relationshipLabel)
-    likedCardsData = await getLikedCardsServer(1, 24, type, relationshipLabel)
+    initialCardsData = await getRecentCardsServer(1, 24, type, relationshipLabel)
   } catch (error) {
     console.error(`Failed to load combo gallery for ${type} / ${relationshipValue}`, error)
-  }
-
-  let initialCardsData
-  switch (activeTab) {
-    case 'popular':
-      initialCardsData = popularCardsData
-      break
-    case 'liked':
-      initialCardsData = likedCardsData
-      break
-    default:
-      initialCardsData = recentCardsData
   }
 
   const relatedRelationshipLinks = getSeoRelationshipsForType(type)
@@ -110,7 +92,7 @@ export default async function TypeRelationshipPage({ params, searchParams }: Pro
     .slice(0, 6)
     .map((relationship) => ({
       href: getGalleryComboHref(type, relationship),
-      title: `${cardTypeLabel} Cards for ${getRelationshipLabel(relationship)}`,
+      title: `${cardTypeLabel} Card Ideas for ${getRelationshipLabel(relationship)}`,
       description: `Browse public ${cardTypeLabel.toLowerCase()} card ideas for your ${getRelationshipLabel(relationship).toLowerCase()}.`,
     }))
 
@@ -205,7 +187,7 @@ export default async function TypeRelationshipPage({ params, searchParams }: Pro
             <TypeRelationshipGalleryContent
               params={resolvedParams}
               initialCardsData={initialCardsData}
-              activeTab={activeTab}
+              activeTab="recent"
             />
           </Suspense>
         </section>

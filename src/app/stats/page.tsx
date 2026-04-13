@@ -10,11 +10,13 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar } from 'recharts';
 import { addDays } from "date-fns";
 import { DateRange } from "react-day-picker";
 import { DatePickerWithRange } from "@/components/ui/date-range-picker";
 import { useRouter } from 'next/navigation';
+import { signIn, useSession } from 'next-auth/react';
 
 interface UserActionStat {
   dt: string;
@@ -52,6 +54,7 @@ interface UserCallVolumeStat {
 
 export default function StatsPage() {
   const router = useRouter();
+  const { status } = useSession();
 
   const [userActionStats, setUserActionStats] = useState<UserActionStat[]>([]);
   const [apiStatsByVersion, setApiStatsByVersion] = useState<ApiStatByVersion[]>([]);
@@ -88,7 +91,26 @@ export default function StatsPage() {
 
       const response = await fetch(`/api/user-stats?${params.toString()}`);
       if (!response.ok) {
-        throw new Error('Failed to fetch stats');
+        let message = 'Failed to fetch stats';
+
+        try {
+          const errorBody = await response.json();
+          if (typeof errorBody?.error === 'string' && errorBody.error.trim()) {
+            message = errorBody.error;
+          }
+        } catch {
+          // Ignore JSON parsing failures and keep the fallback message.
+        }
+
+        if (response.status === 401) {
+          throw new Error('Sign in required');
+        }
+
+        if (response.status === 403) {
+          throw new Error('Admin access required');
+        }
+
+        throw new Error(message);
       }
       
       const data = await response.json();
@@ -121,8 +143,23 @@ export default function StatsPage() {
   };
 
   useEffect(() => {
+    if (status === 'loading') {
+      return;
+    }
+
+    if (status === 'unauthenticated') {
+      setLoading(false);
+      setError('Sign in required');
+      setUserActionStats([]);
+      setApiStatsByVersion([]);
+      setApiFailureStatsByVersion([]);
+      setApiCallStatsByType([]);
+      setUserCallVolumeStats([]);
+      return;
+    }
+
     fetchStats();
-  }, [date]);
+  }, [date, status]);
 
   // 处理数据用于图表展示
   useEffect(() => {
@@ -278,9 +315,30 @@ export default function StatsPage() {
   }
 
   if (error) {
+    const needsSignIn = error === 'Sign in required';
+    const needsAdmin = error === 'Admin access required';
+
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-lg text-red-500">Error: {error}</div>
+      <div className="flex min-h-screen items-center justify-center px-4">
+        <Card className="w-full max-w-lg border-orange-100 bg-white/95 shadow-sm">
+          <CardHeader>
+            <CardTitle className="text-2xl">
+              {needsSignIn ? 'Sign in to view stats' : needsAdmin ? 'Admin access required' : 'Stats unavailable'}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-sm leading-6 text-muted-foreground">
+              {needsSignIn
+                ? 'This dashboard is only available to signed-in admin accounts.'
+                : needsAdmin
+                  ? 'Your current account is authenticated, but it does not have access to the internal stats dashboard.'
+                  : error}
+            </p>
+            {needsSignIn ? (
+              <Button onClick={() => signIn('google')}>Sign in</Button>
+            ) : null}
+          </CardContent>
+        </Card>
       </div>
     );
   }

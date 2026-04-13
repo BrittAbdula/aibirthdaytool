@@ -76,6 +76,16 @@ export default function RelationshipGalleryContent({
   }
 
   useEffect(() => {
+    const isDefaultState =
+      currentTab === activeTab &&
+      (selectedType ?? null) === (defaultType ?? null)
+
+    if (isDefaultState) {
+      setCardsData(initialCardsData)
+      setIsLoading(false)
+      return
+    }
+
     const fetchCards = async () => {
       setIsLoading(true)
       try {
@@ -98,7 +108,7 @@ export default function RelationshipGalleryContent({
     }
 
     fetchCards()
-  }, [relationship, selectedType, currentTab])
+  }, [activeTab, currentTab, defaultType, initialCardsData, relationship, selectedType])
 
   if (!cardsData && !isLoading) {
     notFound()

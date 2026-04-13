@@ -204,9 +204,6 @@ export default async function GeneratorsPage() {
     (generator) =>
       !featuredGenerators.some((featured) => featured.link === generator.link)
   );
-  const communityGenerators = allGenerators
-    .filter((generator) => !generator.isSystem)
-    .slice(0, 8);
   const featuredGeneratorLinks = featuredGenerators.map((generator) => ({
     href: generator.link,
     label: generator.title,
@@ -376,20 +373,6 @@ export default async function GeneratorsPage() {
               ))}
             </div>
           </section>
-
-          {communityGenerators.length > 0 && (
-            <section>
-              <SectionHeading
-                title="Community experiments"
-                description="A lighter section for creator-made ideas. Useful, but intentionally secondary to the core card flows."
-              />
-              <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-4">
-                {communityGenerators.map((card, index) => (
-                  <GeneratorCard key={index} card={card} />
-                ))}
-              </div>
-            </section>
-          )}
 
           <section className="rounded-[32px] border border-orange-100 bg-white/80 px-6 py-10 text-center shadow-sm sm:px-10">
             <h2 className="text-4xl font-caveat font-bold text-gray-800 sm:text-5xl">

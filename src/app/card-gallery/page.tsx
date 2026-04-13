@@ -1,74 +1,44 @@
 import { Suspense } from 'react'
 import { Metadata } from 'next'
-import { getRecentCardsServer, getPopularCardsServer, getLikedCardsServer } from '@/lib/cards'
+import { getRecentCardsServer } from '@/lib/cards'
 import CardGalleryContent from './CardGalleryContent'
-import { CardType } from '@/lib/card-config'
-import { TabType } from '@/lib/cards'
+import { toAbsoluteUrl } from '@/lib/seo'
 
 export const metadata: Metadata = {
-  title: 'AI Greeting Card Gallery | Free & Animated Templates – MewTruCard',
-  description: 'Browse hundreds of free, AI‑generated greeting card templates. Download or personalize animated birthday, love, anniversary cards and more.',
+  title: 'Card Gallery Ideas | MewTruCard',
+  description: 'Browse public card ideas by occasion, compare examples, and open the right generator once you know the tone you want.',
   alternates: {
-    canonical: '/card-gallery/',
+    canonical: toAbsoluteUrl('/card-gallery/'),
   },
   openGraph: {
-    title: 'AI Card Gallery | MewtruCard',
-    description: 'Discover unique AI-generated digital cards for every occasion',
+    title: 'Card Gallery Ideas | MewTruCard',
+    description: 'Browse public card ideas by occasion, compare examples, and open the right generator once you know the tone you want.',
     type: 'website',
-    url: '/card-gallery/',
+    url: toAbsoluteUrl('/card-gallery/'),
     images: [
       {
         url: 'https://mewtrucard.com/mewtrucard-generator.jpg',
         width: 1200,
         height: 630,
-        alt: 'MewtruCard Gallery Preview',
+        alt: 'MewTruCard gallery preview',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'AI Card Gallery | MewtruCard',
-    description: 'Discover unique AI-generated digital cards for every occasion',
+    title: 'Card Gallery Ideas | MewTruCard',
+    description: 'Browse public card ideas by occasion, compare examples, and open the right generator once you know the tone you want.',
     images: ['https://mewtrucard.com/mewtrucard-generator.jpg'],
   },
 }
 
 // Set revalidation period to 1 hours (3600 seconds)
+export const dynamic = 'force-static'
 export const revalidate = 3600
 
-// Generate static params for common card types
-export async function generateStaticParams() {
-  return [
-    { tab: 'recent', type: null },
-    { tab: 'popular', type: null },
-    { tab: 'liked', type: null },
-  ]
-}
-
-interface PageProps {
-  searchParams: Promise<{
-    type?: CardType;
-    tab?: TabType;
-  }>
-}
-
 // Server Component
-export default async function CardGalleryPage({ searchParams }: PageProps) {
-  const resolvedSearchParams = await searchParams
-  const defaultType = resolvedSearchParams.type || null
-  const activeTab = (resolvedSearchParams.tab as TabType) || 'recent'
-  
-  // Fetch card data at build time or during revalidation
-  const recentCardsData = await getRecentCardsServer(1, 24, defaultType)
-  const popularCardsData = await getPopularCardsServer(1, 24, defaultType)
-  const likedCardsData = await getLikedCardsServer(1, 24, defaultType)
-
-  const initialCardsData =
-    activeTab === 'recent'
-      ? recentCardsData
-      : activeTab === 'liked'
-        ? likedCardsData
-        : popularCardsData
+export default async function CardGalleryPage() {
+  const initialCardsData = await getRecentCardsServer(1, 24, null)
   
   return (
     <article className="min-h-screen bg-gradient-to-br from-white via-purple-50 to-pink-50">
@@ -76,17 +46,17 @@ export default async function CardGalleryPage({ searchParams }: PageProps) {
         <header className="text-center">
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-serif font-bold mb-4 tracking-tight">
             <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-pink-600">
-            AI Greeting Card Gallery
+              Card Gallery Ideas
             </span>
           </h1>
           <p className="text-lg sm:text-xl text-gray-600 max-w-2xl mx-auto px-4 ">
-            Browse hundreds of free, AI‑generated greeting card templates. Download or personalize animated birthday, love, anniversary cards and more.
+            Browse public card ideas by occasion, compare examples, and open the right generator once you know the tone you want.
           </p>
             <div className="flex flex-wrap justify-center gap-4 text-sm">
-              <span className="px-3 py-1 bg-purple-50 rounded-full">✨ AI-Generated Designs</span>
-              <span className="px-3 py-1 bg-purple-50 rounded-full">🎨 Customizable Templates</span>
-              <span className="px-3 py-1 bg-purple-50 rounded-full">💝 Multiple Occasions</span>
-              <span className="px-3 py-1 bg-purple-50 rounded-full">🚀 Instant Creation</span>
+              <span className="px-3 py-1 bg-purple-50 rounded-full">Public examples</span>
+              <span className="px-3 py-1 bg-purple-50 rounded-full">Filter by occasion</span>
+              <span className="px-3 py-1 bg-purple-50 rounded-full">Recent by default</span>
+              <span className="px-3 py-1 bg-purple-50 rounded-full">Open a generator next</span>
             </div>
         </header>
 
@@ -101,8 +71,8 @@ export default async function CardGalleryPage({ searchParams }: PageProps) {
           >
             <CardGalleryContent 
               initialCardsData={initialCardsData!} 
-              defaultType={defaultType} 
-              activeTab={activeTab} 
+              defaultType={null} 
+              activeTab="recent" 
             />
           </Suspense>
         </section>

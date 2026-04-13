@@ -1,6 +1,6 @@
 'use client'
 
-import { Suspense, useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import CardGallery from '@/app/card-gallery/CardGallery'
 import CardTypeFilter from '@/app/card-gallery/CardTypeFilter'
@@ -25,11 +25,20 @@ export default function CardGalleryContent({
 }: CardGalleryContentProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const [selectedType, setSelectedType] = useState<CardType | null>(defaultType)
-  const [selectedRelationship, setSelectedRelationship] = useState<string | null>(defaultRelationship || null)
+  const [selectedType, setSelectedType] = useState<CardType | null>(
+    defaultType || (searchParams.get('type') as CardType | null)
+  )
+  const [selectedRelationship, setSelectedRelationship] = useState<string | null>(
+    defaultRelationship ||
+      (searchParams.get('relationship')
+        ? searchParams.get('relationship')!.charAt(0).toUpperCase() + searchParams.get('relationship')!.slice(1)
+        : null)
+  )
   const [cardsData, setCardsData] = useState(initialCardsData)
   const [isLoading, setIsLoading] = useState(false)
-  const [currentTab, setCurrentTab] = useState<TabType>(activeTab)
+  const [currentTab, setCurrentTab] = useState<TabType>(
+    (searchParams.get('tab') as TabType) || activeTab
+  )
   const [showBackToTop, setShowBackToTop] = useState(false)
 
   const handleFilterChange = ({ cardType, relationship }: { cardType: CardType | null, relationship: string | null }) => {
@@ -75,6 +84,20 @@ export default function CardGalleryContent({
   }, [])
 
   useEffect(() => {
+    const relationshipFromQuery = searchParams.get('relationship')
+      ? searchParams.get('relationship')!.charAt(0).toUpperCase() + searchParams.get('relationship')!.slice(1)
+      : null
+    const isDefaultState =
+      currentTab === activeTab &&
+      (selectedType ?? null) === (defaultType ?? null) &&
+      (selectedRelationship ?? null) === (defaultRelationship ?? null)
+
+    if (isDefaultState && !relationshipFromQuery) {
+      setCardsData(initialCardsData)
+      setIsLoading(false)
+      return
+    }
+
     const fetchCards = async () => {
       setIsLoading(true)
       try {
@@ -97,7 +120,7 @@ export default function CardGalleryContent({
     }
 
     fetchCards()
-  }, [selectedType, selectedRelationship, currentTab])
+  }, [activeTab, currentTab, defaultRelationship, defaultType, initialCardsData, searchParams, selectedRelationship, selectedType])
 
   return (
     <main className="min-h-screen">

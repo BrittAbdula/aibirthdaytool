@@ -27,6 +27,8 @@ import {
 } from '@/lib/discovery-links'
 import { cn } from '@/lib/utils'
 
+type HeaderVariant = 'default' | 'compose'
+
 // 定义生成器类型
 const GENERATORS = [
   { slug: 'birthday', label: 'Birthday' },
@@ -49,7 +51,12 @@ const GENERATORS = [
   { slug: 'easter', label: 'Easter' },
   { slug: 'womensday', label: 'Women\'s Day' },
 ]
-const GENERATOR_SLUGS = new Set(GENERATORS.map((generator) => generator.slug))
+export const GENERATOR_SLUGS = new Set(GENERATORS.map((generator) => generator.slug))
+
+export function isGeneratorComposePath(pathname: string) {
+  const pathSegments = pathname.split('/').filter(Boolean)
+  return pathSegments.length === 1 && GENERATOR_SLUGS.has(pathSegments[0])
+}
 
 const EXPLORE_CATEGORY_LINKS = [
   {
@@ -100,7 +107,7 @@ async function reportMissingGenerator(searchTerm: string) {
   }
 }
 
-function Header() {
+function Header({ variant = 'default' }: { variant?: HeaderVariant }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
@@ -115,8 +122,7 @@ function Header() {
   const searchRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null)
-  const pathSegments = pathname.split('/').filter(Boolean)
-  const isGeneratorLandingPage = pathSegments.length === 1 && GENERATOR_SLUGS.has(pathSegments[0])
+  const isGeneratorLandingPage = isGeneratorComposePath(pathname)
   const galleryEntryHref = isGeneratorLandingPage ? `${pathname}#live-gallery` : '/card-gallery/'
   const galleryEntryLabel = isGeneratorLandingPage ? 'See public ideas' : 'Public ideas'
   
@@ -272,6 +278,153 @@ function Header() {
   const handleSurfaceLinkClick = () => {
     setIsMenuOpen(false)
     setIsSearchOpen(false)
+  }
+
+  if (variant === 'compose') {
+    return (
+      <header className="sticky top-0 z-50 w-full border-b border-orange-100/70 bg-white/90 backdrop-blur-xl">
+        <nav className="container mx-auto px-4">
+          <div className="flex h-16 items-center justify-between gap-3">
+            <Link href="/" className="flex min-w-0 items-center space-x-2 group">
+              <div className="relative transition-transform duration-300 group-hover:scale-105">
+                <Image
+                  src="/logo.png"
+                  alt="MewTruCard Logo"
+                  width={38}
+                  height={38}
+                  className="drop-shadow-sm"
+                />
+              </div>
+              <SparklesText
+                text='MewTruCard'
+                className="truncate text-2xl font-caveat font-bold text-gray-800"
+                sparklesCount={10}
+                colors={{ first: "#FF6B6B", second: "#FFD700" }}
+              />
+            </Link>
+
+            <div className="hidden items-center gap-3 md:flex">
+              <Link
+                href={galleryEntryHref}
+                className="inline-flex h-10 items-center rounded-full border border-orange-200 bg-orange-50/80 px-4 text-sm font-semibold text-orange-800 transition-colors hover:bg-orange-100"
+              >
+                Browse ideas
+              </Link>
+              {!isPremiumUser ? <PremiumButton /> : <SubscriptionButton />}
+
+              {status === 'authenticated' && session ? (
+                <>
+                  <Link
+                    href="/my-cards/"
+                    className="inline-flex h-10 items-center rounded-full border border-gray-200 bg-white px-4 text-sm font-semibold text-gray-700 transition-colors hover:border-primary/20 hover:text-primary"
+                  >
+                    My cards
+                  </Link>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button className="flex items-center space-x-2 hover:opacity-80 transition-opacity">
+                        {session.user?.image && (
+                          <div className={cn(
+                            "relative",
+                            isPremiumUser && "ring-2 ring-primary ring-offset-2 rounded-full"
+                          )}>
+                            <Image
+                              src={session.user.image}
+                              alt={session.user.name || ''}
+                              width={32}
+                              height={32}
+                              className={cn(
+                                "rounded-full border border-gray-100",
+                                isPremiumUser && "border-2 border-white"
+                              )}
+                            />
+                            {isPremiumUser && (
+                              <div className="absolute -top-1 -right-1 bg-primary text-white rounded-full w-4 h-4 flex items-center justify-center shadow-sm">
+                                <Crown className="h-2.5 w-2.5" />
+                              </div>
+                            )}
+                          </div>
+                        )}
+                        <ChevronDown className="h-4 w-4 text-gray-400" />
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-56 rounded-2xl p-2 bg-white/95 backdrop-blur shadow-xl border-orange-100">
+                      <DropdownMenuItem className="focus:bg-orange-50 rounded-xl cursor-default">
+                        <div className="flex flex-col text-sm">
+                          <span className="font-semibold text-gray-800">{session.user?.name}</span>
+                          {isPremiumUser && (
+                            <span className="flex items-center mt-1 text-xs text-primary font-medium">
+                              <Crown className="h-3 w-3 mr-1" />
+                              Premium user
+                            </span>
+                          )}
+                        </div>
+                      </DropdownMenuItem>
+                      <div className="my-1 border-t border-orange-50" />
+                      <DropdownMenuItem
+                        onClick={handleLogout}
+                        disabled={isLoading}
+                        className="focus:bg-red-50 focus:text-red-600 rounded-xl cursor-pointer p-2"
+                      >
+                        {isLoading ? (
+                          <>
+                            <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                            Signing out...
+                          </>
+                        ) : (
+                          'Sign Out'
+                        )}
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </>
+              ) : null}
+            </div>
+
+            <div className="flex items-center gap-2 md:hidden">
+              <Link
+                href={galleryEntryHref}
+                onClick={handleSurfaceLinkClick}
+                className="inline-flex h-10 items-center rounded-full border border-orange-200 bg-orange-50/80 px-3 text-sm font-semibold text-orange-800 transition-colors hover:bg-orange-100"
+              >
+                Browse ideas
+              </Link>
+              {status === 'authenticated' && session ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button className="flex h-10 w-10 items-center justify-center rounded-full border border-gray-200 bg-white">
+                      {session.user?.image ? (
+                        <Image
+                          src={session.user.image}
+                          alt={session.user.name || ''}
+                          width={32}
+                          height={32}
+                          className="rounded-full"
+                        />
+                      ) : (
+                        <ChevronDown className="h-4 w-4 text-gray-500" />
+                      )}
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-48 rounded-2xl p-2 bg-white/95 backdrop-blur shadow-xl border-orange-100">
+                    <DropdownMenuItem asChild className="rounded-xl">
+                      <Link href="/my-cards/">My cards</Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={handleLogout}
+                      disabled={isLoading}
+                      className="focus:bg-red-50 focus:text-red-600 rounded-xl cursor-pointer"
+                    >
+                      {isLoading ? 'Signing out...' : 'Sign Out'}
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : null}
+            </div>
+          </div>
+        </nav>
+      </header>
+    )
   }
 
   return (

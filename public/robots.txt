@@ -11,4 +11,4 @@ Disallow: /api/
 Disallow: /card-gallery/?*
 Disallow: /my-cards/
 
-Sitemap: https://www.mewtrucard.com/sitemap.xml
+Sitemap: https://mewtrucard.com/sitemap.xml

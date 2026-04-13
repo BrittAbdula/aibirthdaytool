@@ -36,12 +36,14 @@ export default function TypeRelationshipGalleryContent({
 
   const [cardsData, setCardsData] = useState(initialCardsData)
   const [isLoading, setIsLoading] = useState(false)
-  const [currentTab, setCurrentTab] = useState<TabType>(activeTab)
+  const [currentTab, setCurrentTab] = useState<TabType>(
+    (searchParams.get('tab') as TabType) || activeTab
+  )
 
   useEffect(() => {
     setCardsData(initialCardsData)
-    setCurrentTab(activeTab)
-  }, [activeTab, initialCardsData])
+    setCurrentTab((searchParams.get('tab') as TabType) || activeTab)
+  }, [activeTab, initialCardsData, searchParams])
 
   const buildQuery = (tab: TabType) => {
     const params = new URLSearchParams(searchParams.toString())
@@ -80,7 +82,11 @@ export default function TypeRelationshipGalleryContent({
   }
 
   useEffect(() => {
-    if (currentTab === activeTab) return
+    if (currentTab === activeTab) {
+      setCardsData(initialCardsData)
+      setIsLoading(false)
+      return
+    }
 
     const fetchCards = async () => {
       setIsLoading(true)
@@ -104,7 +110,7 @@ export default function TypeRelationshipGalleryContent({
     }
 
     fetchCards()
-  }, [activeTab, currentTab, relationshipLabel, type])
+  }, [activeTab, currentTab, initialCardsData, relationshipLabel, type])
 
   if (!cardsData && !isLoading) {
     notFound()

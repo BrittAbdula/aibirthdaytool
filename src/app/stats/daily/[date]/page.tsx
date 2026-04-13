@@ -8,7 +8,8 @@ import { CollapsibleJson } from "@/components/ui/collapsible-json";
 import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { X, ArrowLeft, CheckCircle2, XCircle } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
+import { signIn, useSession } from 'next-auth/react';
 
 interface ApiCallDetail {
   id: number;
@@ -33,29 +34,63 @@ interface ApiCallDetail {
 export default function DailyDetailPage() {
   const { date } = useParams<{ date: string }>();
   const router = useRouter();
+  const { status } = useSession();
   const [details, setDetails] = useState<ApiCallDetail[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<'all' | 'success' | 'error'>('all');
 
   useEffect(() => {
+    if (status === 'loading') {
+      return;
+    }
+
+    if (status === 'unauthenticated') {
+      setLoading(false);
+      setError('Sign in required');
+      setDetails([]);
+      return;
+    }
+
     const fetchDetails = async () => {
       try {
+        setError(null);
         const response = await fetch(`/api/user-stats/daily/${date}`);
         if (!response.ok) {
-          throw new Error('Failed to fetch daily details');
+          let message = 'Failed to fetch daily details';
+
+          try {
+            const errorBody = await response.json();
+            if (typeof errorBody?.error === 'string' && errorBody.error.trim()) {
+              message = errorBody.error;
+            }
+          } catch {
+            // Ignore JSON parsing failures and keep the fallback message.
+          }
+
+          if (response.status === 401) {
+            throw new Error('Sign in required');
+          }
+
+          if (response.status === 403) {
+            throw new Error('Admin access required');
+          }
+
+          throw new Error(message);
         }
         const data = await response.json();
         setDetails(data);
       } catch (error) {
         console.error('Error fetching daily details:', error);
+        setError(error instanceof Error ? error.message : 'Failed to fetch daily details');
       } finally {
         setLoading(false);
       }
     };
 
     fetchDetails();
-  }, [date]);
+  }, [date, status]);
 
   const filteredDetails = details.filter(detail => {
     switch (statusFilter) {
@@ -83,10 +118,48 @@ export default function DailyDetailPage() {
       return detail.r2Url;
     }
     if (detail.responseContent) {
-      return `data:image/svg+xml;base64,${Buffer.from(detail.responseContent).toString('base64')}`;
+      return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(detail.responseContent)}`;
     }
     return '';
   };
+
+  if (loading) {
+    return <div className="container mx-auto py-10">Loading...</div>;
+  }
+
+  if (error) {
+    const needsSignIn = error === 'Sign in required';
+    const needsAdmin = error === 'Admin access required';
+
+    return (
+      <div className="container mx-auto py-10">
+        <Card className="max-w-lg border-orange-100 bg-white/95 shadow-sm">
+          <CardHeader>
+            <CardTitle>
+              {needsSignIn ? 'Sign in to view stats' : needsAdmin ? 'Admin access required' : 'Stats unavailable'}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-sm leading-6 text-muted-foreground">
+              {needsSignIn
+                ? 'This daily stats page is only available to signed-in admin accounts.'
+                : needsAdmin
+                  ? 'Your current account does not have access to the internal stats dashboard.'
+                  : error}
+            </p>
+            <div className="flex gap-3">
+              <Button variant="outline" onClick={() => router.push('/stats')}>
+                Back to Overview
+              </Button>
+              {needsSignIn ? (
+                <Button onClick={() => signIn('google')}>Sign in</Button>
+              ) : null}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto py-10 space-y-4">
@@ -165,83 +238,79 @@ export default function DailyDetailPage() {
           </div>
         </CardHeader>
         <CardContent>
-          {loading ? (
-            <div>Loading...</div>
-          ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Time</TableHead>
-                    <TableHead>Card Type</TableHead>
-                    <TableHead>User</TableHead>
-                    <TableHead>Inputs</TableHead>
-                    <TableHead>Tokens</TableHead>
-                    <TableHead>Duration</TableHead>
-                    <TableHead>Prompt Version</TableHead>
-                    <TableHead>Preview</TableHead>
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Time</TableHead>
+                  <TableHead>Card Type</TableHead>
+                  <TableHead>User</TableHead>
+                  <TableHead>Inputs</TableHead>
+                  <TableHead>Tokens</TableHead>
+                  <TableHead>Duration</TableHead>
+                  <TableHead>Prompt Version</TableHead>
+                  <TableHead>Preview</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredDetails.map((detail) => (
+                  <TableRow key={detail.id} className={detail.isError ? 'bg-red-50/50' : ''}>
+                    <TableCell>{new Date(detail.timestamp).toLocaleTimeString()}</TableCell>
+                    <TableCell>{detail.cardType}</TableCell>
+                    <TableCell>
+                      {detail.user ? (
+                        <div className="flex flex-col">
+                          <span className="text-sm font-medium">{detail.user.name}</span>
+                          <span className="text-xs text-muted-foreground">{detail.user.email}</span>
+                        </div>
+                      ) : (
+                        <span className="text-muted-foreground">Anonymous</span>
+                      )}
+                    </TableCell>
+                    <TableCell className="max-w-md">
+                      <CollapsibleJson
+                        data={typeof detail.userInputs === 'string'
+                          ? JSON.parse(detail.userInputs)
+                          : detail.userInputs
+                        }
+                        defaultExpanded={false}
+                      />
+                    </TableCell>
+                    <TableCell>{detail.tokensUsed}</TableCell>
+                    <TableCell>{detail.duration}ms</TableCell>
+                    <TableCell>{detail.promptVersion}</TableCell>
+                    <TableCell>
+                      {(() => {
+                        const previewUrl = getPreviewUrl(detail);
+                        if (detail.isError || !previewUrl) {
+                          return null;
+                        }
+                        return (
+                          <button
+                            onClick={() => setSelectedImage(previewUrl)}
+                            className="block relative w-20 h-20 rounded-lg overflow-hidden border border-gray-200 hover:border-purple-400 transition-colors duration-200 cursor-pointer group"
+                          >
+                            <Image
+                              src={previewUrl}
+                              alt={`Card ${detail.cardId}`}
+                              fill
+                              className="object-contain transition-transform duration-200 group-hover:scale-105"
+                              sizes="80px"
+                            />
+                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-200 flex items-center justify-center">
+                              <span className="text-xs text-white/0 group-hover:text-white/90 bg-black/0 group-hover:bg-black/30 px-2 py-1 rounded transition-all duration-200">
+                                View
+                              </span>
+                            </div>
+                          </button>
+                        );
+                      })()}
+                    </TableCell>
                   </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredDetails.map((detail) => (
-                    <TableRow key={detail.id} className={detail.isError ? 'bg-red-50/50' : ''}>
-                      <TableCell>{new Date(detail.timestamp).toLocaleTimeString()}</TableCell>
-                      <TableCell>{detail.cardType}</TableCell>
-                      <TableCell>
-                        {detail.user ? (
-                          <div className="flex flex-col">
-                            <span className="text-sm font-medium">{detail.user.name}</span>
-                            <span className="text-xs text-muted-foreground">{detail.user.email}</span>
-                          </div>
-                        ) : (
-                          <span className="text-muted-foreground">Anonymous</span>
-                        )}
-                      </TableCell>
-                      <TableCell className="max-w-md">
-                        <CollapsibleJson 
-                          data={typeof detail.userInputs === 'string' 
-                            ? JSON.parse(detail.userInputs)
-                            : detail.userInputs
-                          } 
-                          defaultExpanded={false}
-                        />
-                      </TableCell>
-                      <TableCell>{detail.tokensUsed}</TableCell>
-                      <TableCell>{detail.duration}ms</TableCell>
-                      <TableCell>{detail.promptVersion}</TableCell>
-                      <TableCell>
-                        {(() => {
-                          const previewUrl = getPreviewUrl(detail);
-                          if (detail.isError || !previewUrl) {
-                            return null;
-                          }
-                          return (
-                            <button
-                              onClick={() => setSelectedImage(previewUrl)}
-                              className="block relative w-20 h-20 rounded-lg overflow-hidden border border-gray-200 hover:border-purple-400 transition-colors duration-200 cursor-pointer group"
-                            >
-                              <Image
-                                src={previewUrl}
-                                alt={`Card ${detail.cardId}`}
-                                fill
-                                className="object-contain transition-transform duration-200 group-hover:scale-105"
-                                sizes="80px"
-                              />
-                              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-200 flex items-center justify-center">
-                                <span className="text-xs text-white/0 group-hover:text-white/90 bg-black/0 group-hover:bg-black/30 px-2 py-1 rounded transition-all duration-200">
-                                  View
-                                </span>
-                              </div>
-                            </button>
-                          );
-                        })()}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          )}
+                ))}
+              </TableBody>
+            </Table>
+          </div>
         </CardContent>
       </Card>
 

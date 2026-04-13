@@ -2,7 +2,7 @@
 
 import { ReactNode } from "react";
 import { usePathname } from "next/navigation";
-import { Header } from "@/components/Header";
+import { Header, isGeneratorComposePath } from "@/components/Header";
 import Footer from "@/components/Footer";
 import { VIRAL_MICROSITE_PATHS } from "@/lib/viral-microsites";
 
@@ -15,10 +15,11 @@ const CHROMELESS_PREFIXES = ["/to/", ...VIRAL_MICROSITE_PATHS.map((path) => path
 export default function AppShell({ children }: AppShellProps) {
   const pathname = usePathname() || "/";
   const hideChrome = CHROMELESS_PREFIXES.some((prefix) => pathname.startsWith(prefix));
+  const headerVariant = isGeneratorComposePath(pathname) ? "compose" : "default";
 
   return (
     <div className="flex min-h-screen flex-col">
-      {!hideChrome && <Header />}
+      {!hideChrome && <Header variant={headerVariant} />}
       <div className="flex-grow">{children}</div>
       {!hideChrome && <Footer />}
     </div>
