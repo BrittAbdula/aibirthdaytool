@@ -514,24 +514,6 @@ export default function CardGenerator({
 
   const seoCardLabel = getSeoCardTypeLabel(currentCardType)
   const qualityOptions = getTierOptionsForFormat(selectedFormat)
-  const stepMeta = [
-    {
-      label: 'Setup',
-      title: 'Choose format, occasion, and quality',
-      description: 'Start with the fastest path to a card you can share.',
-    },
-    {
-      label: 'Recipient',
-      title: 'Tell us who this card is for',
-      description: 'A few details help the first draft feel personal.',
-    },
-    {
-      label: 'Message',
-      title: 'Write the message and review advanced options',
-      description: 'Keep it simple or add extra art direction before you generate.',
-    },
-  ] as const
-  const activeStep = stepMeta[currentStep - 1]
   const generatorTitle = currentCardType === 'birthday'
     ? 'Birthday Card Maker'
     : `${seoCardLabel} Card Maker`
@@ -585,59 +567,17 @@ export default function CardGenerator({
             <section className="p-5 sm:p-6 lg:p-8">
               <div className="space-y-6">
                 <div className="space-y-4 rounded-[28px] border border-orange-100/70 bg-white/70 p-5 shadow-sm backdrop-blur">
-                  <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                    <div className="space-y-2">
-                      <div className="flex flex-wrap items-center gap-2 text-xs uppercase tracking-[0.18em] text-orange-700">
-                        <span className="rounded-full bg-orange-50 px-3 py-1 font-semibold">
-                          Step {currentStep} of {TOTAL_STEPS}
-                        </span>
-                        <span className="rounded-full bg-white px-3 py-1 font-semibold text-gray-600">
-                          {activeStep.label}
-                        </span>
-                      </div>
-                      <div>
-                        <h1 className="text-2xl font-serif font-semibold text-gray-900 sm:text-3xl">
-                          {generatorTitle}
-                        </h1>
-                        <p className="mt-2 max-w-2xl text-sm leading-6 text-gray-600 sm:text-base">
-                          {activeStep.description}
-                        </p>
-                      </div>
+                  <div className="space-y-3">
+                    <div className="flex flex-wrap items-center gap-2 text-xs uppercase tracking-[0.18em] text-orange-700">
+                      <span className="rounded-full bg-orange-50 px-3 py-1 font-semibold">
+                        Step {currentStep} of {TOTAL_STEPS}
+                      </span>
                     </div>
-                    <div className="rounded-2xl border border-orange-100 bg-orange-50/70 px-4 py-3 text-sm text-orange-800">
-                      <div className="font-semibold">Task-first flow</div>
-                      <div className="mt-1 text-orange-700/80">
-                        Fill the form first, then generate when the draft feels ready.
-                      </div>
+                    <div>
+                      <h1 className="text-2xl font-serif font-semibold text-gray-900 sm:text-3xl">
+                        {generatorTitle}
+                      </h1>
                     </div>
-                  </div>
-
-                  <div className="grid grid-cols-3 gap-2">
-                    {stepMeta.map((step, index) => {
-                      const isActive = currentStep === index + 1
-                      const isComplete = currentStep > index + 1
-                      return (
-                        <div
-                          key={step.label}
-                          className={cn(
-                            "rounded-2xl border px-3 py-3 text-left transition-colors",
-                            isActive && "border-primary bg-primary/8",
-                            isComplete && "border-emerald-200 bg-emerald-50",
-                            !isActive && !isComplete && "border-gray-200 bg-gray-50/70"
-                          )}
-                        >
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs font-semibold uppercase tracking-[0.16em] text-gray-500">
-                              {step.label}
-                            </span>
-                            {isComplete && <Check className="h-4 w-4 text-emerald-600" />}
-                          </div>
-                          <div className="mt-2 text-sm font-semibold text-gray-800">
-                            {step.title}
-                          </div>
-                        </div>
-                      )
-                    })}
                   </div>
 
                   <div className="h-2 w-full overflow-hidden rounded-full bg-gray-100">
@@ -648,9 +588,6 @@ export default function CardGenerator({
                   </div>
 
                   <div className="flex flex-wrap gap-2 text-xs text-gray-600">
-                    <span className="rounded-full bg-white px-3 py-1 font-medium text-gray-700">
-                      Editable after generation
-                    </span>
                     {(prefilledValues.recipientName || prefilledValues.relationship) && (
                       <span className="rounded-full bg-white px-3 py-1 font-medium text-gray-700">
                         Prefilled for {prefilledValues.recipientName || 'your recipient'}
@@ -1018,14 +955,9 @@ export default function CardGenerator({
         </GlassCard>
 
         <div className="fixed inset-x-0 bottom-0 z-40 border-t border-orange-100/80 bg-white/92 backdrop-blur-xl lg:hidden">
-          <div className="mx-auto max-w-6xl px-4 py-3">
+            <div className="mx-auto max-w-6xl px-4 py-3">
             <div className="mb-2 flex items-center justify-between gap-4 text-xs font-medium text-gray-600">
-              <span>
-                Step {currentStep} of {TOTAL_STEPS}: {activeStep.label}
-              </span>
-              <span>
-                Ready to move to the next step
-              </span>
+              <span>Step {currentStep} of {TOTAL_STEPS}</span>
             </div>
             {renderActionButtons(true)}
           </div>
