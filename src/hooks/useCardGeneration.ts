@@ -341,7 +341,7 @@ export const useCardGeneration = () => {
       setGlobalLoading(false);
       // Individual timers are cleared within each promise now or by useEffect on unmount
     }
-  }, [session, triggerConfettiForImage, imageRefs, setShowAuthDialog, setShowLimitDialog, savedAuthData]); // Added dependencies
+  }, [session, triggerConfettiForImage, setShowAuthDialog, setShowLimitDialog]);
 
   // Effect to handle post-auth generation
   useEffect(() => {

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import {
   Table,
   TableBody,
@@ -78,7 +78,7 @@ export default function StatsPage() {
   const [topFailurePromptVersions, setTopFailurePromptVersions] = useState<string[]>([]);
   const [topCardTypes, setTopCardTypes] = useState<string[]>([]);
 
-  const fetchStats = async () => {
+  const fetchStats = useCallback(async () => {
     if (!date?.from || !date?.to) return;
 
     setError(null);
@@ -140,7 +140,7 @@ export default function StatsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [date]);
 
   useEffect(() => {
     if (status === 'loading') {
@@ -159,7 +159,7 @@ export default function StatsPage() {
     }
 
     fetchStats();
-  }, [date, status]);
+  }, [fetchStats, status]);
 
   // 处理数据用于图表展示
   useEffect(() => {

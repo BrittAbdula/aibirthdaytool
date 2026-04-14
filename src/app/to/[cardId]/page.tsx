@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation'
+import Link from 'next/link'
 import { prisma } from '@/lib/prisma'
 import CardDisplay from '@/components/CardDisplay'
 import { Suspense } from 'react'
@@ -161,7 +162,7 @@ export default async function EditedCardPage({ params }: Props) {
 
         {/* Reply Button Section */}
         <div className="mt-6 sm:mt-8 flex justify-center animate-[fadeUp_0.8s_ease-out_0.8s_forwards] opacity-0">
-          <a
+          <Link
             href="/thankyou/"
             className="group relative inline-flex items-center justify-center px-8 py-3.5 overflow-hidden font-medium text-white transition-all duration-500 ease-out rounded-full shadow-lg hover:shadow-xl transform hover:scale-105"
             style={{
@@ -175,7 +176,7 @@ export default async function EditedCardPage({ params }: Props) {
               <span className="text-sm sm:text-base font-semibold tracking-wide">Send a Thank You Card Back</span>
               <span className="inline-block text-lg group-hover:animate-[wiggle_0.5s_ease-in-out_infinite]">🎁</span>
             </span>
-          </a>
+          </Link>
         </div>
 
         <div className="mt-4 sm:mt-6 flex justify-center animate-[fadeUp_0.8s_ease-out_0.9s_forwards] opacity-0">
@@ -197,13 +198,13 @@ export default async function EditedCardPage({ params }: Props) {
             </span>
             <span className="inline-block animate-pulse text-[#c41e3a]">❤️</span>
             <span className="text-[#2d5a3f] text-sm">on</span>
-            <a
+            <Link
               href="/"
               className="text-[#c41e3a] hover:text-[#8b1538] transition-colors duration-300 font-semibold group"
             >
               MewTruCard
               <span className="inline-block ml-1 group-hover:rotate-12 transition-transform duration-300">🎄</span>
-            </a>
+            </Link>
           </div>
         </footer>
       </div>
