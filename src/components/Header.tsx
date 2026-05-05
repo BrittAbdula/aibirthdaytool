@@ -18,8 +18,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Input } from '@/components/ui/input'
-import { PremiumButton } from '@/components/PremiumModal'
-import { SubscriptionButton } from '@/components/SubscriptionModal'
 import {
   EXPLORE_OCCASION_LINKS,
   EXPLORE_RECIPIENT_LINKS,
@@ -124,7 +122,6 @@ function Header({ variant = 'default' }: { variant?: HeaderVariant }) {
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const isGeneratorLandingPage = isGeneratorComposePath(pathname)
   const galleryEntryHref = isGeneratorLandingPage ? `${pathname}#live-gallery` : '/card-gallery/'
-  const galleryEntryLabel = isGeneratorLandingPage ? 'See public ideas' : 'Public ideas'
   
   // 检查用户是否为Premium会员
   const isPremiumUser = session?.user?.plan === "PREMIUM"
@@ -282,7 +279,7 @@ function Header({ variant = 'default' }: { variant?: HeaderVariant }) {
 
   if (variant === 'compose') {
     return (
-      <header className="sticky top-0 z-50 w-full border-b border-orange-100/70 bg-white/90 backdrop-blur-xl">
+      <header className="sticky top-0 z-50 w-full border-b border-pink-100/70 bg-white/90 backdrop-blur-xl">
         <nav className="container mx-auto px-4">
           <div className="flex h-16 items-center justify-between gap-3">
             <Link href="/" className="flex min-w-0 items-center space-x-2 group">
@@ -297,7 +294,7 @@ function Header({ variant = 'default' }: { variant?: HeaderVariant }) {
               </div>
               <SparklesText
                 text='MewTruCard'
-                className="truncate text-2xl font-caveat font-bold text-gray-800"
+                className="hidden truncate text-2xl font-caveat font-bold text-gray-800 min-[440px]:block"
                 sparklesCount={10}
                 colors={{ first: "#FF6B6B", second: "#FFD700" }}
               />
@@ -306,12 +303,10 @@ function Header({ variant = 'default' }: { variant?: HeaderVariant }) {
             <div className="hidden items-center gap-3 md:flex">
               <Link
                 href={galleryEntryHref}
-                className="inline-flex h-10 items-center rounded-full border border-orange-200 bg-orange-50/80 px-4 text-sm font-semibold text-orange-800 transition-colors hover:bg-orange-100"
+                className="inline-flex h-10 items-center rounded-full border border-pink-200 bg-pink-50/80 px-4 text-sm font-semibold text-rose-800 transition-colors hover:bg-pink-100"
               >
                 Browse ideas
               </Link>
-              {!isPremiumUser ? <PremiumButton /> : <SubscriptionButton />}
-
               {status === 'authenticated' && session ? (
                 <>
                   <Link
@@ -348,8 +343,8 @@ function Header({ variant = 'default' }: { variant?: HeaderVariant }) {
                         <ChevronDown className="h-4 w-4 text-gray-400" />
                       </button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-56 rounded-2xl p-2 bg-white/95 backdrop-blur shadow-xl border-orange-100">
-                      <DropdownMenuItem className="focus:bg-orange-50 rounded-xl cursor-default">
+                    <DropdownMenuContent align="end" className="w-56 rounded-2xl p-2 bg-white/95 backdrop-blur shadow-xl border-pink-100">
+                      <DropdownMenuItem className="focus:bg-pink-50 rounded-xl cursor-default">
                         <div className="flex flex-col text-sm">
                           <span className="font-semibold text-gray-800">{session.user?.name}</span>
                           {isPremiumUser && (
@@ -360,7 +355,10 @@ function Header({ variant = 'default' }: { variant?: HeaderVariant }) {
                           )}
                         </div>
                       </DropdownMenuItem>
-                      <div className="my-1 border-t border-orange-50" />
+                      <div className="my-1 border-t border-pink-50" />
+                      <DropdownMenuItem asChild className="focus:bg-pink-50 rounded-xl p-2">
+                        <Link href="/my-cards/">My cards</Link>
+                      </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={handleLogout}
                         disabled={isLoading}
@@ -385,7 +383,7 @@ function Header({ variant = 'default' }: { variant?: HeaderVariant }) {
               <Link
                 href={galleryEntryHref}
                 onClick={handleSurfaceLinkClick}
-                className="inline-flex h-10 items-center rounded-full border border-orange-200 bg-orange-50/80 px-3 text-sm font-semibold text-orange-800 transition-colors hover:bg-orange-100"
+                className="inline-flex h-10 items-center rounded-full border border-pink-200 bg-pink-50/80 px-3 text-sm font-semibold text-rose-800 transition-colors hover:bg-pink-100"
               >
                 Browse ideas
               </Link>
@@ -406,7 +404,7 @@ function Header({ variant = 'default' }: { variant?: HeaderVariant }) {
                       )}
                     </button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-48 rounded-2xl p-2 bg-white/95 backdrop-blur shadow-xl border-orange-100">
+                  <DropdownMenuContent align="end" className="w-48 rounded-2xl p-2 bg-white/95 backdrop-blur shadow-xl border-pink-100">
                     <DropdownMenuItem asChild className="rounded-xl">
                       <Link href="/my-cards/">My cards</Link>
                     </DropdownMenuItem>
@@ -428,7 +426,7 @@ function Header({ variant = 'default' }: { variant?: HeaderVariant }) {
   }
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-orange-100/50 bg-white/80 backdrop-blur-xl transition-all duration-300">
+    <header className="sticky top-0 z-50 w-full border-b border-pink-100/50 bg-white/80 backdrop-blur-xl transition-all duration-300">
       <nav className="container mx-auto px-4">
         <div className="flex justify-between items-center h-16">
           <Link href="/" className="flex items-center space-x-2 group">
@@ -451,30 +449,27 @@ function Header({ variant = 'default' }: { variant?: HeaderVariant }) {
 
           {/* Desktop Menu */}
           <div className="hidden md:flex items-center space-x-6">
-            <Link href="/" className="text-gray-600 hover:text-primary font-quicksand font-medium transition-colors text-base relative after:content-[''] after:absolute after:w-full after:scale-x-0 after:h-0.5 after:bottom-0 after:left-0 after:bg-primary after:origin-bottom-right after:transition-transform after:duration-300 hover:after:scale-x-100 hover:after:origin-bottom-left">
-              Home
-            </Link>
-
-            <Link href="/cards/" className="text-gray-600 hover:text-primary font-quicksand font-medium transition-colors text-base relative after:content-[''] after:absolute after:w-full after:scale-x-0 after:h-0.5 after:bottom-0 after:left-0 after:bg-primary after:origin-bottom-right after:transition-transform after:duration-300 hover:after:scale-x-100 hover:after:origin-bottom-left">
-              Create
+            <Link href="/cards/" className="text-gray-700 hover:text-primary font-quicksand font-semibold transition-colors text-base">
+              Create a card
             </Link>
 
             <Link
               href={galleryEntryHref}
-              className="inline-flex items-center gap-2 rounded-full border border-orange-200 bg-orange-50/80 px-4 py-2 text-sm font-semibold text-orange-700 transition-all hover:border-orange-300 hover:bg-orange-100 hover:text-orange-800"
+              className="inline-flex min-h-[44px] items-center gap-2 rounded-lg border border-primary/20 bg-white px-4 py-2 text-sm font-semibold text-primary transition-all hover:-translate-y-0.5 hover:bg-primary/10 hover:text-primary"
             >
               <Search className="h-4 w-4" />
-              {galleryEntryLabel}
+              Browse ideas
             </Link>
 
+            {/* Secondary discovery paths stay available without competing with the main two choices. */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="inline-flex items-center gap-1 text-gray-600 hover:text-primary font-quicksand font-medium transition-colors text-base">
-                  Explore
+                <button className="inline-flex min-h-[44px] items-center gap-1 text-gray-500 hover:text-primary font-quicksand font-medium transition-colors text-sm">
+                  More
                   <ChevronDown className="h-4 w-4" />
                 </button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="w-[26rem] rounded-2xl border-orange-100 bg-white/95 p-3 shadow-xl backdrop-blur">
+              <DropdownMenuContent align="start" className="w-[26rem] rounded-2xl border-pink-100 bg-white/95 p-3 shadow-xl backdrop-blur">
                 <DropdownMenuLabel className="px-1 pt-1 pb-3 text-xs uppercase tracking-[0.18em] text-gray-400">
                   Explore by category
                 </DropdownMenuLabel>
@@ -483,9 +478,9 @@ function Header({ variant = 'default' }: { variant?: HeaderVariant }) {
                     <DropdownMenuItem key={link.href} asChild className="rounded-2xl p-0 focus:bg-transparent">
                       <Link
                         href={link.href}
-                        className="flex items-start gap-3 rounded-2xl border border-orange-100/80 bg-white/80 px-4 py-3 transition-colors hover:bg-orange-50"
+                        className="flex items-start gap-3 rounded-2xl border border-pink-100/80 bg-white/80 px-4 py-3 transition-colors hover:bg-pink-50"
                       >
-                        <div className="mt-0.5 rounded-xl bg-orange-50 p-2 text-primary ring-1 ring-orange-100">
+                        <div className="mt-0.5 rounded-xl bg-pink-50 p-2 text-primary ring-1 ring-pink-100">
                           {link.icon}
                         </div>
                         <div>
@@ -496,7 +491,7 @@ function Header({ variant = 'default' }: { variant?: HeaderVariant }) {
                     </DropdownMenuItem>
                   ))}
                 </div>
-                <DropdownMenuSeparator className="my-3 bg-orange-100/60" />
+                <DropdownMenuSeparator className="my-3 bg-pink-100/60" />
                 <div className="px-1 pb-1">
                   <div className="mb-3 text-xs uppercase tracking-[0.18em] text-gray-400">
                     Quick picks
@@ -506,7 +501,7 @@ function Header({ variant = 'default' }: { variant?: HeaderVariant }) {
                       <Link
                         key={link.href}
                         href={link.href}
-                        className="rounded-full border border-orange-100 bg-orange-50/60 px-3 py-2 text-xs font-semibold text-gray-700 transition-colors hover:border-primary/20 hover:bg-orange-50 hover:text-primary"
+                        className="rounded-full border border-pink-100 bg-pink-50/60 px-3 py-2 text-xs font-semibold text-gray-700 transition-colors hover:border-primary/20 hover:bg-pink-50 hover:text-primary"
                       >
                         {link.label}
                       </Link>
@@ -516,29 +511,29 @@ function Header({ variant = 'default' }: { variant?: HeaderVariant }) {
               </DropdownMenuContent>
             </DropdownMenu>
 
-            <Link href="/my-cards/" className="text-gray-600 hover:text-primary font-quicksand font-medium transition-colors text-base relative after:content-[''] after:absolute after:w-full after:scale-x-0 after:h-0.5 after:bottom-0 after:left-0 after:bg-primary after:origin-bottom-right after:transition-transform after:duration-300 hover:after:scale-x-100 hover:after:origin-bottom-left">
-              My Cards
+            <Link href="/my-cards/" className="text-gray-700 hover:text-primary font-quicksand font-semibold transition-colors text-base">
+              My cards
             </Link>
 
             {/* Search Icon & Dropdown */}
             <div className="relative" ref={searchRef}>
               <button
                 onClick={() => setIsSearchOpen(!isSearchOpen)}
-                className="text-gray-500 hover:text-primary p-2 rounded-full hover:bg-orange-50 transition-colors"
+                className="text-gray-500 hover:text-primary p-2 rounded-full hover:bg-pink-50 transition-colors"
                 aria-label="Search card ideas"
               >
                 <Search className="h-5 w-5" />
               </button>
 
               {isSearchOpen && (
-                <div className="absolute right-0 top-full mt-4 w-96 bg-white/95 backdrop-blur-xl rounded-2xl shadow-xl border border-orange-100 overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200">
-                  <form onSubmit={handleSearch} className="p-4 border-b border-orange-50">
+                <div className="absolute right-0 top-full mt-4 w-96 bg-white/95 backdrop-blur-xl rounded-2xl shadow-xl border border-pink-100 overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+                  <form onSubmit={handleSearch} className="p-4 border-b border-pink-50">
                     <div className="relative">
                       <Input
                         ref={inputRef}
                         type="text"
                         placeholder="Search birthdays, apologies, weddings..."
-                        className="pl-10 pr-4 py-6 w-full bg-orange-50/50 border-orange-100 focus:ring-primary/20 focus:border-primary rounded-xl"
+                        className="pl-10 pr-4 py-6 w-full bg-pink-50/50 border-pink-100 focus:ring-primary/20 focus:border-primary rounded-xl"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         autoFocus
@@ -554,9 +549,9 @@ function Header({ variant = 'default' }: { variant?: HeaderVariant }) {
                     </div>
                   </form>
 
-                  <div className="max-h-[300px] overflow-y-auto p-2 scrollbar-thin scrollbar-thumb-orange-200 scrollbar-track-transparent">
+                  <div className="max-h-[300px] overflow-y-auto p-2 scrollbar-thin scrollbar-thumb-pink-200 scrollbar-track-transparent">
                     {showComingSoon ? (
-                      <div className="px-4 py-8 text-center bg-orange-50/30 rounded-xl mx-2">
+                      <div className="px-4 py-8 text-center bg-pink-50/30 rounded-xl mx-2">
                         <div className="text-primary font-caveat text-xl mb-2">
                           Thanks for your suggestion!
                         </div>
@@ -577,10 +572,10 @@ function Header({ variant = 'default' }: { variant?: HeaderVariant }) {
                           <Link
                             key={generator.slug}
                             href={`/${generator.slug}/`}
-                            className="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-orange-50 hover:text-primary rounded-xl transition-colors group"
+                            className="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-pink-50 hover:text-primary rounded-xl transition-colors group"
                             onClick={() => setIsSearchOpen(false)}
                           >
-                            <span className="w-1.5 h-1.5 rounded-full bg-orange-200 group-hover:bg-primary mr-3 transition-colors"></span>
+                            <span className="w-1.5 h-1.5 rounded-full bg-pink-200 group-hover:bg-primary mr-3 transition-colors"></span>
                             {generator.label}
                           </Link>
                         ))}
@@ -593,7 +588,7 @@ function Header({ variant = 'default' }: { variant?: HeaderVariant }) {
                         <Button
                           size="sm"
                           variant="outline"
-                          className="text-primary border-primary/20 hover:bg-orange-50 hover:text-primary hover:border-primary"
+                          className="text-primary border-primary/20 hover:bg-pink-50 hover:text-primary hover:border-primary"
                           onClick={handleRequestGenerator}
                           disabled={isSubmitting}
                         >
@@ -608,10 +603,10 @@ function Header({ variant = 'default' }: { variant?: HeaderVariant }) {
                     ) : null}
                   </div>
 
-                  <div className="p-3 border-t border-orange-50 bg-orange-50/20">
+                  <div className="p-3 border-t border-pink-50 bg-pink-50/20">
                     <Link
                       href="/cards/"
-                      className="block px-4 py-2 text-sm text-center text-primary hover:bg-orange-100/50 rounded-lg font-medium transition-colors"
+                      className="block px-4 py-2 text-sm text-center text-primary hover:bg-pink-100/50 rounded-lg font-medium transition-colors"
                       onClick={() => setIsSearchOpen(false)}
                     >
                       View all card ideas
@@ -620,9 +615,6 @@ function Header({ variant = 'default' }: { variant?: HeaderVariant }) {
                 </div>
               )}
             </div>
-
-            {!isPremiumUser && <PremiumButton />}
-            {isPremiumUser && <SubscriptionButton />}
 
             {status === 'authenticated' && session ? (
               <DropdownMenu>
@@ -653,8 +645,8 @@ function Header({ variant = 'default' }: { variant?: HeaderVariant }) {
                     <ChevronDown className="h-4 w-4 text-gray-400" />
                   </button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56 rounded-2xl p-2 bg-white/95 backdrop-blur shadow-xl border-orange-100">
-                  <DropdownMenuItem className="focus:bg-orange-50 rounded-xl cursor-default">
+                <DropdownMenuContent align="end" className="w-56 rounded-2xl p-2 bg-white/95 backdrop-blur shadow-xl border-pink-100">
+                  <DropdownMenuItem className="focus:bg-pink-50 rounded-xl cursor-default">
                     <div className="flex flex-col text-sm">
                       <span className="font-semibold text-gray-800">{session.user?.name}</span>
                       {isPremiumUser && (
@@ -665,7 +657,7 @@ function Header({ variant = 'default' }: { variant?: HeaderVariant }) {
                       )}
                     </div>
                   </DropdownMenuItem>
-                  <div className="my-1 border-t border-orange-50" />
+                  <div className="my-1 border-t border-pink-50" />
                   <DropdownMenuItem
                     onClick={handleLogout}
                     disabled={isLoading}
@@ -687,7 +679,7 @@ function Header({ variant = 'default' }: { variant?: HeaderVariant }) {
                 variant="outline"
                 onClick={handleLogin}
                 disabled={isLoading}
-                className="rounded-full border-gray-200 text-gray-600 hover:text-primary hover:border-primary/20 hover:bg-orange-50 px-6 h-10"
+                className="rounded-full border-gray-200 text-gray-600 hover:text-primary hover:border-primary/20 hover:bg-pink-50 px-6 h-10"
               >
                 {isLoading ? (
                   <>
@@ -704,7 +696,7 @@ function Header({ variant = 'default' }: { variant?: HeaderVariant }) {
           <div className="md:hidden flex items-center space-x-3">
             <button
               onClick={() => setIsSearchOpen(!isSearchOpen)}
-              className="text-gray-500 p-2 rounded-full hover:bg-orange-50 active:bg-orange-100 transition-colors"
+              className="text-gray-500 p-2 rounded-full hover:bg-pink-50 active:bg-pink-100 transition-colors"
               aria-label="Search card ideas"
             >
               <Search className="h-6 w-6" />
@@ -712,7 +704,7 @@ function Header({ variant = 'default' }: { variant?: HeaderVariant }) {
 
             <button
               aria-label="Toggle menu"
-              className="text-gray-600 relative w-10 h-10 flex items-center justify-center rounded-full hover:bg-orange-50 active:bg-orange-100 transition-colors"
+              className="text-gray-600 relative w-10 h-10 flex items-center justify-center rounded-full hover:bg-pink-50 active:bg-pink-100 transition-colors"
               onClick={() => setIsMenuOpen(!isMenuOpen)}
             >
               <div className="relative w-6 h-6">
@@ -731,7 +723,7 @@ function Header({ variant = 'default' }: { variant?: HeaderVariant }) {
                   ref={inputRef}
                   type="text"
                   placeholder="Search birthdays, apologies, weddings..."
-                  className="pl-10 pr-10 py-3 w-full bg-orange-50/80 border-orange-100 focus:ring-primary focus:border-primary rounded-xl h-12 text-lg"
+                  className="pl-10 pr-10 py-3 w-full bg-pink-50/80 border-pink-100 focus:ring-primary focus:border-primary rounded-xl h-12 text-lg"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   autoFocus
@@ -746,7 +738,7 @@ function Header({ variant = 'default' }: { variant?: HeaderVariant }) {
               </div>
             </form>
 
-            <div className="bg-white/80 backdrop-blur-md rounded-2xl shadow-sm border border-orange-100 overflow-hidden">
+            <div className="bg-white/80 backdrop-blur-md rounded-2xl shadow-sm border border-pink-100 overflow-hidden">
               {showComingSoon ? (
                  <div className="p-6 text-center">
                   <div className="text-primary font-medium mb-2">
@@ -757,7 +749,7 @@ function Header({ variant = 'default' }: { variant?: HeaderVariant }) {
                   </div>
                   <Link
                     href="/cards/"
-                    className="block w-full py-3 text-center text-primary font-medium border border-orange-100 rounded-xl hover:bg-orange-50 active:scale-[0.98] transition-all"
+                    className="block w-full py-3 text-center text-primary font-medium border border-pink-100 rounded-xl hover:bg-pink-50 active:scale-[0.98] transition-all"
                     onClick={() => setIsSearchOpen(false)}
                   >
                     Browse all card ideas
@@ -769,10 +761,10 @@ function Header({ variant = 'default' }: { variant?: HeaderVariant }) {
                     <Link
                       key={generator.slug}
                       href={`/${generator.slug}/`}
-                      className="flex items-center px-5 py-4 text-base text-gray-700 border-b border-orange-50 last:border-0 active:bg-orange-50"
+                      className="flex items-center px-5 py-4 text-base text-gray-700 border-b border-pink-50 last:border-0 active:bg-pink-50"
                       onClick={() => setIsSearchOpen(false)}
                     >
-                      <span className="w-2 h-2 rounded-full bg-orange-200 mr-4"></span>
+                      <span className="w-2 h-2 rounded-full bg-pink-200 mr-4"></span>
                       {generator.label}
                     </Link>
                   ))}
@@ -785,7 +777,7 @@ function Header({ variant = 'default' }: { variant?: HeaderVariant }) {
                   <Button
                     size="sm"
                     variant="outline"
-                    className="w-full py-6 text-primary border-primary/20 hover:bg-orange-50 hover:border-primary"
+                    className="w-full py-6 text-primary border-primary/20 hover:bg-pink-50 hover:border-primary"
                     onClick={handleRequestGenerator}
                     disabled={isSubmitting}
                   >
@@ -804,28 +796,28 @@ function Header({ variant = 'default' }: { variant?: HeaderVariant }) {
 
         {isMenuOpen && (
           <div className="md:hidden py-4 animate-in slide-in-from-top-4 duration-300">
-            <div className="flex flex-col space-y-2 bg-white/80 backdrop-blur-xl rounded-2xl border border-orange-100 p-4 shadow-lg">
-              <Link href="/" className="flex items-center px-4 py-3 text-gray-700 hover:bg-orange-50 rounded-xl transition-colors font-medium text-lg">
+            <div className="flex flex-col space-y-2 bg-white/80 backdrop-blur-xl rounded-2xl border border-pink-100 p-4 shadow-lg">
+              <Link href="/" className="flex items-center px-4 py-3 text-gray-700 hover:bg-pink-50 rounded-xl transition-colors font-medium text-lg">
                 Home
               </Link>
-              <Link href="/cards/" className="flex items-center px-4 py-3 text-gray-700 hover:bg-orange-50 rounded-xl transition-colors font-medium text-lg">
-                Create
+              <Link href="/cards/" className="flex items-center px-4 py-3 text-gray-700 hover:bg-pink-50 rounded-xl transition-colors font-medium text-lg">
+                Create a card
               </Link>
               <Link
                 href={galleryEntryHref}
                 onClick={handleSurfaceLinkClick}
-                className="flex items-center justify-between rounded-xl border border-orange-200 bg-orange-50/80 px-4 py-3 text-orange-800 transition-colors hover:bg-orange-100"
+                className="flex items-center justify-between rounded-xl border border-pink-200 bg-pink-50/80 px-4 py-3 text-rose-800 transition-colors hover:bg-pink-100"
               >
                 <div className="flex items-center gap-3">
                   <Search className="h-5 w-5" />
                   <div>
-                    <div className="font-semibold text-lg">{galleryEntryLabel}</div>
-                    <div className="text-xs text-orange-700">Browse real cards before you generate</div>
+                    <div className="font-semibold text-lg">Browse ideas</div>
+                    <div className="text-xs text-rose-700">Browse real cards before you generate</div>
                   </div>
                 </div>
-                <ChevronDown className="-rotate-90 h-5 w-5 text-orange-500" />
+                <ChevronDown className="-rotate-90 h-5 w-5 text-pink-500" />
               </Link>
-              <Link href="/my-cards/" className="flex items-center px-4 py-3 text-gray-700 hover:bg-orange-50 rounded-xl transition-colors font-medium text-lg">
+              <Link href="/my-cards/" className="flex items-center px-4 py-3 text-gray-700 hover:bg-pink-50 rounded-xl transition-colors font-medium text-lg">
                 My Cards
               </Link>
 
@@ -838,9 +830,9 @@ function Header({ variant = 'default' }: { variant?: HeaderVariant }) {
                 <Link
                   key={link.href}
                   href={link.href}
-                  className="flex items-start gap-3 rounded-xl border border-orange-100/80 bg-white/70 px-4 py-3 text-gray-700 transition-colors hover:bg-orange-50"
+                  className="flex items-start gap-3 rounded-xl border border-pink-100/80 bg-white/70 px-4 py-3 text-gray-700 transition-colors hover:bg-pink-50"
                 >
-                  <div className="mt-0.5 rounded-xl bg-orange-50 p-2 text-primary ring-1 ring-orange-100">
+                  <div className="mt-0.5 rounded-xl bg-pink-50 p-2 text-primary ring-1 ring-pink-100">
                     {link.icon}
                   </div>
                   <div>
@@ -860,18 +852,18 @@ function Header({ variant = 'default' }: { variant?: HeaderVariant }) {
                   <Link
                     key={link.href}
                     href={link.href}
-                    className="rounded-full border border-orange-100 bg-orange-50/60 px-3 py-2 text-xs font-semibold text-gray-700 transition-colors hover:border-primary/20 hover:bg-orange-50 hover:text-primary"
+                    className="rounded-full border border-pink-100 bg-pink-50/60 px-3 py-2 text-xs font-semibold text-gray-700 transition-colors hover:border-primary/20 hover:bg-pink-50 hover:text-primary"
                   >
                     {link.label}
                   </Link>
                 ))}
               </div>
 
-              <div className="my-2 border-t border-orange-100/50"></div>
+              <div className="my-2 border-t border-pink-100/50"></div>
 
               {status === 'authenticated' && session ? (
                 <div className="pt-2">
-                  <div className="flex items-center px-4 py-3 mb-2 bg-orange-50/50 rounded-xl">
+                  <div className="flex items-center px-4 py-3 mb-2 bg-pink-50/50 rounded-xl">
                     {session.user?.image && (
                       <Image
                         src={session.user.image}
@@ -892,12 +884,6 @@ function Header({ variant = 'default' }: { variant?: HeaderVariant }) {
                   </div>
                   
                   <div className="grid gap-2">
-                    {!isPremiumUser ? (
-                      <div className="w-full"><PremiumButton /></div>
-                    ) : (
-                      <div className="w-full"><SubscriptionButton /></div>
-                    )}
-                    
                     <Button
                       variant="ghost"
                       onClick={handleLogout}
@@ -933,9 +919,6 @@ function Header({ variant = 'default' }: { variant?: HeaderVariant }) {
                     )}
                   </WarmButton>
                   
-                  <div className="w-full">
-                    <PremiumButton />
-                  </div>
                 </div>
               )}
             </div>

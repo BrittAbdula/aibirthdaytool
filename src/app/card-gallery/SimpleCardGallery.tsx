@@ -6,7 +6,7 @@ import { ImageViewer } from '../../components/ImageViewer'
 import { Card, TabType } from '@/lib/cards'
 import { CardType } from '@/lib/card-config'
 import { Button } from '@/components/ui/button'
-import { ArrowRightIcon } from '@radix-ui/react-icons'
+import { ArrowRightIcon, CopyIcon, Pencil1Icon } from '@radix-ui/react-icons'
 import { buildCardPreviewAlt } from '@/lib/seo'
 
 interface SimpleCardGalleryProps {
@@ -21,13 +21,27 @@ interface SimpleCardGalleryProps {
 export default function SimpleCardGallery({ initialCardsData, wishCardType, tabType }: SimpleCardGalleryProps) {
   const { cards } = initialCardsData;
 
+  const buildInspirationHref = (card: Card) => {
+    const params = new URLSearchParams({
+      ...(card.relationship ? { relationship: card.relationship } : {}),
+      ...(card.message ? { message: card.message } : {}),
+    })
+    const query = params.toString()
+    return `/${card.cardType}/${query ? `?${query}` : ''}`
+  }
+
+  const handleCopyMessage = async (message?: string | null) => {
+    if (!message) return
+    await navigator.clipboard.writeText(message)
+  }
+
   return (
     <div>
       <div className="columns-2 sm:columns-2 md:columns-3 lg:columns-4 xl:columns-5 2xl:columns-6 gap-4 space-y-4 p-2">
         {cards.map((card) => (
           <div 
             key={card.id} 
-            className="break-inside-avoid mb-4 group bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow"
+            className="group mb-4 break-inside-avoid overflow-hidden rounded-xl border border-[#F1D6DF] bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
           >
             <div className="w-full relative">
               <ImageViewer
@@ -37,6 +51,33 @@ export default function SimpleCardGallery({ initialCardsData, wishCardType, tabT
                 isNewCard={false}
                 imgUrl={card.r2Url || ''}
               />
+            </div>
+            <div className="grid gap-2 p-3">
+              <Link
+                href={buildInspirationHref(card)}
+                className="inline-flex min-h-[44px] items-center justify-center rounded-lg bg-primary px-3 text-xs font-semibold text-white transition-colors hover:bg-primary/90"
+              >
+                Use as inspiration
+                <ArrowRightIcon className="ml-1.5 h-4 w-4" />
+              </Link>
+              <div className="grid grid-cols-2 gap-2">
+                <Link
+                  href={`/${card.cardType}/edit/${card.id}/`}
+                  className="inline-flex min-h-[44px] items-center justify-center rounded-lg border border-[#F1D6DF] px-2 text-xs font-semibold text-[#202A3D] transition-colors hover:bg-[#FFF8F6]"
+                >
+                  <Pencil1Icon className="mr-1.5 h-4 w-4" />
+                  Edit idea
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => handleCopyMessage(card.message)}
+                  disabled={!card.message}
+                  className="inline-flex min-h-[44px] items-center justify-center rounded-lg border border-[#F1D6DF] px-2 text-xs font-semibold text-[#202A3D] transition-colors hover:bg-[#FFF8F6] disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <CopyIcon className="mr-1.5 h-4 w-4" />
+                  Copy style
+                </button>
+              </div>
             </div>
           </div>
         ))}

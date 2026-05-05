@@ -6,7 +6,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { extractEditableFields, updateSvgContent, cn, fetchSvgContent } from '@/lib/utils'
 import NextImage from 'next/image'
-import { DownloadIcon, CopyIcon, PaperPlaneIcon, TwitterLogoIcon, EnvelopeClosedIcon } from '@radix-ui/react-icons'
+import { DownloadIcon, CopyIcon, PaperPlaneIcon, EnvelopeClosedIcon, Pencil1Icon } from '@radix-ui/react-icons'
 import { useToast } from "@/hooks/use-toast"
 import { recordUserAction } from '@/lib/action'
 import dynamic from 'next/dynamic'
@@ -21,7 +21,7 @@ import { Label } from "@/components/ui/label"
 import { RecommendedCards } from '@/components/RecommendedCards'
 import { useSession } from 'next-auth/react'
 import { PremiumModal } from '@/components/PremiumModal'
-import { Crown } from "lucide-react"
+import { Crown, MessageCircle } from "lucide-react"
 
 const IsMobileWrapper = dynamic(() => import('@/components/IsMobileWrapper'), { ssr: false })
 
@@ -372,6 +372,9 @@ export default function EditCardClient({ params }: { params: { cardId: string, c
       case 'email':
         url = `mailto:?body=${encodeURIComponent(shareLink)}`
         break
+      case 'whatsapp':
+        url = `https://wa.me/?text=${encodeURIComponent(shareLink)}`
+        break
     }
     window.open(url, '_blank')
   }
@@ -686,51 +689,62 @@ export default function EditCardClient({ params }: { params: { cardId: string, c
 
         {/* Share Dialog */}
         <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-          <DialogContent className="bg-white/95 backdrop-blur-sm sm:max-w-md">
+          <DialogContent className="bg-white sm:max-w-lg">
             <DialogHeader>
-              <DialogTitle className="text-2xl font-semibold text-center text-[#4A4A4A]">
-                Share Your Creation
+              <DialogTitle className="text-2xl font-semibold text-center text-[#172326]">
+                Your card link is ready
               </DialogTitle>
             </DialogHeader>
             <div className="mt-4">
-              <div className="p-3 bg-gradient-to-r from-pink-50 to-purple-50 rounded-xl">
-                <code className="text-sm font-mono break-all text-[#4A4A4A]">{shareLink}</code>
+              <div className="rounded-lg border border-[#D9CEC0] bg-[#F8F4EC] p-3">
+                <code className="text-sm font-mono break-all text-[#172326]">{shareLink}</code>
               </div>
-              <div className="mt-6 flex flex-wrap gap-3 justify-center">
+              <div className="mt-5 grid gap-3 sm:grid-cols-2">
                 <Button
-                  onClick={() => handleShare('twitter')}
-                  className="bg-[#1DA1F2] text-white hover:opacity-90 transition-all duration-300"
+                  onClick={handleCopyLink}
+                  className="bg-primary text-white hover:bg-primary/90"
                 >
-                  <TwitterLogoIcon className="mr-2 h-4 w-4" />
-                  Twitter
+                  <CopyIcon className="mr-2 h-4 w-4" />
+                  {isCopied ? "Link copied" : "Copy link"}
+                </Button>
+                <IsMobileWrapper>
+                  {(isMobile) => (
+                    <Button
+                      onClick={() => handleDownload(isMobile)}
+                      className="border border-[#D9CEC0] bg-white text-[#172326] hover:bg-[#F8F4EC]"
+                    >
+                      <DownloadIcon className="mr-2 h-4 w-4" />
+                      {isMobile ? "Save" : "Download"}
+                    </Button>
+                  )}
+                </IsMobileWrapper>
+                <Button
+                  onClick={() => handleShare('whatsapp')}
+                  className="border border-[#D9CEC0] bg-white text-[#172326] hover:bg-[#F8F4EC]"
+                >
+                  <MessageCircle className="mr-2 h-4 w-4" />
+                  WhatsApp
                 </Button>
                 <Button
                   onClick={() => handleShare('email')}
-                  className="bg-gradient-to-r from-pink-500 to-pink-600 text-white hover:opacity-90 transition-all duration-300"
+                  className="border border-[#D9CEC0] bg-white text-[#172326] hover:bg-[#F8F4EC]"
                 >
                   <EnvelopeClosedIcon className="mr-2 h-4 w-4" />
                   Email
                 </Button>
                 <Button
                   onClick={() => window.open(shareLink, '_blank')}
-                  className="bg-gradient-to-r from-pink-400 to-pink-500 text-white hover:opacity-90 transition-all duration-300"
+                  className="border border-[#D9CEC0] bg-white text-[#172326] hover:bg-[#F8F4EC]"
                 >
                   <EyeOpenIcon className="mr-2 h-4 w-4" />
                   Preview
                 </Button>
                 <Button
-                  onClick={handleCopyLink}
-                  className="w-full bg-gradient-to-r from-pink-600 to-pink-700 text-white hover:opacity-90 transition-all duration-300"
+                  onClick={() => setIsModalOpen(false)}
+                  className="border border-[#D9CEC0] bg-white text-[#172326] hover:bg-[#F8F4EC]"
                 >
-                  <CopyIcon className="mr-2 h-4 w-4" />
-                  <span
-                    className={cn(
-                      "transition-opacity duration-500",
-                      isCopied ? "opacity-100" : "opacity-100"
-                    )}
-                  >
-                    {isCopied ? "Copy Success!" : "Copy Link"}
-                  </span>
+                  <Pencil1Icon className="mr-2 h-4 w-4" />
+                  Edit again
                 </Button>
               </div>
             </div>

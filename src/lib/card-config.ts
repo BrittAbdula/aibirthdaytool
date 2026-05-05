@@ -1,6 +1,12 @@
 import { prisma } from './prisma'
 import { cache } from 'react'
 import type { OutputFormat } from './style-presets'
+import {
+  getGeneratorSeoConfig,
+  type GeneratorIndexPolicy,
+  type GeneratorSeoFaq,
+  type GeneratorSeoLink,
+} from './generator-seo'
 
 export type CardType = string;
 
@@ -83,6 +89,15 @@ export interface CardConfig {
   promptContent: string;
   defaultSize?: string;
   isSystem: boolean;
+  seoTitle: string;
+  seoDescription: string;
+  primaryIntent: string;
+  indexPolicy: GeneratorIndexPolicy;
+  curatedCanonical: string;
+  seoH1: string;
+  seoIntro: string;
+  seoLinks: GeneratorSeoLink[];
+  seoFaqs?: GeneratorSeoFaq[];
 }
 
 // 类型守卫函数
@@ -122,6 +137,11 @@ export const getCardConfig = cache(
     const why = Array.isArray(generator.why) ? 
       generator.why.filter((item): item is string => typeof item === 'string')
       : undefined;
+    const seoConfig = getGeneratorSeoConfig({
+      slug: generator.slug,
+      label: generator.label,
+      isSystem: generator.isSystem,
+    });
 
     return {
       title: generator.title,
@@ -131,7 +151,8 @@ export const getCardConfig = cache(
       why,
       advancedFields,
       promptContent: generator.promptContent,
-      isSystem: generator.isSystem
+      isSystem: generator.isSystem,
+      ...seoConfig,
     };
   }
 );
@@ -247,7 +268,6 @@ export const getAllCardTypes = cache(
 // Utility function to validate slug
 function isValidSlug(slug: string): boolean {
   const slugRegex = /^[a-z0-9-]+$/; // Only allows lowercase letters, numbers, and dashes
-  console.log(slug, slugRegex.test(slug))
   return slugRegex.test(slug);
 }
 

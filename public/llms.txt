@@ -4,9 +4,17 @@
 
 Brand aliases commonly seen in user queries: MewTru, MewTruCard, birthday.mewtru, valentine.mewtru.
 
+Primary search intents:
+- free AI birthday card maker
+- shareable birthday card link
+- sorry website for girlfriend
+- apology card link
+- free AI valentine card maker
+
 ## Primary Entry Points
 
 - [Birthday Card Generator](/birthday/): Main page for creating free online birthday cards and shareable birthday card links.
+- [Open Your Birthday Surprise](/open-your-birthday-surprise/): Shareable birthday surprise link before a personalized birthday card.
 - [All Card Generators](/cards/): Directory of greeting card generators across all supported occasions.
 - [AI Greeting Card Gallery](/card-gallery/): Public gallery of AI-generated cards.
 - [Birthday Card Templates](/type/birthday/): Browse public birthday card examples and ideas.
@@ -35,6 +43,8 @@ Brand aliases commonly seen in user queries: MewTru, MewTruCard, birthday.mewtru
 ## Popular Template Galleries
 
 - [Birthday Card Gallery](/type/birthday/)
+- [Happy Birthday Card Maker](/happy-birthday/): Curated long-tail page for happy birthday card searches.
+- [Friendship Card Maker](/friendship-card/): Curated long-tail page for friendship card searches.
 - [Birthday Cards for Friend](/type/birthday/for/friend/)
 - [Birthday Cards for Mother](/type/birthday/for/mother/)
 - [Valentine Card Gallery](/type/valentine/)
@@ -51,6 +61,13 @@ Brand aliases commonly seen in user queries: MewTru, MewTruCard, birthday.mewtru
 - [Forgive Me](/forgive-me/): Interactive apology microsite for sorry links.
 - [Will You Be My Bridesmaid?](/will-you-be-my-bridesmaid/): Interactive wedding ask microsite.
 - [Create Your Generator](/create-generator/): Builder for custom card generators created by users.
+
+## Indexing Notes
+
+- Official generator pages and curated long-tail pages are intended for search indexing.
+- User-created or low-quality custom generator slugs should remain noindex unless reviewed and curated.
+- Duplicate or low-quality Valentine ask slugs should point to [Will You Be My Valentine?](/will-you-be-my-valentine/).
+- Search crawler access and AI crawler permissions are handled separately. Search indexing is allowed for public pages; AI training permissions remain restricted by robots and Content-Signal policy.
 
 ## Product Capabilities
 

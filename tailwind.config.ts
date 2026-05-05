@@ -51,7 +51,14 @@ const config = {
 				card: {
 					DEFAULT: 'hsl(var(--card))',
 					foreground: 'hsl(var(--card-foreground))'
-				}
+				},
+				'warm-cream': 'hsl(var(--warm-cream))',
+				'warm-peach': 'hsl(var(--warm-peach))',
+				'warm-coral': 'hsl(var(--warm-coral))',
+				'warm-rose': 'hsl(var(--warm-rose))',
+				'warm-gold': 'hsl(var(--warm-gold))',
+				'brand-lavender': 'hsl(var(--brand-lavender))',
+				'brand-ink': 'hsl(var(--brand-ink))'
 			},
 			borderRadius: {
 				lg: 'var(--radius)',

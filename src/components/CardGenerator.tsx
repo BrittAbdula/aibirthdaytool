@@ -3,16 +3,14 @@ import React, { useState, useEffect, useRef } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Button } from "@/components/ui/button"
 import { WarmButton } from "@/components/ui/warm-button"
-import { GlassCard } from "@/components/ui/glass-card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select"
-import { Card, CardContent } from "@/components/ui/card"
 import { Slider } from "@/components/ui/slider"
 import { Textarea } from "@/components/ui/textarea"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { ImageViewer } from '@/components/ImageViewer'
-import { cn, fetchSvgContent } from '@/lib/utils'
+import { cn } from '@/lib/utils'
 import { CardType, CardConfig, CARD_SIZES } from '@/lib/card-config'
 import { useSession, signIn } from "next-auth/react"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
@@ -48,11 +46,11 @@ const MagicalCardCreation = () => {
   // Text rotation
   useEffect(() => {
     const messages = [
-      "Weaving your magical words... ✨",
-      "Mixing rainbow colors... 🎨",
-      "Sprinkling stardust... 🌟",
-      "Asking AI fairies... 🧚‍♀️",
-      "Almost ready... 🎁",
+      "Drafting your message...",
+      "Balancing the layout...",
+      "Choosing the palette...",
+      "Preparing the preview...",
+      "Almost ready...",
     ];
     let i = 0;
     const interval = setInterval(() => {
@@ -63,7 +61,7 @@ const MagicalCardCreation = () => {
   }, []);
 
   return (
-    <div className="w-full h-full relative overflow-hidden bg-gradient-to-br from-warm-cream via-pink-50 to-blue-50 flex items-center justify-center">
+    <div className="w-full h-full relative overflow-hidden bg-gradient-to-br from-warm-cream via-pink-50 to-purple-50 flex items-center justify-center">
       {/* Background Blobs */}
       <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-pink-200/40 rounded-full blur-[100px] animate-blob mix-blend-multiply"></div>
       <div className="absolute top-1/3 right-1/4 w-[400px] h-[400px] bg-purple-200/40 rounded-full blur-[100px] animate-blob animation-delay-2000 mix-blend-multiply"></div>
@@ -145,7 +143,7 @@ const AgeSelector = ({ age, setAge }: { age: number | null, setAge: (age: number
     <div className="space-y-4 pt-2">
       <div className="flex items-center space-x-6">
         <Slider id="age-slider" min={0} max={120} step={1} value={[age || 0]} onValueChange={handleSliderChange} className="flex-grow custom-slider" />
-        <div className="bg-orange-50 border border-orange-100 rounded-xl px-3 py-2 w-20 text-center font-bold text-gray-700">{age || 0}</div>
+        <div className="bg-pink-50 border border-pink-100 rounded-xl px-3 py-2 w-20 text-center font-bold text-gray-700">{age || 0}</div>
       </div>
       <div className="flex justify-between text-xs text-gray-400 font-medium px-1"><span>Newborn</span><span>Adult</span><span>Elderly</span></div>
     </div>
@@ -172,7 +170,7 @@ const CustomSelect = ({ value, onValueChange, placeholder, options, customValue,
     <div className="relative">
       {!isCustom ? (
         <Select value={value} onValueChange={(val) => { if (val === "custom") setIsCustom(true); else onValueChange(val); }} required={required && !isCustom}>
-          <SelectTrigger className="w-full h-12 bg-white/50 border-orange-100/50 backdrop-blur-sm focus:ring-primary/20"><SelectValue placeholder={placeholder} /></SelectTrigger>
+          <SelectTrigger className="w-full h-12 bg-white/50 border-pink-100/50 backdrop-blur-sm focus:ring-primary/20"><SelectValue placeholder={placeholder} /></SelectTrigger>
           <SelectContent>
             <SelectItem value="custom" className="text-primary font-medium">✨ Custom {label}</SelectItem>
             {options.map((option: string) => (<SelectItem key={option} value={option}>{option}</SelectItem>))}
@@ -192,12 +190,14 @@ export default function CardGenerator({
   wishCardType,
   initialCardId,
   initialImgUrl,
-  cardConfig
+  cardConfig,
+  headingLevel = 'h1',
 }: {
   wishCardType: CardType,
   initialCardId: string,
   initialImgUrl: string,
   cardConfig: CardConfig
+  headingLevel?: 'h1' | 'h2'
 }) {
   const AUTH_DRAFT_KEY = 'mewtrucard.authDraft.v1'
   const { data: session, status } = useSession()
@@ -205,7 +205,7 @@ export default function CardGenerator({
   const searchParamString = searchParams.toString()
   const [currentCardType, setCurrentCardType] = useState<CardType>(wishCardType)
   const [formData, setFormData] = useState<Record<string, any>>({})
-  const [imageCount, setImageCount] = useState<number>(1)
+  const imageCount = 1
   const router = useRouter()
   const sampleCard = `/card/goodluck.svg`
   const [submited, setSubmited] = useState(false)
@@ -213,7 +213,6 @@ export default function CardGenerator({
   const [selectedSize, setSelectedSize] = useState('portrait')
   const defaultSelectedModel = modelConfigs.find(m => m.id === 'Free_Image') || modelConfigs[0]
   const [selectedModel, setSelectedModel] = useState<ModelConfig>(defaultSelectedModel)
-  const [showModelSelector, setShowModelSelector] = useState(false)
   const [selectedFormat, setSelectedFormat] = useState<OutputFormat>(defaultSelectedModel.format)
   const [selectedStyleId, setSelectedStyleId] = useState<string | null>(null)
   const [selectedTier, setSelectedTier] = useState<'base' | 'pro'>('base')
@@ -235,6 +234,11 @@ export default function CardGenerator({
   // Wizard State
   const [currentStep, setCurrentStep] = useState(1);
   const TOTAL_STEPS = 3;
+  const STEP_LABELS = [
+    { title: 'Recipient & occasion', description: 'Start with who this card is for and what moment you are sending.' },
+    { title: 'Message & tone', description: 'Write the core feeling before choosing output settings.' },
+    { title: 'Format, style & sharing', description: 'Choose how the card should look, save, and share.' },
+  ];
 
   const {
     generateCards,
@@ -273,12 +277,16 @@ export default function CardGenerator({
     const signedValue = params.get('signed') || params.get('senderName') || '';
     const recipientValue = params.get('recipientName') || '';
     const messageValue = params.get('message') || '';
+    const toneValue = params.get('tone') || '';
+    const languageValue = params.get('language') || '';
 
     return {
       ...(normalizedRelationship && { relationship: normalizedRelationship, to: normalizedRelationship }),
       ...(recipientValue && { recipientName: recipientValue }),
       ...(signedValue && { signed: signedValue, senderName: signedValue }),
       ...(messageValue && { message: messageValue }),
+      ...(toneValue && { tone: toneValue }),
+      ...(languageValue && { language: languageValue }),
     };
   }, [normalizedRelationship, searchParamString]);
 
@@ -368,7 +376,7 @@ export default function CardGenerator({
   }
 
   const getMissingFieldsForStep = () => {
-    if (currentStep !== 2) return [];
+    if (currentStep !== 1) return [];
 
     return ['to', 'relationship', 'recipientName']
       .map((fieldName) => cardConfig.fields.find((field) => field.name === fieldName))
@@ -453,7 +461,7 @@ export default function CardGenerator({
               value={formData[field.name] || ''}
               onChange={(e) => handleInputChange(field.name, e.target.value)}
               placeholder={field.placeholder}
-              className="text-base h-12 bg-white/50 border-orange-100/50 backdrop-blur-sm focus:ring-primary/20"
+              className="text-base h-12 bg-white/50 border-pink-100/50 backdrop-blur-sm focus:ring-primary/20"
               required={isRequired}
             />
           );
@@ -465,7 +473,7 @@ export default function CardGenerator({
               onChange={(e) => handleInputChange(field.name, e.target.value)}
               placeholder={field.placeholder}
               rows={3}
-              className="resize-none text-base bg-white/50 border-orange-100/50 backdrop-blur-sm focus:ring-primary/20 min-h-[100px]"
+              className="resize-none text-base bg-white/50 border-pink-100/50 backdrop-blur-sm focus:ring-primary/20 min-h-[100px]"
               required={isRequired}
             />
           );
@@ -517,11 +525,260 @@ export default function CardGenerator({
   const generatorTitle = currentCardType === 'birthday'
     ? 'Birthday Card Maker'
     : `${seoCardLabel} Card Maker`
+  const HeadingTag = headingLevel === 'h2' ? 'h2' : 'h1'
   const finalActionLabel = isLoading
     ? 'Generating card...'
     : 'Generate card'
   const hasGeneratedPreview = Boolean(imageStates[0]?.url) && imageStates[0]?.url !== initialImgUrl
   const shouldRenderPreview = showMobilePreview || hasGeneratedPreview || Boolean(imageStates[0]?.isLoading)
+  const currentStepMeta = STEP_LABELS[currentStep - 1]
+
+  const renderRecipientFields = () => (
+    <div className="space-y-6 animate-in slide-in-from-right-4 duration-300">
+      <div className="space-y-3">
+        <Label className="text-lg font-bold text-[#202A3D]">Card occasion</Label>
+        <CustomSelect
+          value={currentCardType}
+          onValueChange={(val: string) => setCurrentCardType(val as CardType)}
+          customValue={customValues['cardType'] || ''}
+          onCustomValueChange={(val: string) => setCustomValues(prev=>({...prev, cardType: val}))}
+          options={cardTypeOptions}
+          placeholder="Select occasion"
+          label="Occasion"
+        />
+      </div>
+
+      <div className="grid gap-5">
+        {['to', 'relationship', 'recipientName', 'age'].map(fieldName => {
+          const field = cardConfig.fields.find(f => f.name === fieldName);
+          return field ? renderField(field) : null;
+        })}
+      </div>
+    </div>
+  )
+
+  const renderMessageFields = () => (
+    <div className="space-y-6 animate-in slide-in-from-right-4 duration-300">
+      <div>
+        <h3 className="text-xl font-semibold text-[#202A3D]">Message and tone</h3>
+        <p className="mt-2 text-sm leading-6 text-[#6B7280]">
+          Write the feeling first. The final format works better after the message has enough context.
+        </p>
+      </div>
+
+      <div className="grid gap-5">
+        {['message', 'tone', 'language', 'signed'].map(fieldName => {
+          const field = cardConfig.fields.find(f => f.name === fieldName);
+          if (!field && fieldName === 'message') return (
+            <div key="message" className="space-y-2">
+              <Label className="font-medium text-[#202A3D]">Message</Label>
+              <Textarea
+                value={formData['message'] || ''}
+                onChange={e=>handleInputChange('message', e.target.value)}
+                placeholder="Describe what you want to say..."
+                className="min-h-[140px] resize-none border-[#F1D6DF] bg-white text-base"
+              />
+            </div>
+          );
+          if (!field && fieldName === 'signed') return (
+            <div key="signed" className="space-y-2">
+              <Label className="font-medium text-[#202A3D]">Signed (optional)</Label>
+              <Input
+                value={formData['signed'] || ''}
+                onChange={e=>handleInputChange('signed', e.target.value)}
+                placeholder="e.g. Your Bestie"
+                className="h-12 border-[#F1D6DF] bg-white"
+              />
+            </div>
+          )
+          return field ? renderField(field) : null;
+        })}
+      </div>
+    </div>
+  )
+
+  const renderFormatFields = () => (
+    <div className="space-y-6 animate-in slide-in-from-right-4 duration-300">
+      <div>
+        <h3 className="text-xl font-semibold text-[#202A3D]">Format, style, and sharing</h3>
+        <p className="mt-2 text-sm leading-6 text-[#6B7280]">
+          Choose output settings after the recipient and message are clear.
+        </p>
+      </div>
+
+      <div className="space-y-3">
+        <Label className="text-lg font-bold text-[#202A3D]">Choose format</Label>
+        <Tabs value={selectedFormat} onValueChange={(v) => setSelectedFormat(v as OutputFormat)} className="w-full">
+          <TabsList className="grid h-14 w-full grid-cols-3 rounded-lg bg-[#FFF8F6] p-1">
+            <TabsTrigger value="svg" className="h-12 rounded-md data-[state=active]:bg-white data-[state=active]:shadow-sm">Animated</TabsTrigger>
+            <TabsTrigger value="image" className="h-12 rounded-md data-[state=active]:bg-white data-[state=active]:shadow-sm">Image</TabsTrigger>
+            <TabsTrigger value="video" className="h-12 rounded-md data-[state=active]:bg-white data-[state=active]:shadow-sm">Video</TabsTrigger>
+          </TabsList>
+        </Tabs>
+      </div>
+
+      <div className="space-y-3">
+        <Label className="text-lg font-bold text-[#202A3D]">Quality tier</Label>
+        <div className="grid gap-3">
+          <button
+            type="button"
+            onClick={() => setSelectedTier('base')}
+            className={cn(
+              "min-h-[44px] rounded-lg border p-4 text-left transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30",
+              selectedTier === 'base' ? "border-primary bg-primary/5" : "border-[#F1D6DF] bg-white hover:bg-[#FFF8F6]"
+            )}
+          >
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <div className="font-bold text-[#202A3D]">{qualityOptions.base.name}</div>
+                <div className="mt-1 text-sm text-[#6B7280]">{qualityOptions.base.time} · Faster first draft</div>
+              </div>
+              {selectedTier === 'base' && <Check className="h-5 w-5 text-primary" />}
+            </div>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              if (!qualityOptions.pro) return
+              setSelectedTier('pro')
+            }}
+            disabled={!qualityOptions.pro}
+            className={cn(
+              "min-h-[44px] rounded-lg border p-4 text-left transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30",
+              selectedTier === 'pro' ? "border-primary bg-primary/5" : "border-[#F1D6DF] bg-white hover:bg-[#FFF8F6]",
+              !qualityOptions.pro && "cursor-not-allowed opacity-55"
+            )}
+          >
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <div className="flex items-center font-bold text-[#202A3D]">
+                  {qualityOptions.pro?.name || "Pro"}
+                  <Crown className="ml-1 h-3.5 w-3.5 text-amber-500" />
+                </div>
+                <div className="mt-1 text-sm text-[#6B7280]">
+                  {qualityOptions.pro?.time || "Premium only"} · Highest quality output
+                </div>
+              </div>
+              {selectedTier === 'pro' && <Check className="h-5 w-5 text-primary" />}
+            </div>
+          </button>
+        </div>
+      </div>
+
+      <div className="overflow-hidden rounded-lg border border-[#F1D6DF] bg-[#FFF8F6]">
+        <button
+          type="button"
+          onClick={() => setShowAdvancedOptions((open) => !open)}
+          className="flex w-full items-start justify-between gap-4 px-5 py-4 text-left transition-colors hover:bg-white/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+        >
+          <div>
+            <div className="text-sm font-semibold uppercase tracking-[0.18em] text-primary">
+              Optional controls
+            </div>
+            <div className="mt-1 text-base font-semibold text-[#202A3D]">
+              Style, reference image, and gallery visibility
+            </div>
+            <p className="mt-1 text-sm text-[#6B7280]">
+              Skip these for the fastest path.
+            </p>
+          </div>
+          <ChevronDown className={cn("mt-1 h-5 w-5 text-[#6B7280] transition-transform", showAdvancedOptions && "rotate-180")} />
+        </button>
+
+        {showAdvancedOptions && (
+          <div className="space-y-5 border-t border-[#F1D6DF] px-5 py-5">
+            {selectedFormat === 'image' && (
+              <button
+                type="button"
+                className="flex min-h-[44px] w-full items-center justify-between rounded-lg border border-[#F1D6DF] bg-white p-4 text-left transition-colors hover:bg-[#FFF8F6]"
+                onClick={() => setStyleDialogOpen(true)}
+              >
+                <div className="flex items-center gap-3">
+                  <div className="rounded-lg bg-primary/10 p-2 text-primary">
+                    <Wand2 size={18} />
+                  </div>
+                  <div>
+                    <div className="font-bold text-[#202A3D]">Visual style</div>
+                    <div className="text-xs text-[#6B7280]">
+                      {selectedStyleId ? stylePresets.find(s=>s.id===selectedStyleId)?.name : 'Auto'}
+                    </div>
+                  </div>
+                </div>
+                <ChevronRight className="text-[#6B7280]" />
+              </button>
+            )}
+
+            {renderField({
+              name: 'design',
+              label: 'Art direction',
+              type: 'select',
+              optional: true,
+              options: ['Pastel', 'Vibrant', 'Minimalist', 'Watercolor']
+            } as any)}
+
+            {selectedFormat !== 'svg' && (
+              <div className="space-y-2">
+                <Label className="font-medium text-[#202A3D]">Reference image (optional)</Label>
+                <button
+                  type="button"
+                  className={cn(
+                    "min-h-[44px] w-full rounded-lg border-2 border-dashed border-[#F1D6DF] bg-white p-6 text-center transition-colors hover:border-primary/50",
+                    uploadedRefUrls.length > 0 && "border-primary bg-primary/5"
+                  )}
+                  onClick={() => refPhotoInputRef.current?.click()}
+                >
+                  <input
+                    ref={refPhotoInputRef}
+                    type="file"
+                    className="hidden"
+                    onChange={handleReferenceUpload}
+                  />
+                  {isRefUploading ? (
+                    <Loader2 className="mx-auto h-5 w-5 animate-spin text-primary" />
+                  ) : uploadedRefUrls.length ? (
+                    <>
+                      {/* Uploaded URLs may come from arbitrary storage locations. */}
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={uploadedRefUrls[0]} alt="Reference upload preview" className="mx-auto h-20 rounded object-contain" />
+                      <div className="mt-3 text-sm font-medium text-[#202A3D]">Tap to replace reference image</div>
+                    </>
+                  ) : (
+                    <div className="space-y-2">
+                      <div className="text-sm font-medium text-[#202A3D]">Upload a reference image</div>
+                      <div className="text-xs text-[#6B7280]">Useful for matching a person, palette, or mood.</div>
+                    </div>
+                  )}
+                </button>
+              </div>
+            )}
+
+            <div className="flex items-center justify-between rounded-lg border border-[#F1D6DF] bg-white p-4">
+              <div className="pr-4">
+                <div className="flex items-center gap-2 font-semibold text-[#202A3D]">
+                  Public gallery visibility
+                  {!isPremiumUser && <Crown size={14} className="text-amber-500" />}
+                </div>
+                <p className="mt-1 text-sm text-[#6B7280]">
+                  Public cards can appear in idea galleries. Premium members can keep drafts private.
+                </p>
+              </div>
+              <Switch
+                checked={!isPrivateCard}
+                onCheckedChange={(checked) => {
+                  if (checked || isPremiumUser) {
+                    setIsPrivateCard(!checked)
+                    return
+                  }
+                  setIsPremiumModalOpen(true)
+                }}
+              />
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  )
 
   const renderActionButtons = (mobile = false) => (
     <div className={cn("flex items-center gap-3", mobile && "w-full")}>
@@ -562,34 +819,40 @@ export default function CardGenerator({
   return (
     <>
       <div className="min-h-screen bg-warm-cream pb-28 lg:pb-0">
-        <GlassCard className="mx-auto my-6 max-w-6xl border-white/70 bg-white/90 p-0 shadow-2xl">
-          <div className="grid lg:grid-cols-[minmax(0,1.05fr)_minmax(340px,0.95fr)]">
+        <div className="mx-auto my-6 max-w-6xl overflow-hidden rounded-xl border border-[#F1D6DF] bg-white shadow-xl">
+          <div className="grid lg:grid-cols-[minmax(0,1.02fr)_minmax(340px,0.98fr)]">
             <section className="p-5 sm:p-6 lg:p-8">
               <div className="space-y-6">
-                <div className="space-y-4 rounded-[28px] border border-orange-100/70 bg-white/70 p-5 shadow-sm backdrop-blur">
+                <div className="space-y-4 border-b border-[#F1D6DF] pb-6">
                   <div className="space-y-3">
-                    <div className="flex flex-wrap items-center gap-2 text-xs uppercase tracking-[0.18em] text-orange-700">
-                      <span className="rounded-full bg-orange-50 px-3 py-1 font-semibold">
+                    <div className="flex flex-wrap items-center gap-2 text-xs uppercase tracking-[0.18em] text-primary">
+                      <span className="rounded-full bg-primary/10 px-3 py-1 font-semibold">
                         Step {currentStep} of {TOTAL_STEPS}
                       </span>
                     </div>
                     <div>
-                      <h1 className="text-2xl font-serif font-semibold text-gray-900 sm:text-3xl">
+                      <HeadingTag className="font-serif text-3xl font-semibold text-[#202A3D] sm:text-4xl">
                         {generatorTitle}
-                      </h1>
+                      </HeadingTag>
+                      <h3 className="mt-4 text-xl font-semibold text-[#202A3D]">
+                        {currentStepMeta.title}
+                      </h3>
+                      <p className="mt-2 text-sm leading-6 text-[#6B7280]">
+                        {currentStepMeta.description}
+                      </p>
                     </div>
                   </div>
 
-                  <div className="h-2 w-full overflow-hidden rounded-full bg-gray-100">
+                  <div className="h-2 w-full overflow-hidden rounded-full bg-[#E5DED2]">
                     <div
-                      className="h-full bg-gradient-to-r from-primary to-warm-coral transition-all duration-500 ease-out"
+                      className="h-full bg-primary transition-all duration-500 ease-out"
                       style={{ width: `${(currentStep / TOTAL_STEPS) * 100}%` }}
                     />
                   </div>
 
-                  <div className="flex flex-wrap gap-2 text-xs text-gray-600">
+                  <div className="flex flex-wrap gap-2 text-xs text-[#6B7280]">
                     {(prefilledValues.recipientName || prefilledValues.relationship) && (
-                      <span className="rounded-full bg-white px-3 py-1 font-medium text-gray-700">
+                      <span className="rounded-full bg-[#FFF8F6] px-3 py-1 font-medium text-[#202A3D]">
                         Prefilled for {prefilledValues.recipientName || 'your recipient'}
                         {prefilledValues.relationship ? ` • ${prefilledValues.relationship}` : ''}
                       </span>
@@ -611,288 +874,43 @@ export default function CardGenerator({
                   </Alert>
                 )}
 
-                {currentStep === 1 && (
-                  <div className="space-y-6 animate-in slide-in-from-right-4 duration-300">
-                    <div className="space-y-3">
-                      <Label className="text-lg font-bold text-gray-800">Choose format</Label>
-                      <Tabs value={selectedFormat} onValueChange={(v) => setSelectedFormat(v as OutputFormat)} className="w-full">
-                        <TabsList className="grid h-14 w-full grid-cols-3 rounded-2xl bg-orange-50/70 p-1">
-                          <TabsTrigger value="svg" className="rounded-xl h-12 data-[state=active]:bg-white data-[state=active]:shadow-warm">Animated</TabsTrigger>
-                          <TabsTrigger value="image" className="rounded-xl h-12 data-[state=active]:bg-white data-[state=active]:shadow-warm">Image</TabsTrigger>
-                          <TabsTrigger value="video" className="rounded-xl h-12 data-[state=active]:bg-white data-[state=active]:shadow-warm">Video</TabsTrigger>
-                        </TabsList>
-                      </Tabs>
-                      <p className="text-sm text-gray-500">
-                        Pick the output that best matches how you want to send this card.
-                      </p>
-                    </div>
-
-                    <div className="space-y-3">
-                      <Label className="text-lg font-bold text-gray-800">Card occasion</Label>
-                      <CustomSelect
-                        value={currentCardType}
-                        onValueChange={(val: string) => setCurrentCardType(val as CardType)}
-                        customValue={customValues['cardType'] || ''}
-                        onCustomValueChange={(val: string) => setCustomValues(prev=>({...prev, cardType: val}))}
-                        options={cardTypeOptions}
-                        placeholder="Select occasion"
-                        label="Occasion"
-                      />
-                    </div>
-
-                    <div className="space-y-3">
-                      <Label className="text-lg font-bold text-gray-800">Quality tier</Label>
-                      <div className="grid gap-3">
-                        <button
-                          type="button"
-                          onClick={() => setSelectedTier('base')}
-                          className={cn(
-                            "rounded-2xl border-2 p-4 text-left transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30",
-                            selectedTier === 'base' ? "border-primary bg-primary/5" : "border-transparent bg-gray-50 hover:bg-gray-100"
-                          )}
-                        >
-                          <div className="flex items-start justify-between gap-4">
-                            <div>
-                              <div className="font-bold text-gray-800">{qualityOptions.base.name}</div>
-                              <div className="mt-1 text-sm text-gray-500">{qualityOptions.base.time} • Faster first draft</div>
-                            </div>
-                            {selectedTier === 'base' && <Check className="h-5 w-5 text-primary" />}
-                          </div>
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => {
-                            if (!qualityOptions.pro) return
-                            setSelectedTier('pro')
-                          }}
-                          disabled={!qualityOptions.pro}
-                          className={cn(
-                            "rounded-2xl border-2 p-4 text-left transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30",
-                            selectedTier === 'pro' ? "border-primary bg-primary/5" : "border-transparent bg-gray-50 hover:bg-gray-100",
-                            !qualityOptions.pro && "cursor-not-allowed opacity-55"
-                          )}
-                        >
-                          <div className="flex items-start justify-between gap-4">
-                            <div>
-                              <div className="flex items-center font-bold text-gray-800">
-                                {qualityOptions.pro?.name || "Pro"}
-                                <Crown className="ml-1 h-3.5 w-3.5 text-amber-500" />
-                              </div>
-                              <div className="mt-1 text-sm text-gray-500">
-                                {qualityOptions.pro?.time || "Premium only"} • Highest quality output
-                              </div>
-                            </div>
-                            {selectedTier === 'pro' && <Check className="h-5 w-5 text-primary" />}
-                          </div>
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {currentStep === 2 && (
-                  <div className="space-y-6 animate-in slide-in-from-right-4 duration-300">
-                    <div>
-                      <h3 className="text-xl font-semibold text-gray-900">Recipient details</h3>
-                      <p className="mt-2 text-sm leading-6 text-gray-600">
-                        These details shape the tone, message, and examples the generator uses.
-                      </p>
-                    </div>
-                    <div className="grid gap-5">
-                      {['to', 'relationship', 'recipientName', 'age'].map(fieldName => {
-                        const field = cardConfig.fields.find(f => f.name === fieldName);
-                        return field ? renderField(field) : null;
-                      })}
-                    </div>
-                  </div>
-                )}
-
-                {currentStep === 3 && (
-                  <div className="space-y-6 animate-in slide-in-from-right-4 duration-300">
-                    <div>
-                      <h3 className="text-xl font-semibold text-gray-900">Message and finishing touches</h3>
-                      <p className="mt-2 text-sm leading-6 text-gray-600">
-                        Write the core message first. Open advanced options only if you want extra art direction.
-                      </p>
-                    </div>
-
-                    <div className="grid gap-5">
-                      {['message', 'tone', 'language', 'signed'].map(fieldName => {
-                        const field = cardConfig.fields.find(f => f.name === fieldName);
-                        if (!field && fieldName === 'message') return (
-                          <div key="message" className="space-y-2">
-                            <Label className="font-medium text-gray-700">Message</Label>
-                            <Textarea
-                              value={formData['message'] || ''}
-                              onChange={e=>handleInputChange('message', e.target.value)}
-                              placeholder="Describe what you want to say..."
-                              className="min-h-[140px] resize-none border-orange-100/60 bg-white/70 text-base"
-                            />
-                          </div>
-                        );
-                        if (!field && fieldName === 'signed') return (
-                          <div key="signed" className="space-y-2">
-                            <Label className="font-medium text-gray-700">Signed (optional)</Label>
-                            <Input
-                              value={formData['signed'] || ''}
-                              onChange={e=>handleInputChange('signed', e.target.value)}
-                              placeholder="e.g. Your Bestie"
-                              className="h-12 border-orange-100/60 bg-white/70"
-                            />
-                          </div>
-                        )
-                        return field ? renderField(field) : null;
-                      })}
-                    </div>
-
-                    <div className="overflow-hidden rounded-[24px] border border-orange-100/70 bg-orange-50/50">
-                      <button
-                        type="button"
-                        onClick={() => setShowAdvancedOptions((open) => !open)}
-                        className="flex w-full items-start justify-between gap-4 px-5 py-4 text-left transition-colors hover:bg-orange-50/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
-                      >
-                        <div>
-                          <div className="text-sm font-semibold uppercase tracking-[0.18em] text-orange-700">
-                            Advanced options
-                          </div>
-                          <div className="mt-1 text-base font-semibold text-gray-900">
-                            Style, reference image, and gallery visibility
-                          </div>
-                          <p className="mt-1 text-sm text-gray-600">
-                            Optional controls for extra direction. Skip this if you want the fastest path.
-                          </p>
-                        </div>
-                        <ChevronDown className={cn("mt-1 h-5 w-5 text-gray-500 transition-transform", showAdvancedOptions && "rotate-180")} />
-                      </button>
-
-                      {showAdvancedOptions && (
-                        <div className="space-y-5 border-t border-orange-100/70 px-5 py-5">
-                          {selectedFormat === 'image' && (
-                            <button
-                              type="button"
-                              className="flex w-full items-center justify-between rounded-2xl border border-purple-100 bg-white/85 p-4 text-left transition-colors hover:bg-white"
-                              onClick={() => setStyleDialogOpen(true)}
-                            >
-                              <div className="flex items-center gap-3">
-                                <div className="rounded-xl bg-purple-100 p-2 text-purple-600">
-                                  <Wand2 size={18} />
-                                </div>
-                                <div>
-                                  <div className="font-bold text-gray-700">Visual style</div>
-                                  <div className="text-xs text-gray-500">
-                                    {selectedStyleId ? stylePresets.find(s=>s.id===selectedStyleId)?.name : 'Auto (smart choice)'}
-                                  </div>
-                                </div>
-                              </div>
-                              <ChevronRight className="text-gray-400" />
-                            </button>
-                          )}
-
-                          {renderField({
-                            name: 'design',
-                            label: 'Art direction',
-                            type: 'select',
-                            optional: true,
-                            options: ['Pastel', 'Vibrant', 'Minimalist', 'Watercolor']
-                          } as any)}
-
-                          {selectedFormat !== 'svg' && (
-                            <div className="space-y-2">
-                              <Label className="font-medium text-gray-700">Reference image (optional)</Label>
-                              <button
-                                type="button"
-                                className={cn(
-                                  "w-full rounded-2xl border-2 border-dashed border-gray-200 bg-white/70 p-6 text-center transition-colors hover:border-primary/50",
-                                  uploadedRefUrls.length > 0 && "border-primary bg-primary/5"
-                                )}
-                                onClick={() => refPhotoInputRef.current?.click()}
-                              >
-                                <input
-                                  ref={refPhotoInputRef}
-                                  type="file"
-                                  className="hidden"
-                                  onChange={handleReferenceUpload}
-                                />
-                                {isRefUploading ? (
-                                  <Loader2 className="mx-auto h-5 w-5 animate-spin text-primary" />
-                                ) : uploadedRefUrls.length ? (
-                                  <>
-                                    {/* Uploaded URLs may come from arbitrary storage locations. */}
-                                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                                    <img src={uploadedRefUrls[0]} alt="Reference upload preview" className="mx-auto h-20 rounded object-contain" />
-                                    <div className="mt-3 text-sm font-medium text-gray-700">Tap to replace reference image</div>
-                                  </>
-                                ) : (
-                                  <div className="space-y-2">
-                                    <div className="text-sm font-medium text-gray-700">Upload a reference image</div>
-                                    <div className="text-xs text-gray-500">Useful for matching a person, palette, or mood.</div>
-                                  </div>
-                                )}
-                              </button>
-                            </div>
-                          )}
-
-                          <div className="flex items-center justify-between rounded-2xl border border-gray-200 bg-white/85 p-4">
-                            <div className="pr-4">
-                              <div className="flex items-center gap-2 font-semibold text-gray-800">
-                                Public gallery visibility
-                                {!isPremiumUser && <Crown size={14} className="text-amber-500" />}
-                              </div>
-                              <p className="mt-1 text-sm text-gray-500">
-                                Public cards can appear in idea galleries. Premium members can keep drafts private.
-                              </p>
-                            </div>
-                            <Switch
-                              checked={!isPrivateCard}
-                              onCheckedChange={(checked) => {
-                                if (checked || isPremiumUser) {
-                                  setIsPrivateCard(!checked)
-                                  return
-                                }
-                                setIsPremiumModalOpen(true)
-                              }}
-                            />
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
+                {currentStep === 1 && renderRecipientFields()}
+                {currentStep === 2 && renderMessageFields()}
+                {currentStep === 3 && renderFormatFields()}
 
                 <div className="hidden lg:block">
                   {renderActionButtons()}
-                  <p className="mt-3 text-sm text-gray-500">
+                  <p className="mt-3 text-sm text-[#6B7280]">
                     When your draft is ready, you can keep refining it, then share or download the final version.
                   </p>
                 </div>
               </div>
             </section>
 
-            <aside className="border-t border-gray-100 bg-gradient-to-br from-orange-50/50 via-white to-rose-50/70 p-5 sm:p-6 lg:border-l lg:border-t-0 lg:p-8">
+            <aside className="border-t border-[#F1D6DF] bg-[#FFF8F6] p-5 sm:p-6 lg:border-l lg:border-t-0 lg:p-8">
               <div className="space-y-5 lg:sticky lg:top-24">
                 <div className="flex items-center justify-between gap-4">
                   <div>
-                    <div className="text-sm font-semibold uppercase tracking-[0.18em] text-orange-700">
+                    <div className="text-sm font-semibold uppercase tracking-[0.18em] text-primary">
                       Preview
                     </div>
-                    <div className="mt-1 text-base font-semibold text-gray-900">
+                    <div className="mt-1 text-base font-semibold text-[#202A3D]">
                       Stable card preview
                     </div>
-                    <p className="mt-1 text-sm text-gray-600">
+                    <p className="mt-1 text-sm text-[#6B7280]">
                       The preview stays out of the way while you fill the form, then updates here.
                     </p>
                   </div>
                   <button
                     type="button"
                     onClick={() => setShowMobilePreview((open) => !open)}
-                    className="inline-flex h-10 items-center rounded-full border border-orange-200 bg-white px-4 text-sm font-semibold text-orange-800 transition-colors hover:bg-orange-50 lg:hidden"
+                    className="inline-flex min-h-[44px] items-center rounded-lg border border-[#F1D6DF] bg-white px-4 text-sm font-semibold text-primary transition-colors hover:bg-primary/10 lg:hidden"
                   >
                     {shouldRenderPreview ? 'Hide preview' : 'Show preview'}
                   </button>
                 </div>
 
-                <div className={cn(!shouldRenderPreview && "hidden lg:block", "rounded-[28px] border border-white/80 bg-white/80 p-4 shadow-xl")}>
+                <div className={cn(!shouldRenderPreview && "hidden lg:block", "rounded-xl border border-[#F1D6DF] bg-white p-4 shadow-lg")}>
                   <div className="flex min-h-[300px] flex-col items-center justify-center">
                     {imageStates[0]?.isLoading ? (
                       <div className="relative aspect-[2/3] w-full max-w-sm overflow-hidden rounded-2xl shadow-2xl">
@@ -936,28 +954,28 @@ export default function CardGenerator({
                 </div>
 
                 {!shouldRenderPreview && (
-                  <div className="rounded-[24px] border border-dashed border-orange-200 bg-white/70 p-5 text-sm text-gray-600 lg:hidden">
+                  <div className="rounded-xl border border-dashed border-[#F1D6DF] bg-white p-5 text-sm text-[#6B7280] lg:hidden">
                     Preview is tucked below the fold until you need it, so you can stay focused on the form.
                   </div>
                 )}
 
-                <div className="rounded-[24px] border border-orange-100/70 bg-white/80 p-4 text-sm text-gray-600 shadow-sm">
-                  <div className="font-semibold text-gray-800">What happens next</div>
+                <div className="rounded-xl border border-[#F1D6DF] bg-white p-4 text-sm text-[#6B7280] shadow-sm">
+                  <div className="font-semibold text-[#202A3D]">What happens next</div>
                   <ul className="mt-3 space-y-2">
-                    <li>1. Finish the form and click the primary action.</li>
-                    <li>2. Your first draft is generated in the preview panel.</li>
-                    <li>3. Keep editing, then share or download the final version.</li>
+                    <li>1. Add recipient and occasion context.</li>
+                    <li>2. Write the message and tone.</li>
+                    <li>3. Pick the format, then generate and share.</li>
                   </ul>
                 </div>
               </div>
             </aside>
           </div>
-        </GlassCard>
+        </div>
 
-        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-orange-100/80 bg-white/92 backdrop-blur-xl lg:hidden">
+        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-[#F1D6DF] bg-white/95 backdrop-blur-xl lg:hidden">
             <div className="mx-auto max-w-6xl px-4 py-3">
-            <div className="mb-2 flex items-center justify-between gap-4 text-xs font-medium text-gray-600">
-              <span>Step {currentStep} of {TOTAL_STEPS}</span>
+            <div className="mb-2 flex items-center justify-between gap-4 text-xs font-medium text-[#6B7280]">
+              <span>Step {currentStep} of {TOTAL_STEPS}: {currentStepMeta.title}</span>
             </div>
             {renderActionButtons(true)}
           </div>

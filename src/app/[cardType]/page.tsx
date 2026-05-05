@@ -1,7 +1,9 @@
-import { notFound } from "next/navigation";
+import Link from "next/link";
+import { notFound, permanentRedirect } from "next/navigation";
 import { Suspense } from "react";
 import { Metadata } from "next/types";
 import { getCardConfig, getAllCardTypes } from "@/lib/card-config";
+import { getCuratedGeneratorSitemapSlugs } from "@/lib/generator-seo";
 import CardTypeBubbles from "@/components/CardTypeBubbles";
 import CardGenerator from "@/components/CardGenerator";
 import SimpleCardGallery from '@/app/card-gallery/SimpleCardGallery'
@@ -25,6 +27,7 @@ import {
     buildItemListSchema,
     buildSoftwareApplicationSchema,
     buildWebPageSchema,
+    toAbsoluteUrl,
 } from "@/lib/seo";
 
 import {
@@ -47,9 +50,14 @@ function getBaseCardName(label: string) {
 // Generate static params for all card types at build time
 export async function generateStaticParams() {
     const cardTypes = await getAllCardTypes();
-    return cardTypes.map((cardType) => ({
+    const officialParams = cardTypes.map((cardType) => ({
         cardType: cardType.type,
     }));
+    const curatedParams = getCuratedGeneratorSitemapSlugs().map((cardType) => ({
+        cardType,
+    }));
+
+    return [...officialParams, ...curatedParams];
 }
 
 // Force static page generation
@@ -64,48 +72,38 @@ export async function generateMetadata({ params }: CardGeneratorPageProps): Prom
         return notFound();
     }
 
-    const baseCardName = getBaseCardName(cardConfig.label);
-    const cardKeywordTitle = `${baseCardName} Card`;
     const imageUrl = `https://mewtrucard.com/mewtrucard-generator.jpg`;
-    const isBirthdayPage = cardType === 'birthday';
-    const description = isBirthdayPage
-        ? `Create an online birthday card, personalize the message, and share it by link or download it with MewTruCard in minutes.`
-        : `Create a personalized ${cardKeywordTitle.toLowerCase()}, edit the message, and share or download it with MewTruCard.`;
-    const title = isBirthdayPage
-        ? `Birthday Card Maker | Create & Share Online - MewTruCard`
-        : `${cardKeywordTitle} Generator | Create & Share Online - MewTruCard`;
-    const socialTitle = isBirthdayPage
-        ? `Birthday Card Maker | MewTruCard`
-        : `${cardKeywordTitle} Generator | MewTruCard`;
+    const canonical = toAbsoluteUrl(cardConfig.curatedCanonical);
+    const shouldIndex = cardConfig.indexPolicy === "index";
 
     return {
-        title,
-        description,
-        robots: cardConfig.isSystem
+        title: cardConfig.seoTitle,
+        description: cardConfig.seoDescription,
+        robots: shouldIndex
             ? undefined
             : {
                 index: false,
                 follow: true,
             },
         alternates: {
-            canonical: `https://mewtrucard.com/${cardType}/`,
+            canonical,
         },
         openGraph: {
-            title: socialTitle,
-            description,
+            title: cardConfig.seoH1,
+            description: cardConfig.seoDescription,
             images: [{
                 url: imageUrl,
                 width: 1200,
                 height: 630,
-                alt: `${cardKeywordTitle} generator preview`
+                alt: `${cardConfig.seoH1} preview`
             }],
             type: 'website',
-            url: `https://mewtrucard.com/${cardType}/`,
+            url: canonical,
         },
         twitter: {
             card: 'summary_large_image',
-            title: socialTitle,
-            description,
+            title: cardConfig.seoH1,
+            description: cardConfig.seoDescription,
             images: [imageUrl],
         },
     };
@@ -120,15 +118,17 @@ export default async function CardGeneratorPage({ params }: CardGeneratorPagePro
         notFound();
     }
 
+    if (cardConfig.indexPolicy === "redirect") {
+        permanentRedirect(cardConfig.curatedCanonical);
+    }
+
     const baseCardName = getBaseCardName(cardConfig.label);
     const cardKeywordTitle = `${baseCardName} Card`;
     const cardKeywordLower = cardKeywordTitle.toLowerCase();
     const cardKeywordPluralLower = `${baseCardName} cards`.toLowerCase();
     const isBirthdayPage = cardType === 'birthday';
-    const generatorDescription = isBirthdayPage
-        ? `Create an online birthday card, personalize the message, and share it by link or download in minutes.`
-        : `Create a personalized ${cardKeywordLower}, customize the message, and share it instantly.`;
-    const generatorName = isBirthdayPage ? "Birthday Card Maker" : `AI ${cardKeywordTitle} Generator`;
+    const generatorDescription = cardConfig.seoDescription;
+    const generatorName = cardConfig.seoH1;
     // Get initial cards data
     let initialCardsData: { cards: Card[]; totalPages: number } = { cards: [], totalPages: 0 };
     try {
@@ -138,7 +138,9 @@ export default async function CardGeneratorPage({ params }: CardGeneratorPagePro
     }
 
     // Prepare JSON-LD structured data
-    const imageUrl = `https://store.celeprime.com/${cardType}.svg`;
+    const imageUrl = cardConfig.isSystem
+        ? `https://store.celeprime.com/${cardType}.svg`
+        : `https://mewtrucard.com/mewtrucard-generator.jpg`;
     const comboLinks = getSeoRelationshipsForType(cardType).slice(0, 6).map((relationship) => ({
         href: getGalleryComboHref(cardType, relationship),
         title: `${cardKeywordTitle} Ideas for ${getRelationshipLabel(relationship)}`,
@@ -151,7 +153,7 @@ export default async function CardGeneratorPage({ params }: CardGeneratorPagePro
     }));
     const trustGuide = getGeneratorTrustGuide(cardType, cardKeywordTitle);
     const trustLinks = getTrustHubRelatedLinks(cardType);
-    const faqEntries = [
+    const defaultFaqEntries = [
         {
             question: `What does the free plan include for MewTruCard ${cardKeywordPluralLower}?`,
             answer:
@@ -173,14 +175,20 @@ export default async function CardGeneratorPage({ params }: CardGeneratorPagePro
                 "You can share a direct card link, download the finished card, or use a surprise-link page when the moment benefits from a playful reveal first.",
         },
     ];
+    const faqEntries = cardConfig.seoFaqs?.length ? cardConfig.seoFaqs : defaultFaqEntries;
+    const seoSchemaLinks = cardConfig.seoLinks.map((link) => ({
+        href: link.href,
+        label: link.label,
+        description: link.description,
+    }));
 
     return (
-        <main className="min-h-screen bg-gradient-to-b from-warm-cream via-rose-50 to-white">
+        <main className="min-h-screen bg-warm-cream text-[#202A3D]">
             <JsonLd
                 data={buildSoftwareApplicationSchema({
                     name: generatorName,
                     description: generatorDescription,
-                    path: `/${cardType}/`,
+                    path: cardConfig.curatedCanonical,
                     image: imageUrl,
                 })}
             />
@@ -188,32 +196,67 @@ export default async function CardGeneratorPage({ params }: CardGeneratorPagePro
                 data={buildBreadcrumbSchema([
                     { name: "Home", href: "/" },
                     { name: "Cards", href: "/cards/" },
-                    { name: generatorName, href: `/${cardType}/` },
+                    { name: generatorName, href: cardConfig.curatedCanonical },
                 ])}
             />
             <JsonLd
                 data={buildWebPageSchema({
                     name: generatorName,
                     description: generatorDescription,
-                    path: `/${cardType}/`,
+                    path: cardConfig.curatedCanonical,
                     reviewedBy: trustGuide.reviewedBy,
                     lastReviewed: trustGuide.lastReviewed,
-                    about: [cardKeywordTitle, "AI greeting card generator", "personalized card maker"],
+                    about: [cardConfig.primaryIntent, cardKeywordTitle, "AI greeting card generator", "personalized card maker"],
                 })}
             />
             <JsonLd data={buildFaqSchema(faqEntries)} />
             {comboLinks.length > 0 && (
                 <JsonLd data={buildItemListSchema(`${cardKeywordTitle} ideas`, comboSchemaLinks)} />
             )}
+            {seoSchemaLinks.length > 0 && (
+                <JsonLd data={buildItemListSchema(`${generatorName} related paths`, seoSchemaLinks)} />
+            )}
+            <div className="relative mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-10 lg:px-8">
+                <section className="mb-10 grid gap-10 border-b border-[#F1D6DF]/70 pb-10 lg:grid-cols-[minmax(0,0.9fr)_minmax(320px,0.55fr)] lg:items-center">
+                    <div>
+                        <p className="text-sm font-semibold uppercase tracking-[0.24em] text-primary">
+                            {cardConfig.primaryIntent}
+                        </p>
+                        <h1 className="mt-4 max-w-4xl font-serif text-5xl font-semibold leading-tight text-[#202A3D] sm:text-6xl">
+                            {cardConfig.seoH1}
+                        </h1>
+                        <p className="mt-5 max-w-2xl text-base leading-7 text-[#6B7280] sm:text-lg">
+                            {cardConfig.seoIntro}
+                        </p>
+                        <div className="mt-7 flex flex-col gap-3 sm:flex-row">
+                            <a
+                                href="#generator"
+                                className="inline-flex min-h-[44px] items-center justify-center rounded-lg bg-primary px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-primary/90 hover:shadow-md"
+                            >
+                                Start creating
+                            </a>
+                            <Link
+                                href="#live-gallery"
+                                className="inline-flex min-h-[44px] items-center justify-center rounded-lg border border-[#F1D6DF] bg-white px-6 py-3 text-sm font-semibold text-[#202A3D] transition hover:-translate-y-0.5 hover:border-primary/30 hover:bg-[#FFF8F6]"
+                            >
+                                Browse ideas first
+                            </Link>
+                        </div>
+                    </div>
+                    <div className="mx-auto w-full max-w-sm rounded-xl border border-[#F1D6DF] bg-white p-4 shadow-xl">
+                        {/* Generator preview may come from remote storage or local public assets. */}
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                            src={imageUrl}
+                            alt={`${cardKeywordTitle} preview`}
+                            width={400}
+                            height={600}
+                            loading="eager"
+                            className="h-auto w-full rounded-lg object-contain"
+                        />
+                    </div>
+                </section>
 
-            {/* Decorative Elements */}
-            <div className="fixed inset-0 overflow-hidden pointer-events-none">
-                <div className="absolute -top-40 -right-40 w-96 h-96 bg-purple-100 rounded-full mix-blend-multiply filter blur-xl opacity-50 animate-blob"></div>
-                <div className="absolute top-0 -left-20 w-72 h-72 bg-pink-100 rounded-full mix-blend-multiply filter blur-xl opacity-50 animate-blob animation-delay-2000"></div>
-                <div className="absolute bottom-0 right-0 w-72 h-72 bg-yellow-100 rounded-full mix-blend-multiply filter blur-xl opacity-50 animate-blob animation-delay-4000"></div>
-            </div>
-
-            <div className="relative container mx-auto px-4 sm:px-6 py-3 sm:py-8">
                 <section id="generator" className="mb-16 scroll-mt-28 sm:mb-24">
                     <Suspense
                         fallback={
@@ -228,13 +271,34 @@ export default async function CardGeneratorPage({ params }: CardGeneratorPagePro
                             initialCardId={''}
                             initialImgUrl={imageUrl}
                             cardConfig={cardConfig}
+                            headingLevel="h2"
                         />
                     </Suspense>
                 </section>
 
+                {cardConfig.seoLinks.length > 0 && (
+                    <section className="mb-16 sm:mb-24">
+                        <p className="mb-3 text-sm font-semibold uppercase tracking-[0.22em] text-primary">
+                            Related paths
+                        </p>
+                        <div className="grid gap-3 md:grid-cols-2">
+                            {cardConfig.seoLinks.map((link) => (
+                                <Link
+                                    key={link.href}
+                                    href={link.href}
+                                    className="rounded-xl border border-[#F1D6DF] bg-white p-5 transition hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-md"
+                                >
+                                    <span className="block text-sm font-bold text-[#202A3D]">{link.label}</span>
+                                    <span className="mt-1 block text-sm leading-6 text-[#6B7280]">{link.description}</span>
+                                </Link>
+                            ))}
+                        </div>
+                    </section>
+                )}
+
                 {/* Templates Section */}
                 <section id="live-gallery" className="text-center mb-16 sm:mb-24 scroll-mt-28">
-                    <p className="mb-3 text-sm font-semibold uppercase tracking-[0.22em] text-orange-700">
+                    <p className="mb-3 text-sm font-semibold uppercase tracking-[0.22em] text-primary">
                         Need ideas before you write?
                     </p>
                     <h2 className="text-3xl sm:text-4xl font-bold text-center mb-4">
@@ -288,54 +352,52 @@ export default async function CardGeneratorPage({ params }: CardGeneratorPagePro
 
                 {/* How to Create Section */}
                 <section className="mb-16 sm:mb-24">
-                    <h2 className="text-3xl sm:text-4xl font-bold text-center mb-4">
-                        <span className="bg-clip-text text-transparent bg-gradient-to-r from-warm-coral to-pink-600">
-                            {isBirthdayPage ? "How to make a birthday card" : `How to make a ${cardKeywordLower}`}
-                        </span>
+                    <h2 className="text-3xl sm:text-4xl font-bold text-center mb-4 text-[#202A3D]">
+                        {isBirthdayPage ? "How to make a birthday card" : `How to make a ${cardKeywordLower}`}
                     </h2>
 
-                    <p className="text-center text-gray-600 max-w-2xl mx-auto mb-12">
+                    <p className="text-center text-[#536361] max-w-2xl mx-auto mb-12">
                         Fill in the recipient details, generate the card, then edit and send it.
                         MewTruCard keeps the path simple so you can move from idea to card link quickly.
                     </p>
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-                        <div className="bg-white p-6 rounded-xl shadow-sm border border-purple-100 flex flex-col items-center text-center relative">
-                            <div className="w-16 h-16 bg-gradient-to-r from-warm-coral to-pink-500 rounded-full flex items-center justify-center mb-4 text-white font-bold text-2xl">
+                        <div className="bg-white p-6 rounded-lg shadow-sm border border-[#F1D6DF] flex flex-col items-center text-center relative">
+                            <div className="w-16 h-16 bg-[#202A3D] rounded-full flex items-center justify-center mb-4 text-white font-bold text-2xl">
                                 1
                             </div>
-                            <h3 className="text-xl font-semibold mb-3 text-gray-800">Choose the setup</h3>
-                            <p className="text-gray-600 mb-4">
-                                Pick the format, card occasion, and quality tier that match how you want to send the final result.
+                            <h3 className="text-xl font-semibold mb-3 text-[#202A3D]">Recipient & occasion</h3>
+                            <p className="text-[#536361] mb-4">
+                                Start with who the card is for, the occasion, and any names or relationship details that make the draft personal.
                             </p>
-                            <div className="text-sm text-purple-600 bg-purple-50 px-3 py-1 rounded-full">
-                                Fast first step
+                            <div className="text-sm text-[#202A3D] bg-[#FFF1F5] px-3 py-1 rounded-full">
+                                Context first
                             </div>
                         </div>
 
-                        <div className="bg-white p-6 rounded-xl shadow-sm border border-purple-100 flex flex-col items-center text-center relative">
-                            <div className="w-16 h-16 bg-gradient-to-r from-warm-coral to-pink-500 rounded-full flex items-center justify-center mb-4 text-white font-bold text-2xl">
+                        <div className="bg-white p-6 rounded-lg shadow-sm border border-[#F1D6DF] flex flex-col items-center text-center relative">
+                            <div className="w-16 h-16 bg-[#B4375F] rounded-full flex items-center justify-center mb-4 text-white font-bold text-2xl">
                                 2
                             </div>
-                            <h3 className="text-xl font-semibold mb-3 text-gray-800">Add recipient and message details</h3>
-                            <p className="text-gray-600 mb-4">
-                                Add the relationship, recipient name, and the message you want to send. This is the part that makes the draft feel personal.
+                            <h3 className="text-xl font-semibold mb-3 text-[#202A3D]">Message & tone</h3>
+                            <p className="text-[#536361] mb-4">
+                                Write the message you want to send, then choose whether it should feel heartfelt, playful, elegant, or romantic.
                             </p>
-                            <div className="text-sm text-purple-600 bg-purple-50 px-3 py-1 rounded-full">
-                                Personal context first
+                            <div className="text-sm text-[#8A2D4C] bg-[#FFF1F5] px-3 py-1 rounded-full">
+                                Clear writing direction
                             </div>
                         </div>
 
-                        <div className="bg-white p-6 rounded-xl shadow-sm border border-purple-100 flex flex-col items-center text-center relative">
-                            <div className="w-16 h-16 bg-gradient-to-r from-warm-coral to-pink-500 rounded-full flex items-center justify-center mb-4 text-white font-bold text-2xl">
+                        <div className="bg-white p-6 rounded-lg shadow-sm border border-[#F1D6DF] flex flex-col items-center text-center relative">
+                            <div className="w-16 h-16 bg-[#E5B72E] rounded-full flex items-center justify-center mb-4 text-white font-bold text-2xl">
                                 3
                             </div>
-                            <h3 className="text-xl font-semibold mb-3 text-gray-800">Generate, review, and share</h3>
-                            <p className="text-gray-600 mb-4">
-                                Open advanced options only if you need extra control, then generate the card, review the preview, and keep editing before you share.
+                            <h3 className="text-xl font-semibold mb-3 text-[#202A3D]">Format, style & sharing</h3>
+                            <p className="text-[#536361] mb-4">
+                                Choose the card format and quality tier only after the message is clear, then generate, edit, copy, download, or share.
                             </p>
-                            <div className="text-sm text-purple-600 bg-purple-50 px-3 py-1 rounded-full">
-                                Ready in 10-30 seconds
+                            <div className="text-sm text-[#70510F] bg-[#FFF8E1] px-3 py-1 rounded-full">
+                                Share-ready output
                             </div>
                         </div>
                     </div>
@@ -385,7 +447,7 @@ export default async function CardGeneratorPage({ params }: CardGeneratorPagePro
                             ))}
                         </div>
 
-                        <div className="bg-gradient-to-r from-orange-50 to-pink-50 p-8 rounded-xl max-w-4xl mx-auto">
+                        <div className="bg-gradient-to-r from-pink-50 via-white to-purple-50 p-8 rounded-xl max-w-4xl mx-auto">
                             <div className="text-center">
                                 <h3 className="text-xl font-semibold mb-4 text-gray-800">
                                     What you can do after generation

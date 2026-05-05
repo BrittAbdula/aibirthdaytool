@@ -19,7 +19,7 @@ export default function DiscoveryPanel({
   return (
     <GlassCard className="h-full border-white/60 bg-white/75 p-6 sm:p-7">
       <div className="mb-5 flex items-center gap-3">
-        <div className="rounded-2xl bg-orange-50 p-3 text-primary ring-1 ring-orange-100">
+        <div className="rounded-2xl bg-pink-50 p-3 text-primary ring-1 ring-pink-100">
           {icon}
         </div>
         <div>
@@ -33,7 +33,7 @@ export default function DiscoveryPanel({
           <Link
             key={link.href}
             href={link.href}
-            className="group flex items-start justify-between gap-4 rounded-2xl border border-orange-100/80 bg-white/80 px-4 py-4 transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/20 hover:bg-orange-50/80"
+            className="group flex items-start justify-between gap-4 rounded-2xl border border-pink-100/80 bg-white/80 px-4 py-4 transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/20 hover:bg-pink-50/80"
           >
             <div>
               <div className="font-semibold text-gray-800 transition-colors group-hover:text-primary">

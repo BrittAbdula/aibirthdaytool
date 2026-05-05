@@ -1,10 +1,11 @@
 import { MetadataRoute } from 'next'
 import { CARD_TYPES, RELATIONSHIPS } from '@/lib/card-constants'
+import { getCuratedGeneratorSitemapSlugs } from '@/lib/generator-seo'
 import { getGalleryComboStaticParams } from '@/lib/gallery-combos'
 import { VIRAL_MICROSITES } from '@/lib/viral-microsites'
 
 function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://mewtrucard.com/'
+  const baseUrl = `${(process.env.NEXT_PUBLIC_BASE_URL || 'https://mewtrucard.com').replace(/\/$/, '')}/`
   const currentDate = new Date()
 
   // Base routes
@@ -76,6 +77,13 @@ function sitemap(): MetadataRoute.Sitemap {
     priority: 0.7,
   }))
 
+  const curatedGeneratorRoutes = getCuratedGeneratorSitemapSlugs().map(slug => ({
+    url: `${baseUrl}${slug}/`,
+    lastModified: currentDate,
+    changeFrequency: 'weekly' as const,
+    priority: 0.65,
+  }))
+
   const comboRoutes = getGalleryComboStaticParams().map((combo) => ({
     url: `${baseUrl}type/${combo.type}/for/${combo.relationship}/`,
     lastModified: currentDate,
@@ -95,6 +103,7 @@ function sitemap(): MetadataRoute.Sitemap {
     ...cardTypeRoutes,
     ...relationshipRoutes,
     ...generatorRoutes,
+    ...curatedGeneratorRoutes,
     ...comboRoutes,
     ...viralMicrositeRoutes,
   ] satisfies MetadataRoute.Sitemap

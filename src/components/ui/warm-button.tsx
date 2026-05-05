@@ -4,22 +4,22 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center whitespace-nowrap rounded-2xl text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 active:scale-95 touch-manipulation min-h-[44px]",
+  "inline-flex min-h-[44px] touch-manipulation items-center justify-center whitespace-nowrap rounded-lg text-sm font-semibold ring-offset-background transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 active:scale-[0.98]",
   {
     variants: {
       variant: {
-        default: "bg-gradient-to-r from-[#FF6B6B] to-[#FF8E53] text-white shadow-md hover:shadow-lg hover:brightness-110 border border-transparent",
-        secondary: "bg-[#FFF8F0] text-[#2D2D2D] border border-orange-100 hover:bg-white hover:shadow-md",
-        outline: "border-2 border-[#FF6B6B] bg-transparent text-[#FF6B6B] hover:bg-[#FF6B6B]/10",
-        ghost: "hover:bg-orange-50 text-[#5A5A5A] hover:text-[#2D2D2D]",
-        link: "text-[#FF6B6B] underline-offset-4 hover:underline",
-        warm: "bg-gradient-to-r from-yellow-400 to-orange-500 text-white shadow-warm hover:shadow-warm-lg hover:-translate-y-0.5",
-        soft: "bg-[#FFEEE4] text-[#FF6B6B] hover:bg-[#FFDCC9]",
+        default: "border border-transparent bg-primary text-white shadow-sm hover:-translate-y-0.5 hover:bg-primary/90 hover:shadow-md",
+        secondary: "border border-[#F1D6DF] bg-white text-[#202A3D] hover:-translate-y-0.5 hover:border-primary/35 hover:bg-[#FFF1F5] hover:shadow-sm",
+        outline: "border border-primary bg-transparent text-primary hover:bg-primary/10",
+        ghost: "text-[#525B70] hover:bg-primary/10 hover:text-primary",
+        link: "text-primary underline-offset-4 hover:underline",
+        warm: "border border-transparent bg-warm-coral text-white shadow-sm hover:-translate-y-0.5 hover:bg-warm-coral/90 hover:shadow-md",
+        soft: "bg-[#FFF1F5] text-[#8A2D4C] hover:bg-[#FAD5E0]",
       },
       size: {
         default: "h-11 px-6 py-2",
-        sm: "h-9 rounded-xl px-4",
-        lg: "h-14 rounded-3xl px-10 text-lg",
+        sm: "h-10 px-4",
+        lg: "h-14 px-8 text-base",
         icon: "h-11 w-11",
       },
       animation: {
