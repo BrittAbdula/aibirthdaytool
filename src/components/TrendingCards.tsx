@@ -79,7 +79,7 @@ const CardImage = ({ images, title }: { images: string[], title: string }) => {
   }, [images.length])
 
   return (
-    <div className="relative w-full pb-[133.33%] mb-3 overflow-hidden rounded-xl bg-white shadow-sm border border-orange-50">
+    <div className="relative w-full pb-[133.33%] mb-3 overflow-hidden rounded-xl bg-white shadow-sm border border-pink-50">
       <div className={`absolute inset-0 transition-opacity duration-300 ease-in-out ${
         isTransitioning ? 'opacity-0' : 'opacity-100'
       }`}>
@@ -119,14 +119,14 @@ export const TrendingCards = () => {
         <div className="hidden md:flex gap-2">
           <button 
             onClick={() => scroll('left')}
-            className="p-2 rounded-full border border-orange-100 bg-white hover:bg-orange-50 text-gray-600 hover:text-primary transition-colors focus:outline-none"
+            className="p-2 rounded-full border border-pink-100 bg-white hover:bg-pink-50 text-gray-600 hover:text-primary transition-colors focus:outline-none"
             aria-label="Scroll left"
           >
             <ChevronLeft className="w-5 h-5" />
           </button>
           <button 
             onClick={() => scroll('right')}
-            className="p-2 rounded-full border border-orange-100 bg-white hover:bg-orange-50 text-gray-600 hover:text-primary transition-colors focus:outline-none"
+            className="p-2 rounded-full border border-pink-100 bg-white hover:bg-pink-50 text-gray-600 hover:text-primary transition-colors focus:outline-none"
             aria-label="Scroll right"
           >
             <ChevronRight className="w-5 h-5" />
@@ -142,7 +142,7 @@ export const TrendingCards = () => {
         <div className="flex space-x-6 min-w-max px-4">
           {trendingCards.map((card, index) => (
             <Link href={card.link} key={index} className="group flex-shrink-0 w-64 md:w-72">
-              <div className="bg-white/60 backdrop-blur-sm rounded-2xl p-4 border border-white/50 hover:border-orange-200 transition-all duration-300 hover:shadow-warm hover:-translate-y-1">
+              <div className="bg-white/60 backdrop-blur-sm rounded-2xl p-4 border border-white/50 hover:border-pink-200 transition-all duration-300 hover:shadow-warm hover:-translate-y-1">
                 <CardImage images={card.images} title={card.title} />
                 <p className="text-center font-caveat font-bold text-xl text-gray-700 group-hover:text-primary transition-colors">{card.title} Card</p>
               </div>

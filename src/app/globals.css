@@ -4,60 +4,63 @@
 
 @layer base {
     :root {
-        /* Warm & Natural Palette - Light Mode */
-        --warm-cream: 29 80% 97%;
-        /* #FFF8F0 */
-        --warm-peach: 22 100% 95%;
-        /* #FFEEE4 */
-        --warm-coral: 5 100% 75%;
-        /* #FF8A80 */
-        --warm-rose: 8 100% 83%;
-        /* #FFB4A8 */
-        --warm-gold: 48 100% 50%;
-        /* #FFD700 */
+        --warm-cream: 13 100% 98%;
+        /* #FFF8F6 Paper cream */
+        --warm-peach: 344 100% 95%;
+        /* #FFE8F0 Envelope blush */
+        --warm-coral: 342 53% 46%;
+        /* #B4375F Logo rose */
+        --warm-rose: 345 82% 85%;
+        /* #F8B7C7 Envelope pink */
+        --warm-gold: 43 78% 53%;
+        /* #E5B72E Sparkle gold */
+        --brand-lavender: 250 100% 82%;
+        /* #B1A0FF Logo lavender */
+        --brand-ink: 220 31% 18%;
+        /* #202A3D Wordmark ink */
 
-        --background: 29 80% 97%;
-        /* #FFF8F0 */
-        --foreground: 0 0% 18%;
-        /* #2D2D2D */
+        --background: 13 100% 98%;
+        /* #FFF8F6 */
+        --foreground: 220 31% 18%;
+        /* #202A3D */
 
         --card: 0 0% 100%;
-        --card-foreground: 0 0% 18%;
+        --card-foreground: 220 31% 18%;
 
         --popover: 0 0% 100%;
-        --popover-foreground: 0 0% 18%;
+        --popover-foreground: 220 31% 18%;
 
-        --primary: 5 95% 72%;
-        /* #FF7074 Warm Coral/Pink */
+        --primary: 342 53% 46%;
+        /* #B4375F Logo rose */
         --primary-foreground: 0 0% 100%;
 
-        --secondary: 22 100% 95%;
-        /* #FFEEE4 Warm Peach */
-        --secondary-foreground: 0 0% 18%;
+        --secondary: 344 100% 95%;
+        /* #FFE8F0 Envelope blush */
+        --secondary-foreground: 220 31% 18%;
 
-        --muted: 29 30% 95%;
-        --muted-foreground: 0 0% 45%;
+        --muted: 344 52% 94%;
+        --muted-foreground: 223 12% 42%;
 
-        --accent: 48 95% 48%;
-        /* #F2C900 Warm Gold */
-        --accent-foreground: 0 0% 18%;
+        --accent: 250 100% 94%;
+        /* #ECE8FF Soft lavender */
+        --accent-foreground: 220 31% 18%;
 
         --destructive: 0 84% 60%;
         --destructive-foreground: 210 40% 98%;
 
-        --border: 5 20% 90%;
-        --input: 5 20% 90%;
-        --ring: 5 95% 72%;
+        --border: 344 38% 86%;
+        --input: 344 38% 86%;
+        --ring: 342 53% 46%;
 
-        --radius: 1rem;
-        /* 16px */
+        --radius: 0.5rem;
+        /* 8px */
 
         /* Chart colors */
-        --chart-1: 12 76% 61%;
-        --chart-2: 173 58% 39%;
-        --chart-3: 197 37% 24%;
-        --chart-4: 43 74% 66%;
-        --chart-5: 27 87% 67%;
+        --chart-1: 342 53% 46%;
+        --chart-2: 250 100% 82%;
+        --chart-3: 220 31% 18%;
+        --chart-4: 43 78% 53%;
+        --chart-5: 345 82% 85%;
     }
 
     .dark {

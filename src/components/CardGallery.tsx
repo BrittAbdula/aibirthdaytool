@@ -1,9 +1,10 @@
 'use client'
 
 import React, { useState, useEffect, useCallback } from 'react'
+import Link from 'next/link'
 import { ImageViewer } from './ImageViewer'
 import { Card } from '@/lib/cards'
-import { Heart, Crown } from 'lucide-react'
+import { Copy, Heart, Crown, PenLine, Sparkles } from 'lucide-react'
 import { recordUserAction } from '@/lib/action'
 
 interface CardGalleryProps {
@@ -72,11 +73,23 @@ function CardItem({ card }: { card: Card }) {
     localStorage.setItem('likedCards', JSON.stringify(likedCards))
   }
 
+  const inspirationHref = `/${card.cardType}/?${new URLSearchParams({
+    ...(card.relationship ? { relationship: card.relationship } : {}),
+    ...(card.message ? { message: card.message } : {}),
+  }).toString()}`
+
+  const handleCopyMessage = async (e: React.MouseEvent) => {
+    e.stopPropagation()
+    e.preventDefault()
+    if (!card.message) return
+    await navigator.clipboard.writeText(card.message)
+  }
+
   const displayLabel = cardTypeLabels[card.cardType] || card.cardType
 
   return (
     <div className="group break-inside-avoid mb-4">
-      <div className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300">
+      <div className="overflow-hidden rounded-xl border border-[#F1D6DF] bg-white shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md">
         {/* Image Container */}
         <div className="relative overflow-hidden">
           <ImageViewer
@@ -90,7 +103,7 @@ function CardItem({ card }: { card: Card }) {
           
           {/* Premium Badge */}
           {card.premium && (
-            <div className="absolute top-2 left-2 px-2 py-1 bg-gradient-to-r from-amber-500 to-orange-500 rounded-full flex items-center gap-1 shadow-md">
+            <div className="absolute top-2 left-2 px-2 py-1 bg-gradient-to-r from-warm-gold to-warm-coral rounded-full flex items-center gap-1 shadow-md">
               <Crown className="h-3 w-3 text-white" />
               <span className="text-[10px] text-white font-medium">PRO</span>
             </div>
@@ -121,7 +134,8 @@ function CardItem({ card }: { card: Card }) {
             {/* Like Button */}
             <button
               onClick={handleLike}
-              className="flex items-center gap-1 group/like"
+              className="group/like flex min-h-[44px] min-w-[44px] items-center justify-center gap-1 rounded-lg transition-colors hover:bg-red-50"
+              aria-label={isLiked ? 'Unlike card' : 'Like card'}
             >
               <Heart
                 className={`h-4 w-4 transition-all duration-200 ${
@@ -134,6 +148,34 @@ function CardItem({ card }: { card: Card }) {
                 {likeCount > 0 ? likeCount : ''}
               </span>
             </button>
+          </div>
+
+          <div className="mt-3 grid gap-2">
+            <Link
+              href={inspirationHref}
+              className="inline-flex min-h-[44px] items-center justify-center rounded-lg bg-primary px-3 text-sm font-semibold text-white transition-colors hover:bg-primary/90"
+            >
+              <Sparkles className="mr-2 h-4 w-4" />
+              Use as inspiration
+            </Link>
+            <div className="grid grid-cols-2 gap-2">
+              <Link
+                href={`/${card.cardType}/edit/${card.id}/`}
+                className="inline-flex min-h-[44px] items-center justify-center rounded-lg border border-[#F1D6DF] px-3 text-xs font-semibold text-[#202A3D] transition-colors hover:bg-[#FFF8F6]"
+              >
+                <PenLine className="mr-1.5 h-4 w-4" />
+                Edit idea
+              </Link>
+              <button
+                type="button"
+                onClick={handleCopyMessage}
+                disabled={!card.message}
+                className="inline-flex min-h-[44px] items-center justify-center rounded-lg border border-[#F1D6DF] px-3 text-xs font-semibold text-[#202A3D] transition-colors hover:bg-[#FFF8F6] disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <Copy className="mr-1.5 h-4 w-4" />
+                Copy style
+              </button>
+            </div>
           </div>
         </div>
       </div>

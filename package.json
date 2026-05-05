@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
+    "seo:check": "ts-node --compiler-options '{\"module\":\"commonjs\",\"moduleResolution\":\"node\"}' scripts/seo-regression-check.ts",
     "postinstall": "pnpm prisma generate",
     "prisma:generate": "prisma generate",
     "db:init": "pnpm run prisma:generate && prisma db push && node scripts/seed-system-generators.js"

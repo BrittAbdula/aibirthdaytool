@@ -1,5 +1,14 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+    async redirects() {
+        return [
+            {
+                source: '/will-you-be-my-valentine-manghud',
+                destination: '/will-you-be-my-valentine/',
+                permanent: true,
+            },
+        ];
+    },
     trailingSlash: true,
     images: {
         remotePatterns: [

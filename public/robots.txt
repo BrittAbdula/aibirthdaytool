@@ -1,3 +1,16 @@
+# Public search crawlers can index the marketing, generator, gallery, and
+# curated long-tail pages. Private user areas, edit flows, API routes, and
+# query-string gallery states stay blocked to avoid index bloat.
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+# AI crawler and training permissions are managed separately at the Cloudflare
+# layer with Content-Signal rules. Keep this file focused on search indexing
+# and private-path exclusions.
+
 # Twitterbot
 User-agent: Twitterbot
 Allow: /

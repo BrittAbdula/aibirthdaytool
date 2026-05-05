@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Caveat, Quicksand } from "next/font/google";
+import { Fraunces, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import '@/styles/globals.css';
 import { Toaster } from "@/components/ui/toaster";
@@ -12,13 +12,13 @@ import JsonLd from "@/components/JsonLd";
 import { ScrollToTop } from "@/components/ScrollToTop";
 import { buildOrganizationSchema, buildWebsiteSchema, toAbsoluteUrl } from "@/lib/seo";
 
-const caveat = Caveat({ 
+const displayFont = Fraunces({
   subsets: ["latin"],
   variable: '--font-caveat',
   display: 'swap',
 });
 
-const quicksand = Quicksand({ 
+const sansFont = Plus_Jakarta_Sans({
   subsets: ["latin"],
   variable: '--font-quicksand',
   display: 'swap',
@@ -93,7 +93,7 @@ export default function RootLayout({
         {/* Google Tag Manager should be inside <head> */}
         <GoogleTagManager gtmId="GTM-57P7BF4D" />
       </head>
-      <body className={`${caveat.variable} ${quicksand.variable} font-sans text-[#2D2D2D]`}>
+      <body className={`${displayFont.variable} ${sansFont.variable} font-sans text-[#202A3D]`}>
         <JsonLd data={buildOrganizationSchema()} />
         <JsonLd data={buildWebsiteSchema()} />
         <SessionProvider>
