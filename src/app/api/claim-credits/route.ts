@@ -1,11 +1,12 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
+import { getCountryCodeFromHeaders, getDailyCreditAllowance } from '@/lib/credits';
 
 export const dynamic = 'force-dynamic';
 
 // GET /api/claim-credits - Get user credits status
-export async function GET() {
+export async function GET(request: Request) {
     try {
         const session = await auth();
 
@@ -37,10 +38,18 @@ export async function GET() {
         const isPremium = planType === 'PREMIUM';
 
         // Calculate credits
-        const dailyCredits = isPremium ? Infinity : (isFirstDay ? 4 : 5);
+        const countryCode = getCountryCodeFromHeaders(request.headers);
+        const dailyCredits = getDailyCreditAllowance({ planType, isFirstDay, countryCode });
         const usedCredits = usage?.count || 0;
         const availableCredits = isPremium ? Infinity : Math.max(0, dailyCredits - usedCredits);
         const hasClaimed = !!usage && !isFirstDay; // First day doesn't need claiming
+        const message = isPremium
+            ? '💎 Premium members have unlimited credits!'
+            : isFirstDay
+                ? `✨ Welcome! You have ${dailyCredits} welcome credits today.`
+                : hasClaimed
+                    ? `🎨 You have ${availableCredits} credits remaining today.`
+                    : '🎁 Your daily credits are ready to claim!';
 
         return NextResponse.json({
             success: true,
@@ -50,11 +59,7 @@ export async function GET() {
             usedCredits,
             dailyCredits: isPremium ? 'unlimited' : dailyCredits,
             hasClaimed: isFirstDay ? true : hasClaimed, // First day auto-claimed
-            message: isFirstDay
-                ? '✨ Welcome! You have 2 animated card creations today. More options unlock tomorrow!'
-                : hasClaimed
-                    ? `🎨 You have ${availableCredits} credits remaining today.`
-                    : '🎁 Your daily credits are ready to claim!'
+            message,
         });
     } catch (error) {
         console.error('Error fetching credits status:', error);
@@ -63,7 +68,7 @@ export async function GET() {
 }
 
 // POST /api/claim-credits - Claim daily credits (creates usage record if not exists)
-export async function POST() {
+export async function POST(request: Request) {
     try {
         const session = await auth();
 
@@ -83,6 +88,8 @@ export async function POST() {
         const planType = user?.plan || 'FREE';
         const isFirstDay = !!user?.createdAt && user.createdAt >= todayStart;
         const isPremium = planType === 'PREMIUM';
+        const countryCode = getCountryCodeFromHeaders(request.headers);
+        const dailyCredits = getDailyCreditAllowance({ planType, isFirstDay, countryCode });
 
         // Premium users don't need to claim
         if (isPremium) {
@@ -94,14 +101,14 @@ export async function POST() {
             });
         }
 
-        // First-day users can't claim (they get their 4 credits automatically)
+        // First-day users can't claim (welcome credits are active automatically)
         if (isFirstDay) {
             return NextResponse.json({
                 success: false,
                 error: 'first_day',
                 message: '🌟 Your welcome credits are already active! Come back tomorrow to claim more.',
                 isFirstDay: true,
-                availableCredits: 4,
+                availableCredits: dailyCredits,
             });
         }
 
@@ -116,7 +123,7 @@ export async function POST() {
         });
 
         if (existingUsage) {
-            const remaining = Math.max(0, 5 - existingUsage.count);
+            const remaining = Math.max(0, dailyCredits - existingUsage.count);
             return NextResponse.json({
                 success: true,
                 alreadyClaimed: true,
@@ -138,7 +145,7 @@ export async function POST() {
         return NextResponse.json({
             success: true,
             message: '🎉 Daily credits claimed! You now have 5 credits to create amazing cards.',
-            availableCredits: 5,
+            availableCredits: dailyCredits,
             usedCredits: 0,
             claimed: true,
         });

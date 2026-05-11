@@ -6,33 +6,11 @@ import { prisma } from '@/lib/prisma';
 import { generateCardImage } from '@/lib/image';
 import { generateCardVideo, generateCardImageWithBananaEdit } from '@/lib/image-and-video';
 import { nanoid } from 'nanoid';
-import { getModelConfig, createModelTierMap } from '@/lib/model-config';
+import { getModelConfig } from '@/lib/model-config';
 import { uploadSvgToR2 } from '@/lib/r2';
 import { stylePresets } from '@/lib/style-presets';
+import { getCountryCodeFromHeaders, getDailyCreditAllowance, isHighValueCountry } from '@/lib/credits';
 
-// 获取用户可用积分
-async function getUserCredits(userId: string, planType: string, isFirstDay: boolean): Promise<number> {
-  // FREE users: first day = 4 credits (2 SVG cards), then 5 credits daily
-  const dailyCredits = planType === 'FREE' ? (isFirstDay ? 4 : 5) : Infinity;
-
-  if (dailyCredits === Infinity) {
-    return Infinity; // PREMIUM users have unlimited credits
-  }
-
-  // 查询今日已使用的积分
-  const today = new Date(new Date().setHours(0, 0, 0, 0));
-  const usage = await prisma.apiUsage.findUnique({
-    where: {
-      userId_date: {
-        userId,
-        date: today,
-      },
-    },
-  });
-
-  const usedCredits = usage?.count || 0;
-  return Math.max(0, dailyCredits - usedCredits);
-}
 // 增加超时限制到最大值
 export const maxDuration = 60; // 增加到 60 秒
 
@@ -69,6 +47,8 @@ export async function POST(request: Request) {
     // 检查是否是修改请求
     const isModification = modificationFeedback && previousCardId;
 
+    const todayStart = new Date(new Date().setHours(0, 0, 0, 0));
+
     // 优化：并行查询用户权限和使用情况
     const [user, usage] = await Promise.all([
       prisma.user.findUnique({
@@ -79,7 +59,7 @@ export async function POST(request: Request) {
         where: {
           userId_date: {
             userId,
-            date: new Date(new Date().setHours(0, 0, 0, 0)),
+            date: todayStart,
           },
         },
       })
@@ -112,25 +92,27 @@ export async function POST(request: Request) {
     const modelLevel = modelTier === 'Premium' && planType === 'PREMIUM' ? 'PREMIUM' : 'FREE';
 
     // Check if user is on their first day (registration day)
-    const todayStart = new Date(new Date().setHours(0, 0, 0, 0));
     const isFirstDay = !!user?.createdAt && user.createdAt >= todayStart;
+    const countryCode = getCountryCodeFromHeaders(request.headers);
+    const dailyCredits = getDailyCreditAllowance({ planType, isFirstDay, countryCode });
+    const usedCredits = usage?.count || 0;
+    const availableCredits = dailyCredits === Infinity ? Infinity : Math.max(0, dailyCredits - usedCredits);
+    const hasHighValueWelcomeCredits = planType === 'FREE' && isFirstDay && isHighValueCountry(countryCode);
 
-    // First-day FREE users can only generate SVG (animated) cards
-    if (isFirstDay && planType === 'FREE' && format !== 'svg') {
+    // First-day FREE users outside high-value regions can only generate SVG cards.
+    if (isFirstDay && planType === 'FREE' && !hasHighValueWelcomeCredits && format !== 'svg') {
       return NextResponse.json({
         error: 'first_day_svg_only',
         message: '✨ Welcome to your creative journey! On your first day, you can create 2 magical animated cards. Static images and videos unlock tomorrow — trust us, the wait will be worth it!'
       }, { status: 403 });
     }
 
-    const availableCredits = await getUserCredits(userId, planType, isFirstDay);
-
     // Check if user has enough credits
     if (availableCredits < creditsUsed) {
       return NextResponse.json({
         error: 'rate_limit',
         message: isFirstDay
-          ? '🎨 You\'ve used your 2 welcome cards for today! Come back tomorrow to unlock more options and claim your daily credits.'
+          ? `🎨 You've used your ${dailyCredits} welcome credits for today. Come back tomorrow to claim more credits or upgrade to Premium for unlimited creations!`
           : 'Daily limit reached. Claim your credits tomorrow or upgrade to Premium for unlimited creations!'
       }, { status: 429 });
     }
@@ -145,7 +127,7 @@ export async function POST(request: Request) {
           await prisma.apiUsage.create({
             data: {
               userId,
-              date: new Date(new Date().setHours(0, 0, 0, 0)),
+              date: todayStart,
               count: creditsUsed,
             },
           });
