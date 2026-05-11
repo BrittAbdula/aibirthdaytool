@@ -65,6 +65,7 @@ model UserAction {
 
   @@index([cardId])
   @@index([userId])
+  @@index([cardId, action, timestamp], map: "UserAction_card_action_time_idx")
 }
 
 model EditedCard {
@@ -91,6 +92,9 @@ model EditedCard {
 
   @@index([originalCardId])
   @@index([userId])
+  @@index([isPublic, deleted, cardType, relationship, createdAt], map: "EditedCard_gallery_filter_idx")
+  @@index([isPublic, deleted, model, createdAt], map: "EditedCard_gallery_model_idx")
+  @@index([isPublic, deleted, originalCardId, createdAt], map: "EditedCard_gallery_group_idx")
 }
 
 model DeletedCard {

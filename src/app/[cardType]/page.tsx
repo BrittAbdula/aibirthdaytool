@@ -7,7 +7,7 @@ import { getCuratedGeneratorSitemapSlugs } from "@/lib/generator-seo";
 import CardTypeBubbles from "@/components/CardTypeBubbles";
 import CardGenerator from "@/components/CardGenerator";
 import SimpleCardGallery from '@/app/card-gallery/SimpleCardGallery'
-import { Card, getRecentCardsServer } from '@/lib/cards';
+import { Card, getFeaturedCardsServer } from '@/lib/cards';
 import GalleryComboLinkSection from "@/components/gallery/GalleryComboLinkSection";
 import JsonLd from "@/components/JsonLd";
 import GuidanceGridSection from "@/components/eeat/GuidanceGridSection";
@@ -132,7 +132,7 @@ export default async function CardGeneratorPage({ params }: CardGeneratorPagePro
     // Get initial cards data
     let initialCardsData: { cards: Card[]; totalPages: number } = { cards: [], totalPages: 0 };
     try {
-        initialCardsData = await getRecentCardsServer(1, 20, cardType);
+        initialCardsData = await getFeaturedCardsServer(1, 20, cardType);
     } catch (error) {
         console.error(`Failed to load public cards for ${cardType}`, error);
     }
@@ -309,7 +309,7 @@ export default async function CardGeneratorPage({ params }: CardGeneratorPagePro
 
                     <div className="text-center mb-12">
                         <p className="text-lg sm:text-xl text-gray-600 max-w-3xl mx-auto px-4 mb-6">
-                            Browse recent public {cardKeywordPluralLower} for tone, layout, and message inspiration,
+                            Browse featured public {cardKeywordPluralLower} for tone, layout, and message inspiration,
                             then open the editor to create a version that fits your moment.
                         </p>
                     </div>
@@ -320,7 +320,7 @@ export default async function CardGeneratorPage({ params }: CardGeneratorPagePro
                                 <div className="text-center">
                                     <div className="inline-flex items-center gap-2 text-gray-600">
                                         <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-purple-500"></div>
-                                        <span>Loading recent public {cardKeywordPluralLower}...</span>
+                                        <span>Loading featured public {cardKeywordPluralLower}...</span>
                                     </div>
                                 </div>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 px-4">
@@ -337,7 +337,7 @@ export default async function CardGeneratorPage({ params }: CardGeneratorPagePro
                             </div>
                         }
                     >
-                        <SimpleCardGallery wishCardType={cardType} initialCardsData={initialCardsData} tabType="recent" />
+                        <SimpleCardGallery wishCardType={cardType} initialCardsData={initialCardsData} tabType="featured" />
                     </Suspense>
                 </section>
 

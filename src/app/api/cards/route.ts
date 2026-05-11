@@ -1,5 +1,11 @@
 import { NextResponse } from 'next/server'
-import { getRecentCardsServer, getPopularCardsServer, getLikedCardsServer, TabType } from '@/lib/cards'
+import {
+  getFeaturedCardsServer,
+  getRecentCardsServer,
+  getPopularCardsServer,
+  getLikedCardsServer,
+  TabType,
+} from '@/lib/cards'
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
@@ -7,12 +13,15 @@ export async function GET(request: Request) {
   const pageSize = parseInt(searchParams.get('pageSize') || '12', 10)
   const wishCardType = searchParams.get('wishCardType')
   const relationship = searchParams.get('relationship')
-  const tab = (searchParams.get('tab') as TabType) || 'recent'
+  const tab = (searchParams.get('tab') as TabType) || 'featured'
 
   try {
     let cardsData;
     
     switch (tab) {
+      case 'featured':
+        cardsData = await getFeaturedCardsServer(page, pageSize, wishCardType, relationship)
+        break
       case 'popular':
         cardsData = await getPopularCardsServer(page, pageSize, wishCardType, relationship)
         break
@@ -20,7 +29,7 @@ export async function GET(request: Request) {
         cardsData = await getLikedCardsServer(page, pageSize, wishCardType, relationship)
         break
       default:
-        cardsData = await getRecentCardsServer(page, pageSize, wishCardType, relationship)
+        cardsData = await getFeaturedCardsServer(page, pageSize, wishCardType, relationship)
     }
     
     return NextResponse.json(cardsData)

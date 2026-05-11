@@ -3,7 +3,7 @@ import { Suspense } from 'react'
 import Link from 'next/link'
 import RelationshipGalleryContent from './RelationshipGalleryContent'
 import GalleryComboLinkSection from '@/components/gallery/GalleryComboLinkSection'
-import { Card, getRecentCardsServer } from '@/lib/cards'
+import { Card, getFeaturedCardsServer } from '@/lib/cards'
 import { getCardTypeLabel, getGalleryComboHref, getRelationshipLabel, getRelationshipValue, getSeoTypesForRelationship } from '@/lib/gallery-combos'
 import { toAbsoluteUrl } from '@/lib/seo'
 
@@ -76,7 +76,7 @@ export default async function RelationshipPage({ params }: Props) {
   let initialCardsData: { cards: Card[]; totalPages: number } = { cards: [], totalPages: 0 }
 
   try {
-    initialCardsData = await getRecentCardsServer(1, 24, null, relationship)
+    initialCardsData = await getFeaturedCardsServer(1, 24, null, relationship)
   } catch (error) {
     console.error(`Failed to load relationship gallery for ${relationshipValue}`, error)
   }
@@ -144,7 +144,7 @@ export default async function RelationshipPage({ params }: Props) {
               params={resolvedParams}
               initialCardsData={initialCardsData}
               defaultType={null}
-              activeTab="recent"
+              activeTab="featured"
             />
           </Suspense>
         </section>

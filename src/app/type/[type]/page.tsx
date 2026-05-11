@@ -7,7 +7,7 @@ import GalleryComboLinkSection from '@/components/gallery/GalleryComboLinkSectio
 import GuidanceGridSection from '@/components/eeat/GuidanceGridSection'
 import TrustSignalsSection from '@/components/eeat/TrustSignalsSection'
 import JsonLd from '@/components/JsonLd'
-import { Card, getRecentCardsServer } from '@/lib/cards'
+import { Card, getFeaturedCardsServer } from '@/lib/cards'
 import { getCardTypeLabel, getGalleryComboHref, getRelationshipLabel, getSeoRelationshipsForType } from '@/lib/gallery-combos'
 import { getTrustHubRelatedLinks, getTypeGalleryTrustGuide } from '@/lib/eeat-content'
 import { buildBreadcrumbSchema, buildItemListSchema, buildWebPageSchema, toAbsoluteUrl } from '@/lib/seo'
@@ -77,7 +77,7 @@ export default async function TypePage({ params }: Props) {
   let initialCardsData: { cards: Card[]; totalPages: number } = { cards: [], totalPages: 0 }
 
   try {
-    initialCardsData = await getRecentCardsServer(1, 24, type, null)
+    initialCardsData = await getFeaturedCardsServer(1, 24, type, null)
   } catch (error) {
     console.error(`Failed to load type gallery for ${type}`, error)
   }
@@ -165,7 +165,7 @@ export default async function TypePage({ params }: Props) {
               params={resolvedParams}
               initialCardsData={initialCardsData}
               defaultRelationship={null}
-              activeTab="recent"
+              activeTab="featured"
             />
           </Suspense>
         </section>

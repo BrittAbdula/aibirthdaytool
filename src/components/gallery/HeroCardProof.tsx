@@ -77,7 +77,7 @@ export default function HeroCardProof({
             See what people are making right now
           </h2>
           <p className="mt-3 max-w-md text-sm leading-6 text-gray-600 sm:text-base">
-            Browse recent public {cardName.toLowerCase()} cards for tone, layout,
+            Browse featured public {cardName.toLowerCase()} cards for tone, layout,
             and style ideas before you create your own.
           </p>
         </div>

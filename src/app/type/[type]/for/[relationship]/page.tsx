@@ -6,7 +6,7 @@ import { CardType } from '@/lib/card-config'
 import GuidanceGridSection from '@/components/eeat/GuidanceGridSection'
 import TrustSignalsSection from '@/components/eeat/TrustSignalsSection'
 import JsonLd from '@/components/JsonLd'
-import { Card, getRecentCardsServer } from '@/lib/cards'
+import { Card, getFeaturedCardsServer } from '@/lib/cards'
 import {
   getCardTypeLabel,
   getGalleryComboHref,
@@ -82,7 +82,7 @@ export default async function TypeRelationshipPage({ params }: Props) {
   let initialCardsData: { cards: Card[]; totalPages: number } = { cards: [], totalPages: 0 }
 
   try {
-    initialCardsData = await getRecentCardsServer(1, 24, type, relationshipLabel)
+    initialCardsData = await getFeaturedCardsServer(1, 24, type, relationshipLabel)
   } catch (error) {
     console.error(`Failed to load combo gallery for ${type} / ${relationshipValue}`, error)
   }
@@ -187,7 +187,7 @@ export default async function TypeRelationshipPage({ params }: Props) {
             <TypeRelationshipGalleryContent
               params={resolvedParams}
               initialCardsData={initialCardsData}
-              activeTab="recent"
+              activeTab="featured"
             />
           </Suspense>
         </section>

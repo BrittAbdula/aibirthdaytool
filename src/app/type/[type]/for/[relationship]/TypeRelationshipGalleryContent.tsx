@@ -26,7 +26,7 @@ interface Props {
 export default function TypeRelationshipGalleryContent({
   params,
   initialCardsData,
-  activeTab = 'recent',
+  activeTab = 'featured',
 }: Props) {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -47,7 +47,7 @@ export default function TypeRelationshipGalleryContent({
 
   const buildQuery = (tab: TabType) => {
     const params = new URLSearchParams(searchParams.toString())
-    if (tab === 'recent') params.delete('tab')
+    if (tab === activeTab) params.delete('tab')
     else params.set('tab', tab)
     return params.toString()
   }
@@ -60,7 +60,7 @@ export default function TypeRelationshipGalleryContent({
 
   const handleRelationshipChange = (value: string | null) => {
     const params = new URLSearchParams(searchParams.toString())
-    if (currentTab === 'recent') params.delete('tab')
+    if (currentTab === activeTab) params.delete('tab')
     else params.set('tab', currentTab)
 
     if (!value) {
@@ -122,12 +122,22 @@ export default function TypeRelationshipGalleryContent({
 
   return (
     <article className="min-h-screen">
-      <div className="mb-8 flex justify-center">
-        <div className="border border-purple-200 rounded-full p-1 bg-white shadow-sm">
-          <div className="flex space-x-1">
+      <div className="mb-8 flex justify-center px-2">
+        <div className="w-full max-w-lg border border-purple-200 rounded-full p-1 bg-white shadow-sm sm:w-auto">
+          <div className="grid grid-cols-4 gap-1 sm:flex sm:space-x-1">
+            <button
+              onClick={() => handleTabChange('featured')}
+              className={`px-2 sm:px-6 py-2 rounded-full text-xs sm:text-sm font-medium transition-all ${
+                currentTab === 'featured'
+                  ? 'bg-purple-500 text-white shadow-sm'
+                  : 'text-gray-600 hover:bg-purple-50'
+              }`}
+            >
+              Featured
+            </button>
             <button
               onClick={() => handleTabChange('recent')}
-              className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${
+              className={`px-2 sm:px-6 py-2 rounded-full text-xs sm:text-sm font-medium transition-all ${
                 currentTab === 'recent'
                   ? 'bg-purple-500 text-white shadow-sm'
                   : 'text-gray-600 hover:bg-purple-50'
@@ -136,24 +146,24 @@ export default function TypeRelationshipGalleryContent({
               Recent
             </button>
             <button
+              onClick={() => handleTabChange('liked')}
+              className={`px-2 sm:px-6 py-2 rounded-full text-xs sm:text-sm font-medium transition-all ${
+                currentTab === 'liked'
+                  ? 'bg-purple-500 text-white shadow-sm'
+                  : 'text-gray-600 hover:bg-purple-50'
+              }`}
+            >
+              Liked
+            </button>
+            <button
               onClick={() => handleTabChange('popular')}
-              className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${
+              className={`px-2 sm:px-6 py-2 rounded-full text-xs sm:text-sm font-medium transition-all ${
                 currentTab === 'popular'
                   ? 'bg-purple-500 text-white shadow-sm'
                   : 'text-gray-600 hover:bg-purple-50'
               }`}
             >
               Popular
-            </button>
-            <button
-              onClick={() => handleTabChange('liked')}
-              className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${
-                currentTab === 'liked'
-                  ? 'bg-purple-500 text-white shadow-sm'
-                  : 'text-gray-600 hover:bg-purple-50'
-              }`}
-            >
-              Most Liked
             </button>
           </div>
         </div>

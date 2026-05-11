@@ -1,25 +1,144 @@
 import { S3Client, PutObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
 
-const R2_ACCOUNT_ID = process.env.R2_ACCOUNT_ID;
-const R2_ACCESS_KEY_ID = process.env.R2_ACCESS_KEY_ID;
-const R2_SECRET_ACCESS_KEY = process.env.R2_SECRET_ACCESS_KEY;
-const R2_BUCKET_NAME = process.env.R2_BUCKET_NAME;
-
-if (!R2_ACCOUNT_ID || !R2_ACCESS_KEY_ID || !R2_SECRET_ACCESS_KEY || !R2_BUCKET_NAME) {
-    throw new Error('Missing required R2 configuration environment variables');
+interface R2ClientConfig {
+    accountId: string;
+    accessKeyId: string;
+    secretAccessKey: string;
+    bucketName: string;
 }
 
-const r2Client = new S3Client({
-    region: 'auto',
-    endpoint: `https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
-    credentials: {
-        accessKeyId: R2_ACCESS_KEY_ID,
-        secretAccessKey: R2_SECRET_ACCESS_KEY,
-    },
-});
+let cachedR2Client: S3Client | null = null;
+
+function getR2Config(): R2ClientConfig {
+    const accountId = process.env.R2_ACCOUNT_ID;
+    const accessKeyId = process.env.R2_ACCESS_KEY_ID;
+    const secretAccessKey = process.env.R2_SECRET_ACCESS_KEY;
+    const bucketName = process.env.R2_BUCKET_NAME;
+
+    if (!accountId || !accessKeyId || !secretAccessKey || !bucketName) {
+        throw new Error('Missing required R2 configuration environment variables');
+    }
+
+    return { accountId, accessKeyId, secretAccessKey, bucketName };
+}
+
+function getR2Client(): { client: S3Client; config: R2ClientConfig } {
+    const config = getR2Config();
+
+    if (!cachedR2Client) {
+        cachedR2Client = new S3Client({
+            region: 'auto',
+            endpoint: `https://${config.accountId}.r2.cloudflarestorage.com`,
+            credentials: {
+                accessKeyId: config.accessKeyId,
+                secretAccessKey: config.secretAccessKey,
+            },
+        });
+    }
+
+    return { client: cachedR2Client, config };
+}
+
+export type StorageDeletionProvider =
+    | 'r2'
+    | 'cloudflare-images'
+    | 'external'
+    | 'data-url'
+    | 'empty'
+    | 'invalid-url'
+    | 'unsupported-managed-url';
+
+export interface StorageDeletionTarget {
+    action: 'delete-r2' | 'skip';
+    provider: StorageDeletionProvider;
+    key?: string;
+    reason?: string;
+    canDeleteDatabase: boolean;
+}
+
+export interface StorageDeletionResult extends StorageDeletionTarget {
+    status: 'deleted' | 'skipped' | 'failed';
+    url?: string;
+    error?: string;
+}
+
+const CLEANUP_OWNED_R2_PREFIXES = ['cards/', 'images/', 'videos/'];
+
+function isManagedStorageHost(hostname: string): boolean {
+    return hostname === 'celeprime.com' || hostname.endsWith('.celeprime.com');
+}
+
+export function classifyStorageUrl(fileUrl: string | null | undefined): StorageDeletionTarget {
+    if (!fileUrl) {
+        return {
+            action: 'skip',
+            provider: 'empty',
+            reason: 'No storage URL provided',
+            canDeleteDatabase: true,
+        };
+    }
+
+    if (fileUrl.startsWith('data:')) {
+        return {
+            action: 'skip',
+            provider: 'data-url',
+            reason: 'Inline data URL has no remote object to delete',
+            canDeleteDatabase: true,
+        };
+    }
+
+    let parsedUrl: URL;
+    try {
+        parsedUrl = new URL(fileUrl);
+    } catch {
+        return {
+            action: 'skip',
+            provider: 'invalid-url',
+            reason: 'Storage URL is not a valid URL',
+            canDeleteDatabase: true,
+        };
+    }
+
+    if (!isManagedStorageHost(parsedUrl.hostname)) {
+        return {
+            action: 'skip',
+            provider: 'external',
+            reason: 'URL is not managed by this storage cleanup',
+            canDeleteDatabase: true,
+        };
+    }
+
+    const key = parsedUrl.pathname.replace(/^\/+/, '');
+
+    if (key.startsWith('cdn-cgi/imagedelivery/')) {
+        return {
+            action: 'skip',
+            provider: 'cloudflare-images',
+            reason: 'Cloudflare Images deletion is not enabled for this cleanup job',
+            canDeleteDatabase: false,
+        };
+    }
+
+    if (CLEANUP_OWNED_R2_PREFIXES.some(prefix => key.startsWith(prefix))) {
+        return {
+            action: 'delete-r2',
+            provider: 'r2',
+            key,
+            canDeleteDatabase: true,
+        };
+    }
+
+    return {
+        action: 'skip',
+        provider: 'unsupported-managed-url',
+        reason: 'Managed URL is outside cleanup-owned prefixes',
+        canDeleteDatabase: false,
+    };
+}
 
 export async function uploadSvgToR2(svgContent: string, cardId: string, createdAt: Date): Promise<string> {
     try {
+        const { client, config } = getR2Client();
         // 使用 UTC 时间来保持一致性
         const year = createdAt.getUTCFullYear()
         const month = String(createdAt.getUTCMonth() + 1).padStart(2, '0')
@@ -28,9 +147,9 @@ export async function uploadSvgToR2(svgContent: string, cardId: string, createdA
         // 构建存储路径：cards/年/月/日/cardId.svg
         const key = `cards/${year}/${month}/${day}/${cardId}.svg`
         
-        await r2Client.send(
+        await client.send(
             new PutObjectCommand({
-                Bucket: R2_BUCKET_NAME,
+                Bucket: config.bucketName,
                 Key: key,
                 Body: svgContent,
                 ContentType: 'image/svg+xml',
@@ -41,35 +160,57 @@ export async function uploadSvgToR2(svgContent: string, cardId: string, createdA
     } catch (error) {
         console.error('R2 upload error details:', {
             error,
-            accountId: R2_ACCOUNT_ID,
-            bucketName: R2_BUCKET_NAME
+            accountId: process.env.R2_ACCOUNT_ID,
+            bucketName: process.env.R2_BUCKET_NAME
         });
         throw new Error(`Failed to upload to R2: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
 }
 
 export async function deleteR2ObjectByUrl(fileUrl: string | null | undefined): Promise<void> {
-    if (!fileUrl) return;
+    const result = await deleteStoredObjectByUrl(fileUrl);
+    if (result.status === 'failed') {
+        console.error('R2 delete error:', result.error);
+    }
+}
+
+export async function deleteStoredObjectByUrl(fileUrl: string | null | undefined): Promise<StorageDeletionResult> {
+    const target = classifyStorageUrl(fileUrl);
+
+    if (target.action === 'skip') {
+        return {
+            ...target,
+            status: 'skipped',
+            url: fileUrl || undefined,
+        };
+    }
+
     try {
-        const parsedUrl = new URL(fileUrl);
-        if (!parsedUrl.hostname.includes('celeprime.com')) {
-            return; // Skip unrelated hosts
-        }
-        const key = parsedUrl.pathname.replace(/^\/+/, '');
-        if (!key) return;
-        await r2Client.send(
+        const { client, config } = getR2Client();
+        await client.send(
             new DeleteObjectCommand({
-                Bucket: R2_BUCKET_NAME,
-                Key: key,
+                Bucket: config.bucketName,
+                Key: target.key,
             })
         );
+        return {
+            ...target,
+            status: 'deleted',
+            url: fileUrl || undefined,
+        };
     } catch (error) {
-        console.error('R2 delete error:', error);
+        return {
+            ...target,
+            status: 'failed',
+            url: fileUrl || undefined,
+            error: error instanceof Error ? error.message : 'Unknown error',
+        };
     }
 }
 
 export async function uploadImageToR2(imageBuffer: Buffer, taskId: string): Promise<string> {
   try {
+      const { client, config } = getR2Client();
       const now = new Date();
       const year = now.getUTCFullYear();
       const month = String(now.getUTCMonth() + 1).padStart(2, '0');
@@ -77,9 +218,9 @@ export async function uploadImageToR2(imageBuffer: Buffer, taskId: string): Prom
       
       const key = `images/${year}/${month}/${day}/${taskId}.png`;
       
-      await r2Client.send(
+      await client.send(
           new PutObjectCommand({
-              Bucket: R2_BUCKET_NAME,
+              Bucket: config.bucketName,
               Key: key,
               Body: imageBuffer,
               ContentType: 'image/png',
@@ -98,6 +239,7 @@ export async function uploadImageToR2(imageBuffer: Buffer, taskId: string): Prom
 // upload video to r2
 export async function uploadVideoToR2(url: string, taskId: string): Promise<string> {
   try {
+    const { client, config } = getR2Client();
     const now = new Date();
     const year = now.getUTCFullYear();
     const month = String(now.getUTCMonth() + 1).padStart(2, '0');
@@ -108,9 +250,9 @@ export async function uploadVideoToR2(url: string, taskId: string): Promise<stri
     const response = await fetch(url);
     const videoBuffer = Buffer.from(await response.arrayBuffer());
 
-    await r2Client.send(
+    await client.send(
         new PutObjectCommand({
-            Bucket: R2_BUCKET_NAME,
+            Bucket: config.bucketName,
             Key: key,
             Body: videoBuffer,
             ContentType: 'video/mp4',

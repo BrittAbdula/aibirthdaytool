@@ -56,15 +56,18 @@ export default function CardGalleryContent({
     } else {
       params.delete('relationship')
     }
-    router.push(`/card-gallery?${params.toString()}`)
+    const query = params.toString()
+    router.push(query ? `/card-gallery?${query}` : '/card-gallery/')
   }
 
   const handleTabChange = (tab: TabType) => {
     setCurrentTab(tab)
     
     const params = new URLSearchParams(searchParams.toString())
-    params.set('tab', tab)
-    router.push(`/card-gallery?${params.toString()}`)
+    if (tab === activeTab) params.delete('tab')
+    else params.set('tab', tab)
+    const query = params.toString()
+    router.push(query ? `/card-gallery?${query}` : '/card-gallery/')
   }
 
   const scrollToTop = useCallback(() => {
@@ -127,8 +130,20 @@ export default function CardGalleryContent({
       <div className="relative py-8 sm:py-12">
         {/* Tab Selection */}
         <div className="mb-6 sm:mb-8 flex justify-center px-2" role="tablist" aria-label="Gallery tabs">
-          <div className="border border-purple-200 rounded-full p-1 bg-white shadow-sm w-full max-w-md sm:w-auto">
-            <div className="grid grid-cols-3 sm:flex sm:space-x-1 gap-1">
+          <div className="border border-purple-200 rounded-full p-1 bg-white shadow-sm w-full max-w-lg sm:w-auto">
+            <div className="grid grid-cols-4 sm:flex sm:space-x-1 gap-1">
+              <button
+                onClick={() => handleTabChange('featured')}
+                role="tab"
+                aria-selected={currentTab === 'featured'}
+                className={`px-3 sm:px-6 py-2 rounded-full text-xs sm:text-sm font-medium transition-all whitespace-nowrap ${
+                  currentTab === 'featured'
+                    ? 'bg-purple-500 text-white shadow-sm'
+                    : 'text-gray-600 hover:bg-purple-50'
+                }`}
+              >
+                Featured
+              </button>
               <button
                 onClick={() => handleTabChange('recent')}
                 role="tab"
@@ -151,7 +166,7 @@ export default function CardGalleryContent({
                     : 'text-gray-600 hover:bg-purple-50'
                 }`}
               >
-                <span className="hidden sm:inline">Weekly </span>Liked
+                Liked
               </button>
               <button
                 onClick={() => handleTabChange('popular')}

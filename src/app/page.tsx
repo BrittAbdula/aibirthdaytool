@@ -15,7 +15,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import CardMarquee from "@/components/CardMarquee";
-import { Card, getRecentCardsServer } from "@/lib/cards";
+import { Card, getFeaturedCardsServer } from "@/lib/cards";
 import {
   Accordion,
   AccordionContent,
@@ -79,7 +79,7 @@ export default async function Home() {
   };
 
   try {
-    initialCardsData = await getRecentCardsServer(1, 12, "");
+    initialCardsData = await getFeaturedCardsServer(1, 12, "");
   } catch (error) {
     console.error("Failed to load homepage card data", error);
   }

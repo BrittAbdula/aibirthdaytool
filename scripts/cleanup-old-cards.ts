@@ -1,222 +1,394 @@
 /**
- * 数据库清理脚本
- * 
- * 功能：
- * 1. 删除 EditedCard 中超过一年且没有 copy/download/send/up 行为的卡片
- * 2. 同时删除关联的 ApiLog 记录
- * 3. 删除 ApiLog 中有但 EditedCard 没有的记录
- * 
- * 运行：npx ts-node scripts/cleanup-old-cards.ts
- * 
- * 注意：执行前请确保已备份数据库！
+ * Database-driven card cleanup.
+ *
+ * Default mode is dry-run:
+ *   pnpm cleanup:cards -- --dry-run
+ *
+ * Execute after reviewing dry-run output:
+ *   pnpm cleanup:cards -- --execute
  */
 
-import { config } from 'dotenv'
-config({ path: '.env.local' })
+import { config } from 'dotenv';
+config({ path: '.env.local' });
 
-import { PrismaClient, Prisma } from '@prisma/client'
+import { Prisma, PrismaClient } from '@prisma/client';
+import {
+  classifyStorageUrl,
+  deleteStoredObjectByUrl,
+  StorageDeletionResult,
+} from '../src/lib/r2';
+import {
+  CLEANUP_PROTECTED_ACTIONS,
+  DEFAULT_RETENTION_DAYS,
+  dedupeById,
+  getCleanupCutoffDate,
+} from './cleanup-card-policy';
 
-// 使用直连 URL 执行清理脚本
-const dbUrl = process.env.DIRECT_URL || process.env.DATABASE_URL || ''
-const urlWithTimeout = dbUrl.includes('connect_timeout') 
-  ? dbUrl 
-  : dbUrl + (dbUrl.includes('?') ? '&' : '?') + 'connect_timeout=30'
+const DEFAULT_BATCH_SIZE = 500;
 
-const prisma = new PrismaClient({
-  datasources: {
-    db: {
-      url: urlWithTimeout
-    }
-  }
-})
-
-async function main() {
-  console.log('=== 数据库清理脚本 ===\n')
-
-  // 一年前的日期
-  const oneYearAgo = new Date()
-  oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1)
-  console.log(`基准日期（一年前）: ${oneYearAgo.toISOString()}\n`)
-
-  // ============================================
-  // 清理前统计
-  // ============================================
-  console.log('--- 清理前统计 ---')
-  const beforeEditedCardCount = await prisma.editedCard.count()
-  const beforeApiLogCount = await prisma.apiLog.count()
-  const beforeUserActionCount = await prisma.userAction.count()
-  console.log(`EditedCard 数量: ${beforeEditedCardCount}`)
-  console.log(`ApiLog 数量: ${beforeApiLogCount}`)
-  console.log(`UserAction 数量: ${beforeUserActionCount}`)
-
-  // ============================================
-  // 步骤 1: 使用原生 SQL 删除超过一年且无用户行为的 EditedCard
-  // ============================================
-  console.log('\n--- 步骤 1: 删除超过一年且无用户行为的 EditedCard ---')
-
-  // 首先查找需要删除的数量
-  const countToDelete = await prisma.$queryRaw<[{ count: bigint }]>`
-    SELECT COUNT(*) as count
-    FROM "EditedCard" ec
-    WHERE ec."createdAt" < ${oneYearAgo}
-      AND ec."deleted" = false
-      AND NOT EXISTS (
-        SELECT 1 FROM "UserAction" ua 
-        WHERE ua."cardId" = ec."originalCardId"
-          AND ua."action" IN ('copy', 'download', 'send', 'up')
-      )
-  `
-  console.log(`需要删除的 EditedCard 数量: ${countToDelete[0].count}`)
-
-  if (Number(countToDelete[0].count) > 0) {
-    // 获取需要删除的 EditedCard 的 originalCardId（用于后续清理 ApiLog）
-    const cardsToDelete = await prisma.$queryRaw<{ id: string, originalCardId: string }[]>`
-      SELECT ec."id", ec."originalCardId"
-      FROM "EditedCard" ec
-      WHERE ec."createdAt" < ${oneYearAgo}
-        AND ec."deleted" = false
-        AND NOT EXISTS (
-          SELECT 1 FROM "UserAction" ua 
-          WHERE ua."cardId" = ec."originalCardId"
-            AND ua."action" IN ('copy', 'download', 'send', 'up')
-        )
-    `
-    
-    // 收集需要检查的 originalCardId
-    const originalCardIds = Array.from(new Set(cardsToDelete.map(c => c.originalCardId)))
-    const editedCardIds = cardsToDelete.map(c => c.id)
-    
-    console.log(`涉及的 originalCardId 数量: ${originalCardIds.length}`)
-
-    // 删除 EditedCard
-    const deletedEditedCards = await prisma.$executeRaw`
-      DELETE FROM "EditedCard"
-      WHERE "createdAt" < ${oneYearAgo}
-        AND "deleted" = false
-        AND NOT EXISTS (
-          SELECT 1 FROM "UserAction" ua 
-          WHERE ua."cardId" = "EditedCard"."originalCardId"
-            AND ua."action" IN ('copy', 'download', 'send', 'up')
-        )
-    `
-    console.log(`已删除 EditedCard: ${deletedEditedCards} 条`)
-
-    // 检查这些 originalCardId 是否还被其他 EditedCard 引用
-    if (originalCardIds.length > 0) {
-      // 分批处理，每批 1000 个
-      const batchSize = 1000
-      let totalDeletedApiLogs = 0
-      let totalDeletedUserActions = 0
-
-      for (let i = 0; i < originalCardIds.length; i += batchSize) {
-        const batch = originalCardIds.slice(i, i + batchSize)
-        
-        // 找出不再被引用的 cardId
-        const stillReferenced = await prisma.editedCard.findMany({
-          where: { originalCardId: { in: batch } },
-          select: { originalCardId: true },
-          distinct: ['originalCardId']
-        })
-        const stillReferencedSet = new Set(stillReferenced.map(c => c.originalCardId))
-        const toDelete = batch.filter(id => !stillReferencedSet.has(id))
-
-        if (toDelete.length > 0) {
-          // 删除 UserAction
-          const deletedUA = await prisma.userAction.deleteMany({
-            where: { cardId: { in: toDelete } }
-          })
-          totalDeletedUserActions += deletedUA.count
-
-          // 删除 ApiLog
-          const deletedAL = await prisma.apiLog.deleteMany({
-            where: { cardId: { in: toDelete } }
-          })
-          totalDeletedApiLogs += deletedAL.count
-        }
-      }
-      console.log(`已删除关联的 UserAction: ${totalDeletedUserActions} 条`)
-      console.log(`已删除关联的 ApiLog: ${totalDeletedApiLogs} 条`)
-    }
-  } else {
-    console.log('没有需要删除的 EditedCard')
-  }
-
-  // ============================================
-  // 步骤 2: 删除 ApiLog 中孤立的记录（无对应 EditedCard）
-  // ============================================
-  console.log('\n--- 步骤 2: 删除 ApiLog 中孤立的记录 ---')
-
-  // 查找孤立的 ApiLog 数量
-  const orphanedCount = await prisma.$queryRaw<[{ count: bigint }]>`
-    SELECT COUNT(*) as count
-    FROM "ApiLog" al
-    WHERE NOT EXISTS (
-      SELECT 1 FROM "EditedCard" ec 
-      WHERE ec."originalCardId" = al."cardId"
-    )
-  `
-  console.log(`孤立的 ApiLog 数量: ${orphanedCount[0].count}`)
-
-  if (Number(orphanedCount[0].count) > 0) {
-    // 获取孤立的 cardId
-    const orphanedLogs = await prisma.$queryRaw<{ cardId: string }[]>`
-      SELECT al."cardId"
-      FROM "ApiLog" al
-      WHERE NOT EXISTS (
-        SELECT 1 FROM "EditedCard" ec 
-        WHERE ec."originalCardId" = al."cardId"
-      )
-    `
-    const orphanedCardIds = orphanedLogs.map(l => l.cardId)
-
-    // 分批删除
-    const batchSize = 1000
-    let totalDeletedOrphanedUA = 0
-    let totalDeletedOrphanedAL = 0
-
-    for (let i = 0; i < orphanedCardIds.length; i += batchSize) {
-      const batch = orphanedCardIds.slice(i, i + batchSize)
-      
-      // 删除 UserAction
-      const deletedUA = await prisma.userAction.deleteMany({
-        where: { cardId: { in: batch } }
-      })
-      totalDeletedOrphanedUA += deletedUA.count
-
-      // 删除 ApiLog
-      const deletedAL = await prisma.apiLog.deleteMany({
-        where: { cardId: { in: batch } }
-      })
-      totalDeletedOrphanedAL += deletedAL.count
-    }
-    console.log(`已删除孤立记录的 UserAction: ${totalDeletedOrphanedUA} 条`)
-    console.log(`已删除孤立的 ApiLog: ${totalDeletedOrphanedAL} 条`)
-  } else {
-    console.log('没有孤立的 ApiLog 需要删除')
-  }
-
-  // ============================================
-  // 最终统计
-  // ============================================
-  console.log('\n=== 清理完成 ===')
-  
-  const finalEditedCardCount = await prisma.editedCard.count()
-  const finalApiLogCount = await prisma.apiLog.count()
-  const finalUserActionCount = await prisma.userAction.count()
-  
-  console.log(`\n清理前 -> 清理后：`)
-  console.log(`EditedCard: ${beforeEditedCardCount} -> ${finalEditedCardCount} (删除 ${beforeEditedCardCount - finalEditedCardCount})`)
-  console.log(`ApiLog: ${beforeApiLogCount} -> ${finalApiLogCount} (删除 ${beforeApiLogCount - finalApiLogCount})`)
-  console.log(`UserAction: ${beforeUserActionCount} -> ${finalUserActionCount} (删除 ${beforeUserActionCount - finalUserActionCount})`)
-  
-  console.log('\n建议：在 Neon SQL Editor 执行 VACUUM ANALYZE; 以回收空间')
+interface CleanupOptions {
+  dryRun: boolean;
+  retentionDays: number;
+  limit: number;
 }
 
-main()
-  .catch((e) => {
-    console.error('错误:', e)
-    process.exit(1)
-  })
-  .finally(async () => {
-    await prisma.$disconnect()
-  })
+interface CleanupStats {
+  attempted: number;
+  databaseDeleted: number;
+  storageDeleted: number;
+  skippedDatabase: number;
+  failedStorage: number;
+}
+
+interface CleanupCandidate {
+  id: string | number;
+  label: string;
+  r2Url: string | null;
+  createdAt: Date;
+  knownBytes: number;
+}
+
+function readNumberArg(args: string[], name: string, fallback: number): number {
+  const prefix = `${name}=`;
+  const value = args.find(arg => arg.startsWith(prefix))?.slice(prefix.length);
+  if (!value) return fallback;
+
+  const parsed = Number(value);
+  if (!Number.isInteger(parsed) || parsed <= 0) {
+    throw new Error(`${name} must be a positive integer`);
+  }
+  return parsed;
+}
+
+function parseArgs(args = process.argv.slice(2)): CleanupOptions {
+  const wantsExecute = args.includes('--execute');
+  const wantsDryRun = args.includes('--dry-run');
+
+  if (wantsExecute && wantsDryRun) {
+    throw new Error('Choose either --dry-run or --execute, not both');
+  }
+
+  return {
+    dryRun: !wantsExecute,
+    retentionDays: readNumberArg(args, '--retention-days', DEFAULT_RETENTION_DAYS),
+    limit: readNumberArg(args, '--limit', DEFAULT_BATCH_SIZE),
+  };
+}
+
+function formatBytes(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  const units = ['KB', 'MB', 'GB', 'TB'];
+  let value = bytes / 1024;
+  let index = 0;
+
+  while (value >= 1024 && index < units.length - 1) {
+    value /= 1024;
+    index += 1;
+  }
+
+  return `${value.toFixed(value >= 10 ? 1 : 2)} ${units[index]}`;
+}
+
+function estimateTextBytes(content: string | null | undefined): number {
+  return content ? Buffer.byteLength(content, 'utf8') : 0;
+}
+
+function summarizeCandidates(label: string, total: number, candidates: CleanupCandidate[]): void {
+  const knownBytes = candidates.reduce((sum, candidate) => sum + candidate.knownBytes, 0);
+  const unknownRemoteObjects = candidates.filter(candidate => {
+    const target = classifyStorageUrl(candidate.r2Url);
+    return target.action === 'delete-r2' && candidate.knownBytes === 0;
+  }).length;
+
+  console.log(`\n--- ${label} ---`);
+  console.log(`Total candidates: ${total}`);
+  console.log(`Current batch: ${candidates.length}`);
+  console.log(`Estimated known reclaimable text size in batch: ${formatBytes(knownBytes)}`);
+  console.log(`Remote objects without known local size in batch: ${unknownRemoteObjects}`);
+
+  for (const candidate of candidates) {
+    const target = classifyStorageUrl(candidate.r2Url);
+    const storageLabel = target.key || target.provider;
+    console.log(
+      `- ${candidate.label} | created=${candidate.createdAt.toISOString()} | storage=${storageLabel} | url=${candidate.r2Url || '(none)'}`
+    );
+  }
+}
+
+async function deleteStorageIfNeeded(
+  url: string | null,
+  dryRun: boolean
+): Promise<StorageDeletionResult> {
+  if (dryRun) {
+    const target = classifyStorageUrl(url);
+    return {
+      ...target,
+      status: 'skipped',
+      url: url || undefined,
+    };
+  }
+
+  return deleteStoredObjectByUrl(url);
+}
+
+function createStats(): CleanupStats {
+  return {
+    attempted: 0,
+    databaseDeleted: 0,
+    storageDeleted: 0,
+    skippedDatabase: 0,
+    failedStorage: 0,
+  };
+}
+
+function printStats(label: string, stats: CleanupStats): void {
+  console.log(`\n${label} results:`);
+  console.log(`Attempted: ${stats.attempted}`);
+  console.log(`Database rows deleted: ${stats.databaseDeleted}`);
+  console.log(`Storage objects deleted: ${stats.storageDeleted}`);
+  console.log(`Database rows kept because storage was not safely removable: ${stats.skippedDatabase}`);
+  console.log(`Storage deletion failures: ${stats.failedStorage}`);
+}
+
+const protectedActions = [...CLEANUP_PROTECTED_ACTIONS];
+
+interface EditedCardCleanupRow {
+  id: string;
+  originalCardId: string;
+  cardType: string;
+  createdAt: Date;
+  r2Url: string | null;
+  editedContent: string | null;
+}
+
+interface ApiLogCleanupRow {
+  id: number;
+  cardId: string;
+  cardType: string;
+  timestamp: Date;
+  r2Url: string | null;
+  responseContent: string | null;
+}
+
+function buildEditedCardBaseSql(cutoff: Date): Prisma.Sql {
+  return Prisma.sql`
+    FROM "EditedCard" ec
+    LEFT JOIN "User" u ON u.id = ec."userId"
+    WHERE ec."createdAt" < ${cutoff}
+      AND ec."deleted" = false
+      AND ec."customUrl" IS NULL
+      AND (ec."userId" IS NULL OR COALESCE(u."plan"::text, 'FREE') <> 'PREMIUM')
+      AND NOT EXISTS (
+        SELECT 1 FROM "UserAction" ua
+        WHERE ua."cardId" = ec."originalCardId"
+          AND ua."action" IN (${Prisma.join(protectedActions)})
+      )
+  `;
+}
+
+function buildOrphanedApiLogBaseSql(cutoff: Date): Prisma.Sql {
+  return Prisma.sql`
+    FROM "ApiLog" al
+    LEFT JOIN "User" u ON u.id = al."userId"
+    WHERE al."timestamp" < ${cutoff}
+      AND (al."userId" IS NULL OR COALESCE(u."plan"::text, 'FREE') <> 'PREMIUM')
+      AND NOT EXISTS (
+        SELECT 1 FROM "EditedCard" ec
+        WHERE ec."originalCardId" = al."cardId"
+      )
+      AND NOT EXISTS (
+        SELECT 1 FROM "UserAction" ua
+        WHERE ua."cardId" = al."cardId"
+          AND ua."action" IN (${Prisma.join(protectedActions)})
+      )
+  `;
+}
+
+async function cleanupEditedCards(
+  prisma: PrismaClient,
+  cutoff: Date,
+  options: CleanupOptions
+): Promise<CleanupStats> {
+  const baseSql = buildEditedCardBaseSql(cutoff);
+  const [totalRows, cards] = await Promise.all([
+    prisma.$queryRaw<{ count: bigint }[]>`
+      SELECT COUNT(*)::bigint AS count
+      ${baseSql}
+    `,
+    prisma.$queryRaw<EditedCardCleanupRow[]>`
+      SELECT
+        ec.id,
+        ec."originalCardId",
+        ec."cardType",
+        ec."createdAt",
+        ec."r2Url",
+        ec."editedContent"
+      ${baseSql}
+      ORDER BY ec."createdAt" ASC
+      LIMIT ${options.limit}
+    `,
+  ]);
+  const total = Number(totalRows[0]?.count ?? 0);
+  const uniqueCards = dedupeById(cards);
+
+  summarizeCandidates(
+    'EditedCard cleanup candidates',
+    total,
+    uniqueCards.map(card => ({
+      id: card.id,
+      label: `EditedCard:${card.id} original=${card.originalCardId} type=${card.cardType}`,
+      r2Url: card.r2Url,
+      createdAt: card.createdAt,
+      knownBytes: estimateTextBytes(card.editedContent),
+    }))
+  );
+
+  const stats = createStats();
+  for (const card of uniqueCards) {
+    stats.attempted += 1;
+    const storageResult = await deleteStorageIfNeeded(card.r2Url, options.dryRun);
+
+    if (storageResult.status === 'deleted') {
+      stats.storageDeleted += 1;
+    }
+
+    if (storageResult.status === 'failed') {
+      stats.failedStorage += 1;
+      console.error(`Keeping EditedCard ${card.id}; storage delete failed: ${storageResult.error}`);
+      continue;
+    }
+
+    if (!storageResult.canDeleteDatabase) {
+      stats.skippedDatabase += 1;
+      console.warn(
+        `Keeping EditedCard ${card.id}; ${storageResult.provider} is not safely removable: ${storageResult.reason || 'no reason provided'}`
+      );
+      continue;
+    }
+
+    if (!options.dryRun) {
+      const result = await prisma.editedCard.deleteMany({ where: { id: card.id } });
+      stats.databaseDeleted += result.count;
+    }
+  }
+
+  return stats;
+}
+
+async function cleanupOrphanedApiLogs(
+  prisma: PrismaClient,
+  cutoff: Date,
+  options: CleanupOptions
+): Promise<CleanupStats> {
+  const baseSql = buildOrphanedApiLogBaseSql(cutoff);
+  const [totalRows, logs] = await Promise.all([
+    prisma.$queryRaw<{ count: bigint }[]>`
+      SELECT COUNT(*)::bigint AS count
+      ${baseSql}
+    `,
+    prisma.$queryRaw<ApiLogCleanupRow[]>`
+      SELECT
+        al.id,
+        al."cardId",
+        al."cardType",
+        al."timestamp",
+        al."r2Url",
+        al."responseContent"
+      ${baseSql}
+      ORDER BY al."timestamp" ASC
+      LIMIT ${options.limit}
+    `,
+  ]);
+  const total = Number(totalRows[0]?.count ?? 0);
+  const uniqueLogs = dedupeById(logs);
+
+  summarizeCandidates(
+    'Orphaned ApiLog cleanup candidates',
+    total,
+    uniqueLogs.map(log => ({
+      id: log.id,
+      label: `ApiLog:${log.id} card=${log.cardId} type=${log.cardType}`,
+      r2Url: log.r2Url,
+      createdAt: log.timestamp,
+      knownBytes: estimateTextBytes(log.responseContent),
+    }))
+  );
+
+  const stats = createStats();
+  for (const log of uniqueLogs) {
+    stats.attempted += 1;
+    const storageResult = await deleteStorageIfNeeded(log.r2Url, options.dryRun);
+
+    if (storageResult.status === 'deleted') {
+      stats.storageDeleted += 1;
+    }
+
+    if (storageResult.status === 'failed') {
+      stats.failedStorage += 1;
+      console.error(`Keeping ApiLog ${log.id}; storage delete failed: ${storageResult.error}`);
+      continue;
+    }
+
+    if (!storageResult.canDeleteDatabase) {
+      stats.skippedDatabase += 1;
+      console.warn(
+        `Keeping ApiLog ${log.id}; ${storageResult.provider} is not safely removable: ${storageResult.reason || 'no reason provided'}`
+      );
+      continue;
+    }
+
+    if (!options.dryRun) {
+      const result = await prisma.apiLog.deleteMany({ where: { id: log.id } });
+      stats.databaseDeleted += result.count;
+    }
+  }
+
+  return stats;
+}
+
+async function main() {
+  const options = parseArgs();
+  const cutoff = getCleanupCutoffDate(new Date(), options.retentionDays);
+
+  const dbUrl = process.env.DIRECT_URL || process.env.DATABASE_URL || '';
+  const urlWithTimeout = dbUrl.includes('connect_timeout')
+    ? dbUrl
+    : dbUrl + (dbUrl.includes('?') ? '&' : '?') + 'connect_timeout=30';
+
+  const prisma = new PrismaClient({
+    datasources: {
+      db: {
+        url: urlWithTimeout,
+      },
+    },
+  });
+
+  console.log('=== Card cleanup ===');
+  console.log(`Mode: ${options.dryRun ? 'dry-run' : 'execute'}`);
+  console.log(`Retention: ${options.retentionDays} days`);
+  console.log(`Cutoff: ${cutoff.toISOString()}`);
+  console.log(`Batch limit per section: ${options.limit}`);
+
+  try {
+    const editedStats = await cleanupEditedCards(prisma, cutoff, options);
+    printStats('EditedCard cleanup', editedStats);
+
+    const apiLogStats = await cleanupOrphanedApiLogs(prisma, cutoff, options);
+    printStats('Orphaned ApiLog cleanup', apiLogStats);
+
+    if (options.dryRun) {
+      console.log('\nDry-run only. Re-run with --execute after reviewing candidates.');
+    } else {
+      console.log('\nCleanup complete. Consider VACUUM ANALYZE after large database deletions.');
+    }
+  } finally {
+    await prisma.$disconnect();
+  }
+}
+
+if (require.main === module) {
+  main().catch(error => {
+    console.error('Cleanup failed:', error);
+    process.exit(1);
+  });
+}

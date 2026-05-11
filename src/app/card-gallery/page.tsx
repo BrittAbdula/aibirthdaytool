@@ -1,6 +1,6 @@
 import { Suspense } from 'react'
 import { Metadata } from 'next'
-import { getRecentCardsServer } from '@/lib/cards'
+import { getFeaturedCardsServer } from '@/lib/cards'
 import CardGalleryContent from './CardGalleryContent'
 import { toAbsoluteUrl } from '@/lib/seo'
 
@@ -38,7 +38,7 @@ export const revalidate = 3600
 
 // Server Component
 export default async function CardGalleryPage() {
-  const initialCardsData = await getRecentCardsServer(1, 24, null)
+  const initialCardsData = await getFeaturedCardsServer(1, 24, null)
   
   return (
     <article className="min-h-screen bg-gradient-to-br from-white via-purple-50 to-pink-50">
@@ -55,7 +55,7 @@ export default async function CardGalleryPage() {
             <div className="flex flex-wrap justify-center gap-4 text-sm">
               <span className="px-3 py-1 bg-purple-50 rounded-full">Public examples</span>
               <span className="px-3 py-1 bg-purple-50 rounded-full">Filter by occasion</span>
-              <span className="px-3 py-1 bg-purple-50 rounded-full">Recent by default</span>
+              <span className="px-3 py-1 bg-purple-50 rounded-full">Featured by default</span>
               <span className="px-3 py-1 bg-purple-50 rounded-full">Open a generator next</span>
             </div>
         </header>
@@ -72,7 +72,7 @@ export default async function CardGalleryPage() {
             <CardGalleryContent 
               initialCardsData={initialCardsData!} 
               defaultType={null} 
-              activeTab="recent" 
+              activeTab="featured"
             />
           </Suspense>
         </section>
