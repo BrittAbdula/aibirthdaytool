@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
 import { uploadVideoToR2, uploadToCloudflareImages } from '@/lib/r2';
+import { SEEDANCE_VIDEO_MODEL, requestSeedanceVideoStatus } from '@/lib/seedance-video';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -155,6 +156,87 @@ export async function GET(request: Request) {
       response.headers.set('Pragma', 'no-cache');
       response.headers.set('Expires', '0');
       return response;
+    }
+
+    // Handle Seedance video generation status
+    if (card.promptVersion === SEEDANCE_VIDEO_MODEL || card.promptVersion?.includes('seedance')) {
+      try {
+        const videoData = await requestSeedanceVideoStatus(card.taskId || '');
+
+        if (videoData.status === 'completed') {
+          if (videoData.videoUrl) {
+            const r2Url = await uploadVideoToR2(videoData.videoUrl, card.taskId || '');
+            await prisma.apiLog.update({
+              where: { cardId },
+              data: {
+                status: 'completed',
+                r2Url,
+                tokensUsed: videoData.tokensUsed,
+              },
+            });
+
+            const response = NextResponse.json({
+              status: 'completed',
+              r2Url,
+              responseContent: '',
+              progress: 100,
+            });
+
+            response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+            response.headers.set('Pragma', 'no-cache');
+            response.headers.set('Expires', '0');
+
+            return response;
+          }
+        }
+
+        if (videoData.status === 'failed') {
+          await prisma.apiLog.update({
+            where: { cardId },
+            data: { status: 'failed', errorMessage: videoData.errorMessage || 'Seedance video generation failed' },
+          });
+
+          const response = NextResponse.json({
+            status: 'failed',
+            r2Url: '',
+            responseContent: '',
+            errorMessage: videoData.errorMessage || 'Seedance video generation failed',
+          });
+
+          response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+          response.headers.set('Pragma', 'no-cache');
+          response.headers.set('Expires', '0');
+
+          return response;
+        }
+
+        const response = NextResponse.json({
+          status: 'processing',
+          r2Url: '',
+          responseContent: '',
+          progress: videoData.progress,
+          message: `Video is being generated (${videoData.progress}%)`,
+        });
+
+        response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+        response.headers.set('Pragma', 'no-cache');
+        response.headers.set('Expires', '0');
+
+        return response;
+      } catch (error) {
+        const response = NextResponse.json({
+          status: 'processing',
+          r2Url: '',
+          responseContent: '',
+          message: error instanceof Error ? error.message : 'Seedance video is being generated',
+        });
+
+        response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+        response.headers.set('Pragma', 'no-cache');
+        response.headers.set('Expires', '0');
+
+        return response;
+      }
     }
 
     // Handle HM video generation status

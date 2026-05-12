@@ -2,14 +2,21 @@ import assert from 'node:assert/strict';
 
 import {
   ACTION_WEIGHTS,
+  PREMIUM_TAB_TEXT_MODELS,
   getInteractionScore,
   getModelQualityScore,
   getRecencyBoost,
 } from '../src/lib/card-ranking';
 
 assert.equal(getModelQualityScore('google/nano-banana-edit'), 70);
+assert.equal(getModelQualityScore('gpt-image-2-edit'), 70);
+assert.equal(getModelQualityScore('gpt-image-2'), 65);
 assert.equal(getModelQualityScore('google/nano-banana-pro'), 65);
+assert.equal(getModelQualityScore('claude-opus-4-7'), 40);
+assert.equal(getModelQualityScore('claude-sonnet-4-6'), 40);
 assert.equal(getModelQualityScore('claude-sonnet-4-5-20250929'), 40);
+assert.equal(PREMIUM_TAB_TEXT_MODELS.includes('claude-opus-4-7'), true);
+assert.equal(PREMIUM_TAB_TEXT_MODELS.includes('claude-sonnet-4-6'), true);
 assert.equal(getModelQualityScore('some-new-model'), 15);
 assert.equal(getModelQualityScore(null), 0);
 

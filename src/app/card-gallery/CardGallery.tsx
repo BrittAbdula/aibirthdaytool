@@ -7,6 +7,7 @@ import { CardType } from '@/lib/card-config'
 import { Heart } from 'lucide-react'
 import { CARD_TYPES, RELATIONSHIPS } from '@/lib/card-constants'
 import { recordUserAction } from '@/lib/action'
+import { GALLERY_PAGE_SIZE } from '@/lib/gallery-pagination'
 import { buildCardPreviewAlt, buildCardPreviewTitle } from '@/lib/seo'
 
 interface CardGalleryProps {
@@ -18,8 +19,6 @@ interface CardGalleryProps {
   relationship?: string | null;
   tabType: TabType;
 }
-
-const CARDS_PER_PAGE = 12
 
 const SkeletonCard = () => (
   <div className="break-inside-avoid mb-3 sm:mb-4">
@@ -118,7 +117,7 @@ export default function CardGallery({ initialCardsData, wishCardType, relationsh
     try {
       const params = new URLSearchParams({
         page: page.toString(),
-        pageSize: CARDS_PER_PAGE.toString(),
+        pageSize: GALLERY_PAGE_SIZE.toString(),
         tab: tabType,
         ...(relationship ? { relationship } : {}),
         ...(wishCardType ? { wishCardType } : {})

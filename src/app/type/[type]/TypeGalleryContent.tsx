@@ -8,6 +8,7 @@ import CardGallery from '@/app/card-gallery/CardGallery'
 import { CardType } from '@/lib/card-config'
 import { RELATIONSHIPS } from '@/lib/card-constants'
 import { TabType } from '@/lib/cards'
+import { GALLERY_PAGE_SIZE } from '@/lib/gallery-pagination'
 import { getGalleryComboHref, getRelationshipLabel, getRelationshipValue, hasSeoGalleryCombo } from '@/lib/gallery-combos'
 
 interface Props {
@@ -92,7 +93,7 @@ export default function TypeGalleryContent({
       try {
         const params = new URLSearchParams({
           page: '1',
-          pageSize: '12',
+          pageSize: GALLERY_PAGE_SIZE.toString(),
           wishCardType: type,
           tab: currentTab,
           ...(selectedRelationship && { relationship: selectedRelationship })

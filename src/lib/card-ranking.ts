@@ -1,13 +1,16 @@
 export const REFERENCE_EDIT_MODELS = [
+  'gpt-image-2-edit',
   'google/nano-banana-edit',
 ] as const;
 
 export const PREMIUM_QUALITY_MODELS = [
+  'gpt-image-2',
   'gpt4o-image',
   'google/nano-banana-pro',
   'hm-veo3-fast-video',
   'veo-veo3-fast-video',
   'luma-ray-v2-video',
+  'doubao-seedance-2-0-fast-260128',
 ] as const;
 
 export const STRONG_QUALITY_MODELS = [
@@ -17,6 +20,8 @@ export const STRONG_QUALITY_MODELS = [
 ] as const;
 
 export const TEXT_QUALITY_MODELS = [
+  'claude-opus-4-7',
+  'claude-sonnet-4-6',
   'anthropic/claude-sonnet-4',
   'claude-sonnet-4-20250514',
   'claude-sonnet-4-5-20250929',
@@ -26,6 +31,14 @@ export const TEXT_QUALITY_MODELS = [
   'claude-haiku-4-5-20251001',
   'gemini-3-flash-preview',
   'deepseek/deepseek-chat-v3-0324:free',
+] as const;
+
+export const PREMIUM_TAB_TEXT_MODELS = [
+  'claude-opus-4-7',
+  'claude-sonnet-4-6',
+  'anthropic/claude-sonnet-4',
+  'claude-sonnet-4-5-20250929',
+  'anthropic/claude-3.7-sonnet',
 ] as const;
 
 export const ACTION_WEIGHTS = {

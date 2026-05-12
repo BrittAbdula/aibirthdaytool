@@ -2,6 +2,7 @@ import { Suspense } from 'react'
 import { Metadata } from 'next'
 import { getFeaturedCardsServer } from '@/lib/cards'
 import CardGalleryContent from './CardGalleryContent'
+import { GALLERY_PAGE_SIZE } from '@/lib/gallery-pagination'
 import { toAbsoluteUrl } from '@/lib/seo'
 
 export const metadata: Metadata = {
@@ -38,7 +39,7 @@ export const revalidate = 3600
 
 // Server Component
 export default async function CardGalleryPage() {
-  const initialCardsData = await getFeaturedCardsServer(1, 24, null)
+  const initialCardsData = await getFeaturedCardsServer(1, GALLERY_PAGE_SIZE, null)
   
   return (
     <article className="min-h-screen bg-gradient-to-br from-white via-purple-50 to-pink-50">

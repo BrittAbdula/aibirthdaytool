@@ -1,9 +1,10 @@
 import { Metadata } from "next";
-import ViralMicrosite from "@/components/viral/ViralMicrosite";
+import { Suspense } from "react";
 import {
   buildViralMicrositeMetadata,
   getViralMicrosite,
 } from "@/lib/viral-microsites";
+import ValentineExperience from "./valentine-experience";
 
 const microsite = getViralMicrosite("will-you-be-my-valentine");
 
@@ -12,7 +13,13 @@ export const metadata: Metadata = microsite
   : {};
 
 export default function Page() {
-  if (!microsite) return null;
-
-  return <ViralMicrosite config={microsite} />;
+  return (
+    <Suspense
+      fallback={
+        <main className="min-h-[100dvh] bg-gradient-to-br from-rose-100 via-pink-100 to-orange-50" />
+      }
+    >
+      <ValentineExperience />
+    </Suspense>
+  );
 }

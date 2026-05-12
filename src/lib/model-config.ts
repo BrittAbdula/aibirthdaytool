@@ -64,26 +64,26 @@ export const modelConfigs: ModelConfig[] = [
   {
     id: 'Premium_Video_Fast',
     name: 'Pro Video Fast',
-    description: 'Dynamic video cards with smooth animations and effects',
-    time: '45 sec',
+    description: '5-second video cards with smooth motion and cinematic effects',
+    time: '60 sec',
     format: 'video',
     tier: 'Premium',
     credits: 6,
     icon: '🎬',
     badge: 'Premium',
-    features: ['HD video output', 'Dynamic animations', 'Professional effects']
+    features: ['Fast video generation', '5-second video', 'HD motion output']
   },
   {
     id: 'Premium_Video_Pro',
-    name: 'Pro Video Ultimate',
-    description: 'Ultra-premium video cards with cinematic quality',
-    time: '90 sec',
+    name: 'Pro Video Fast',
+    description: '5-second video cards with smooth motion and cinematic effects',
+    time: '60 sec',
     format: 'video',
     tier: 'Premium',
-    credits: 15,
+    credits: 6,
     icon: '🎥',
     badge: 'Premium',
-    features: ['4K video output', 'Cinematic effects', 'Ultimate quality']
+    features: ['Fast video generation', '5-second video', 'HD motion output']
   }
 ];
 

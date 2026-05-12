@@ -6,6 +6,7 @@ import CardGallery from '@/app/card-gallery/CardGallery'
 import CardTypeFilter from '@/app/card-gallery/CardTypeFilter'
 import { CardType } from '@/lib/card-config'
 import { Card, TabType } from '@/lib/cards'
+import { GALLERY_PAGE_SIZE } from '@/lib/gallery-pagination'
 
 interface CardGalleryContentProps {
   initialCardsData: {
@@ -106,7 +107,7 @@ export default function CardGalleryContent({
       try {
         const params = new URLSearchParams({
           page: '1',
-          pageSize: '12',
+          pageSize: GALLERY_PAGE_SIZE.toString(),
           tab: currentTab,
           ...(selectedType && { wishCardType: selectedType }),
           ...(selectedRelationship && { relationship: selectedRelationship })

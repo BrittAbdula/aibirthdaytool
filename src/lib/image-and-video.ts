@@ -6,6 +6,8 @@ import { uploadImageToR2} from '@/lib/r2';
 import { GoogleGenAI, Modality } from "@google/genai";
 import { nanoid } from 'nanoid';
 import { v2 as cloudinary } from 'cloudinary';
+import { GPT_IMAGE_2_EDIT_MODEL, requestGptImage2Edit } from './gpt-image-2';
+import { SEEDANCE_VIDEO_MODEL, requestSeedanceVideoGeneration } from './seedance-video';
 
 interface CardContentParams {
     cardType: CardType;
@@ -543,79 +545,105 @@ export async function generateCardVideoWithLuma(params: CardContentParams): Prom
 
 export async function generateCardVideo(params: CardContentParams, modelLevel: string): Promise<{ taskId: string, r2Url: string, svgContent: string, model: string, tokensUsed: number, duration: number, errorMessage?: string, status?: string }> {
     if (modelLevel === 'PREMIUM') {
-        
-        return await generateCardVideoWithLuma(params);
+        return await generateCardVideoWithSeedance(params);
     } else {
         // 可以在这里添加其他视频生成服务
         throw new Error('Video generation not supported for this model level');
     }
 }
 
-// Reference-image edit via Banana Edit API (google/nano-banana-edit)
-export async function generateCardImageWithBananaEdit(params: { size: string; userPrompt: string; imageUrls: string[] }): Promise<{ taskId: string, r2Url: string, svgContent: string, model: string, tokensUsed: number, duration: number, errorMessage?: string, status?: string }> {
+export async function generateCardVideoWithSeedance(params: CardContentParams): Promise<{ taskId: string, r2Url: string, svgContent: string, model: string, tokensUsed: number, duration: number, errorMessage?: string, status?: string }> {
+    const { size, userPrompt } = params;
     const startTime = Date.now();
+
+    console.log(`<----Using model : ${SEEDANCE_VIDEO_MODEL}---->`);
+
     try {
-        const apiKey = process.env.KIE_API_KEY;
-        if (!apiKey) throw new Error('KIE_API_KEY is not configured');
-
-        if (!params.imageUrls?.length) throw new Error('No reference images provided');
-        if (params.userPrompt.length >= 5000) throw new Error('User prompt too long');
-
-        const sizeMap: Record<string, 'auto' | '1:1' | '3:4' | '9:16' | '4:3' | '16:9'> = {
-            portrait: '3:4',
-            landscape: '4:3',
-            square: '1:1',
-            instagram: '1:1',
-            story: '9:16'
-        };
-        const image_size = sizeMap[params.size] || '9:16';
-
-        const payload = {
-            model: 'google/nano-banana-edit',
-            input: {
-                prompt: params.userPrompt,
-                image_urls: params.imageUrls,
-                output_format: 'png',
-                image_size
-            }
-        };
-
-        const resp = await fetch('https://api.kie.ai/api/v1/jobs/createTask', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${apiKey}`
-            },
-            body: JSON.stringify(payload)
-        });
-        if (!resp.ok) {
-            const text = await resp.text();
-            throw new Error(`Banana createTask failed: ${resp.status} ${text}`);
+        if (userPrompt.length >= 5000) {
+            throw new Error('User prompt too long');
         }
-        const data = await resp.json();
-        const taskId = data?.data?.taskId;
-        if (!taskId) throw new Error('No taskId from Banana');
+
+        const prompt = [
+            userPrompt,
+            'Create a polished 5-second greeting-card video with smooth cinematic motion.',
+            'Use full-bleed composition, no borders, no letterboxing, no overlaid text, no watermark.',
+            'Focus on visual storytelling, warm lighting, cohesive colors, and one clear emotional motion idea.',
+        ].join(' ');
+
+        const result = await requestSeedanceVideoGeneration({
+            prompt,
+            size,
+        });
 
         return {
-            taskId,
+            taskId: result.taskId,
             r2Url: '',
             svgContent: '',
-            model: 'google/nano-banana-edit',
+            model: SEEDANCE_VIDEO_MODEL,
             tokensUsed: 0,
             duration: Date.now() - startTime,
             errorMessage: '',
-            status: 'processing'
+            status: 'processing',
+        };
+    } catch (error) {
+        console.error('Error in generateCardVideoWithSeedance:', error);
+        return {
+            taskId: '',
+            r2Url: '',
+            svgContent: '',
+            model: SEEDANCE_VIDEO_MODEL,
+            tokensUsed: 0,
+            duration: Date.now() - startTime,
+            errorMessage: error instanceof Error ? error.message : 'Unknown error',
+            status: 'failed',
+        };
+    }
+}
+
+export async function generateCardImageWithGptImage2Edit(params: { size: string; userPrompt: string; imageUrls: string[] }): Promise<{ taskId: string, r2Url: string, svgContent: string, model: string, tokensUsed: number, duration: number, errorMessage?: string, status?: string }> {
+    const startTime = Date.now();
+    const taskId = `gpt_image_2_edit_${nanoid(12)}`;
+    try {
+        if (!params.imageUrls?.length) throw new Error('No reference images provided');
+        if (params.userPrompt.length >= 5000) throw new Error('User prompt too long');
+
+        const result = await requestGptImage2Edit({
+            prompt: params.userPrompt,
+            size: params.size,
+            quality: 'high',
+            imageUrls: params.imageUrls,
+        });
+
+        const r2Url = result.imageBase64
+            ? await uploadImageToR2(Buffer.from(result.imageBase64, 'base64'), taskId)
+            : result.imageUrl || '';
+
+        if (!r2Url) throw new Error('No image URL returned from gpt-image-2 edit');
+
+        return {
+            taskId,
+            r2Url,
+            svgContent: '',
+            model: GPT_IMAGE_2_EDIT_MODEL,
+            tokensUsed: result.tokensUsed,
+            duration: Date.now() - startTime,
+            errorMessage: '',
+            status: 'completed'
         };
     } catch (error) {
         return {
             taskId: '',
             r2Url: '',
             svgContent: '',
-            model: 'google/nano-banana-edit',
+            model: GPT_IMAGE_2_EDIT_MODEL,
             tokensUsed: 0,
             duration: Date.now() - startTime,
             errorMessage: error instanceof Error ? error.message : 'Unknown error',
             status: 'failed'
         };
     }
+}
+
+export async function generateCardImageWithBananaEdit(params: { size: string; userPrompt: string; imageUrls: string[] }): Promise<{ taskId: string, r2Url: string, svgContent: string, model: string, tokensUsed: number, duration: number, errorMessage?: string, status?: string }> {
+    return generateCardImageWithGptImage2Edit(params);
 }

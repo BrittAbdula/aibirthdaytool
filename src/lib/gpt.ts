@@ -3,6 +3,7 @@ import { prisma } from './prisma';
 import { generatePrompt } from './prompt';
 import { CARD_SIZES } from './card-config';
 import { fetchSvgContent } from './utils';
+import { getSvgGenerationModel } from './svg-models';
 
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
 const YOUR_SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'http://MewTruCard.COM';
@@ -24,30 +25,7 @@ function extractSvgContent(content: string): string | null {
 }
 
 function getRandomModel(modelLevel: string): string {
-    if (modelLevel === 'PREMIUM') {
-        return 'anthropic/claude-sonnet-4';
-    }
-    
-    const models = [
-        { name: "anthropic/claude-3.5-haiku", weight: 15 },
-        // { name: "anthropic/claude-3.7-sonnet", weight: 1 },
-        { name: "anthropic/claude-sonnet-4", weight: 1 },
-        // { name: "deepseek/deepseek-chat-v3-0324:free", weight: 20 },
-        // { name: "deepseek/deepseek-r1-0528:free", weight: 100 }
-    ];
-
-    const totalWeight = models.reduce((sum, model) => sum + model.weight, 0);
-    const random = Math.random() * totalWeight;
-
-    let cumulativeWeight = 0;
-    for (const model of models) {
-        cumulativeWeight += model.weight;
-        if (random < cumulativeWeight) {
-            return model.name;
-        }
-    }
-
-    return models[0].name; // Fallback, should not reach here
+    return getSvgGenerationModel(modelLevel);
 }
 
 interface CardContentParams {

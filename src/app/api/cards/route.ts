@@ -6,11 +6,12 @@ import {
   getLikedCardsServer,
   TabType,
 } from '@/lib/cards'
+import { GALLERY_PAGE_SIZE } from '@/lib/gallery-pagination'
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
   const page = parseInt(searchParams.get('page') || '1', 10)
-  const pageSize = parseInt(searchParams.get('pageSize') || '12', 10)
+  const pageSize = parseInt(searchParams.get('pageSize') || GALLERY_PAGE_SIZE.toString(), 10)
   const wishCardType = searchParams.get('wishCardType')
   const relationship = searchParams.get('relationship')
   const tab = (searchParams.get('tab') as TabType) || 'featured'
@@ -21,6 +22,9 @@ export async function GET(request: Request) {
     switch (tab) {
       case 'featured':
         cardsData = await getFeaturedCardsServer(page, pageSize, wishCardType, relationship)
+        break
+      case 'recent':
+        cardsData = await getRecentCardsServer(page, pageSize, wishCardType, relationship)
         break
       case 'popular':
         cardsData = await getPopularCardsServer(page, pageSize, wishCardType, relationship)

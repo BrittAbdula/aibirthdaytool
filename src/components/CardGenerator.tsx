@@ -46,7 +46,8 @@ const MagicalCardCreation = () => {
   // Text rotation
   useEffect(() => {
     const messages = [
-      "Drafting your message...",
+      "Reading the personal details...",
+      "Finding the emotional hook...",
       "Balancing the layout...",
       "Choosing the palette...",
       "Preparing the preview...",
@@ -159,7 +160,18 @@ const pickDefaultModelForFormat = (fmt: OutputFormat): ModelConfig => {
 const getTierOptionsForFormat = (fmt: OutputFormat) => {
   if (fmt === 'svg') return { base: modelConfigs.find(m => m.id === 'Free_SVG') || pickDefaultModelForFormat('svg'), pro: modelConfigs.find(m => m.id === 'Premium_SVG') }
   if (fmt === 'image') return { base: modelConfigs.find(m => m.id === 'Free_Image') || pickDefaultModelForFormat('image'), pro: modelConfigs.find(m => m.id === 'Premium_Image') }
-  return { base: modelConfigs.find(m => m.id === 'Premium_Video_Fast') || pickDefaultModelForFormat('video'), pro: modelConfigs.find(m => m.id === 'Premium_Video_Pro') }
+  return { base: modelConfigs.find(m => m.id === 'Premium_Video_Fast') || pickDefaultModelForFormat('video'), pro: undefined }
+}
+
+const RECIPIENT_TRAIT_CHIPS = ['Funny', 'Gentle', 'Ambitious', 'Creative', 'Calm', 'Brave', 'Warm', 'Adventurous']
+const RELATIONSHIP_VIBE_CHIPS = ['Playful', 'Heartfelt', 'Romantic', 'Respectful', 'Cozy', 'Nostalgic']
+
+const normalizeChipValues = (value: unknown): string[] => {
+  if (Array.isArray(value)) return value.map(item => String(item).trim()).filter(Boolean)
+  if (typeof value === 'string') {
+    return value.split(',').map(item => item.trim()).filter(Boolean)
+  }
+  return []
 }
 
 const CustomSelect = ({ value, onValueChange, placeholder, options, customValue, onCustomValueChange, required, label }: any) => {
@@ -236,8 +248,8 @@ export default function CardGenerator({
   const TOTAL_STEPS = 3;
   const STEP_LABELS = [
     { title: 'Recipient & occasion', description: 'Start with who this card is for and what moment you are sending.' },
-    { title: 'Message & tone', description: 'Write the core feeling before choosing output settings.' },
-    { title: 'Format, style & sharing', description: 'Choose how the card should look, save, and share.' },
+    { title: 'Message & personal touch', description: 'Add the feeling, then one memory, trait, or motif that makes it specific.' },
+    { title: 'Format, style & sharing', description: 'Choose output settings, reference image, and gallery visibility.' },
   ];
 
   const {
@@ -326,6 +338,11 @@ export default function CardGenerator({
   useEffect(() => {
     if (!selectedFormat) return;
     const tiers = getTierOptionsForFormat(selectedFormat);
+    if (selectedTier === 'pro' && !tiers.pro) {
+      setSelectedTier('base');
+      setSelectedModel(tiers.base);
+      return;
+    }
     const nextModel = selectedTier === 'pro' && tiers.pro ? tiers.pro : tiers.base;
     setSelectedModel(nextModel);
     if (selectedFormat === 'svg') setSelectedStyleId(null);
@@ -342,8 +359,26 @@ export default function CardGenerator({
     }
   }, [globalLoading, imageStates, initialImgUrl]);
 
-  const handleInputChange = (name: string, value: string | number) => {
+  const handleInputChange = (name: string, value: any) => {
     setFormData(prev => ({ ...prev, [name]: value }))
+  }
+
+  const toggleRecipientTrait = (trait: string) => {
+    setFormData(prev => {
+      const current = normalizeChipValues(prev.recipientTraits);
+      const exists = current.includes(trait);
+      const next = exists
+        ? current.filter(item => item !== trait)
+        : [...current, trait].slice(0, 3);
+      return { ...prev, recipientTraits: next };
+    });
+  }
+
+  const toggleRelationshipVibe = (vibe: string) => {
+    setFormData(prev => ({
+      ...prev,
+      relationshipVibe: prev.relationshipVibe === vibe ? '' : vibe
+    }));
   }
 
   const handleReferenceUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -396,13 +431,18 @@ export default function CardGenerator({
       return;
     }
 
+    if (selectedFormat === 'video' && !isPremiumUser) {
+      setIsPremiumModalOpen(true);
+      return;
+    }
+
     const options = {
       cardType: currentCardType,
       size: selectedSize,
       modelId: selectedModel.id,
       formData: { ...formData, isPublic: !isPrivateCard },
       imageCount: 1, // Force 1 for simplicity in wizard
-      referenceImageUrls: uploadedRefUrls,
+      referenceImageUrls: selectedFormat === 'image' ? uploadedRefUrls : [],
       styleId: selectedFormat === 'image' ? (selectedStyleId || undefined) : undefined,
       outputFormat: selectedFormat
     };
@@ -421,6 +461,7 @@ export default function CardGenerator({
     formData,
     generateCards,
     isPrivateCard,
+    isPremiumUser,
     selectedFormat,
     selectedModel,
     selectedSize,
@@ -557,12 +598,110 @@ export default function CardGenerator({
     </div>
   )
 
+  const renderPersonalTouchFields = () => {
+    const selectedTraits = normalizeChipValues(formData.recipientTraits);
+    const selectedVibe = (formData.relationshipVibe || '').toString();
+
+    return (
+      <div className="space-y-5 rounded-lg border border-[#F1D6DF] bg-[#FFF8F6] p-4">
+        <div>
+          <h4 className="text-base font-semibold text-[#202A3D]">Personal touch</h4>
+          <p className="mt-1 text-sm leading-6 text-[#6B7280]">
+            A single memory, trait, or motif is enough.
+          </p>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="sharedMemory" className="font-medium text-[#202A3D]">Shared memory or recent moment</Label>
+          <Textarea
+            id="sharedMemory"
+            value={formData.sharedMemory || ''}
+            onChange={(e) => handleInputChange('sharedMemory', e.target.value)}
+            placeholder="e.g. our rainy coffee walk after the concert"
+            rows={2}
+            className="min-h-[76px] resize-none border-[#F1D6DF] bg-white text-base"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label className="font-medium text-[#202A3D]">Recipient traits</Label>
+          <div className="flex flex-wrap gap-2">
+            {RECIPIENT_TRAIT_CHIPS.map((trait) => {
+              const selected = selectedTraits.includes(trait);
+              return (
+                <button
+                  key={trait}
+                  type="button"
+                  aria-pressed={selected}
+                  onClick={() => toggleRecipientTrait(trait)}
+                  className={cn(
+                    "min-h-[44px] rounded-full border px-4 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30",
+                    selected ? "border-primary bg-primary text-white" : "border-[#F1D6DF] bg-white text-[#202A3D] hover:bg-primary/10"
+                  )}
+                >
+                  {trait}
+                </button>
+              )
+            })}
+          </div>
+          <p className="text-xs text-[#6B7280]">Pick up to 3.</p>
+        </div>
+
+        <div className="space-y-2">
+          <Label className="font-medium text-[#202A3D]">Relationship vibe</Label>
+          <div className="flex flex-wrap gap-2">
+            {RELATIONSHIP_VIBE_CHIPS.map((vibe) => {
+              const selected = selectedVibe === vibe;
+              return (
+                <button
+                  key={vibe}
+                  type="button"
+                  aria-pressed={selected}
+                  onClick={() => toggleRelationshipVibe(vibe)}
+                  className={cn(
+                    "min-h-[44px] rounded-full border px-4 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30",
+                    selected ? "border-[#202A3D] bg-[#202A3D] text-white" : "border-[#F1D6DF] bg-white text-[#202A3D] hover:bg-[#FFF1EE]"
+                  )}
+                >
+                  {vibe}
+                </button>
+              )
+            })}
+          </div>
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div className="space-y-2">
+            <Label htmlFor="insideJokeOrMotif" className="font-medium text-[#202A3D]">Inside joke or motif</Label>
+            <Input
+              id="insideJokeOrMotif"
+              value={formData.insideJokeOrMotif || ''}
+              onChange={(e) => handleInputChange('insideJokeOrMotif', e.target.value)}
+              placeholder="e.g. blue umbrella"
+              className="h-12 border-[#F1D6DF] bg-white"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="avoidDetails" className="font-medium text-[#202A3D]">Avoid</Label>
+            <Input
+              id="avoidDetails"
+              value={formData.avoidDetails || ''}
+              onChange={(e) => handleInputChange('avoidDetails', e.target.value)}
+              placeholder="e.g. no cheesy hearts"
+              className="h-12 border-[#F1D6DF] bg-white"
+            />
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   const renderMessageFields = () => (
     <div className="space-y-6 animate-in slide-in-from-right-4 duration-300">
       <div>
         <h3 className="text-xl font-semibold text-[#202A3D]">Message and tone</h3>
         <p className="mt-2 text-sm leading-6 text-[#6B7280]">
-          Write the feeling first. The final format works better after the message has enough context.
+          Write the feeling first, then add one human detail that makes the card specific.
         </p>
       </div>
 
@@ -594,6 +733,8 @@ export default function CardGenerator({
           return field ? renderField(field) : null;
         })}
       </div>
+
+      {renderPersonalTouchFields()}
     </div>
   )
 
@@ -602,7 +743,7 @@ export default function CardGenerator({
       <div>
         <h3 className="text-xl font-semibold text-[#202A3D]">Format, style, and sharing</h3>
         <p className="mt-2 text-sm leading-6 text-[#6B7280]">
-          Choose output settings after the recipient and message are clear.
+          Choose output settings after the recipient, message, and personal hook are clear.
         </p>
       </div>
 
@@ -630,39 +771,39 @@ export default function CardGenerator({
           >
             <div className="flex items-start justify-between gap-4">
               <div>
-                <div className="font-bold text-[#202A3D]">{qualityOptions.base.name}</div>
+                <div className="flex items-center font-bold text-[#202A3D]">
+                  {qualityOptions.base.name}
+                  {qualityOptions.base.tier === 'Premium' && <Crown className="ml-1 h-3.5 w-3.5 text-amber-500" />}
+                </div>
                 <div className="mt-1 text-sm text-[#6B7280]">{qualityOptions.base.time} · Faster first draft</div>
               </div>
               {selectedTier === 'base' && <Check className="h-5 w-5 text-primary" />}
             </div>
           </button>
 
-          <button
-            type="button"
-            onClick={() => {
-              if (!qualityOptions.pro) return
-              setSelectedTier('pro')
-            }}
-            disabled={!qualityOptions.pro}
-            className={cn(
-              "min-h-[44px] rounded-lg border p-4 text-left transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30",
-              selectedTier === 'pro' ? "border-primary bg-primary/5" : "border-[#F1D6DF] bg-white hover:bg-[#FFF8F6]",
-              !qualityOptions.pro && "cursor-not-allowed opacity-55"
-            )}
-          >
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <div className="flex items-center font-bold text-[#202A3D]">
-                  {qualityOptions.pro?.name || "Pro"}
-                  <Crown className="ml-1 h-3.5 w-3.5 text-amber-500" />
+          {qualityOptions.pro && (
+            <button
+              type="button"
+              onClick={() => setSelectedTier('pro')}
+              className={cn(
+                "min-h-[44px] rounded-lg border p-4 text-left transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30",
+                selectedTier === 'pro' ? "border-primary bg-primary/5" : "border-[#F1D6DF] bg-white hover:bg-[#FFF8F6]"
+              )}
+            >
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <div className="flex items-center font-bold text-[#202A3D]">
+                    {qualityOptions.pro.name}
+                    <Crown className="ml-1 h-3.5 w-3.5 text-amber-500" />
+                  </div>
+                  <div className="mt-1 text-sm text-[#6B7280]">
+                    {qualityOptions.pro.time} · Highest quality output
+                  </div>
                 </div>
-                <div className="mt-1 text-sm text-[#6B7280]">
-                  {qualityOptions.pro?.time || "Premium only"} · Highest quality output
-                </div>
+                {selectedTier === 'pro' && <Check className="h-5 w-5 text-primary" />}
               </div>
-              {selectedTier === 'pro' && <Check className="h-5 w-5 text-primary" />}
-            </div>
-          </button>
+            </button>
+          )}
         </div>
       </div>
 
@@ -701,12 +842,18 @@ export default function CardGenerator({
                   <div>
                     <div className="font-bold text-[#202A3D]">Visual style</div>
                     <div className="text-xs text-[#6B7280]">
-                      {selectedStyleId ? stylePresets.find(s=>s.id===selectedStyleId)?.name : 'Auto'}
+                      Image only · {selectedStyleId ? stylePresets.find(s=>s.id===selectedStyleId)?.name : 'Auto'}
                     </div>
                   </div>
                 </div>
                 <ChevronRight className="text-[#6B7280]" />
               </button>
+            )}
+
+            {selectedFormat !== 'image' && (
+              <div className="rounded-lg border border-[#F1D6DF] bg-white px-4 py-3 text-sm text-[#6B7280]">
+                Visual style and reference image apply to Image drafts.
+              </div>
             )}
 
             {renderField({
@@ -717,7 +864,7 @@ export default function CardGenerator({
               options: ['Pastel', 'Vibrant', 'Minimalist', 'Watercolor']
             } as any)}
 
-            {selectedFormat !== 'svg' && (
+            {selectedFormat === 'image' && (
               <div className="space-y-2">
                 <Label className="font-medium text-[#202A3D]">Reference image (optional)</Label>
                 <button

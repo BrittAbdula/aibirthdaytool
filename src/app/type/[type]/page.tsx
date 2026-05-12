@@ -8,6 +8,7 @@ import GuidanceGridSection from '@/components/eeat/GuidanceGridSection'
 import TrustSignalsSection from '@/components/eeat/TrustSignalsSection'
 import JsonLd from '@/components/JsonLd'
 import { Card, getFeaturedCardsServer } from '@/lib/cards'
+import { GALLERY_PAGE_SIZE } from '@/lib/gallery-pagination'
 import { getCardTypeLabel, getGalleryComboHref, getRelationshipLabel, getSeoRelationshipsForType } from '@/lib/gallery-combos'
 import { getTrustHubRelatedLinks, getTypeGalleryTrustGuide } from '@/lib/eeat-content'
 import { buildBreadcrumbSchema, buildItemListSchema, buildWebPageSchema, toAbsoluteUrl } from '@/lib/seo'
@@ -77,7 +78,7 @@ export default async function TypePage({ params }: Props) {
   let initialCardsData: { cards: Card[]; totalPages: number } = { cards: [], totalPages: 0 }
 
   try {
-    initialCardsData = await getFeaturedCardsServer(1, 24, type, null)
+    initialCardsData = await getFeaturedCardsServer(1, GALLERY_PAGE_SIZE, type, null)
   } catch (error) {
     console.error(`Failed to load type gallery for ${type}`, error)
   }

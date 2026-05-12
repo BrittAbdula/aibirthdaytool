@@ -4,6 +4,7 @@ import { Prisma } from '@prisma/client';
 import {
   ACTION_WEIGHTS,
   PREMIUM_QUALITY_MODELS,
+  PREMIUM_TAB_TEXT_MODELS,
   REFERENCE_EDIT_MODELS,
   STRONG_QUALITY_MODELS,
   TEXT_QUALITY_MODELS,
@@ -17,9 +18,7 @@ const PREMIUM_BADGE_MODELS = [
 const PREMIUM_TAB_MODELS = [
   ...REFERENCE_EDIT_MODELS,
   ...PREMIUM_QUALITY_MODELS,
-  'anthropic/claude-sonnet-4',
-  'claude-sonnet-4-5-20250929',
-  'anthropic/claude-3.7-sonnet',
+  ...PREMIUM_TAB_TEXT_MODELS,
 ] as const;
 
 const ACTION_LOOKBACK_DAYS = 120;
