@@ -5,7 +5,6 @@ import '@/styles/globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import { GoogleAnalytics, GoogleTagManager } from '@next/third-parties/google'
 import { SessionProvider } from "next-auth/react"
-import GoogleAdsense from "@/components/GoogleAdsense";
 import Script from "next/script";
 import AppShell from "@/components/AppShell";
 import JsonLd from "@/components/JsonLd";
@@ -77,16 +76,12 @@ export default function RootLayout({
             window.dataLayer = window.dataLayer || [];
             function gtag(){dataLayer.push(arguments);}
             gtag('consent', 'default', {
-              'ad_storage': 'granted',
               'analytics_storage': 'granted',
               'functionality_storage': 'granted',
               'personalization_storage': 'granted',
-              'ad_user_data': 'granted',
-              'ad_personalization': 'granted',
               'security_storage': 'granted', // Always needed for security purposes
               'wait_for_update': 500
             });
-            gtag('set', 'ads_data_redaction', false);
             gtag('set', 'url_passthrough', true);
           `}
         </Script>
@@ -97,7 +92,6 @@ export default function RootLayout({
         <JsonLd data={buildOrganizationSchema()} />
         <JsonLd data={buildWebsiteSchema()} />
         <SessionProvider>
-          <GoogleAdsense />
           <AppShell>{children}</AppShell>
           <ScrollToTop />
           <Toaster />

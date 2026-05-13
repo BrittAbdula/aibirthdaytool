@@ -15,6 +15,7 @@
     "test:gallery-ranking": "ts-node --compiler-options '{\"module\":\"commonjs\",\"moduleResolution\":\"node\"}' scripts/gallery-ranking.test.ts",
     "test:gallery-pagination": "ts-node --compiler-options '{\"module\":\"commonjs\",\"moduleResolution\":\"node\"}' scripts/gallery-pagination.test.ts",
     "test:cleanup-policy": "ts-node --compiler-options '{\"module\":\"commonjs\",\"moduleResolution\":\"node\"}' scripts/cleanup-card-policy.test.ts",
+    "test:no-ads": "ts-node --compiler-options '{\"module\":\"commonjs\",\"moduleResolution\":\"node\"}' scripts/no-ads.test.ts",
     "cleanup:cards": "ts-node --compiler-options '{\"module\":\"commonjs\",\"moduleResolution\":\"node\"}' scripts/cleanup-old-cards.ts",
     "seo:check": "ts-node --compiler-options '{\"module\":\"commonjs\",\"moduleResolution\":\"node\"}' scripts/seo-regression-check.ts",
     "postinstall": "pnpm prisma generate",
