@@ -1,6 +1,4 @@
 import { NextResponse } from 'next/server';
-import { generateCardContent } from '@/lib/gpt';
-import { generateCardContentWithAnthropic } from '@/lib/anthropic-messages';
 import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
 import { generateCardImage } from '@/lib/image';
@@ -10,8 +8,8 @@ import { getModelConfig } from '@/lib/model-config';
 import { uploadSvgToR2 } from '@/lib/r2';
 import { stylePresets } from '@/lib/style-presets';
 import { getCountryCodeFromHeaders, getDailyCreditAllowance, isHighValueCountry } from '@/lib/credits';
-import { getSvgGenerationModel } from '@/lib/svg-models';
 import { buildReferenceEditPrompt, createNaturalPrompt } from '@/lib/personalization-prompt';
+import { generateCardContentWithKieClaude } from '@/lib/kie-claude-svg';
 
 // 增加超时限制到最大值
 export const maxDuration = 60; // 增加到 60 秒
@@ -253,14 +251,7 @@ export async function POST(request: Request) {
       } else if (format === 'video') {
         result = await generateCardVideo(cardParams, modelLevel);
       } else {
-        // SVG path: prefer Anthropic Messages via HOLD gateway if configured
-        const holdBase = process.env.HOLD_AI_BASE_URL;
-        const holdKey = process.env.HOLD_AI_KEY;
-        if (holdBase && holdKey) {
-          result = await generateCardContentWithAnthropic(cardParams, getSvgGenerationModel(modelLevel));
-        } else {
-          result = await generateCardContent(cardParams, modelLevel);
-        }
+        result = await generateCardContentWithKieClaude(cardParams);
       }
 
       // console.log('result', result);
