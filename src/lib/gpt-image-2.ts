@@ -30,22 +30,8 @@ interface GptImage2ApiConfig {
 }
 
 export function getGptImage2ApiConfig(env: NodeJS.ProcessEnv = process.env): GptImage2ApiConfig {
-  const apiKey =
-    env.GPT_IMAGE_2_API_KEY ||
-    env.GPT_IMAGE_API_KEY ||
-    env.OPENAI_API_KEY ||
-    env.HM_API_KEY ||
-    env.HOLD_AI_KEY ||
-    '';
-
-  const baseUrl =
-    env.GPT_IMAGE_2_BASE_URL ||
-    env.GPT_IMAGE_API_BASE_URL ||
-    env.OPENAI_BASE_URL ||
-    env.HM_BASE_URL ||
-    env.HOLD_AI_BASE_URL ||
-    env.ENDPOINT ||
-    'https://api.openai.com';
+  const apiKey = env.KIE_API_KEY || '';
+  const baseUrl = env.KIE_BASE_URL || 'https://api.kie.ai';
 
   return {
     apiKey,
@@ -121,7 +107,7 @@ function resolveRequestConfig(params: Pick<GptImage2RequestParams, 'apiKey' | 'b
   const baseUrl = trimTrailingSlash(params.baseUrl || config.baseUrl);
 
   if (!apiKey) {
-    throw new Error('GPT_IMAGE_2_API_KEY, GPT_IMAGE_API_KEY, OPENAI_API_KEY, HM_API_KEY, or HOLD_AI_KEY is not configured');
+    throw new Error('KIE_API_KEY is not configured');
   }
 
   return { apiKey, baseUrl };

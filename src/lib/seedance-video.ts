@@ -17,6 +17,11 @@ interface SeedanceStatusOptions {
   baseUrl?: string;
 }
 
+interface SeedanceApiConfig {
+  apiKey: string;
+  baseUrl: string;
+}
+
 export interface NormalizedSeedanceVideoStatus {
   status: 'processing' | 'completed' | 'failed';
   videoUrl: string;
@@ -35,15 +40,22 @@ export function getSeedanceResolution(_size: string): SeedanceResolution {
   return '720p';
 }
 
+export function getSeedanceApiConfig(env: NodeJS.ProcessEnv = process.env): SeedanceApiConfig {
+  return {
+    apiKey: env.KIE_API_KEY || '',
+    baseUrl: normalizeBaseUrl(env.KIE_BASE_URL || 'https://api.kie.ai'),
+  };
+}
+
 export async function requestSeedanceVideoGeneration(
   options: SeedanceGenerationOptions,
   fetchImpl: typeof fetch = fetch
 ): Promise<{ taskId: string }> {
-  const apiKey = options.apiKey || process.env.SEEDANCE_API_KEY || process.env.HM_API_KEY;
-  const baseUrl = normalizeBaseUrl(options.baseUrl || process.env.SEEDANCE_BASE_URL || process.env.HM_BASE_URL);
+  const config = getSeedanceApiConfig();
+  const apiKey = options.apiKey || config.apiKey;
+  const baseUrl = normalizeBaseUrl(options.baseUrl || config.baseUrl);
 
-  if (!apiKey) throw new Error('SEEDANCE_API_KEY or HM_API_KEY is not configured');
-  if (!baseUrl) throw new Error('SEEDANCE_BASE_URL or HM_BASE_URL is not configured');
+  if (!apiKey) throw new Error('KIE_API_KEY is not configured');
 
   const body: Record<string, unknown> = {
     prompt: trimSeedancePrompt(options.prompt),
@@ -86,11 +98,11 @@ export async function requestSeedanceVideoStatus(
   options: SeedanceStatusOptions = {},
   fetchImpl: typeof fetch = fetch
 ): Promise<NormalizedSeedanceVideoStatus> {
-  const apiKey = options.apiKey || process.env.SEEDANCE_API_KEY || process.env.HM_API_KEY;
-  const baseUrl = normalizeBaseUrl(options.baseUrl || process.env.SEEDANCE_BASE_URL || process.env.HM_BASE_URL);
+  const config = getSeedanceApiConfig();
+  const apiKey = options.apiKey || config.apiKey;
+  const baseUrl = normalizeBaseUrl(options.baseUrl || config.baseUrl);
 
-  if (!apiKey) throw new Error('SEEDANCE_API_KEY or HM_API_KEY is not configured');
-  if (!baseUrl) throw new Error('SEEDANCE_BASE_URL or HM_BASE_URL is not configured');
+  if (!apiKey) throw new Error('KIE_API_KEY is not configured');
 
   const response = await fetchImpl(`${baseUrl}/v2/videos/generations/${encodeURIComponent(taskId)}`, {
     method: 'GET',

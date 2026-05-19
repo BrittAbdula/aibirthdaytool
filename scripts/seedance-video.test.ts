@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 
 import {
   SEEDANCE_VIDEO_MODEL,
+  getSeedanceApiConfig,
   getSeedanceRatio,
   normalizeSeedanceVideoStatus,
   requestSeedanceVideoGeneration,
@@ -13,6 +14,30 @@ assert.equal(getSeedanceRatio('story'), '9:16');
 assert.equal(getSeedanceRatio('landscape'), '16:9');
 assert.equal(getSeedanceRatio('square'), '1:1');
 assert.equal(getSeedanceRatio('unknown'), '9:16');
+
+assert.deepEqual(
+  getSeedanceApiConfig({
+    KIE_API_KEY: 'kie-key',
+    KIE_BASE_URL: 'https://api.kie.ai/',
+  } as unknown as NodeJS.ProcessEnv),
+  {
+    apiKey: 'kie-key',
+    baseUrl: 'https://api.kie.ai',
+  }
+);
+
+assert.deepEqual(
+  getSeedanceApiConfig({
+    SEEDANCE_API_KEY: 'legacy-seedance-key',
+    SEEDANCE_BASE_URL: 'https://legacy-seedance.example.com',
+    HM_API_KEY: 'hm-key',
+    HM_BASE_URL: 'https://hm.example.com',
+  } as unknown as NodeJS.ProcessEnv),
+  {
+    apiKey: '',
+    baseUrl: 'https://api.kie.ai',
+  }
+);
 
 async function main() {
   const calls: Array<{ input: RequestInfo | URL; init?: RequestInit }> = [];

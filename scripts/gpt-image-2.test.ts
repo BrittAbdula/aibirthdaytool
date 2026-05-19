@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 
 import {
+  getGptImage2ApiConfig,
   getGptImage2Size,
   requestGptImage2Edit,
   requestGptImage2Generation,
@@ -13,6 +14,30 @@ assert.equal(getGptImage2Size('story'), '1024x1536');
 assert.equal(getGptImage2Size('landscape'), '1536x1024');
 assert.equal(getGptImage2Size('square'), '1024x1024');
 assert.equal(getGptImage2Size('unknown'), '1024x1536');
+
+assert.deepEqual(
+  getGptImage2ApiConfig({
+    KIE_API_KEY: 'kie-key',
+    KIE_BASE_URL: 'https://api.kie.ai/',
+  } as unknown as NodeJS.ProcessEnv),
+  {
+    apiKey: 'kie-key',
+    baseUrl: 'https://api.kie.ai',
+  }
+);
+
+assert.deepEqual(
+  getGptImage2ApiConfig({
+    GPT_IMAGE_2_API_KEY: 'legacy-image-key',
+    GPT_IMAGE_2_BASE_URL: 'https://legacy-image.example.com',
+    OPENAI_API_KEY: 'openai-key',
+    HM_API_KEY: 'hm-key',
+  } as unknown as NodeJS.ProcessEnv),
+  {
+    apiKey: '',
+    baseUrl: 'https://api.kie.ai',
+  }
+);
 
 async function main() {
   {
