@@ -262,6 +262,8 @@ export async function POST(request: Request) {
         resolvedR2Url = await uploadSvgToR2(result.svgContent, cardId, new Date());
       }
 
+      const nextStatus = result.status || 'completed';
+
       await prisma.apiLog.update({
         where: { cardId },
         data: {
@@ -272,7 +274,8 @@ export async function POST(request: Request) {
           tokensUsed: result.tokensUsed,
           duration: result.duration,
           errorMessage: result.errorMessage,
-          status: result.status || 'completed',
+          status: nextStatus,
+          isError: nextStatus === 'failed',
         },
       });
     } catch (error) {

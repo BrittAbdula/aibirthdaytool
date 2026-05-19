@@ -13,6 +13,7 @@
     "test:personalization-prompt": "ts-node --compiler-options '{\"module\":\"commonjs\",\"moduleResolution\":\"node\"}' scripts/personalization-prompt.test.ts",
     "test:seedance-video": "ts-node --compiler-options '{\"module\":\"commonjs\",\"moduleResolution\":\"node\"}' scripts/seedance-video.test.ts",
     "test:svg-models": "ts-node --compiler-options '{\"module\":\"commonjs\",\"moduleResolution\":\"node\"}' scripts/svg-models.test.ts",
+    "test:stats-preview": "ts-node --compiler-options '{\"module\":\"commonjs\",\"moduleResolution\":\"node\"}' scripts/stats-preview.test.ts",
     "test:gallery-ranking": "ts-node --compiler-options '{\"module\":\"commonjs\",\"moduleResolution\":\"node\"}' scripts/gallery-ranking.test.ts",
     "test:gallery-pagination": "ts-node --compiler-options '{\"module\":\"commonjs\",\"moduleResolution\":\"node\"}' scripts/gallery-pagination.test.ts",
     "test:cleanup-policy": "ts-node --compiler-options '{\"module\":\"commonjs\",\"moduleResolution\":\"node\"}' scripts/cleanup-card-policy.test.ts",

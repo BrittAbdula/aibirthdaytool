@@ -1,15 +1,17 @@
 'use client';
 
+/* eslint-disable @next/next/no-img-element -- Admin previews must render data URLs, SVGs, and storage URLs without Next image optimization. */
+
 import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { CollapsibleJson } from "@/components/ui/collapsible-json";
 import { useParams, useRouter } from 'next/navigation';
-import Image from 'next/image';
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { ArrowLeft } from "lucide-react";
 import { signIn, useSession } from 'next-auth/react';
+import { DailyStatsPreview, getDailyStatsPreview } from '@/lib/stats-preview';
 
 interface ApiCallDetail {
   id: number;
@@ -20,6 +22,7 @@ interface ApiCallDetail {
   tokensUsed: number;
   duration: number;
   timestamp: string;
+  status?: string;
   isError: boolean;
   errorMessage?: string;
   r2Url?: string;
@@ -38,7 +41,7 @@ export default function DailyDetailPage() {
   const [details, setDetails] = useState<ApiCallDetail[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [selectedPreview, setSelectedPreview] = useState<Extract<DailyStatsPreview, { kind: 'image' | 'video' }> | null>(null);
   const [statusFilter, setStatusFilter] = useState<'all' | 'success' | 'error'>('all');
 
   useEffect(() => {
@@ -95,9 +98,9 @@ export default function DailyDetailPage() {
   const filteredDetails = details.filter(detail => {
     switch (statusFilter) {
       case 'success':
-        return !detail.isError;
+        return !detail.isError && detail.status !== 'failed';
       case 'error':
-        return detail.isError;
+        return detail.isError || detail.status === 'failed';
       default:
         return true;
     }
@@ -111,16 +114,6 @@ export default function DailyDetailPage() {
     averageTokens: Math.round(details.reduce((acc, d) => acc + d.tokensUsed, 0) / details.length) || 0,
     averageDuration: Math.round(details.reduce((acc, d) => acc + d.duration, 0) / details.length) || 0,
     totalTokens: details.reduce((acc, d) => acc + d.tokensUsed, 0),
-  };
-
-  const getPreviewUrl = (detail: ApiCallDetail) => {
-    if (detail.r2Url) {
-      return detail.r2Url;
-    }
-    if (detail.responseContent) {
-      return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(detail.responseContent)}`;
-    }
-    return '';
   };
 
   if (loading) {
@@ -281,22 +274,40 @@ export default function DailyDetailPage() {
                     <TableCell>{detail.promptVersion}</TableCell>
                     <TableCell>
                       {(() => {
-                        const previewUrl = getPreviewUrl(detail);
-                        if (detail.isError || !previewUrl) {
-                          return null;
+                        const preview = getDailyStatsPreview(detail);
+                        if (preview.kind === 'none') {
+                          return (
+                            <div
+                              className="w-28 rounded-md border border-dashed border-gray-200 bg-gray-50 px-2 py-2 text-xs text-muted-foreground"
+                              title={preview.detail}
+                            >
+                              <div className="font-medium text-gray-700">{preview.label}</div>
+                              <div className="mt-1 line-clamp-2">{preview.detail}</div>
+                            </div>
+                          );
                         }
+
                         return (
                           <button
-                            onClick={() => setSelectedImage(previewUrl)}
+                            onClick={() => setSelectedPreview(preview)}
                             className="block relative w-20 h-20 rounded-lg overflow-hidden border border-gray-200 hover:border-purple-400 transition-colors duration-200 cursor-pointer group"
                           >
-                            <Image
-                              src={previewUrl}
-                              alt={`Card ${detail.cardId}`}
-                              fill
-                              className="object-contain transition-transform duration-200 group-hover:scale-105"
-                              sizes="80px"
-                            />
+                            {preview.kind === 'video' ? (
+                              <video
+                                src={preview.src}
+                                muted
+                                playsInline
+                                preload="metadata"
+                                className="h-full w-full object-contain transition-transform duration-200 group-hover:scale-105"
+                              />
+                            ) : (
+                              <img
+                                src={preview.src}
+                                alt={`Card ${detail.cardId}`}
+                                loading="lazy"
+                                className="h-full w-full object-contain transition-transform duration-200 group-hover:scale-105"
+                              />
+                            )}
                             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-200 flex items-center justify-center">
                               <span className="text-xs text-white/0 group-hover:text-white/90 bg-black/0 group-hover:bg-black/30 px-2 py-1 rounded transition-all duration-200">
                                 View
@@ -314,18 +325,26 @@ export default function DailyDetailPage() {
         </CardContent>
       </Card>
 
-      <Dialog open={!!selectedImage} onOpenChange={() => setSelectedImage(null)}>
+      <Dialog open={!!selectedPreview} onOpenChange={() => setSelectedPreview(null)}>
         <DialogContent className="max-w-2xl w-full p-0 overflow-hidden">
           <div className="relative aspect-square bg-white p-20">
-            {selectedImage && (
-              <Image
-                src={selectedImage}
-                alt="Card Preview"
-                fill
-                className="object-contain p-4"
-                sizes="(max-width: 768px) 100vw, 800px"
+            {selectedPreview?.kind === 'video' ? (
+              <video
+                src={selectedPreview.src}
+                controls
+                autoPlay
+                muted
+                loop
+                playsInline
+                className="h-full w-full object-contain"
               />
-            )}
+            ) : selectedPreview?.kind === 'image' ? (
+              <img
+                src={selectedPreview.src}
+                alt="Card Preview"
+                className="h-full w-full object-contain"
+              />
+            ) : null}
           </div>
         </DialogContent>
       </Dialog>
