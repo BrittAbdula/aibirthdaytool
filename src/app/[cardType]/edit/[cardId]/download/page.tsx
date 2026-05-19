@@ -2,6 +2,7 @@
 
 import React, { useEffect, useMemo, useState } from 'react'
 import NextImage from 'next/image'
+import Script from 'next/script'
 import { Button } from '@/components/ui/button'
 import { useToast } from '@/hooks/use-toast'
 import { recordUserAction } from '@/lib/action'
@@ -67,6 +68,10 @@ export default function DownloadGatePage() {
     }
   }, [searchParams])
 
+  useEffect(() => {
+    // No manual push here; allow auto-ads to handle placement
+  }, [])
+
   async function handleDownload() {
     if (!sourceUrl) return
     try {
@@ -111,6 +116,13 @@ export default function DownloadGatePage() {
 
   return (
     <div className="min-h-screen bg-white">
+      <Script
+        async
+        src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1555702340859042"
+        crossOrigin="anonymous"
+        strategy="afterInteractive"
+      />
+
       <div className="mx-auto max-w-6xl px-4 py-10">
         <div className="grid grid-cols-1 lg:grid-cols-6 gap-8">
           <div className="hidden lg:block lg:col-span-2" aria-hidden />

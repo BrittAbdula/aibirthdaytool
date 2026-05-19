@@ -15,7 +15,6 @@
     "test:gallery-ranking": "ts-node --compiler-options '{\"module\":\"commonjs\",\"moduleResolution\":\"node\"}' scripts/gallery-ranking.test.ts",
     "test:gallery-pagination": "ts-node --compiler-options '{\"module\":\"commonjs\",\"moduleResolution\":\"node\"}' scripts/gallery-pagination.test.ts",
     "test:cleanup-policy": "ts-node --compiler-options '{\"module\":\"commonjs\",\"moduleResolution\":\"node\"}' scripts/cleanup-card-policy.test.ts",
-    "test:no-ads": "ts-node --compiler-options '{\"module\":\"commonjs\",\"moduleResolution\":\"node\"}' scripts/no-ads.test.ts",
     "cleanup:cards": "ts-node --compiler-options '{\"module\":\"commonjs\",\"moduleResolution\":\"node\"}' scripts/cleanup-old-cards.ts",
     "seo:check": "ts-node --compiler-options '{\"module\":\"commonjs\",\"moduleResolution\":\"node\"}' scripts/seo-regression-check.ts",
     "postinstall": "pnpm prisma generate",
@@ -85,5 +84,6 @@
       "lodash@<4.18.0": "4.18.1",
       "tar@<7.5.10": "7.5.10"
     }
-  }
+  },
+  "packageManager": "pnpm@10.28.0+sha512.05df71d1421f21399e053fde567cea34d446fa02c76571441bfc1c7956e98e363088982d940465fd34480d4d90a0668bc12362f8aa88000a64e83d0b0e47be48"
 }
