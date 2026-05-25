@@ -10,6 +10,7 @@ import { stylePresets } from '@/lib/style-presets';
 import { getCountryCodeFromHeaders, getDailyCreditAllowance, isHighValueCountry } from '@/lib/credits';
 import { buildReferenceEditPrompt, createNaturalPrompt } from '@/lib/personalization-prompt';
 import { generateCardContentWithKieClaude } from '@/lib/kie-claude-svg';
+import { getSvgGenerationModel } from '@/lib/svg-models';
 
 // 增加超时限制到最大值
 export const maxDuration = 60; // 增加到 60 秒
@@ -251,7 +252,7 @@ export async function POST(request: Request) {
       } else if (format === 'video') {
         result = await generateCardVideo(cardParams, modelLevel);
       } else {
-        result = await generateCardContentWithKieClaude(cardParams);
+        result = await generateCardContentWithKieClaude(cardParams, getSvgGenerationModel(modelLevel));
       }
 
       // console.log('result', result);

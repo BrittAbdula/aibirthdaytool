@@ -27,7 +27,7 @@ type SvgGenerationResult = {
   status?: string;
 };
 
-export async function generateCardContentWithKieClaude(params: CardContentParams): Promise<SvgGenerationResult> {
+export async function generateCardContentWithKieClaude(params: CardContentParams, model = KIE_CLAUDE_OPUS_4_7_MODEL): Promise<SvgGenerationResult> {
   const { cardType, size, userPrompt, modificationFeedback, previousCardId } = params;
   const startTime = Date.now();
 
@@ -41,6 +41,7 @@ export async function generateCardContentWithKieClaude(params: CardContentParams
     }
 
     const response = await requestKieClaudeMessage({
+      model,
       messages: [
         {
           role: 'user',
@@ -77,7 +78,7 @@ export async function generateCardContentWithKieClaude(params: CardContentParams
       taskId: '',
       r2Url: '',
       svgContent: '',
-      model: KIE_CLAUDE_OPUS_4_7_MODEL,
+      model,
       tokensUsed: 0,
       duration: Date.now() - startTime,
       errorMessage: error instanceof Error ? error.message : 'Unknown error',

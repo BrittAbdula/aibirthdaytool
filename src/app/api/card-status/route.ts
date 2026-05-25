@@ -3,6 +3,7 @@ import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
 import { uploadVideoToR2, uploadToCloudflareImages } from '@/lib/r2';
 import { SEEDANCE_VIDEO_MODEL, requestSeedanceVideoStatus } from '@/lib/seedance-video';
+import { GPT_IMAGE_2_EDIT_MODEL, GPT_IMAGE_2_MODEL, requestGptImage2Status } from '@/lib/gpt-image-2';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -40,6 +41,139 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'Card not found' }, { status: 404 });
     }
     // console.log('gpt4o-image-------card', card);
+
+    if (card.promptVersion === GPT_IMAGE_2_MODEL || card.promptVersion === GPT_IMAGE_2_EDIT_MODEL) {
+      if (!card.taskId) {
+        const response = NextResponse.json({
+          status: card.status,
+          r2Url: card.r2Url || '',
+          responseContent: card.responseContent || '',
+          isError: card.isError,
+          errorMessage: card.errorMessage || 'Missing gpt-image-2 taskId',
+        });
+
+        response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+        response.headers.set('Pragma', 'no-cache');
+        response.headers.set('Expires', '0');
+
+        return response;
+      }
+
+      try {
+        const imageData = await requestGptImage2Status(card.taskId);
+
+        if (imageData.status === 'completed') {
+          if (!imageData.imageUrl) {
+            const errorMessage = 'GPT Image 2 completed without image URL';
+            await prisma.apiLog.update({
+              where: { cardId },
+              data: {
+                status: 'failed',
+                isError: true,
+                errorMessage,
+                tokensUsed: imageData.tokensUsed,
+              },
+            });
+
+            const response = NextResponse.json({
+              status: 'failed',
+              r2Url: '',
+              responseContent: '',
+              errorMessage,
+            });
+
+            response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+            response.headers.set('Pragma', 'no-cache');
+            response.headers.set('Expires', '0');
+
+            return response;
+          }
+
+          let outUrl = imageData.imageUrl;
+          try {
+            const uploadedUrl = await uploadToCloudflareImages(imageData.imageUrl);
+            outUrl = uploadedUrl || imageData.imageUrl;
+          } catch {
+            outUrl = imageData.imageUrl;
+          }
+
+          await prisma.apiLog.update({
+            where: { cardId },
+            data: {
+              status: 'completed',
+              isError: false,
+              r2Url: outUrl,
+              tokensUsed: imageData.tokensUsed,
+            },
+          });
+
+          const response = NextResponse.json({
+            status: 'completed',
+            r2Url: outUrl,
+            responseContent: '',
+            progress: 100,
+          });
+
+          response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+          response.headers.set('Pragma', 'no-cache');
+          response.headers.set('Expires', '0');
+
+          return response;
+        }
+
+        if (imageData.status === 'failed') {
+          await prisma.apiLog.update({
+            where: { cardId },
+            data: {
+              status: 'failed',
+              isError: true,
+              errorMessage: imageData.errorMessage || 'GPT Image 2 generation failed',
+              tokensUsed: imageData.tokensUsed,
+            },
+          });
+
+          const response = NextResponse.json({
+            status: 'failed',
+            r2Url: '',
+            responseContent: '',
+            errorMessage: imageData.errorMessage || 'GPT Image 2 generation failed',
+          });
+
+          response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+          response.headers.set('Pragma', 'no-cache');
+          response.headers.set('Expires', '0');
+
+          return response;
+        }
+
+        const response = NextResponse.json({
+          status: 'processing',
+          r2Url: '',
+          responseContent: '',
+          progress: imageData.progress,
+          message: `Image is being generated (${imageData.progress}%)`,
+        });
+
+        response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+        response.headers.set('Pragma', 'no-cache');
+        response.headers.set('Expires', '0');
+
+        return response;
+      } catch (error) {
+        const response = NextResponse.json({
+          status: 'processing',
+          r2Url: '',
+          responseContent: '',
+          message: error instanceof Error ? error.message : 'GPT Image 2 is being generated',
+        });
+
+        response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+        response.headers.set('Pragma', 'no-cache');
+        response.headers.set('Expires', '0');
+
+        return response;
+      }
+    }
 
     if(card.promptVersion === 'gpt4o-image'){
       const data = await getGenerateStatus(card.taskId || '');

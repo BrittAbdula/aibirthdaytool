@@ -3,8 +3,6 @@ import {
     GPT_IMAGE_2_MODEL,
     requestGptImage2Generation,
 } from './gpt-image-2';
-import { uploadImageToR2 } from '@/lib/r2';
-import { nanoid } from 'nanoid';
 
 interface CardContentParams {
     cardType: CardType;
@@ -33,7 +31,6 @@ export async function generateCardImage(params: CardContentParams, _modelLevel: 
 export async function generateCardImageWithGptImage2(params: CardContentParams, quality: 'medium' | 'high' | 'auto' = 'auto'): Promise<CardImageResult> {
     const { size, userPrompt } = params;
     const startTime = Date.now();
-    const taskId = `gpt_image_2_${nanoid(12)}`;
 
     try {
         if (userPrompt.length >= 5000) {
@@ -46,23 +43,15 @@ export async function generateCardImageWithGptImage2(params: CardContentParams, 
             quality,
         });
 
-        const r2Url = result.imageBase64
-            ? await uploadImageToR2(Buffer.from(result.imageBase64, 'base64'), taskId)
-            : result.imageUrl || '';
-
-        if (!r2Url) {
-            throw new Error('No image URL returned from gpt-image-2');
-        }
-
         return {
-            taskId,
-            r2Url,
+            taskId: result.taskId,
+            r2Url: '',
             svgContent: '',
             model: GPT_IMAGE_2_MODEL,
             tokensUsed: result.tokensUsed,
             duration: Date.now() - startTime,
             errorMessage: '',
-            status: 'completed',
+            status: 'processing',
         };
     } catch (error) {
         return {

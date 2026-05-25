@@ -1,22 +1,19 @@
 import assert from 'node:assert/strict';
 
-import {
-  getGptImage2ApiConfig,
-  getGptImage2Size,
-  requestGptImage2Edit,
-  requestGptImage2Generation,
-} from '../src/lib/gpt-image-2';
+import * as gptImage2 from '../src/lib/gpt-image-2';
 
-const pngBase64 = Buffer.from('fake-png').toString('base64');
-
-assert.equal(getGptImage2Size('portrait'), '1024x1536');
-assert.equal(getGptImage2Size('story'), '1024x1536');
-assert.equal(getGptImage2Size('landscape'), '1536x1024');
-assert.equal(getGptImage2Size('square'), '1024x1024');
-assert.equal(getGptImage2Size('unknown'), '1024x1536');
+assert.equal(gptImage2.getGptImage2AspectRatio('portrait'), '9:16');
+assert.equal(gptImage2.getGptImage2AspectRatio('story'), '9:16');
+assert.equal(gptImage2.getGptImage2AspectRatio('landscape'), '16:9');
+assert.equal(gptImage2.getGptImage2AspectRatio('square'), '1:1');
+assert.equal(gptImage2.getGptImage2AspectRatio('instagram'), '1:1');
+assert.equal(gptImage2.getGptImage2AspectRatio('unknown'), '9:16');
+assert.equal(gptImage2.getGptImage2Resolution('medium'), '1K');
+assert.equal(gptImage2.getGptImage2Resolution('high'), '2K');
+assert.equal(gptImage2.getGptImage2Resolution('auto'), '1K');
 
 assert.deepEqual(
-  getGptImage2ApiConfig({
+  gptImage2.getGptImage2ApiConfig({
     KIE_API_KEY: 'kie-key',
     KIE_BASE_URL: 'https://api.kie.ai/',
   } as unknown as NodeJS.ProcessEnv),
@@ -27,7 +24,7 @@ assert.deepEqual(
 );
 
 assert.deepEqual(
-  getGptImage2ApiConfig({
+  gptImage2.getGptImage2ApiConfig({
     GPT_IMAGE_2_API_KEY: 'legacy-image-key',
     GPT_IMAGE_2_BASE_URL: 'https://legacy-image.example.com',
     OPENAI_API_KEY: 'openai-key',
@@ -46,85 +43,142 @@ async function main() {
       calls.push({ input, init });
       return new Response(
         JSON.stringify({
-          data: [{ b64_json: pngBase64 }],
-          usage: { total_tokens: 17 },
+          code: 200,
+          msg: 'success',
+          data: { taskId: 'task_gptimage_text' },
         }),
         { status: 200, headers: { 'Content-Type': 'application/json' } }
       );
     };
 
-    const result = await requestGptImage2Generation(
+    const result = await gptImage2.requestGptImage2Generation(
       {
         apiKey: 'test-key',
         baseUrl: 'https://image.example.com/',
         prompt: 'birthday card',
         size: 'landscape',
+        quality: 'medium',
       },
       fetchImpl
     );
 
     assert.equal(calls.length, 1);
-    assert.equal(String(calls[0].input), 'https://image.example.com/v1/images/generations');
+    assert.equal(String(calls[0].input), 'https://image.example.com/api/v1/jobs/createTask');
     assert.equal(calls[0].init?.method, 'POST');
     assert.equal((calls[0].init?.headers as Record<string, string>).Authorization, 'Bearer test-key');
 
     const body = JSON.parse(calls[0].init?.body as string);
     assert.deepEqual(body, {
-      model: 'gpt-image-2',
-      prompt: 'birthday card',
-      size: '1536x1024',
-      quality: 'auto',
-      response_format: 'b64_json',
+      model: 'gpt-image-2-text-to-image',
+      input: {
+        prompt: 'birthday card',
+        aspect_ratio: '16:9',
+        resolution: '1K',
+      },
     });
-    assert.equal(result.imageBase64, pngBase64);
-    assert.equal(result.tokensUsed, 17);
+    assert.equal(result.taskId, 'task_gptimage_text');
+    assert.equal(result.tokensUsed, 0);
   }
 
   {
     const calls: Array<{ input: RequestInfo | URL; init?: RequestInit }> = [];
     const fetchImpl: typeof fetch = async (input, init) => {
       calls.push({ input, init });
-      if (String(input).startsWith('https://cdn.example.com/')) {
-        return new Response(Buffer.from([1, 2, 3]), {
-          status: 200,
-          headers: { 'Content-Type': 'image/png' },
-        });
-      }
-
       return new Response(
         JSON.stringify({
-          data: [{ b64_json: pngBase64 }],
-          usage: { total_tokens: 23 },
+          code: 200,
+          msg: 'success',
+          data: { taskId: 'task_gptimage_edit' },
         }),
         { status: 200, headers: { 'Content-Type': 'application/json' } }
       );
     };
 
-    const result = await requestGptImage2Edit(
+    const result = await gptImage2.requestGptImage2Edit(
       {
         apiKey: 'test-key',
         baseUrl: 'https://image.example.com',
         prompt: 'add glasses',
         size: 'portrait',
+        quality: 'high',
         imageUrls: ['https://cdn.example.com/a.png', 'https://cdn.example.com/b.png'],
       },
       fetchImpl
     );
 
-    assert.equal(calls.length, 3);
-    assert.equal(String(calls[2].input), 'https://image.example.com/v1/images/edits');
-    assert.equal(calls[2].init?.method, 'POST');
-    assert.equal((calls[2].init?.headers as Record<string, string>).Authorization, 'Bearer test-key');
+    assert.equal(calls.length, 1);
+    assert.equal(String(calls[0].input), 'https://image.example.com/api/v1/jobs/createTask');
+    assert.equal(calls[0].init?.method, 'POST');
+    assert.equal((calls[0].init?.headers as Record<string, string>).Authorization, 'Bearer test-key');
 
-    const form = calls[2].init?.body as FormData;
-    assert.equal(form.get('model'), 'gpt-image-2');
-    assert.equal(form.get('prompt'), 'add glasses');
-    assert.equal(form.get('size'), '1024x1536');
-    assert.equal(form.get('quality'), 'auto');
-    assert.equal(form.get('response_format'), 'b64_json');
-    assert.equal(form.getAll('image').length, 2);
-    assert.equal(result.imageBase64, pngBase64);
-    assert.equal(result.tokensUsed, 23);
+    const body = JSON.parse(calls[0].init?.body as string);
+    assert.deepEqual(body, {
+      model: 'gpt-image-2-image-to-image',
+      input: {
+        prompt: 'add glasses',
+        input_urls: ['https://cdn.example.com/a.png', 'https://cdn.example.com/b.png'],
+        aspect_ratio: '9:16',
+        resolution: '2K',
+      },
+    });
+    assert.equal(result.taskId, 'task_gptimage_edit');
+    assert.equal(result.tokensUsed, 0);
+  }
+
+  {
+    const calls: Array<{ input: RequestInfo | URL; init?: RequestInit }> = [];
+    const fetchImpl: typeof fetch = async (input, init) => {
+      calls.push({ input, init });
+      return new Response(
+        JSON.stringify({
+          code: 200,
+          msg: 'success',
+          data: {
+            taskId: 'task_gptimage_text',
+            state: 'success',
+            resultJson: JSON.stringify({
+              resultUrls: ['https://cdn.example.com/result.png'],
+            }),
+            progress: 45,
+            creditsConsumed: 50,
+          },
+        }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } }
+      );
+    };
+
+    const status = await gptImage2.requestGptImage2Status(
+      'task_gptimage_text',
+      {
+        apiKey: 'test-key',
+        baseUrl: 'https://image.example.com/',
+      },
+      fetchImpl
+    );
+
+    assert.equal(calls.length, 1);
+    assert.equal(String(calls[0].input), 'https://image.example.com/api/v1/jobs/recordInfo?taskId=task_gptimage_text');
+    assert.equal(calls[0].init?.method, 'GET');
+    assert.equal((calls[0].init?.headers as Record<string, string>).Authorization, 'Bearer test-key');
+    assert.deepEqual(status, {
+      status: 'completed',
+      imageUrl: 'https://cdn.example.com/result.png',
+      progress: 100,
+      tokensUsed: 50,
+      raw: {
+        code: 200,
+        msg: 'success',
+        data: {
+          taskId: 'task_gptimage_text',
+          state: 'success',
+          resultJson: JSON.stringify({
+            resultUrls: ['https://cdn.example.com/result.png'],
+          }),
+          progress: 45,
+          creditsConsumed: 50,
+        },
+      },
+    });
   }
 
   console.log('gpt-image-2 helpers passed');

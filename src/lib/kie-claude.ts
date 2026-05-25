@@ -1,4 +1,5 @@
 export const KIE_CLAUDE_OPUS_4_7_MODEL = 'claude-opus-4-7';
+export const KIE_CLAUDE_HAIKU_4_5_MODEL = 'claude-haiku-4-5';
 
 export interface KieClaudeMessage {
   role: 'user' | 'assistant';

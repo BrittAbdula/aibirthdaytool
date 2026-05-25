@@ -1,12 +1,14 @@
 import assert from 'node:assert/strict';
 
 import {
+  KIE_CLAUDE_HAIKU_4_5_MODEL,
   KIE_CLAUDE_OPUS_4_7_MODEL,
   extractSvgContentFromKieClaudeText,
   requestKieClaudeMessage,
 } from '../src/lib/kie-claude';
 
 assert.equal(KIE_CLAUDE_OPUS_4_7_MODEL, 'claude-opus-4-7');
+assert.equal(KIE_CLAUDE_HAIKU_4_5_MODEL, 'claude-haiku-4-5');
 
 async function main() {
   const calls: Array<{ input: RequestInfo | URL; init?: RequestInit }> = [];

@@ -1,9 +1,11 @@
 export const REFERENCE_EDIT_MODELS = [
+  'gpt-image-2-image-to-image',
   'gpt-image-2-edit',
   'google/nano-banana-edit',
 ] as const;
 
 export const PREMIUM_QUALITY_MODELS = [
+  'gpt-image-2-text-to-image',
   'gpt-image-2',
   'gpt4o-image',
   'google/nano-banana-pro',
@@ -28,6 +30,7 @@ export const TEXT_QUALITY_MODELS = [
   'anthropic/claude-3.7-sonnet',
   'anthropic/claude-3.5-haiku',
   'claude-3-5-haiku-20241022',
+  'claude-haiku-4-5',
   'claude-haiku-4-5-20251001',
   'gemini-3-flash-preview',
   'deepseek/deepseek-chat-v3-0324:free',

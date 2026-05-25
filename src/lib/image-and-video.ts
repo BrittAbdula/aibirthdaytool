@@ -602,7 +602,6 @@ export async function generateCardVideoWithSeedance(params: CardContentParams): 
 
 export async function generateCardImageWithGptImage2Edit(params: { size: string; userPrompt: string; imageUrls: string[] }): Promise<{ taskId: string, r2Url: string, svgContent: string, model: string, tokensUsed: number, duration: number, errorMessage?: string, status?: string }> {
     const startTime = Date.now();
-    const taskId = `gpt_image_2_edit_${nanoid(12)}`;
     try {
         if (!params.imageUrls?.length) throw new Error('No reference images provided');
         if (params.userPrompt.length >= 5000) throw new Error('User prompt too long');
@@ -614,21 +613,15 @@ export async function generateCardImageWithGptImage2Edit(params: { size: string;
             imageUrls: params.imageUrls,
         });
 
-        const r2Url = result.imageBase64
-            ? await uploadImageToR2(Buffer.from(result.imageBase64, 'base64'), taskId)
-            : result.imageUrl || '';
-
-        if (!r2Url) throw new Error('No image URL returned from gpt-image-2 edit');
-
         return {
-            taskId,
-            r2Url,
+            taskId: result.taskId,
+            r2Url: '',
             svgContent: '',
             model: GPT_IMAGE_2_EDIT_MODEL,
             tokensUsed: result.tokensUsed,
             duration: Date.now() - startTime,
             errorMessage: '',
-            status: 'completed'
+            status: 'processing'
         };
     } catch (error) {
         return {

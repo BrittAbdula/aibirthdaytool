@@ -1,8 +1,9 @@
-export const GPT_IMAGE_2_MODEL = 'gpt-image-2';
-export const GPT_IMAGE_2_EDIT_MODEL = 'gpt-image-2-edit';
+export const GPT_IMAGE_2_MODEL = 'gpt-image-2-text-to-image';
+export const GPT_IMAGE_2_EDIT_MODEL = 'gpt-image-2-image-to-image';
 
 type GptImage2Quality = 'low' | 'medium' | 'high' | 'auto';
-type GptImage2ResponseFormat = 'b64_json' | 'url';
+type GptImage2AspectRatio = 'auto' | '1:1' | '9:16' | '16:9' | '4:3' | '3:4';
+type GptImage2Resolution = '1K' | '2K' | '4K';
 
 interface GptImage2RequestParams {
   apiKey?: string;
@@ -10,17 +11,30 @@ interface GptImage2RequestParams {
   prompt: string;
   size: string;
   quality?: GptImage2Quality;
-  responseFormat?: GptImage2ResponseFormat;
+  callBackUrl?: string;
 }
 
 interface GptImage2EditParams extends GptImage2RequestParams {
   imageUrls: string[];
 }
 
+interface GptImage2StatusOptions {
+  apiKey?: string;
+  baseUrl?: string;
+}
+
 export interface GptImage2Result {
-  imageBase64?: string;
-  imageUrl?: string;
+  taskId: string;
   tokensUsed: number;
+  raw: unknown;
+}
+
+export interface NormalizedGptImage2Status {
+  status: 'processing' | 'completed' | 'failed';
+  imageUrl: string;
+  progress: number;
+  tokensUsed: number;
+  errorMessage?: string;
   raw: unknown;
 }
 
@@ -39,66 +53,152 @@ export function getGptImage2ApiConfig(env: NodeJS.ProcessEnv = process.env): Gpt
   };
 }
 
-export function getGptImage2Size(size: string): string {
-  if (size === 'landscape') return '1536x1024';
-  if (size === 'square' || size === 'instagram') return '1024x1024';
-  return '1024x1536';
+export function getGptImage2AspectRatio(size: string): GptImage2AspectRatio {
+  if (size === 'landscape') return '16:9';
+  if (size === 'square' || size === 'instagram') return '1:1';
+  return '9:16';
+}
+
+export function getGptImage2Resolution(quality: GptImage2Quality = 'auto'): GptImage2Resolution {
+  return quality === 'high' ? '2K' : '1K';
 }
 
 export async function requestGptImage2Generation(
   params: GptImage2RequestParams,
   fetchImpl: typeof fetch = fetch
 ): Promise<GptImage2Result> {
-  const { apiKey, baseUrl } = resolveRequestConfig(params);
-  const response = await fetchImpl(`${baseUrl}/v1/images/generations`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Accept': 'application/json',
-      'Authorization': `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({
+  return createGptImage2Task(
+    {
+      ...params,
       model: GPT_IMAGE_2_MODEL,
-      prompt: params.prompt,
-      size: getGptImage2Size(params.size),
-      quality: params.quality || 'auto',
-      response_format: params.responseFormat || 'b64_json',
-    }),
-  });
-
-  return parseGptImage2Response(response, 'gpt-image-2 generation');
+      input: {
+        prompt: params.prompt,
+        aspect_ratio: getGptImage2AspectRatio(params.size),
+        resolution: getGptImage2Resolution(params.quality),
+      },
+    },
+    'gpt-image-2 generation',
+    fetchImpl
+  );
 }
 
 export async function requestGptImage2Edit(
   params: GptImage2EditParams,
   fetchImpl: typeof fetch = fetch
 ): Promise<GptImage2Result> {
-  const { apiKey, baseUrl } = resolveRequestConfig(params);
-  if (!params.imageUrls.length) {
+  const imageUrls = params.imageUrls.filter((url) => typeof url === 'string' && url.length > 0);
+  if (!imageUrls.length) {
     throw new Error('No reference images provided');
   }
 
-  const formData = new FormData();
-  for (const [index, imageUrl] of params.imageUrls.entries()) {
-    const image = await fetchImageAsBlob(imageUrl, index, fetchImpl);
-    formData.append('image', image.blob, image.filename);
-  }
-  formData.append('prompt', params.prompt);
-  formData.append('model', GPT_IMAGE_2_MODEL);
-  formData.append('size', getGptImage2Size(params.size));
-  formData.append('quality', params.quality || 'auto');
-  formData.append('response_format', params.responseFormat || 'b64_json');
-
-  const response = await fetchImpl(`${baseUrl}/v1/images/edits`, {
-    method: 'POST',
-    headers: {
-      'Accept': 'application/json',
-      'Authorization': `Bearer ${apiKey}`,
+  return createGptImage2Task(
+    {
+      ...params,
+      model: GPT_IMAGE_2_EDIT_MODEL,
+      input: {
+        prompt: params.prompt,
+        input_urls: imageUrls,
+        aspect_ratio: getGptImage2AspectRatio(params.size),
+        resolution: getGptImage2Resolution(params.quality),
+      },
     },
-    body: formData,
+    'gpt-image-2 edit',
+    fetchImpl
+  );
+}
+
+export async function requestGptImage2Status(
+  taskId: string,
+  options: GptImage2StatusOptions = {},
+  fetchImpl: typeof fetch = fetch
+): Promise<NormalizedGptImage2Status> {
+  const { apiKey, baseUrl } = resolveRequestConfig(options);
+  if (!taskId) {
+    throw new Error('Missing gpt-image-2 taskId');
+  }
+
+  const response = await fetchImpl(`${baseUrl}/api/v1/jobs/recordInfo?taskId=${encodeURIComponent(taskId)}`, {
+    method: 'GET',
+    headers: {
+      Accept: 'application/json',
+      Authorization: `Bearer ${apiKey}`,
+    },
+    cache: 'no-store',
   });
 
-  return parseGptImage2Response(response, 'gpt-image-2 edit');
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`gpt-image-2 status request failed: ${response.status} ${errorText}`);
+  }
+
+  return normalizeGptImage2Status(await response.json());
+}
+
+export function normalizeGptImage2Status(data: any): NormalizedGptImage2Status {
+  const record = data?.data || data || {};
+  const state = String(record?.state || record?.status || '').toLowerCase();
+  const imageUrl = getFirstResultUrl(record);
+  const tokensUsed = Number(record?.creditsConsumed || record?.credits_consumed || 0);
+  const rawProgress = parseProgress(record?.progress);
+
+  if (state === 'success') {
+    return {
+      status: 'completed',
+      imageUrl,
+      progress: 100,
+      tokensUsed,
+      raw: data,
+    };
+  }
+
+  if (state === 'fail' || state === 'failed' || state === 'generate_failed') {
+    return {
+      status: 'failed',
+      imageUrl: '',
+      progress: rawProgress,
+      tokensUsed,
+      errorMessage: String(record?.failMsg || record?.errorMessage || record?.failCode || 'GPT Image 2 generation failed'),
+      raw: data,
+    };
+  }
+
+  return {
+    status: 'processing',
+    imageUrl: '',
+    progress: rawProgress,
+    tokensUsed,
+    raw: data,
+  };
+}
+
+interface CreateTaskOptions extends Pick<GptImage2RequestParams, 'apiKey' | 'baseUrl' | 'callBackUrl'> {
+  model: string;
+  input: Record<string, unknown>;
+}
+
+async function createGptImage2Task(
+  options: CreateTaskOptions,
+  label: string,
+  fetchImpl: typeof fetch
+): Promise<GptImage2Result> {
+  const { apiKey, baseUrl } = resolveRequestConfig(options);
+  const body: Record<string, unknown> = {
+    model: options.model,
+    input: options.input,
+  };
+  if (options.callBackUrl) body.callBackUrl = options.callBackUrl;
+
+  const response = await fetchImpl(`${baseUrl}/api/v1/jobs/createTask`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+      Authorization: `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify(body),
+  });
+
+  return parseGptImage2TaskResponse(response, label);
 }
 
 function resolveRequestConfig(params: Pick<GptImage2RequestParams, 'apiKey' | 'baseUrl'>): GptImage2ApiConfig {
@@ -113,70 +213,58 @@ function resolveRequestConfig(params: Pick<GptImage2RequestParams, 'apiKey' | 'b
   return { apiKey, baseUrl };
 }
 
-async function parseGptImage2Response(response: Response, label: string): Promise<GptImage2Result> {
+async function parseGptImage2TaskResponse(response: Response, label: string): Promise<GptImage2Result> {
   if (!response.ok) {
     const errorText = await response.text();
     throw new Error(`${label} failed: ${response.status} ${errorText}`);
   }
 
   const data = await response.json() as any;
-  const image = data?.data?.[0];
-  const imageBase64 = normalizeBase64Image(image?.b64_json);
-  const imageUrl = typeof image?.url === 'string' ? image.url : undefined;
+  if (Number(data?.code) !== 200) {
+    throw new Error(`${label} failed: ${data?.code || 'unknown'} ${data?.msg || 'Unknown error'}`);
+  }
 
-  if (!imageBase64 && !imageUrl) {
-    throw new Error(`${label} did not return image data`);
+  const taskId = data?.data?.taskId || data?.data?.task_id || data?.taskId || data?.task_id;
+  if (typeof taskId !== 'string' || !taskId) {
+    throw new Error(`${label} did not return taskId`);
   }
 
   return {
-    imageBase64,
-    imageUrl,
-    tokensUsed: Number(data?.usage?.total_tokens || 0),
+    taskId,
+    tokensUsed: Number(data?.data?.creditsConsumed || data?.usage?.total_tokens || 0),
     raw: data,
   };
 }
 
-async function fetchImageAsBlob(
-  imageUrl: string,
-  index: number,
-  fetchImpl: typeof fetch
-): Promise<{ blob: Blob; filename: string }> {
-  const response = await fetchImpl(imageUrl);
-  if (!response.ok) {
-    throw new Error(`Failed to fetch reference image ${index + 1}: ${response.status}`);
-  }
-
-  const contentType = response.headers.get('Content-Type') || 'image/png';
-  const imageBuffer = await response.arrayBuffer();
-  const blob = new Blob([imageBuffer], { type: contentType });
-
-  return {
-    blob,
-    filename: getImageFilename(imageUrl, index, contentType),
-  };
+function getFirstResultUrl(record: any): string {
+  const result = parseResultJson(record?.resultJson);
+  const resultUrls = result?.resultUrls || result?.result_urls || record?.response?.resultUrls || record?.resultUrls;
+  return Array.isArray(resultUrls) && typeof resultUrls[0] === 'string' ? resultUrls[0] : '';
 }
 
-function getImageFilename(imageUrl: string, index: number, contentType: string): string {
-  const extension = contentType.includes('jpeg') || contentType.includes('jpg')
-    ? 'jpg'
-    : contentType.includes('webp')
-      ? 'webp'
-      : 'png';
+function parseResultJson(value: unknown): any {
+  if (!value) return null;
+  if (typeof value === 'object') return value;
+  if (typeof value !== 'string') return null;
 
   try {
-    const pathname = new URL(imageUrl).pathname;
-    const filename = pathname.split('/').filter(Boolean).pop();
-    if (filename && filename.includes('.')) return filename;
-  } catch {}
-
-  return `reference-${index + 1}.${extension}`;
+    return JSON.parse(value);
+  } catch {
+    return null;
+  }
 }
 
-function normalizeBase64Image(value: unknown): string | undefined {
-  if (typeof value !== 'string' || !value) return undefined;
-  const dataUrlPrefix = ';base64,';
-  const prefixIndex = value.indexOf(dataUrlPrefix);
-  return prefixIndex >= 0 ? value.slice(prefixIndex + dataUrlPrefix.length) : value;
+function parseProgress(progress: unknown): number {
+  if (typeof progress === 'number') return clampProgress(progress);
+  if (typeof progress === 'string') {
+    const parsed = parseInt(progress.replace('%', ''), 10);
+    return Number.isFinite(parsed) ? clampProgress(parsed) : 0;
+  }
+  return 0;
+}
+
+function clampProgress(value: number): number {
+  return Math.max(0, Math.min(100, value));
 }
 
 function trimTrailingSlash(value: string): string {

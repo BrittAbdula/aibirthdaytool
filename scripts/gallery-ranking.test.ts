@@ -9,10 +9,13 @@ import {
 } from '../src/lib/card-ranking';
 
 assert.equal(getModelQualityScore('google/nano-banana-edit'), 70);
+assert.equal(getModelQualityScore('gpt-image-2-image-to-image'), 70);
 assert.equal(getModelQualityScore('gpt-image-2-edit'), 70);
+assert.equal(getModelQualityScore('gpt-image-2-text-to-image'), 65);
 assert.equal(getModelQualityScore('gpt-image-2'), 65);
 assert.equal(getModelQualityScore('google/nano-banana-pro'), 65);
 assert.equal(getModelQualityScore('claude-opus-4-7'), 40);
+assert.equal(getModelQualityScore('claude-haiku-4-5'), 40);
 assert.equal(getModelQualityScore('claude-sonnet-4-6'), 40);
 assert.equal(getModelQualityScore('claude-sonnet-4-5-20250929'), 40);
 assert.equal(PREMIUM_TAB_TEXT_MODELS.includes('claude-opus-4-7'), true);
