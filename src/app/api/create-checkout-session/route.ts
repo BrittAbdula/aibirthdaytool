@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { auth } from "@/auth"
 import Stripe from "stripe"
+import { buildCheckoutRedirectUrls } from "@/lib/pricing"
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", {
   // @ts-ignore - Using recommended stable version instead of the hardcoded preview version
@@ -20,7 +21,7 @@ export async function POST(request: Request) {
     const customer_email = session.user.email
     // const userId = "cm56ic66y000110jijyw2ir8r"
     // const customer_email = "auroroa@gmail.com"
-    const { plan, returnUrl } = await request.json()
+    const { plan, returnUrl, source } = await request.json()
     
     if (!plan || (plan !== "monthly" && plan !== "yearly")) {
       return NextResponse.json(
@@ -31,6 +32,7 @@ export async function POST(request: Request) {
 
     // Get base URL for success and cancel URLs
     const origin = request.headers.get("origin") || "http://localhost:3000"
+    const { successUrl, cancelUrl } = buildCheckoutRedirectUrls(origin, returnUrl)
     
     // Set price ID based on the selected plan
     const priceId = plan === "monthly" 
@@ -60,13 +62,15 @@ export async function POST(request: Request) {
       subscription_data: {
         metadata: {
           userId,
+          source: typeof source === "string" ? source : "unknown",
         },
       },
-      success_url: `${origin}${returnUrl || '/'}?status=success&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${origin}?status=cancelled`,
+      success_url: successUrl,
+      cancel_url: cancelUrl,
       metadata: {
         userId,
         plan,
+        source: typeof source === "string" ? source : "unknown",
       },
     })
 
@@ -78,4 +82,4 @@ export async function POST(request: Request) {
       { status: 500 }
     )
   }
-} 
+}

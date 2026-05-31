@@ -74,7 +74,15 @@ export default function Footer() {
           <nav className="order-1 md:order-2">
             <ul className="flex space-x-6">
               <li>
-                <Link 
+                <Link
+                  href="/pricing/"
+                  className="text-sm text-gray-600 hover:text-purple-600 transition-colors"
+                >
+                  Pricing
+                </Link>
+              </li>
+              <li>
+                <Link
                   href="/privacy-policy" 
                   className="text-sm text-gray-600 hover:text-purple-600 transition-colors"
                 >

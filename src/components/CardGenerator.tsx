@@ -18,6 +18,7 @@ import { Loader2, Crown, AlertCircle, ChevronRight, Check, Sparkles, Wand2, Chev
 import { useCardGeneration } from '@/hooks/useCardGeneration'
 import { PremiumModal } from '@/components/PremiumModal'
 import { modelConfigs, type ModelConfig } from '@/lib/model-config'
+import type { PremiumModalContext } from '@/lib/pricing'
 import { stylePresets, getPresetsForFormat, type OutputFormat } from '@/lib/style-presets'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { Switch } from "@/components/ui/switch"
@@ -234,6 +235,7 @@ export default function CardGenerator({
   const refPhotoInputRef = useRef<HTMLInputElement>(null)
   const [isAuthLoading, setIsAuthLoading] = useState(false)
   const [isPremiumModalOpen, setIsPremiumModalOpen] = useState(false)
+  const [premiumModalContext, setPremiumModalContext] = useState<PremiumModalContext>('default')
   const [isPremiumUser, setIsPremiumUser] = useState(false)
   const [isPrivateCard, setIsPrivateCard] = useState(false)
   const [errorToast, setErrorToast] = useState<{title: string; message: string; type: 'error' | 'warning' | 'info'} | null>(null);
@@ -432,6 +434,7 @@ export default function CardGenerator({
     }
 
     if (selectedFormat === 'video' && !isPremiumUser) {
+      setPremiumModalContext('video')
       setIsPremiumModalOpen(true);
       return;
     }
@@ -450,7 +453,20 @@ export default function CardGenerator({
     try {
       const result = await generateCards(options);
       if (result.success) setSubmited(true);
-      else if (result.error === 'rate_limit') setErrorToast({ title: 'Daily Limit Reached', message: 'Free users can generate 1 card per day.', type: 'warning' });
+      else if (result.error === 'rate_limit') {
+        setShowLimitDialog(false);
+        setPremiumModalContext('limit');
+        setIsPremiumModalOpen(true);
+        setErrorToast({
+          title: 'Daily limit reached',
+          message: 'Upgrade to Premium to keep creating today.',
+          type: 'warning'
+        });
+      }
+      else if (result.error === 'premium_required') {
+        setPremiumModalContext('video');
+        setIsPremiumModalOpen(true);
+      }
       else setErrorToast({ title: 'Generation Failed', message: result.error || 'Error generating card', type: 'error' });
     } catch (err) {
       setErrorToast({ title: 'System Error', message: 'Something went wrong', type: 'error' });
@@ -468,6 +484,7 @@ export default function CardGenerator({
     selectedStyleId,
     session,
     setShowAuthDialog,
+    setShowLimitDialog,
     uploadedRefUrls,
   ]);
 
@@ -917,6 +934,7 @@ export default function CardGenerator({
                     setIsPrivateCard(!checked)
                     return
                   }
+                  setPremiumModalContext('privacy')
                   setIsPremiumModalOpen(true)
                 }}
               />
@@ -1141,10 +1159,31 @@ export default function CardGenerator({
       </Dialog>
       
       <Dialog open={showLimitDialog} onOpenChange={setShowLimitDialog}>
-         <DialogContent><DialogTitle>Limit Reached</DialogTitle><p>You have reached the daily limit.</p></DialogContent>
+         <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Daily limit reached</DialogTitle>
+            <DialogDescription>
+              Premium removes the daily credit ceiling so you can finish this card now.
+            </DialogDescription>
+          </DialogHeader>
+          <Button
+            onClick={() => {
+              setShowLimitDialog(false)
+              setPremiumModalContext('limit')
+              setIsPremiumModalOpen(true)
+            }}
+          >
+            Upgrade to keep creating
+          </Button>
+        </DialogContent>
       </Dialog>
 
-      <PremiumModal isOpen={isPremiumModalOpen} onOpenChange={setIsPremiumModalOpen} />
+      <PremiumModal
+        isOpen={isPremiumModalOpen}
+        onOpenChange={setIsPremiumModalOpen}
+        context={premiumModalContext}
+        source={`card_generator_${premiumModalContext}`}
+      />
 
       {/* Style Dialog Re-implementation */}
       <Dialog open={styleDialogOpen} onOpenChange={setStyleDialogOpen}>

@@ -10,6 +10,7 @@ import Script from "next/script";
 import AppShell from "@/components/AppShell";
 import JsonLd from "@/components/JsonLd";
 import { ScrollToTop } from "@/components/ScrollToTop";
+import { CheckoutStatusToast } from "@/components/CheckoutStatusToast";
 import { buildOrganizationSchema, buildWebsiteSchema, toAbsoluteUrl } from "@/lib/seo";
 
 const displayFont = Fraunces({
@@ -101,6 +102,7 @@ export default function RootLayout({
           <AppShell>{children}</AppShell>
           <ScrollToTop />
           <Toaster />
+          <CheckoutStatusToast />
         </SessionProvider>
         <GoogleAnalytics gaId="G-TR8BTB7YVW" />
       </body>

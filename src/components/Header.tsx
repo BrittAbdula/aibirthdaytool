@@ -307,6 +307,15 @@ function Header({ variant = 'default' }: { variant?: HeaderVariant }) {
               >
                 Browse ideas
               </Link>
+              {!isPremiumUser && (
+                <Link
+                  href="/pricing/"
+                  className="inline-flex h-10 items-center gap-2 rounded-full border border-primary/20 bg-white px-4 text-sm font-semibold text-primary transition-colors hover:bg-primary/10"
+                >
+                  <Crown className="h-4 w-4" />
+                  Upgrade
+                </Link>
+              )}
               {status === 'authenticated' && session ? (
                 <>
                   <Link
@@ -387,6 +396,16 @@ function Header({ variant = 'default' }: { variant?: HeaderVariant }) {
               >
                 Browse ideas
               </Link>
+              {!isPremiumUser && (
+                <Link
+                  href="/pricing/"
+                  onClick={handleSurfaceLinkClick}
+                  className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-primary/20 bg-white text-primary"
+                  aria-label="View Premium pricing"
+                >
+                  <Crown className="h-4 w-4" />
+                </Link>
+              )}
               {status === 'authenticated' && session ? (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -514,6 +533,9 @@ function Header({ variant = 'default' }: { variant?: HeaderVariant }) {
             <Link href="/my-cards/" className="text-gray-700 hover:text-primary font-quicksand font-semibold transition-colors text-base">
               My cards
             </Link>
+            <Link href="/pricing/" className="text-gray-700 hover:text-primary font-quicksand font-semibold transition-colors text-base">
+              Pricing
+            </Link>
 
             {/* Search Icon & Dropdown */}
             <div className="relative" ref={searchRef}>
@@ -617,6 +639,16 @@ function Header({ variant = 'default' }: { variant?: HeaderVariant }) {
             </div>
 
             {status === 'authenticated' && session ? (
+              <>
+              {!isPremiumUser && (
+                <Link
+                  href="/pricing/"
+                  className="inline-flex min-h-[44px] items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-primary/90"
+                >
+                  <Crown className="h-4 w-4" />
+                  Upgrade
+                </Link>
+              )}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button className="flex items-center space-x-2 hover:opacity-80 transition-opacity">
@@ -674,6 +706,7 @@ function Header({ variant = 'default' }: { variant?: HeaderVariant }) {
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
+              </>
             ) : (
               <WarmButton
                 variant="outline"
@@ -819,6 +852,9 @@ function Header({ variant = 'default' }: { variant?: HeaderVariant }) {
               </Link>
               <Link href="/my-cards/" className="flex items-center px-4 py-3 text-gray-700 hover:bg-pink-50 rounded-xl transition-colors font-medium text-lg">
                 My Cards
+              </Link>
+              <Link href="/pricing/" className="flex items-center px-4 py-3 text-gray-700 hover:bg-pink-50 rounded-xl transition-colors font-medium text-lg">
+                Pricing
               </Link>
 
               <div className="px-4 pt-3">

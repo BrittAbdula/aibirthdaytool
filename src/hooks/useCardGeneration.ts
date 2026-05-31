@@ -165,9 +165,18 @@ export const useCardGeneration = () => {
           });
 
           if (!response.ok) {
+            let errorPayload: { error?: string; message?: string } = {};
+            try {
+              errorPayload = await response.json();
+            } catch {
+              errorPayload = {};
+            }
+
             if (response.status === 429) { setShowLimitDialog(true); throw new Error('rate_limit'); }
             if (response.status === 401) { throw new Error('auth'); }
-            throw new Error('Failed to start card generation');
+            if (errorPayload.error === 'premium_required') { throw new Error('premium_required'); }
+            if (errorPayload.error === 'first_day_svg_only') { throw new Error(errorPayload.message || 'first_day_svg_only'); }
+            throw new Error(errorPayload.message || errorPayload.error || 'Failed to start card generation');
           }
 
           const { cardId } = await response.json();
@@ -307,6 +316,9 @@ export const useCardGeneration = () => {
         const rateLimitError = failedResults.find(r => r.error === 'rate_limit');
         if(rateLimitError) { setShowLimitDialog(true); throw new Error('rate_limit'); } // Re-throw to trigger limit dialog
 
+        const premiumRequiredError = failedResults.find(r => r.error === 'premium_required');
+        if(premiumRequiredError) { throw new Error('premium_required'); }
+
         // Collect other errors
         const otherErrors = failedResults
           .filter(r => r.error !== 'auth' && r.error !== 'rate_limit')
@@ -332,6 +344,7 @@ export const useCardGeneration = () => {
       // Handle top-level errors (auth, rate_limit re-thrown)
       if (outerError.message === 'auth') { /* Handled by re-throwing */ return { success: false, error: 'auth' }; }
       if (outerError.message === 'rate_limit') { /* Handled by re-throwing */ return { success: false, error: 'rate_limit' }; }
+      if (outerError.message === 'premium_required') { return { success: false, error: 'premium_required' }; }
 
       setError(outerError.message || 'An unexpected error occurred.');
       return { success: false, error: outerError.message };
