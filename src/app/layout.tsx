@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { Fraunces, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import '@/styles/globals.css';
@@ -102,7 +103,9 @@ export default function RootLayout({
           <AppShell>{children}</AppShell>
           <ScrollToTop />
           <Toaster />
-          <CheckoutStatusToast />
+          <Suspense fallback={null}>
+            <CheckoutStatusToast />
+          </Suspense>
         </SessionProvider>
         <GoogleAnalytics gaId="G-TR8BTB7YVW" />
       </body>
