@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import CardGallery from '@/app/card-gallery/CardGallery'
 import CardTypeFilter from '@/app/card-gallery/CardTypeFilter'
@@ -40,7 +40,6 @@ export default function CardGalleryContent({
   const [currentTab, setCurrentTab] = useState<TabType>(
     (searchParams.get('tab') as TabType) || activeTab
   )
-  const [showBackToTop, setShowBackToTop] = useState(false)
 
   const handleFilterChange = ({ cardType, relationship }: { cardType: CardType | null, relationship: string | null }) => {
     setSelectedType(cardType)
@@ -70,22 +69,6 @@ export default function CardGalleryContent({
     const query = params.toString()
     router.push(query ? `/card-gallery?${query}` : '/card-gallery/')
   }
-
-  const scrollToTop = useCallback(() => {
-    window.scrollTo({
-      top: 0,
-      behavior: 'smooth'
-    })
-  }, [])
-
-  useEffect(() => {
-    const handleScroll = () => {
-      setShowBackToTop(window.scrollY > 500)
-    }
-
-    window.addEventListener('scroll', handleScroll)
-    return () => window.removeEventListener('scroll', handleScroll)
-  }, [])
 
   useEffect(() => {
     const relationshipFromQuery = searchParams.get('relationship')
@@ -208,30 +191,6 @@ export default function CardGalleryContent({
             />
           )}
         </section>
-
-        {/* Back to Top Button */}
-        {showBackToTop && (
-          <button
-            onClick={scrollToTop}
-            className="fixed bottom-8 right-8 p-3 bg-purple-500 text-white rounded-full shadow-lg hover:bg-purple-600 transition-all duration-300 z-50 flex items-center justify-center"
-            aria-label="Back to top"
-          >
-            <svg 
-              xmlns="http://www.w3.org/2000/svg" 
-              className="h-6 w-6" 
-              fill="none" 
-              viewBox="0 0 24 24" 
-              stroke="currentColor"
-            >
-              <path 
-                strokeLinecap="round" 
-                strokeLinejoin="round" 
-                strokeWidth={2} 
-                d="M5 10l7-7m0 0l7 7m-7-7v18" 
-              />
-            </svg>
-          </button>
-        )}
       </div>
     </main>
   )
