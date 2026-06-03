@@ -7,7 +7,7 @@ import GalleryComboLinkSection from '@/components/gallery/GalleryComboLinkSectio
 import GuidanceGridSection from '@/components/eeat/GuidanceGridSection'
 import TrustSignalsSection from '@/components/eeat/TrustSignalsSection'
 import JsonLd from '@/components/JsonLd'
-import { Card, getFeaturedCardsServer } from '@/lib/cards'
+import { GalleryCardsResult, getFeaturedCardsServer } from '@/lib/cards'
 import { GALLERY_PAGE_SIZE } from '@/lib/gallery-pagination'
 import { getCardTypeLabel, getGalleryComboHref, getRelationshipLabel, getSeoRelationshipsForType } from '@/lib/gallery-combos'
 import { getTrustHubRelatedLinks, getTypeGalleryTrustGuide } from '@/lib/eeat-content'
@@ -75,7 +75,7 @@ export default async function TypePage({ params }: Props) {
   const type = decodeURIComponent(resolvedParams.type) as CardType
   const cardTypeLabel = getCardTypeLabel(type)
   const isBirthdayType = type === 'birthday'
-  let initialCardsData: { cards: Card[]; totalPages: number } = { cards: [], totalPages: 0 }
+  let initialCardsData: GalleryCardsResult = { cards: [], hasMore: false, totalPages: 0 }
 
   try {
     initialCardsData = await getFeaturedCardsServer(1, GALLERY_PAGE_SIZE, type, null)

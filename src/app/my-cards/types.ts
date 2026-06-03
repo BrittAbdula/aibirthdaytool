@@ -12,7 +12,7 @@ export interface EditedCardEntry {
   id: string; // Assuming EditedCard.id is a string (e.g., CUID)
   cardType: string | null;
   r2Url: string | null;
-  editedContent: string | null;
+  editedContent?: string | null;
   model?: string | null;
   relationship?: string | null;
   recipientName: string | null;

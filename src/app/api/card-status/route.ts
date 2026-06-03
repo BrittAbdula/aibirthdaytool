@@ -4,9 +4,49 @@ import { prisma } from '@/lib/prisma';
 import { uploadVideoToR2, uploadToCloudflareImages } from '@/lib/r2';
 import { SEEDANCE_VIDEO_MODEL, requestSeedanceVideoStatus } from '@/lib/seedance-video';
 import { GPT_IMAGE_2_EDIT_MODEL, GPT_IMAGE_2_MODEL, requestGptImage2Status } from '@/lib/gpt-image-2';
+import { getRetryAfterSeconds, isTerminalCardStatus } from '@/lib/card-status';
+import { Prisma } from '@prisma/client';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
+
+function applyNoStoreHeaders(response: NextResponse, retryAfterSeconds?: number) {
+  response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  response.headers.set('Pragma', 'no-cache');
+  response.headers.set('Expires', '0');
+  if (retryAfterSeconds) {
+    response.headers.set('Retry-After', String(retryAfterSeconds));
+  }
+  return response;
+}
+
+function processingResponse(body: Record<string, unknown> = {}) {
+  return applyNoStoreHeaders(
+    NextResponse.json({ status: 'processing', r2Url: '', responseContent: '', ...body }),
+    getRetryAfterSeconds(30000)
+  );
+}
+
+async function getResponseContent(cardId: string) {
+  const content = await prisma.apiLog.findUnique({
+    where: { cardId },
+    select: { responseContent: true },
+  });
+
+  return content?.responseContent || '';
+}
+
+async function updateCardIfNotTerminal(cardId: string, data: Prisma.ApiLogUpdateManyMutationInput) {
+  await prisma.apiLog.updateMany({
+    where: {
+      cardId,
+      status: {
+        notIn: ['completed', 'failed'],
+      },
+    },
+    data,
+  });
+}
 
 export async function GET(request: Request) {
   try {
@@ -29,7 +69,6 @@ export async function GET(request: Request) {
       select: {
         status: true,
         r2Url: true,
-        responseContent: true,
         isError: true,
         errorMessage: true,
         promptVersion: true,
@@ -40,6 +79,17 @@ export async function GET(request: Request) {
     if (!card) {
       return NextResponse.json({ error: 'Card not found' }, { status: 404 });
     }
+
+    if (isTerminalCardStatus(card.status)) {
+      const responseContent = card.r2Url ? '' : await getResponseContent(cardId);
+      return applyNoStoreHeaders(NextResponse.json({
+        status: card.status,
+        r2Url: card.r2Url || '',
+        responseContent,
+        isError: card.isError,
+        errorMessage: card.errorMessage,
+      }));
+    }
     // console.log('gpt4o-image-------card', card);
 
     if (card.promptVersion === GPT_IMAGE_2_MODEL || card.promptVersion === GPT_IMAGE_2_EDIT_MODEL) {
@@ -47,16 +97,12 @@ export async function GET(request: Request) {
         const response = NextResponse.json({
           status: card.status,
           r2Url: card.r2Url || '',
-          responseContent: card.responseContent || '',
+          responseContent: card.r2Url ? '' : await getResponseContent(cardId),
           isError: card.isError,
           errorMessage: card.errorMessage || 'Missing gpt-image-2 taskId',
         });
 
-        response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
-        response.headers.set('Pragma', 'no-cache');
-        response.headers.set('Expires', '0');
-
-        return response;
+        return applyNoStoreHeaders(response);
       }
 
       try {
@@ -65,14 +111,11 @@ export async function GET(request: Request) {
         if (imageData.status === 'completed') {
           if (!imageData.imageUrl) {
             const errorMessage = 'GPT Image 2 completed without image URL';
-            await prisma.apiLog.update({
-              where: { cardId },
-              data: {
-                status: 'failed',
-                isError: true,
-                errorMessage,
-                tokensUsed: imageData.tokensUsed,
-              },
+            await updateCardIfNotTerminal(cardId, {
+              status: 'failed',
+              isError: true,
+              errorMessage,
+              tokensUsed: imageData.tokensUsed,
             });
 
             const response = NextResponse.json({
@@ -82,11 +125,7 @@ export async function GET(request: Request) {
               errorMessage,
             });
 
-            response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
-            response.headers.set('Pragma', 'no-cache');
-            response.headers.set('Expires', '0');
-
-            return response;
+            return applyNoStoreHeaders(response);
           }
 
           let outUrl = imageData.imageUrl;
@@ -97,14 +136,11 @@ export async function GET(request: Request) {
             outUrl = imageData.imageUrl;
           }
 
-          await prisma.apiLog.update({
-            where: { cardId },
-            data: {
-              status: 'completed',
-              isError: false,
-              r2Url: outUrl,
-              tokensUsed: imageData.tokensUsed,
-            },
+          await updateCardIfNotTerminal(cardId, {
+            status: 'completed',
+            isError: false,
+            r2Url: outUrl,
+            tokensUsed: imageData.tokensUsed,
           });
 
           const response = NextResponse.json({
@@ -114,22 +150,15 @@ export async function GET(request: Request) {
             progress: 100,
           });
 
-          response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
-          response.headers.set('Pragma', 'no-cache');
-          response.headers.set('Expires', '0');
-
-          return response;
+          return applyNoStoreHeaders(response);
         }
 
         if (imageData.status === 'failed') {
-          await prisma.apiLog.update({
-            where: { cardId },
-            data: {
-              status: 'failed',
-              isError: true,
-              errorMessage: imageData.errorMessage || 'GPT Image 2 generation failed',
-              tokensUsed: imageData.tokensUsed,
-            },
+          await updateCardIfNotTerminal(cardId, {
+            status: 'failed',
+            isError: true,
+            errorMessage: imageData.errorMessage || 'GPT Image 2 generation failed',
+            tokensUsed: imageData.tokensUsed,
           });
 
           const response = NextResponse.json({
@@ -139,39 +168,17 @@ export async function GET(request: Request) {
             errorMessage: imageData.errorMessage || 'GPT Image 2 generation failed',
           });
 
-          response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
-          response.headers.set('Pragma', 'no-cache');
-          response.headers.set('Expires', '0');
-
-          return response;
+          return applyNoStoreHeaders(response);
         }
 
-        const response = NextResponse.json({
-          status: 'processing',
-          r2Url: '',
-          responseContent: '',
+        return processingResponse({
           progress: imageData.progress,
           message: `Image is being generated (${imageData.progress}%)`,
         });
-
-        response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
-        response.headers.set('Pragma', 'no-cache');
-        response.headers.set('Expires', '0');
-
-        return response;
       } catch (error) {
-        const response = NextResponse.json({
-          status: 'processing',
-          r2Url: '',
-          responseContent: '',
+        return processingResponse({
           message: error instanceof Error ? error.message : 'GPT Image 2 is being generated',
         });
-
-        response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
-        response.headers.set('Pragma', 'no-cache');
-        response.headers.set('Expires', '0');
-
-        return response;
       }
     }
 
@@ -188,15 +195,15 @@ export async function GET(request: Request) {
             // Fallback to original URL on upload failure
             outUrl = imageUrl;
           }
-          await prisma.apiLog.update({
-            where: { cardId },
-            data: { status: 'completed', r2Url: outUrl },
+          await updateCardIfNotTerminal(cardId, {
+            status: 'completed',
+            r2Url: outUrl,
           });
         }
       }else if(data?.status === 'GENERATE_FAILED'){
-        await prisma.apiLog.update({
-          where: { cardId },
-          data: { status: 'failed', errorMessage: data?.errorMessage || '' },
+        await updateCardIfNotTerminal(cardId, {
+          status: 'failed',
+          errorMessage: data?.errorMessage || '',
         });
       }
       const status = data?.status === 'SUCCESS' ?  'completed' : data?.status === 'GENERATE_FAILED' ? 'failed' : 'processing';
@@ -207,11 +214,9 @@ export async function GET(request: Request) {
         r2Url: outUrl,
       });
       
-      response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
-      response.headers.set('Pragma', 'no-cache');
-      response.headers.set('Expires', '0');
-      
-      return response;
+      return status === 'processing'
+        ? applyNoStoreHeaders(response, getRetryAfterSeconds(30000))
+        : applyNoStoreHeaders(response);
     }
 
     // Handle Banana image generation status (Edit/Pro)
@@ -234,11 +239,7 @@ export async function GET(request: Request) {
         data = await resp.json();
       } catch (e) {
         // Network or API failure — keep polling without failing the route
-        const response = NextResponse.json({ status: 'processing', r2Url: '' });
-        response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
-        response.headers.set('Pragma', 'no-cache');
-        response.headers.set('Expires', '0');
-        return response;
+        return processingResponse();
       }
       // Normalize
       const state = data?.data?.state as ('waiting'|'success'|'fail'|undefined);
@@ -261,35 +262,25 @@ export async function GET(request: Request) {
         } catch (e) {
           outUrl = resultUrl; // fallback
         }
-        await prisma.apiLog.update({
-          where: { cardId },
-          data: { status: 'completed', r2Url: outUrl }
+        await updateCardIfNotTerminal(cardId, {
+          status: 'completed',
+          r2Url: outUrl,
         });
         const response = NextResponse.json({ status: 'completed', r2Url: outUrl });
-        response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
-        response.headers.set('Pragma', 'no-cache');
-        response.headers.set('Expires', '0');
-        return response;
+        return applyNoStoreHeaders(response);
       }
 
       if (status === 'failed') {
-        await prisma.apiLog.update({
-          where: { cardId },
-          data: { status: 'failed', errorMessage: data?.data?.failMsg || 'Banana generation failed' }
+        await updateCardIfNotTerminal(cardId, {
+          status: 'failed',
+          errorMessage: data?.data?.failMsg || 'Banana generation failed',
         });
         const response = NextResponse.json({ status: 'failed', r2Url: '', errorMessage: data?.data?.failMsg || 'Banana generation failed' });
-        response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
-        response.headers.set('Pragma', 'no-cache');
-        response.headers.set('Expires', '0');
-        return response;
+        return applyNoStoreHeaders(response);
       }
 
       // processing
-      const response = NextResponse.json({ status: 'processing', r2Url: '' });
-      response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
-      response.headers.set('Pragma', 'no-cache');
-      response.headers.set('Expires', '0');
-      return response;
+      return processingResponse();
     }
 
     // Handle Seedance video generation status
@@ -300,13 +291,10 @@ export async function GET(request: Request) {
         if (videoData.status === 'completed') {
           if (videoData.videoUrl) {
             const r2Url = await uploadVideoToR2(videoData.videoUrl, card.taskId || '');
-            await prisma.apiLog.update({
-              where: { cardId },
-              data: {
-                status: 'completed',
-                r2Url,
-                tokensUsed: videoData.tokensUsed,
-              },
+            await updateCardIfNotTerminal(cardId, {
+              status: 'completed',
+              r2Url,
+              tokensUsed: videoData.tokensUsed,
             });
 
             const response = NextResponse.json({
@@ -316,18 +304,14 @@ export async function GET(request: Request) {
               progress: 100,
             });
 
-            response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
-            response.headers.set('Pragma', 'no-cache');
-            response.headers.set('Expires', '0');
-
-            return response;
+            return applyNoStoreHeaders(response);
           }
         }
 
         if (videoData.status === 'failed') {
-          await prisma.apiLog.update({
-            where: { cardId },
-            data: { status: 'failed', errorMessage: videoData.errorMessage || 'Seedance video generation failed' },
+          await updateCardIfNotTerminal(cardId, {
+            status: 'failed',
+            errorMessage: videoData.errorMessage || 'Seedance video generation failed',
           });
 
           const response = NextResponse.json({
@@ -337,39 +321,17 @@ export async function GET(request: Request) {
             errorMessage: videoData.errorMessage || 'Seedance video generation failed',
           });
 
-          response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
-          response.headers.set('Pragma', 'no-cache');
-          response.headers.set('Expires', '0');
-
-          return response;
+          return applyNoStoreHeaders(response);
         }
 
-        const response = NextResponse.json({
-          status: 'processing',
-          r2Url: '',
-          responseContent: '',
+        return processingResponse({
           progress: videoData.progress,
           message: `Video is being generated (${videoData.progress}%)`,
         });
-
-        response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
-        response.headers.set('Pragma', 'no-cache');
-        response.headers.set('Expires', '0');
-
-        return response;
       } catch (error) {
-        const response = NextResponse.json({
-          status: 'processing',
-          r2Url: '',
-          responseContent: '',
+        return processingResponse({
           message: error instanceof Error ? error.message : 'Seedance video is being generated',
         });
-
-        response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
-        response.headers.set('Pragma', 'no-cache');
-        response.headers.set('Expires', '0');
-
-        return response;
       }
     }
 
@@ -382,9 +344,9 @@ export async function GET(request: Request) {
         if(videoUrl){
           // For videos, we might want to store the URL directly or upload to R2
           const r2Url = await uploadVideoToR2(videoUrl, card.taskId || '');
-          await prisma.apiLog.update({
-            where: { cardId },
-            data: { status: 'completed', r2Url: r2Url },
+          await updateCardIfNotTerminal(cardId, {
+            status: 'completed',
+            r2Url: r2Url,
           });
           
           // Return the completed video with R2 URL
@@ -394,16 +356,12 @@ export async function GET(request: Request) {
             responseContent: '', // Videos don't have SVG content
           });
           
-          response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
-          response.headers.set('Pragma', 'no-cache');
-          response.headers.set('Expires', '0');
-          
-          return response;
+          return applyNoStoreHeaders(response);
         }
       } else if(videoData?.code === 'failed'){
-        await prisma.apiLog.update({
-          where: { cardId },
-          data: { status: 'failed', errorMessage: videoData?.message || 'Video generation failed' },
+        await updateCardIfNotTerminal(cardId, {
+          status: 'failed',
+          errorMessage: videoData?.message || 'Video generation failed',
         });
         
         // Return the failed status
@@ -414,27 +372,14 @@ export async function GET(request: Request) {
           errorMessage: videoData?.message || 'Video generation failed'
         });
         
-        response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
-        response.headers.set('Pragma', 'no-cache');
-        response.headers.set('Expires', '0');
-        
-        return response;
+        return applyNoStoreHeaders(response);
       }
       
       // For processing status, return the current progress
-      const response = NextResponse.json({
-        status: 'processing',
-        r2Url: '',
-        responseContent: '',
+      return processingResponse({
         progress: videoData?.data?.progress || 0,
         message: videoData?.message || 'Video is being generated'
       });
-      
-      response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
-      response.headers.set('Pragma', 'no-cache');
-      response.headers.set('Expires', '0');
-      
-      return response;
     }
 
     // Handle Luma video generation status
@@ -446,9 +391,9 @@ export async function GET(request: Request) {
         if(videoUrl){
           // For videos, we might want to store the URL directly or upload to R2
           const r2Url = await uploadVideoToR2(videoUrl, card.taskId || '');
-          await prisma.apiLog.update({
-            where: { cardId },
-            data: { status: 'completed', r2Url: r2Url },
+          await updateCardIfNotTerminal(cardId, {
+            status: 'completed',
+            r2Url: r2Url,
           });
           
           // Return the completed video with R2 URL
@@ -458,16 +403,12 @@ export async function GET(request: Request) {
             responseContent: '', // Videos don't have SVG content
           });
           
-          response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
-          response.headers.set('Pragma', 'no-cache');
-          response.headers.set('Expires', '0');
-          
-          return response;
+          return applyNoStoreHeaders(response);
         }
       } else if(videoData?.state === 'failed'){
-        await prisma.apiLog.update({
-          where: { cardId },
-          data: { status: 'failed', errorMessage: 'Luma video generation failed' },
+        await updateCardIfNotTerminal(cardId, {
+          status: 'failed',
+          errorMessage: 'Luma video generation failed',
         });
         
         // Return the failed status
@@ -478,49 +419,29 @@ export async function GET(request: Request) {
           errorMessage: 'Luma video generation failed'
         });
         
-        response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
-        response.headers.set('Pragma', 'no-cache');
-        response.headers.set('Expires', '0');
-        
-        return response;
+        return applyNoStoreHeaders(response);
       }
       
       // For processing status, return the current progress
-      const response = NextResponse.json({
-        status: 'processing',
-        r2Url: '',
-        responseContent: '',
+      return processingResponse({
         message: `Video is being generated (${videoData?.state || 'processing'})`
       });
-      
-      response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
-      response.headers.set('Pragma', 'no-cache');
-      response.headers.set('Expires', '0');
-      
-      return response;
     }
     
     // 同样为其他情况添加缓存控制头
     const response = NextResponse.json({
       status: card.status,
       r2Url: card.r2Url || '',
-      responseContent: card.responseContent || '',
+      responseContent: card.r2Url ? '' : await getResponseContent(cardId),
       isError: card.isError,
       errorMessage: card.errorMessage,
     });
     
-    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
-    response.headers.set('Pragma', 'no-cache');
-    response.headers.set('Expires', '0');
-    
-    return response;
+    return applyNoStoreHeaders(response);
   } catch (error) {
     console.error('Error checking card status:', error);
     
-    const response = NextResponse.json({ error: 'Internal server error' }, { status: 500 });
-    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
-    
-    return response;
+    return applyNoStoreHeaders(NextResponse.json({ error: 'Internal server error' }, { status: 500 }));
   }
 }
 

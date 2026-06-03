@@ -26,15 +26,24 @@ export async function GET(request: Request) {
             ${endDate}::date,
             interval '1 day'
           )::date as dt
+        ),
+        action_counts AS (
+          SELECT
+            date_trunc('day', ua.timestamp)::date as dt,
+            ua.action,
+            COUNT(ua.id)::integer as count
+          FROM "UserAction" ua
+          WHERE ua.timestamp >= ${startDate}::date
+            AND ua.timestamp < (${endDate}::date + interval '1 day')
+          GROUP BY date_trunc('day', ua.timestamp)::date, ua.action
         )
         SELECT
           to_char(d.dt, 'YYYY-MM-DD') as dt,
-          COALESCE(ua.action, 'unknown') as action,
-          COUNT(ua.id)::integer as count
+          COALESCE(ac.action, 'unknown') as action,
+          COALESCE(ac.count, 0)::integer as count
         FROM date_range d
-        LEFT JOIN "UserAction" ua ON to_char(ua.timestamp, 'YYYY-MM-DD') = to_char(d.dt, 'YYYY-MM-DD')
-        GROUP BY d.dt, ua.action
-        ORDER BY d.dt ASC, ua.action ASC
+        LEFT JOIN action_counts ac ON ac.dt = d.dt
+        ORDER BY d.dt ASC, ac.action ASC
       `,
       // 2. API 调用统计根据 promptVersion 进行分类统计 (全部调用)
       prisma.$queryRaw`
@@ -44,15 +53,24 @@ export async function GET(request: Request) {
             ${endDate}::date,
             interval '1 day'
           )::date as dt
+        ),
+        api_counts AS (
+          SELECT
+            date_trunc('day', al.timestamp)::date as dt,
+            al."promptVersion",
+            COUNT(al.id)::integer as count
+          FROM "ApiLog" al
+          WHERE al.timestamp >= ${startDate}::date
+            AND al.timestamp < (${endDate}::date + interval '1 day')
+          GROUP BY date_trunc('day', al.timestamp)::date, al."promptVersion"
         )
         SELECT
           to_char(d.dt, 'YYYY-MM-DD') as dt,
-          COALESCE(al."promptVersion", 'unknown') as "promptVersion",
-          COUNT(al.id)::integer as count
+          COALESCE(ac."promptVersion", 'unknown') as "promptVersion",
+          COALESCE(ac.count, 0)::integer as count
         FROM date_range d
-        LEFT JOIN "ApiLog" al ON to_char(al.timestamp, 'YYYY-MM-DD') = to_char(d.dt, 'YYYY-MM-DD')
-        GROUP BY d.dt, al."promptVersion"
-        ORDER BY d.dt ASC, al."promptVersion" ASC
+        LEFT JOIN api_counts ac ON ac.dt = d.dt
+        ORDER BY d.dt ASC, ac."promptVersion" ASC
       `,
       // 3. 近三十天每天卡片类型cardType的api调用量统计
       prisma.$queryRaw`
@@ -62,15 +80,24 @@ export async function GET(request: Request) {
             ${endDate}::date,
             interval '1 day'
           )::date as dt
+        ),
+        card_type_counts AS (
+          SELECT
+            date_trunc('day', al.timestamp)::date as dt,
+            al."cardType",
+            COUNT(al.id)::integer as total_count
+          FROM "ApiLog" al
+          WHERE al.timestamp >= ${startDate}::date
+            AND al.timestamp < (${endDate}::date + interval '1 day')
+          GROUP BY date_trunc('day', al.timestamp)::date, al."cardType"
         )
         SELECT
           to_char(d.dt, 'YYYY-MM-DD') as dt,
-          COALESCE(al."cardType", 'unknown') as "cardType",
-          COUNT(al.id)::integer as total_count
+          COALESCE(ctc."cardType", 'unknown') as "cardType",
+          COALESCE(ctc.total_count, 0)::integer as total_count
         FROM date_range d
-        LEFT JOIN "ApiLog" al ON to_char(al.timestamp, 'YYYY-MM-DD') = to_char(d.dt, 'YYYY-MM-DD')
-        GROUP BY d.dt, al."cardType"
-        ORDER BY d.dt ASC, al."cardType" ASC
+        LEFT JOIN card_type_counts ctc ON ctc.dt = d.dt
+        ORDER BY d.dt ASC, ctc."cardType" ASC
       `,
       // 4. 近三十天每天用户调用量的分层统计
       prisma.$queryRaw`
@@ -80,21 +107,34 @@ export async function GET(request: Request) {
             ${endDate}::date,
             interval '1 day'
           )::date as dt
+        ),
+        usage_counts AS (
+          SELECT
+            au.date::date as dt,
+            COUNT(au.id)::integer AS total_users,
+            COALESCE(SUM(au.count), 0)::integer AS total_calls,
+            COALESCE(SUM(CASE WHEN au.count > 2 THEN 1 ELSE 0 END), 0)::integer AS up2_users,
+            COALESCE(SUM(CASE WHEN au.count > 5 THEN 1 ELSE 0 END), 0)::integer AS up5_users,
+            COALESCE(SUM(CASE WHEN au.count > 8 THEN 1 ELSE 0 END), 0)::integer AS up8_users,
+            COALESCE(to_char(CASE
+                            WHEN COUNT(au.id) > 0 THEN round(SUM(COALESCE(au.count, 0))::numeric / COUNT(au.id), 2)
+                            ELSE 0
+                         END, 'FM9999990.99'), '0.00') AS avg_calls
+          FROM "ApiUsage" au
+          WHERE au.date >= ${startDate}::date
+            AND au.date <= ${endDate}::date
+          GROUP BY au.date::date
         )
         SELECT
           to_char(d.dt, 'YYYY-MM-DD') as dt,
-          COUNT(au.id)::integer AS total_users,
-          COALESCE(SUM(au.count), 0)::integer AS total_calls,
-          COALESCE(SUM(CASE WHEN au.count > 2 THEN 1 ELSE 0 END), 0)::integer AS up2_users,
-          COALESCE(SUM(CASE WHEN au.count > 5 THEN 1 ELSE 0 END), 0)::integer AS up5_users,
-          COALESCE(SUM(CASE WHEN au.count > 8 THEN 1 ELSE 0 END), 0)::integer AS up8_users,
-          COALESCE(to_char(CASE 
-                          WHEN COUNT(au.id) > 0 THEN round(SUM(COALESCE(au.count, 0))::numeric / COUNT(au.id), 2)
-                          ELSE 0
-                       END, 'FM9999990.99'), '0.00') AS avg_calls
+          COALESCE(uc.total_users, 0)::integer AS total_users,
+          COALESCE(uc.total_calls, 0)::integer AS total_calls,
+          COALESCE(uc.up2_users, 0)::integer AS up2_users,
+          COALESCE(uc.up5_users, 0)::integer AS up5_users,
+          COALESCE(uc.up8_users, 0)::integer AS up8_users,
+          COALESCE(uc.avg_calls, '0.00') AS avg_calls
         FROM date_range d
-        LEFT JOIN "ApiUsage" au ON to_char(au."createdAt", 'YYYY-MM-DD') = to_char(d.dt, 'YYYY-MM-DD')
-        GROUP BY d.dt
+        LEFT JOIN usage_counts uc ON uc.dt = d.dt
         ORDER BY d.dt ASC
       `,
       // 5. API 失败调用统计（按 promptVersion 分类，只包含错误）
@@ -105,16 +145,25 @@ export async function GET(request: Request) {
             ${endDate}::date,
             interval '1 day'
           )::date as dt
+        ),
+        failure_counts AS (
+          SELECT
+            date_trunc('day', al.timestamp)::date as dt,
+            al."promptVersion",
+            COUNT(al.id)::integer as count
+          FROM "ApiLog" al
+          WHERE al.timestamp >= ${startDate}::date
+            AND al.timestamp < (${endDate}::date + interval '1 day')
+            AND al."isError" = true
+          GROUP BY date_trunc('day', al.timestamp)::date, al."promptVersion"
         )
         SELECT
           to_char(d.dt, 'YYYY-MM-DD') as dt,
-          COALESCE(al."promptVersion", 'unknown') as "promptVersion",
-          COUNT(al.id)::integer as count
+          COALESCE(fc."promptVersion", 'unknown') as "promptVersion",
+          COALESCE(fc.count, 0)::integer as count
         FROM date_range d
-        LEFT JOIN "ApiLog" al ON to_char(al.timestamp, 'YYYY-MM-DD') = to_char(d.dt, 'YYYY-MM-DD')
-          AND al."isError" = 'true'
-        GROUP BY d.dt, al."promptVersion"
-        ORDER BY d.dt ASC, al."promptVersion" ASC
+        LEFT JOIN failure_counts fc ON fc.dt = d.dt
+        ORDER BY d.dt ASC, fc."promptVersion" ASC
       `
     ]);
 
@@ -189,7 +238,9 @@ export async function GET(request: Request) {
 
     console.log("Returning response with structure:", Object.keys(responseData));
 
-    return NextResponse.json(responseData);
+    const response = NextResponse.json(responseData);
+    response.headers.set('Cache-Control', 'private, max-age=300, stale-while-revalidate=900');
+    return response;
   } catch (error) {
     console.error("Error fetching user stats:", error);
     return NextResponse.json(

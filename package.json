@@ -16,6 +16,8 @@
     "test:stats-preview": "ts-node --compiler-options '{\"module\":\"commonjs\",\"moduleResolution\":\"node\"}' scripts/stats-preview.test.ts",
     "test:gallery-ranking": "ts-node --compiler-options '{\"module\":\"commonjs\",\"moduleResolution\":\"node\"}' scripts/gallery-ranking.test.ts",
     "test:gallery-pagination": "ts-node --compiler-options '{\"module\":\"commonjs\",\"moduleResolution\":\"node\"}' scripts/gallery-pagination.test.ts",
+    "test:gallery-api-contract": "ts-node --compiler-options '{\"module\":\"commonjs\",\"moduleResolution\":\"node\"}' scripts/gallery-api-contract.test.ts",
+    "test:card-status-polling": "ts-node --compiler-options '{\"module\":\"commonjs\",\"moduleResolution\":\"node\"}' scripts/card-status-polling.test.ts",
     "test:cleanup-policy": "ts-node --compiler-options '{\"module\":\"commonjs\",\"moduleResolution\":\"node\"}' scripts/cleanup-card-policy.test.ts",
     "cleanup:cards": "ts-node --compiler-options '{\"module\":\"commonjs\",\"moduleResolution\":\"node\"}' scripts/cleanup-old-cards.ts",
     "seo:check": "ts-node --compiler-options '{\"module\":\"commonjs\",\"moduleResolution\":\"node\"}' scripts/seo-regression-check.ts",

@@ -130,6 +130,25 @@ export async function GET(request: Request) {
       },
       skip,
       take: pageSize,
+      select: {
+        id: true,
+        originalCardId: true,
+        cardType: true,
+        model: true,
+        relationship: true,
+        recipientName: true,
+        senderName: true,
+        spotifyTrackId: true,
+        r2Url: true,
+        userId: true,
+        customUrl: true,
+        message: true,
+        requirements: true,
+        isPublic: true,
+        deleted: true,
+        createdAt: true,
+        updatedAt: true,
+      },
     })
 
     const total = await prisma.editedCard.count({

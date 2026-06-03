@@ -7,7 +7,7 @@ import { getCuratedGeneratorSitemapSlugs } from "@/lib/generator-seo";
 import CardTypeBubbles from "@/components/CardTypeBubbles";
 import CardGenerator from "@/components/CardGenerator";
 import SimpleCardGallery from '@/app/card-gallery/SimpleCardGallery'
-import { Card, getFeaturedCardsServer } from '@/lib/cards';
+import { GalleryCardsResult, getFeaturedCardsServer } from '@/lib/cards';
 import GalleryComboLinkSection from "@/components/gallery/GalleryComboLinkSection";
 import JsonLd from "@/components/JsonLd";
 import GuidanceGridSection from "@/components/eeat/GuidanceGridSection";
@@ -130,7 +130,7 @@ export default async function CardGeneratorPage({ params }: CardGeneratorPagePro
     const generatorDescription = cardConfig.seoDescription;
     const generatorName = cardConfig.seoH1;
     // Get initial cards data
-    let initialCardsData: { cards: Card[]; totalPages: number } = { cards: [], totalPages: 0 };
+    let initialCardsData: GalleryCardsResult = { cards: [], hasMore: false, totalPages: 0 };
     try {
         initialCardsData = await getFeaturedCardsServer(1, 20, cardType);
     } catch (error) {

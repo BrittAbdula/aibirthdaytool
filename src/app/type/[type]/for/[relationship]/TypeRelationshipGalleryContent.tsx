@@ -5,7 +5,7 @@ import { notFound, useRouter, useSearchParams } from 'next/navigation'
 import CardGallery from '@/app/card-gallery/CardGallery'
 import { SimpleFilter } from '@/components/SimpleFilter'
 import { CardType } from '@/lib/card-config'
-import { TabType } from '@/lib/cards'
+import { GalleryCardsResult, TabType } from '@/lib/cards'
 import { GALLERY_PAGE_SIZE } from '@/lib/gallery-pagination'
 import {
   getGalleryComboHref,
@@ -17,10 +17,7 @@ import {
 
 interface Props {
   params: { type: CardType; relationship: string }
-  initialCardsData: {
-    cards: any[]
-    totalPages: number
-  }
+  initialCardsData: GalleryCardsResult
   activeTab?: TabType
 }
 
@@ -101,7 +98,7 @@ export default function TypeRelationshipGalleryContent({
         })
         const response = await fetch(`/api/cards?${params.toString()}`)
         if (!response.ok) throw new Error('Failed to fetch cards')
-        const data = await response.json()
+        const data: GalleryCardsResult = await response.json()
         setCardsData(data)
       } catch (error) {
         console.error('Error fetching cards:', error)
