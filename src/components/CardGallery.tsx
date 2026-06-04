@@ -3,15 +3,12 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { ImageViewer } from './ImageViewer'
-import { Card } from '@/lib/cards'
+import { Card, GalleryCardsResult } from '@/lib/cards'
 import { Copy, Heart, Crown, PenLine, Sparkles } from 'lucide-react'
 import { recordUserAction } from '@/lib/action'
 
 interface CardGalleryProps {
-  initialCardsData: {
-    cards: Card[];
-    totalPages: number;
-  };
+  initialCardsData: GalleryCardsResult;
   wishCardType: string | null;
 }
 
@@ -186,27 +183,44 @@ function CardItem({ card }: { card: Card }) {
 export default function CardGallery({ initialCardsData, wishCardType }: CardGalleryProps) {
   const [cards, setCards] = useState<Card[]>(initialCardsData.cards)
   const [currentPage, setCurrentPage] = useState(1)
-  const [totalPages, setTotalPages] = useState(initialCardsData.totalPages)
+  const [nextCursor, setNextCursor] = useState<string | undefined>(initialCardsData.nextCursor)
+  const [requestCursor, setRequestCursor] = useState<string | undefined>()
   const [isLoading, setIsLoading] = useState(false)
-  const [hasMore, setHasMore] = useState(initialCardsData.totalPages > 1)
+  const [hasMore, setHasMore] = useState(initialCardsData.hasMore)
 
-  const fetchCards = useCallback(async (page: number, append = false) => {
+  useEffect(() => {
+    setCards(initialCardsData.cards)
+    setCurrentPage(1)
+    setNextCursor(initialCardsData.nextCursor)
+    setRequestCursor(undefined)
+    setHasMore(initialCardsData.hasMore)
+  }, [initialCardsData, wishCardType])
+
+  const fetchCards = useCallback(async (page: number, append = false, cursor?: string) => {
     setIsLoading(true)
     try {
-      const response = await fetch(
-        `/api/cards?page=${page}&pageSize=${CARDS_PER_PAGE}&wishCardType=${wishCardType || ''}`
-      )
+      const params = new URLSearchParams({
+        pageSize: CARDS_PER_PAGE.toString(),
+        wishCardType: wishCardType || '',
+      })
+      if (cursor) {
+        params.set('cursor', cursor)
+      } else {
+        params.set('page', page.toString())
+      }
+
+      const response = await fetch(`/api/cards?${params.toString()}`)
       if (!response.ok) throw new Error('Failed to fetch cards')
       
-      const data = await response.json()
+      const data: GalleryCardsResult = await response.json()
       
       if (append) {
         setCards(prev => [...prev, ...data.cards])
       } else {
         setCards(data.cards)
       }
-      setTotalPages(data.totalPages)
-      setHasMore(page < data.totalPages)
+      setNextCursor(data.nextCursor)
+      setHasMore(data.hasMore)
     } catch (error) {
       console.error('Error fetching cards:', error)
     } finally {
@@ -216,9 +230,9 @@ export default function CardGallery({ initialCardsData, wishCardType }: CardGall
 
   useEffect(() => {
     if (currentPage > 1) {
-      fetchCards(currentPage, true)
+      fetchCards(currentPage, true, requestCursor)
     }
-  }, [currentPage, fetchCards])
+  }, [currentPage, fetchCards, requestCursor])
 
   // Infinite scroll handler
   useEffect(() => {
@@ -230,13 +244,14 @@ export default function CardGallery({ initialCardsData, wishCardType }: CardGall
       const documentHeight = document.documentElement.scrollHeight
       
       if (scrollTop + windowHeight >= documentHeight - 500) {
-        setCurrentPage(prev => prev + 1)
+        setRequestCursor(nextCursor)
+        setCurrentPage(prev => nextCursor ? Number(nextCursor) : prev + 1)
       }
     }
 
     window.addEventListener('scroll', handleScroll)
     return () => window.removeEventListener('scroll', handleScroll)
-  }, [isLoading, hasMore])
+  }, [isLoading, hasMore, nextCursor])
 
   return (
     <div className="w-full">

@@ -30,6 +30,16 @@ export async function GET(request: Request) {
         },
         skip,
         take: pageSize,
+        select: {
+          id: true,
+          cardId: true,
+          cardType: true,
+          timestamp: true,
+          r2Url: true,
+          status: true,
+          isError: true,
+          errorMessage: true,
+        },
       }),
       prisma.apiLog.count({
         where: {

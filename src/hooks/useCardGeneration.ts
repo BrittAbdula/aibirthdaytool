@@ -3,6 +3,7 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 import type { OutputFormat } from '@/lib/style-presets';
 import confetti from 'canvas-confetti';
 import { useSession, signIn } from 'next-auth/react';
+import { getCardStatusPollingDelay } from '@/lib/card-status';
 
 interface CardGenerationOptions {
   cardType: string;
@@ -195,7 +196,7 @@ export const useCardGeneration = () => {
           });
 
           while (Date.now() - startPollingTime < maxPollingDuration && !isCompleted) {
-            const pollingDelay = Date.now() - startPollingTime < 10000 ? 1000 : 2000;
+            const pollingDelay = getCardStatusPollingDelay(Date.now() - startPollingTime);
             await new Promise(resolve => setTimeout(resolve, pollingDelay));
             if (isCompleted) break; // Check again after delay
 

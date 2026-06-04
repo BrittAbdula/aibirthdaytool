@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/prisma';
 import { unstable_cache } from 'next/cache';
 import { Prisma } from '@prisma/client';
+import { getNextPageCursor } from '@/lib/gallery-pagination';
 import {
   ACTION_WEIGHTS,
   PREMIUM_QUALITY_MODELS,
@@ -101,7 +102,26 @@ export interface Card {
   message: string | null;
 }
 
+export interface GalleryCardsResult {
+  cards: Card[];
+  hasMore: boolean;
+  nextCursor?: string;
+  totalPages?: number;
+}
+
 export type TabType = 'featured' | 'recent' | 'popular' | 'liked';
+
+function buildGalleryCardsResult(cards: Card[], page: number, pageSize: number): GalleryCardsResult {
+  const hasMore = cards.length > pageSize;
+  const visibleCards = hasMore ? cards.slice(0, pageSize) : cards;
+
+  return {
+    cards: visibleCards,
+    hasMore,
+    nextCursor: getNextPageCursor(page, hasMore),
+    totalPages: hasMore ? page + 1 : page,
+  };
+}
 
 export const getFeaturedCardsServer = unstable_cache(
   async (page: number, pageSize: number, wishCardType: string | null, relationship: string | null = null) => {
@@ -135,24 +155,14 @@ export const getPremiumCardsServer = unstable_cache(
   { revalidate: 300 }
 );
 
-async function countGalleryGroups(whereClause: Prisma.Sql) {
-  const totalGroupsQuery = Prisma.sql`
-    SELECT COUNT(DISTINCT ec."originalCardId")::integer as count
-    FROM "EditedCard" ec
-    ${whereClause};
-  `;
-
-  const totalResult = await prisma.$queryRaw<{ count: number }[]>(totalGroupsQuery);
-  return totalResult[0]?.count ?? 0;
-}
-
 async function fetchFeaturedCards(
   page: number,
   pageSize: number,
   wishCardType: string | null,
   relationship: string | null = null
-): Promise<{ cards: Card[]; totalPages: number }> {
+): Promise<GalleryCardsResult> {
   const offset = (page - 1) * pageSize;
+  const queryLimit = pageSize + 1;
   const whereClause = buildGalleryWhereClause(wishCardType, relationship);
 
   const cardsQuery = Prisma.sql`
@@ -218,15 +228,11 @@ async function fetchFeaturedCards(
       (model_quality_score + recency_boost + LN(1 + group_weighted_actions)) DESC,
       "createdAt" DESC,
       id DESC
-    LIMIT ${pageSize} OFFSET ${offset};
+    LIMIT ${queryLimit} OFFSET ${offset};
   `;
 
-  const [cardsResult, totalGroupsCount] = await Promise.all([
-    prisma.$queryRaw<Card[]>(cardsQuery),
-    countGalleryGroups(whereClause),
-  ]);
-
-  return { cards: cardsResult, totalPages: Math.ceil(totalGroupsCount / pageSize) };
+  const cardsResult = await prisma.$queryRaw<Card[]>(cardsQuery);
+  return buildGalleryCardsResult(cardsResult, page, pageSize);
 }
 
 async function fetchRecentCards(
@@ -234,27 +240,64 @@ async function fetchRecentCards(
   pageSize: number,
   wishCardType: string | null,
   relationship: string | null = null
-): Promise<{ cards: Card[]; totalPages: number }> {
+): Promise<GalleryCardsResult> {
   const offset = (page - 1) * pageSize;
+  const queryLimit = pageSize + 1;
   const whereClause = buildGalleryWhereClause(wishCardType, relationship);
 
   const cardsQuery = Prisma.sql`
-    WITH RankedCards AS (
+    WITH RecentCardIds AS (
       SELECT
+        DISTINCT ON (ec."originalCardId")
         ec.id,
         ec."cardType",
         ec.relationship,
-        ec."r2Url",
         ec."createdAt",
         ec."originalCardId",
-        ec."message",
-        CASE WHEN ${buildModelCondition(PREMIUM_BADGE_MODELS)} THEN true ELSE false END as premium,
-        ROW_NUMBER() OVER (
-          PARTITION BY ec."originalCardId"
-          ORDER BY ec."createdAt" DESC, ec.id DESC
-        ) as rn
+        CASE WHEN ${buildModelCondition(PREMIUM_BADGE_MODELS)} THEN true ELSE false END as premium
       FROM "EditedCard" ec
       ${whereClause}
+      ORDER BY ec."originalCardId", ec."createdAt" DESC, ec.id DESC
+    ),
+    PagedCardIds AS (
+      SELECT
+        id,
+        "cardType",
+        relationship,
+        "createdAt",
+        "originalCardId",
+        premium
+      FROM RecentCardIds
+      ORDER BY "createdAt" DESC, id DESC
+      LIMIT ${queryLimit} OFFSET ${offset}
+    ),
+    RecentCards AS (
+      SELECT
+        pci.id,
+        pci."cardType",
+        pci.relationship,
+        ec."r2Url",
+        pci."createdAt",
+        pci."originalCardId",
+        ec."message",
+        pci.premium
+      FROM PagedCardIds pci
+      CROSS JOIN LATERAL (
+        SELECT
+          ec."r2Url",
+          ec."message"
+        FROM "EditedCard" ec
+        WHERE ec.id = pci.id
+          AND ec."originalCardId" = pci."originalCardId"
+          AND ec."createdAt" = pci."createdAt"
+          AND ec."cardType" = pci."cardType"
+          AND ec.relationship IS NOT DISTINCT FROM pci.relationship
+          AND ec."isPublic" = true
+          AND ec.deleted = false
+          AND ec."r2Url" IS NOT NULL
+          AND ec."r2Url" <> ''
+        LIMIT 1
+      ) ec
     )
     SELECT
       id,
@@ -263,18 +306,13 @@ async function fetchRecentCards(
       "r2Url",
       "message",
       premium
-    FROM RankedCards
-    WHERE rn = 1
+    FROM RecentCards
     ORDER BY "createdAt" DESC, id DESC
-    LIMIT ${pageSize} OFFSET ${offset};
+    ;
   `;
 
-  const [cardsResult, totalGroupsCount] = await Promise.all([
-    prisma.$queryRaw<Card[]>(cardsQuery),
-    countGalleryGroups(whereClause),
-  ]);
-
-  return { cards: cardsResult, totalPages: Math.ceil(totalGroupsCount / pageSize) };
+  const cardsResult = await prisma.$queryRaw<Card[]>(cardsQuery);
+  return buildGalleryCardsResult(cardsResult, page, pageSize);
 }
 
 async function fetchPopularCards(
@@ -282,8 +320,9 @@ async function fetchPopularCards(
   pageSize: number,
   wishCardType: string | null,
   relationship: string | null = null
-): Promise<{ cards: Card[]; totalPages: number }> {
+): Promise<GalleryCardsResult> {
   const offset = (page - 1) * pageSize;
+  const queryLimit = pageSize + 1;
   const whereClause = buildGalleryWhereClause(wishCardType, relationship);
 
   const cardsQuery = Prisma.sql`
@@ -346,24 +385,29 @@ async function fetchPopularCards(
       group_weighted_actions DESC,
       max_created_at_in_group DESC,
       id DESC
-    LIMIT ${pageSize} OFFSET ${offset};
+    LIMIT ${queryLimit} OFFSET ${offset};
   `;
 
-  const [cardsResult, totalGroupsCount] = await Promise.all([
-    prisma.$queryRaw<Card[]>(cardsQuery),
-    countGalleryGroups(whereClause),
-  ]);
-
-  return { cards: cardsResult, totalPages: Math.ceil(totalGroupsCount / pageSize) };
+  const cardsResult = await prisma.$queryRaw<Card[]>(cardsQuery);
+  return buildGalleryCardsResult(cardsResult, page, pageSize);
 }
 
-export async function getLikedCardsServer(
+export const getLikedCardsServer = unstable_cache(
+  async (page: number, pageSize: number, wishCardType: string | null = null, relationship: string | null = null) => {
+    return fetchLikedCards(page, pageSize, wishCardType, relationship);
+  },
+  ['liked-cards-server'],
+  { revalidate: 300 }
+);
+
+async function fetchLikedCards(
   page: number,
   pageSize: number,
   wishCardType: string | null = null,
   relationship: string | null = null
-): Promise<{ cards: Card[]; totalPages: number }> {
+): Promise<GalleryCardsResult> {
   const offset = (page - 1) * pageSize;
+  const queryLimit = pageSize + 1;
   const whereClause = buildGalleryWhereClause(wishCardType, relationship);
 
   const cardsQuery = Prisma.sql`
@@ -420,15 +464,11 @@ export async function getLikedCardsServer(
       group_up_count DESC,
       max_created_at_in_group DESC,
       id DESC
-    LIMIT ${pageSize} OFFSET ${offset};
+    LIMIT ${queryLimit} OFFSET ${offset};
   `;
 
-  const [cardsResult, totalGroupsCount] = await Promise.all([
-    prisma.$queryRaw<Card[]>(cardsQuery),
-    countGalleryGroups(whereClause),
-  ]);
-
-  return { cards: cardsResult, totalPages: Math.ceil(totalGroupsCount / pageSize) };
+  const cardsResult = await prisma.$queryRaw<Card[]>(cardsQuery);
+  return buildGalleryCardsResult(cardsResult, page, pageSize);
 }
 
 export async function fetchPremiumCards(
@@ -436,8 +476,9 @@ export async function fetchPremiumCards(
   pageSize: number,
   wishCardType: string | null = null,
   relationship: string | null = null
-): Promise<{ cards: Card[]; totalPages: number }> {
+): Promise<GalleryCardsResult> {
   const offset = (page - 1) * pageSize;
+  const queryLimit = pageSize + 1;
   const whereClause = buildGalleryWhereClause(wishCardType, relationship, [
     buildModelCondition(PREMIUM_TAB_MODELS),
   ]);
@@ -496,13 +537,9 @@ export async function fetchPremiumCards(
       group_up_count DESC,
       max_created_at_in_group DESC,
       id DESC
-    LIMIT ${pageSize} OFFSET ${offset};
+    LIMIT ${queryLimit} OFFSET ${offset};
   `;
 
-  const [cardsResult, totalGroupsCount] = await Promise.all([
-    prisma.$queryRaw<Card[]>(cardsQuery),
-    countGalleryGroups(whereClause),
-  ]);
-
-  return { cards: cardsResult, totalPages: Math.ceil(totalGroupsCount / pageSize) };
+  const cardsResult = await prisma.$queryRaw<Card[]>(cardsQuery);
+  return buildGalleryCardsResult(cardsResult, page, pageSize);
 }

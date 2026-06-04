@@ -15,7 +15,8 @@ import {
   Sparkles,
 } from "lucide-react";
 import CardMarquee from "@/components/CardMarquee";
-import { Card, getFeaturedCardsServer } from "@/lib/cards";
+import { GalleryCardsResult, getFeaturedCardsServer } from "@/lib/cards";
+import { GALLERY_PAGE_SIZE } from "@/lib/gallery-pagination";
 import {
   Accordion,
   AccordionContent,
@@ -73,13 +74,14 @@ export const metadata: Metadata = {
 export const revalidate = 300;
 
 export default async function Home() {
-  let initialCardsData: { cards: Card[]; totalPages: number } = {
+  let initialCardsData: GalleryCardsResult = {
     cards: [],
+    hasMore: false,
     totalPages: 0,
   };
 
   try {
-    initialCardsData = await getFeaturedCardsServer(1, 12, "");
+    initialCardsData = await getFeaturedCardsServer(1, GALLERY_PAGE_SIZE, "");
   } catch (error) {
     console.error("Failed to load homepage card data", error);
   }

@@ -24,7 +24,7 @@ interface EditedCardEntry {
   id: string;
   cardType: string | null;
   r2Url: string | null;
-  editedContent: string | null;
+  editedContent?: string | null;
   model?: string | null;
   relationship?: string | null;
   recipientName: string | null;
@@ -77,7 +77,6 @@ export default async function MyCardsPage() {
         id: true,
         cardId: true,
         cardType: true,
-        responseContent: true,
         timestamp: true,
         r2Url: true,
       }
@@ -94,7 +93,6 @@ export default async function MyCardsPage() {
         id: true,
         cardType: true,
         r2Url: true,
-        editedContent: true,
         model: true,
         relationship: true,
         recipientName: true,

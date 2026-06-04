@@ -3,17 +3,14 @@
 import React from 'react'
 import Link from 'next/link'
 import { ImageViewer } from '../../components/ImageViewer'
-import { Card, TabType } from '@/lib/cards'
+import { Card, GalleryCardsResult, TabType } from '@/lib/cards'
 import { CardType } from '@/lib/card-config'
 import { Button } from '@/components/ui/button'
 import { ArrowRightIcon, CopyIcon, Pencil1Icon } from '@radix-ui/react-icons'
 import { buildCardPreviewAlt } from '@/lib/seo'
 
 interface SimpleCardGalleryProps {
-  initialCardsData: {
-    cards: Card[];
-    totalPages: number;
-  };
+  initialCardsData: GalleryCardsResult;
   wishCardType: CardType | null;
   tabType: TabType;
 }

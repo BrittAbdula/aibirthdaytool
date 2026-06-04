@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react'
 import Link from 'next/link'
-import { Card, TabType } from '@/lib/cards'
+import { Card, GalleryCardsResult, TabType } from '@/lib/cards'
 import { CardType } from '@/lib/card-config'
 import { Heart } from 'lucide-react'
 import { CARD_TYPES, RELATIONSHIPS } from '@/lib/card-constants'
@@ -11,10 +11,7 @@ import { GALLERY_PAGE_SIZE } from '@/lib/gallery-pagination'
 import { buildCardPreviewAlt, buildCardPreviewTitle } from '@/lib/seo'
 
 interface CardGalleryProps {
-  initialCardsData: {
-    cards: Card[];
-    totalPages: number;
-  };
+  initialCardsData: GalleryCardsResult;
   wishCardType: CardType | null;
   relationship?: string | null;
   tabType: TabType;
@@ -62,9 +59,10 @@ const typeEmojis: Record<string, string> = {
 export default function CardGallery({ initialCardsData, wishCardType, relationship = null, tabType }: CardGalleryProps) {
   const [cards, setCards] = useState<Card[]>(initialCardsData.cards)
   const [currentPage, setCurrentPage] = useState(1)
-  const [totalPages, setTotalPages] = useState(initialCardsData.totalPages)
+  const [nextCursor, setNextCursor] = useState<string | undefined>(initialCardsData.nextCursor)
+  const [requestCursor, setRequestCursor] = useState<string | undefined>()
   const [isLoading, setIsLoading] = useState(false)
-  const [hasMore, setHasMore] = useState(currentPage < totalPages)
+  const [hasMore, setHasMore] = useState(initialCardsData.hasMore)
   const [preloadedImages, setPreloadedImages] = useState<Set<string>>(new Set())
   const observerTarget = useRef<HTMLDivElement>(null)
   const [likedMap, setLikedMap] = useState<Record<string, boolean>>({})
@@ -78,9 +76,10 @@ export default function CardGallery({ initialCardsData, wishCardType, relationsh
 
   const loadMore = useCallback(() => {
     if (!isLoading && hasMore) {
-      setCurrentPage(prev => prev + 1)
+      setRequestCursor(nextCursor)
+      setCurrentPage(prev => nextCursor ? Number(nextCursor) : prev + 1)
     }
-  }, [isLoading, hasMore])
+  }, [hasMore, isLoading, nextCursor])
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -102,8 +101,9 @@ export default function CardGallery({ initialCardsData, wishCardType, relationsh
   useEffect(() => {
     setCurrentPage(1)
     setCards(initialCardsData.cards)
-    setTotalPages(initialCardsData.totalPages)
-    setHasMore(initialCardsData.totalPages > 1)
+    setNextCursor(initialCardsData.nextCursor)
+    setRequestCursor(undefined)
+    setHasMore(initialCardsData.hasMore)
     try {
       const local = JSON.parse(localStorage.getItem('likedCards') || '{}')
       if (local && typeof local === 'object') {
@@ -112,25 +112,29 @@ export default function CardGallery({ initialCardsData, wishCardType, relationsh
     } catch {}
   }, [wishCardType, relationship, initialCardsData, tabType])
 
-  const fetchCards = useCallback(async (page: number) => {
+  const fetchCards = useCallback(async (page: number, cursor?: string) => {
     setIsLoading(true)
     try {
       const params = new URLSearchParams({
-        page: page.toString(),
         pageSize: GALLERY_PAGE_SIZE.toString(),
         tab: tabType,
         ...(relationship ? { relationship } : {}),
         ...(wishCardType ? { wishCardType } : {})
       })
+      if (cursor) {
+        params.set('cursor', cursor)
+      } else {
+        params.set('page', page.toString())
+      }
       
       const response = await fetch(`/api/cards?${params.toString()}`)
       if (!response.ok) {
         throw new Error('Failed to fetch cards')
       }
-      const data = await response.json()
+      const data: GalleryCardsResult = await response.json()
       setCards(prev => [...prev, ...data.cards])
-      setTotalPages(data.totalPages)
-      setHasMore(page < data.totalPages)
+      setNextCursor(data.nextCursor)
+      setHasMore(data.hasMore)
     } catch (error) {
       console.error('Error fetching cards:', error)
     } finally {
@@ -140,9 +144,9 @@ export default function CardGallery({ initialCardsData, wishCardType, relationsh
 
   useEffect(() => {
     if (currentPage > 1) {
-      void fetchCards(currentPage)
+      void fetchCards(currentPage, requestCursor)
     }
-  }, [currentPage, fetchCards])
+  }, [currentPage, fetchCards, requestCursor])
 
   useEffect(() => {
     cards.forEach(card => {

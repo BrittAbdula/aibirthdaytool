@@ -6,15 +6,34 @@ import {
   getLikedCardsServer,
   TabType,
 } from '@/lib/cards'
-import { GALLERY_PAGE_SIZE } from '@/lib/gallery-pagination'
+import {
+  GALLERY_PAGE_SIZE,
+  MAX_GALLERY_PAGE_SIZE,
+  getPageFromCursor,
+  getSafeGalleryPage,
+  getSafeGalleryPageSize,
+} from '@/lib/gallery-pagination'
+
+const CACHE_CONTROL = 'public, s-maxage=300, stale-while-revalidate=3600'
+const VALID_TABS: TabType[] = ['featured', 'recent', 'popular', 'liked']
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
-  const page = parseInt(searchParams.get('page') || '1', 10)
-  const pageSize = parseInt(searchParams.get('pageSize') || GALLERY_PAGE_SIZE.toString(), 10)
+  const cursor = searchParams.get('cursor')
+  const cursorPage = getPageFromCursor(cursor)
+  const page = cursor ? cursorPage : getSafeGalleryPage(searchParams.get('page'))
+  const pageSize = getSafeGalleryPageSize(searchParams.get('pageSize') || GALLERY_PAGE_SIZE.toString())
   const wishCardType = searchParams.get('wishCardType')
   const relationship = searchParams.get('relationship')
   const tab = (searchParams.get('tab') as TabType) || 'featured'
+
+  if (!page) {
+    return NextResponse.json({ error: 'Invalid page or cursor' }, { status: 400 })
+  }
+
+  if (!VALID_TABS.includes(tab)) {
+    return NextResponse.json({ error: 'Unsupported tab' }, { status: 400 })
+  }
 
   try {
     let cardsData;
@@ -35,8 +54,11 @@ export async function GET(request: Request) {
       default:
         cardsData = await getFeaturedCardsServer(page, pageSize, wishCardType, relationship)
     }
-    
-    return NextResponse.json(cardsData)
+
+    const response = NextResponse.json(cardsData)
+    response.headers.set('Cache-Control', CACHE_CONTROL)
+    response.headers.set('X-Gallery-Max-Page-Size', String(MAX_GALLERY_PAGE_SIZE))
+    return response
   } catch (error) {
     console.error('Error fetching cards:', error)
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })

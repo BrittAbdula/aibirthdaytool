@@ -6,7 +6,7 @@ import { CardType } from '@/lib/card-config'
 import GuidanceGridSection from '@/components/eeat/GuidanceGridSection'
 import TrustSignalsSection from '@/components/eeat/TrustSignalsSection'
 import JsonLd from '@/components/JsonLd'
-import { Card, getFeaturedCardsServer } from '@/lib/cards'
+import { GalleryCardsResult, getFeaturedCardsServer } from '@/lib/cards'
 import { GALLERY_PAGE_SIZE } from '@/lib/gallery-pagination'
 import {
   getCardTypeLabel,
@@ -80,7 +80,7 @@ export default async function TypeRelationshipPage({ params }: Props) {
   const relationshipLabel = getRelationshipLabel(relationshipValue)
   const cardTypeLabel = getCardTypeLabel(type)
 
-  let initialCardsData: { cards: Card[]; totalPages: number } = { cards: [], totalPages: 0 }
+  let initialCardsData: GalleryCardsResult = { cards: [], hasMore: false, totalPages: 0 }
 
   try {
     initialCardsData = await getFeaturedCardsServer(1, GALLERY_PAGE_SIZE, type, relationshipLabel)

@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { Card } from '@/lib/cards'
+import { Card, GalleryCardsResult } from '@/lib/cards'
 import { cn } from '@/lib/utils'
 import Marquee from '@/components/ui/marquee'
 import Link from 'next/link'
@@ -10,10 +10,7 @@ import { ChevronRight } from 'lucide-react'
 import { buildCardPreviewAlt, buildCardPreviewTitle, getSeoCardTypeLabel } from '@/lib/seo'
 
 interface CardMarqueeProps {
-  initialCardsData: {
-    cards: Card[];
-    totalPages: number;
-  };
+  initialCardsData: GalleryCardsResult;
   wishCardType: string | null;
   className?: string;
 }
