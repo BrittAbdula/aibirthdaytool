@@ -159,7 +159,7 @@ const pickDefaultModelForFormat = (fmt: OutputFormat): ModelConfig => {
 }
 
 const getTierOptionsForFormat = (fmt: OutputFormat) => {
-  if (fmt === 'svg') return { base: modelConfigs.find(m => m.id === 'Free_SVG') || pickDefaultModelForFormat('svg'), pro: modelConfigs.find(m => m.id === 'Premium_SVG') }
+  if (fmt === 'svg') return { base: modelConfigs.find(m => m.id === 'Free_SVG') || pickDefaultModelForFormat('svg'), pro: undefined }
   if (fmt === 'image') return { base: modelConfigs.find(m => m.id === 'Free_Image') || pickDefaultModelForFormat('image'), pro: modelConfigs.find(m => m.id === 'Premium_Image') }
   return { base: modelConfigs.find(m => m.id === 'Premium_Video_Fast') || pickDefaultModelForFormat('video'), pro: undefined }
 }
@@ -224,7 +224,7 @@ export default function CardGenerator({
   const [submited, setSubmited] = useState(false)
   const [customValues, setCustomValues] = useState<Record<string, string>>({})
   const [selectedSize, setSelectedSize] = useState('portrait')
-  const defaultSelectedModel = modelConfigs.find(m => m.id === 'Free_Image') || modelConfigs[0]
+  const defaultSelectedModel = modelConfigs.find(m => m.id === 'Free_SVG') || modelConfigs[0]
   const [selectedModel, setSelectedModel] = useState<ModelConfig>(defaultSelectedModel)
   const [selectedFormat, setSelectedFormat] = useState<OutputFormat>(defaultSelectedModel.format)
   const [selectedStyleId, setSelectedStyleId] = useState<string | null>(null)

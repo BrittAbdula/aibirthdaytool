@@ -3,7 +3,7 @@ import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
 import { uploadVideoToR2, uploadToCloudflareImages } from '@/lib/r2';
 import { SEEDANCE_VIDEO_MODEL, requestSeedanceVideoStatus } from '@/lib/seedance-video';
-import { GPT_IMAGE_2_EDIT_MODEL, GPT_IMAGE_2_MODEL, requestGptImage2Status } from '@/lib/gpt-image-2';
+import { GPT_IMAGE_2_EDIT_MODEL, GPT_IMAGE_2_MODEL, LEGACY_GPT_IMAGE_2_MODEL, requestGptImage2Status } from '@/lib/gpt-image-2';
 import { getRetryAfterSeconds, isTerminalCardStatus } from '@/lib/card-status';
 import { Prisma } from '@prisma/client';
 
@@ -91,6 +91,23 @@ export async function GET(request: Request) {
       }));
     }
     // console.log('gpt4o-image-------card', card);
+
+    if (card.promptVersion === LEGACY_GPT_IMAGE_2_MODEL) {
+      const errorMessage = 'Legacy gpt-image-2 path is disabled; please regenerate with the current image or SVG model.';
+      await updateCardIfNotTerminal(cardId, {
+        status: 'failed',
+        isError: true,
+        errorMessage,
+      });
+
+      return applyNoStoreHeaders(NextResponse.json({
+        status: 'failed',
+        r2Url: '',
+        responseContent: '',
+        isError: true,
+        errorMessage,
+      }));
+    }
 
     if (card.promptVersion === GPT_IMAGE_2_MODEL || card.promptVersion === GPT_IMAGE_2_EDIT_MODEL) {
       if (!card.taskId) {

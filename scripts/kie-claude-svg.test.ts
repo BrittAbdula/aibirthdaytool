@@ -8,7 +8,7 @@ import {
 } from '../src/lib/kie-claude';
 
 assert.equal(KIE_CLAUDE_OPUS_4_7_MODEL, 'claude-opus-4-7');
-assert.equal(KIE_CLAUDE_HAIKU_4_5_MODEL, 'claude-haiku-4-5');
+assert.equal(KIE_CLAUDE_HAIKU_4_5_MODEL, 'claude-haiku-4-5-20251001');
 
 async function main() {
   const calls: Array<{ input: RequestInfo | URL; init?: RequestInit }> = [];
@@ -53,7 +53,7 @@ async function main() {
 
   const body = JSON.parse(calls[0].init?.body as string);
   assert.deepEqual(body, {
-    model: 'claude-opus-4-7',
+    model: 'claude-haiku-4-5-20251001',
     messages: [
       {
         role: 'user',
@@ -69,7 +69,17 @@ async function main() {
 
   assert.equal(
     extractSvgContentFromKieClaudeText(result.text),
-    '<svg viewBox="0 0 10 10"><text>Tom &amp; Jerry</text></svg>'
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><text>Tom &amp; Jerry</text></svg>'
+  );
+
+  assert.equal(
+    extractSvgContentFromKieClaudeText('```svg\n<svg viewBox="0 0 10 10"><text>Hi</text></svg>\n```'),
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><text>Hi</text></svg>'
+  );
+
+  assert.equal(
+    extractSvgContentFromKieClaudeText('&lt;svg viewBox=&quot;0 0 10 10&quot;&gt;&lt;text&gt;Tom &amp; Jerry&lt;/text&gt;&lt;/svg&gt;'),
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><text>Tom &amp; Jerry</text></svg>'
   );
 
   console.log('kie claude svg helpers passed');

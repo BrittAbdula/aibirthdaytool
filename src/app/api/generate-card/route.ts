@@ -45,6 +45,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Missing required field: cardType' }, { status: 400 });
     }
 
+    if (modelId === 'gpt-image-2') {
+      return NextResponse.json({
+        error: 'legacy_model_disabled',
+        message: 'The legacy gpt-image-2 path is disabled. Please use the current Image model or Animated SVG.'
+      }, { status: 410 });
+    }
+
     // 检查是否是修改请求
     const isModification = modificationFeedback && previousCardId;
 
@@ -73,7 +80,9 @@ export async function POST(request: Request) {
     }
 
     const format = (outputFormat as 'image' | 'svg' | 'video') || modelConfig.format;
-    const modelTier = modelConfig.tier;
+    const svgBillingModelConfig = getModelConfig('Free_SVG') || modelConfig;
+    const billingModelConfig = format === 'svg' ? svgBillingModelConfig : modelConfig;
+    const modelTier = format === 'svg' ? 'Free' : modelConfig.tier;
 
     // 获取用户计划类型
     const planType = user?.plan || 'FREE';
@@ -97,12 +106,12 @@ export async function POST(request: Request) {
     })();
 
     // Credits: static image baseline = 6, plus style cost; SVG/Video use model credits
-    let creditsUsed = (format === 'image' ? 6 : modelConfig.credits) + styleCost;
+    let creditsUsed = (format === 'image' ? 6 : billingModelConfig.credits) + styleCost;
     // Reference image edit special case: using reference images costs 6 (ignore style surcharge)
     if (format === 'image' && Array.isArray(referenceImageUrls) && referenceImageUrls.length > 0) {
       creditsUsed = 6;
     }
-    const modelLevel = modelTier === 'Premium' && planType === 'PREMIUM' ? 'PREMIUM' : 'FREE';
+    const modelLevel = format === 'svg' ? 'FREE' : modelTier === 'Premium' && planType === 'PREMIUM' ? 'PREMIUM' : 'FREE';
 
     // Check if user is on their first day (registration day)
     const isFirstDay = !!user?.createdAt && user.createdAt >= todayStart;

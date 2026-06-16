@@ -52,6 +52,64 @@ interface UserCallVolumeStat {
   avg_calls: string;
 }
 
+interface ModelHealthStat {
+  promptVersion: string;
+  total_calls: number;
+  completed_calls: number;
+  failed_calls: number;
+  pending_calls: number;
+  processing_calls: number;
+  stale_non_terminal_calls: number;
+  avg_duration_sec: number;
+  tokens_used: number;
+  unique_users: number;
+  modification_calls: number;
+  reference_image_calls: number;
+  saved_cards: number;
+  public_cards: number;
+  copy_cards: number;
+  download_cards: number;
+  send_cards: number;
+  up_cards: number;
+  moment_answer_cards: number;
+  completion_rate: number;
+  failure_rate: number;
+  save_rate: number;
+  send_rate: number;
+  satisfaction_proxy: number;
+}
+
+interface CardTypeConversionStat {
+  cardType: string;
+  topModel: string;
+  total_calls: number;
+  completed_calls: number;
+  failed_calls: number;
+  unique_users: number;
+  avg_duration_sec: number;
+  saved_cards: number;
+  public_cards: number;
+  copy_cards: number;
+  download_cards: number;
+  send_cards: number;
+  up_cards: number;
+  moment_answer_cards: number;
+  completion_rate: number;
+  failure_rate: number;
+  save_rate: number;
+  send_rate: number;
+  download_rate: number;
+  copy_rate: number;
+  up_rate: number;
+  satisfaction_proxy: number;
+}
+
+const formatPercent = (value: number) => `${value.toFixed(1)}%`;
+const formatNumber = (value: number) => new Intl.NumberFormat('en-US').format(value);
+const formatSeconds = (value: number) => `${value.toFixed(2)}s`;
+const compactLabel = (value: string, maxLength = 22) =>
+  value.length > maxLength ? `${value.slice(0, maxLength - 1)}…` : value;
+
 export default function StatsPage() {
   const router = useRouter();
   const { status } = useSession();
@@ -61,6 +119,8 @@ export default function StatsPage() {
   const [apiFailureStatsByVersion, setApiFailureStatsByVersion] = useState<ApiFailureStatByVersion[]>([]);
   const [apiCallStatsByType, setApiCallStatsByType] = useState<ApiCallStatByType[]>([]);
   const [userCallVolumeStats, setUserCallVolumeStats] = useState<UserCallVolumeStat[]>([]);
+  const [modelHealthStats, setModelHealthStats] = useState<ModelHealthStat[]>([]);
+  const [cardTypeConversionStats, setCardTypeConversionStats] = useState<CardTypeConversionStat[]>([]);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -123,6 +183,8 @@ export default function StatsPage() {
       setApiStatsByVersion(Array.isArray(data.apiStatsByVersion) ? data.apiStatsByVersion : []);
       setApiFailureStatsByVersion(Array.isArray(data.apiFailureStatsByVersion) ? data.apiFailureStatsByVersion : []);
       setApiCallStatsByType(Array.isArray(data.apiCallStatsByType) ? data.apiCallStatsByType : []);
+      setModelHealthStats(Array.isArray(data.modelHealthStats) ? data.modelHealthStats : []);
+      setCardTypeConversionStats(Array.isArray(data.cardTypeConversionStats) ? data.cardTypeConversionStats : []);
       
       const sortedStats = Array.isArray(data.userCallVolumeStats) 
         ? [...data.userCallVolumeStats].sort((a, b) => new Date(a.dt).getTime() - new Date(b.dt).getTime())
@@ -137,6 +199,8 @@ export default function StatsPage() {
       setApiFailureStatsByVersion([]);
       setApiCallStatsByType([]);
       setUserCallVolumeStats([]);
+      setModelHealthStats([]);
+      setCardTypeConversionStats([]);
     } finally {
       setLoading(false);
     }
@@ -155,6 +219,8 @@ export default function StatsPage() {
       setApiFailureStatsByVersion([]);
       setApiCallStatsByType([]);
       setUserCallVolumeStats([]);
+      setModelHealthStats([]);
+      setCardTypeConversionStats([]);
       return;
     }
 
@@ -350,6 +416,24 @@ export default function StatsPage() {
 
   // 图表颜色
   const colors = ['#8884d8', '#82ca9d', '#ffc658', '#ff7300', '#a4de6c', '#d0ed57', '#f7f3f7', '#cc3300', '#6699cc', '#996633'];
+  const modelHealthRows = [...modelHealthStats]
+    .sort((a, b) => b.total_calls - a.total_calls)
+    .slice(0, 12);
+  const modelHealthChartData = modelHealthRows.slice(0, 8).map(stat => ({
+    model: stat.promptVersion,
+    completion_rate: stat.completion_rate,
+    failure_rate: stat.failure_rate,
+    satisfaction_proxy: stat.satisfaction_proxy,
+  }));
+  const cardTypeRows = [...cardTypeConversionStats]
+    .sort((a, b) => b.total_calls - a.total_calls)
+    .slice(0, 12);
+  const cardTypeChartData = cardTypeRows.slice(0, 8).map(stat => ({
+    cardType: stat.cardType,
+    save_rate: stat.save_rate,
+    send_rate: stat.send_rate,
+    satisfaction_proxy: stat.satisfaction_proxy,
+  }));
 
   return (
     <div className="container mx-auto py-8">
@@ -493,6 +577,144 @@ export default function StatsPage() {
                   {/* <Line yAxisId="right" type="monotone" dataKey="avg_calls" stroke="#d0ed57" name="Avg Calls" /> */}
                 </LineChart>
               </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid grid-cols-1 gap-6 mb-8">
+        <Card>
+          <CardHeader>
+            <CardTitle>Model-Level Health and Behavior Signals</CardTitle>
+            <p className="text-sm text-muted-foreground">
+              Completion/failure use all calls. Save, send, and proxy rates use completed calls as denominator.
+            </p>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="h-[320px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={modelHealthChartData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="model" tickFormatter={(value) => compactLabel(String(value), 14)} />
+                  <YAxis />
+                  <Tooltip labelFormatter={(value) => String(value)} formatter={(value, name) => {
+                    const metric = String(name);
+                    return [metric === 'satisfaction_proxy' ? Number(value).toFixed(1) : formatPercent(Number(value)), metric];
+                  }} />
+                  <Legend />
+                  <Bar dataKey="completion_rate" fill="#2563eb" name="Completion %" />
+                  <Bar dataKey="failure_rate" fill="#dc2626" name="Failure %" />
+                  <Bar dataKey="satisfaction_proxy" fill="#16a34a" name="Satisfaction Proxy" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Model</TableHead>
+                    <TableHead className="text-right">Calls</TableHead>
+                    <TableHead className="text-right">Completed</TableHead>
+                    <TableHead className="text-right">Failed</TableHead>
+                    <TableHead className="text-right">Stale</TableHead>
+                    <TableHead className="text-right">Avg Time</TableHead>
+                    <TableHead className="text-right">Users</TableHead>
+                    <TableHead className="text-right">Save</TableHead>
+                    <TableHead className="text-right">Send</TableHead>
+                    <TableHead className="text-right">D/C/U</TableHead>
+                    <TableHead className="text-right">Proxy</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {modelHealthRows.map((stat) => (
+                    <TableRow key={stat.promptVersion}>
+                      <TableCell className="max-w-[260px] truncate font-medium" title={stat.promptVersion}>
+                        {stat.promptVersion}
+                      </TableCell>
+                      <TableCell className="text-right">{formatNumber(stat.total_calls)}</TableCell>
+                      <TableCell className="text-right">{formatPercent(stat.completion_rate)}</TableCell>
+                      <TableCell className="text-right">{formatPercent(stat.failure_rate)}</TableCell>
+                      <TableCell className="text-right">{formatNumber(stat.stale_non_terminal_calls)}</TableCell>
+                      <TableCell className="text-right">{formatSeconds(stat.avg_duration_sec)}</TableCell>
+                      <TableCell className="text-right">{formatNumber(stat.unique_users)}</TableCell>
+                      <TableCell className="text-right">{formatPercent(stat.save_rate)}</TableCell>
+                      <TableCell className="text-right">{formatPercent(stat.send_rate)}</TableCell>
+                      <TableCell className="text-right">
+                        {formatNumber(stat.download_cards)}/{formatNumber(stat.copy_cards)}/{formatNumber(stat.up_cards)}
+                      </TableCell>
+                      <TableCell className="text-right">{stat.satisfaction_proxy.toFixed(1)}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Card-Type Conversion and Satisfaction Proxy</CardTitle>
+            <p className="text-sm text-muted-foreground">
+              Behavior counts are deduped by original card ID so repeated events do not inflate conversion.
+            </p>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="h-[320px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={cardTypeChartData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="cardType" />
+                  <YAxis />
+                  <Tooltip formatter={(value, name) => {
+                    const metric = String(name);
+                    return [metric === 'satisfaction_proxy' ? Number(value).toFixed(1) : formatPercent(Number(value)), metric];
+                  }} />
+                  <Legend />
+                  <Bar dataKey="save_rate" fill="#2563eb" name="Save %" />
+                  <Bar dataKey="send_rate" fill="#16a34a" name="Send %" />
+                  <Bar dataKey="satisfaction_proxy" fill="#f59e0b" name="Satisfaction Proxy" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Card Type</TableHead>
+                    <TableHead>Top Model</TableHead>
+                    <TableHead className="text-right">Calls</TableHead>
+                    <TableHead className="text-right">Completed</TableHead>
+                    <TableHead className="text-right">Failed</TableHead>
+                    <TableHead className="text-right">Save</TableHead>
+                    <TableHead className="text-right">Send</TableHead>
+                    <TableHead className="text-right">Download</TableHead>
+                    <TableHead className="text-right">Copy</TableHead>
+                    <TableHead className="text-right">Up</TableHead>
+                    <TableHead className="text-right">Proxy</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {cardTypeRows.map((stat) => (
+                    <TableRow key={stat.cardType}>
+                      <TableCell className="font-medium">{stat.cardType}</TableCell>
+                      <TableCell className="max-w-[220px] truncate" title={stat.topModel}>
+                        {stat.topModel}
+                      </TableCell>
+                      <TableCell className="text-right">{formatNumber(stat.total_calls)}</TableCell>
+                      <TableCell className="text-right">{formatPercent(stat.completion_rate)}</TableCell>
+                      <TableCell className="text-right">{formatPercent(stat.failure_rate)}</TableCell>
+                      <TableCell className="text-right">{formatPercent(stat.save_rate)}</TableCell>
+                      <TableCell className="text-right">{formatPercent(stat.send_rate)}</TableCell>
+                      <TableCell className="text-right">{formatPercent(stat.download_rate)}</TableCell>
+                      <TableCell className="text-right">{formatPercent(stat.copy_rate)}</TableCell>
+                      <TableCell className="text-right">{formatPercent(stat.up_rate)}</TableCell>
+                      <TableCell className="text-right">{stat.satisfaction_proxy.toFixed(1)}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             </div>
           </CardContent>
         </Card>

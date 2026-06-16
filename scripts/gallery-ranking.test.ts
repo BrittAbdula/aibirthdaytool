@@ -12,7 +12,7 @@ assert.equal(getModelQualityScore('google/nano-banana-edit'), 70);
 assert.equal(getModelQualityScore('gpt-image-2-image-to-image'), 70);
 assert.equal(getModelQualityScore('gpt-image-2-edit'), 70);
 assert.equal(getModelQualityScore('gpt-image-2-text-to-image'), 65);
-assert.equal(getModelQualityScore('gpt-image-2'), 65);
+assert.equal(getModelQualityScore('gpt-image-2'), 0);
 assert.equal(getModelQualityScore('google/nano-banana-pro'), 65);
 assert.equal(getModelQualityScore('claude-opus-4-7'), 40);
 assert.equal(getModelQualityScore('claude-haiku-4-5'), 40);

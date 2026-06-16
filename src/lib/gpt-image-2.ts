@@ -1,3 +1,4 @@
+export const LEGACY_GPT_IMAGE_2_MODEL = 'gpt-image-2';
 export const GPT_IMAGE_2_MODEL = 'gpt-image-2-text-to-image';
 export const GPT_IMAGE_2_EDIT_MODEL = 'gpt-image-2-image-to-image';
 

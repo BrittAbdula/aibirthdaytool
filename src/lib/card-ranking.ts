@@ -6,13 +6,16 @@ export const REFERENCE_EDIT_MODELS = [
 
 export const PREMIUM_QUALITY_MODELS = [
   'gpt-image-2-text-to-image',
-  'gpt-image-2',
   'gpt4o-image',
   'google/nano-banana-pro',
   'hm-veo3-fast-video',
   'veo-veo3-fast-video',
   'luma-ray-v2-video',
   'doubao-seedance-2-0-fast-260128',
+] as const;
+
+export const DISABLED_MODELS = [
+  'gpt-image-2',
 ] as const;
 
 export const STRONG_QUALITY_MODELS = [
@@ -57,6 +60,7 @@ const includesModel = (models: readonly string[], model: string | null) =>
   !!model && models.includes(model);
 
 export function getModelQualityScore(model: string | null): number {
+  if (includesModel(DISABLED_MODELS, model)) return 0;
   if (includesModel(REFERENCE_EDIT_MODELS, model)) return 70;
   if (includesModel(PREMIUM_QUALITY_MODELS, model)) return 65;
   if (includesModel(STRONG_QUALITY_MODELS, model)) return 55;
