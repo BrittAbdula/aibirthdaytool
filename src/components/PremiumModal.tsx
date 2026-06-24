@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import Link from "next/link"
 import { ArrowRight, Check, Crown, ShieldCheck } from "lucide-react"
 import { 
@@ -21,6 +21,7 @@ import {
   type PremiumModalContext,
   type PremiumPlanKey,
 } from "@/lib/pricing"
+import { trackMonetizationEvent } from "@/lib/monetization-client"
 import { cn } from "@/lib/utils"
 
 interface PremiumPlanProps {
@@ -36,10 +37,29 @@ export function PremiumModal({
   context = "default",
   source,
 }: PremiumPlanProps) {
-  const [selectedPlan, setSelectedPlan] = useState<PremiumPlanKey>("yearly")
+  const [selectedPlan, setSelectedPlan] = useState<PremiumPlanKey>("monthly")
+  const trackedOpenRef = useRef(false)
   const copy = premiumModalCopy[context]
   const plan = premiumPlans[selectedPlan]
   const checkoutSource = source || `premium_modal_${context}`
+
+  useEffect(() => {
+    if (!isOpen) {
+      trackedOpenRef.current = false
+      return
+    }
+    if (trackedOpenRef.current) return
+
+    trackedOpenRef.current = true
+
+    trackMonetizationEvent({
+      eventType: "premium_modal_view",
+      plan: selectedPlan,
+      source: checkoutSource,
+      path: `${window.location.pathname}${window.location.search}${window.location.hash}`,
+      metadata: { context },
+    })
+  }, [checkoutSource, context, isOpen, selectedPlan])
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>

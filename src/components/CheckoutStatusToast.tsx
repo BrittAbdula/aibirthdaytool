@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { toast } from "@/hooks/use-toast"
+import { trackMonetizationEvent } from "@/lib/monetization-client"
 
 export function CheckoutStatusToast() {
   const searchParams = useSearchParams()
@@ -17,6 +18,11 @@ export function CheckoutStatusToast() {
     handledStatusRef.current = status
 
     if (status === "success") {
+      trackMonetizationEvent({
+        eventType: "checkout_success_return",
+        path: `${pathname}?${searchParams.toString()}`,
+        stripeSessionId: searchParams.get("session_id"),
+      })
       toast({
         title: "Checkout complete",
         description: "Premium will unlock as soon as Stripe confirms the subscription.",
@@ -24,6 +30,10 @@ export function CheckoutStatusToast() {
     }
 
     if (status === "cancelled") {
+      trackMonetizationEvent({
+        eventType: "checkout_cancelled",
+        path: `${pathname}?${searchParams.toString()}`,
+      })
       toast({
         title: "Checkout canceled",
         description: "No charge was made. You can return to pricing whenever you are ready.",

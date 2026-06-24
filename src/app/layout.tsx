@@ -12,6 +12,7 @@ import AppShell from "@/components/AppShell";
 import JsonLd from "@/components/JsonLd";
 import { ScrollToTop } from "@/components/ScrollToTop";
 import { CheckoutStatusToast } from "@/components/CheckoutStatusToast";
+import { PendingCheckoutResume } from "@/components/PendingCheckoutResume";
 import { buildOrganizationSchema, buildWebsiteSchema, toAbsoluteUrl } from "@/lib/seo";
 
 const displayFont = Fraunces({
@@ -105,6 +106,7 @@ export default function RootLayout({
           <Toaster />
           <Suspense fallback={null}>
             <CheckoutStatusToast />
+            <PendingCheckoutResume />
           </Suspense>
         </SessionProvider>
         <GoogleAnalytics gaId="G-TR8BTB7YVW" />

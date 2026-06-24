@@ -172,6 +172,7 @@ model User {
   plan          PlanType       @default(FREE)
   bonusCredits  BonusCredit[]
   stripeLogs    StripeLog[]
+  monetizationEvents MonetizationEvent[]
 }
 
 model ApiUsage {
@@ -278,4 +279,24 @@ model StripeLog {
   @@index([eventType])
   @@index([objectId])
   @@index([createdAt])
+}
+
+model MonetizationEvent {
+  id              String   @id @default(cuid())
+  eventType       String
+  userId          String?
+  user            User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  plan            String?
+  source          String?
+  path            String?
+  stripeSessionId String?
+  errorCode       String?
+  errorMessage    String?
+  metadata        Json?
+  createdAt       DateTime @default(now())
+
+  @@index([eventType, createdAt])
+  @@index([userId, createdAt])
+  @@index([source, createdAt])
+  @@index([stripeSessionId])
 }

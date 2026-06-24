@@ -2,10 +2,12 @@ import { NextResponse } from "next/server"
 import { headers } from "next/headers"
 import Stripe from "stripe"
 import { prisma } from "@/lib/prisma"
+import { recordMonetizationEvent } from "@/lib/monetization"
+import { getUserPlanForSubscriptionStatus } from "@/lib/subscription-status"
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", {
   // @ts-ignore - Using recommended stable version instead of the hardcoded preview version
-  apiVersion: "2023-10-16", 
+  apiVersion: "2026-02-25.clover",
 })
 
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET || ""
@@ -47,6 +49,7 @@ export async function POST(request: Request) {
         break
 
       case "invoice.paid":
+      case "invoice.payment_succeeded":
         await handleInvoicePaid(event.data.object as Stripe.Invoice)
         break
 
@@ -90,7 +93,7 @@ async function logStripeEvent(event: Stripe.Event) {
       currency = subscription.items.data[0]?.price.currency || null
       log = true
     }
-    else if (event.type === "invoice.payment_succeeded") {
+    else if (event.type === "invoice.payment_succeeded" || event.type === "invoice.paid") {
       const invoice = eventData as Stripe.Invoice
       userId = invoice.metadata?.userId || null
       status = invoice.status || null
@@ -191,6 +194,7 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
     await prisma.subscription.update({
       where: { userId },
       data: {
+        plan: "FREE",
         status: "canceled",
         cancelAtPeriodEnd: true,
         endDate,
@@ -249,8 +253,9 @@ async function updateSubscriptionInDatabase(userId: string, subscription: Stripe
       return
     }
 
+    const status = subscription.status
     // Assuming you have enum types defined in Prisma schema
-    const planType = "PREMIUM" 
+    const planType = getUserPlanForSubscriptionStatus(status)
     const billingPeriod = isMonthly ? "MONTHLY" : "YEARLY"
     
     // Subscription periods are in Unix timestamp seconds
@@ -263,8 +268,6 @@ async function updateSubscriptionInDatabase(userId: string, subscription: Stripe
       ? new Date(endTimestamp * 1000) 
       : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // Default to 30 days if missing
     
-    const status = subscription.status
-
     // Check if subscription already exists
     const existingSubscription = await prisma.subscription.findUnique({
       where: { userId },
@@ -306,6 +309,17 @@ async function updateSubscriptionInDatabase(userId: string, subscription: Stripe
       where: { id: userId },
       data: { plan: planType },
     })
+
+    if (planType === "PREMIUM") {
+      await recordMonetizationEvent({
+        eventType: "subscription_activated",
+        userId,
+        plan: isMonthly ? "monthly" : "yearly",
+        source: "stripe_webhook",
+        stripeSessionId: subscription.id,
+        metadata: { status },
+      })
+    }
   } catch (error) {
     console.error("Error updating subscription in database:", error)
     throw error

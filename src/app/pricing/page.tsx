@@ -14,6 +14,7 @@ import {
   Wand2,
 } from "lucide-react"
 import { PricingCheckoutButton } from "@/components/PricingCheckoutButton"
+import { PricingPageTracker } from "@/components/PricingPageTracker"
 import { WarmButton } from "@/components/ui/warm-button"
 import {
   getYearlySavingsPercent,
@@ -83,6 +84,7 @@ export default function PricingPage() {
 
   return (
     <main className="min-h-screen overflow-x-hidden bg-warm-cream text-[#202A3D]">
+      <PricingPageTracker />
       <section className="border-b border-[#F1D6DF] bg-[#FFF8F6]">
         <div className="mx-auto grid max-w-7xl items-center gap-12 px-4 py-12 sm:px-6 lg:min-h-[calc(100svh-4rem)] lg:grid-cols-[minmax(0,0.95fr)_minmax(420px,1.05fr)] lg:px-8 lg:py-16">
           <div className="max-w-2xl">
@@ -217,38 +219,38 @@ export default function PricingPage() {
                 <div>
                   <div className="inline-flex items-center gap-2 rounded-full bg-[#FFF1F5] px-3 py-1 text-sm font-semibold text-primary">
                     <Crown className="h-4 w-4" />
-                    Best for repeat cards
+                    Best for today
                   </div>
                   <h3 className="mt-4 text-2xl font-semibold text-[#202A3D]">Premium</h3>
                   <p className="mt-2 text-sm leading-6 text-[#6B7280]">
-                    Unlimited creations with premium formats and cleaner delivery.
+                    Private sharing, video, and cleaner delivery when this card needs more.
                   </p>
                 </div>
                 <div className="text-left sm:text-right">
-                  <div className="text-4xl font-bold text-[#202A3D]">{premiumPlans.yearly.price}</div>
+                  <div className="text-4xl font-bold text-[#202A3D]">{premiumPlans.monthly.price}</div>
                   <div className="mt-1 text-sm font-semibold text-primary">
-                    {premiumPlans.yearly.monthlyEquivalent} billed yearly
+                    {premiumPlans.monthly.billingLabel}
                   </div>
-                  <div className="mt-1 text-sm text-[#6B7280]">Save {savingsPercent}% vs monthly</div>
+                  <div className="mt-1 text-sm text-[#6B7280]">Yearly saves {savingsPercent}% when you need more cards.</div>
                 </div>
               </div>
 
               <div className="mt-6 grid gap-3 sm:grid-cols-2">
                 <PricingCheckoutButton
-                  plan="yearly"
-                  source="pricing_page_yearly"
+                  plan="monthly"
+                  source="pricing_page_monthly"
                   className="h-12 bg-primary text-white hover:bg-primary/90"
                 >
-                  Choose yearly
+                  Choose monthly
                   <ArrowRight className="h-4 w-4" />
                 </PricingCheckoutButton>
                 <PricingCheckoutButton
-                  plan="monthly"
-                  source="pricing_page_monthly"
+                  plan="yearly"
+                  source="pricing_page_yearly"
                   variant="outline"
                   className="h-12 border-primary/25 text-primary hover:bg-[#FFF1F5] hover:text-primary"
                 >
-                  Monthly {premiumPlans.monthly.price}
+                  Yearly {premiumPlans.yearly.price}
                 </PricingCheckoutButton>
               </div>
 

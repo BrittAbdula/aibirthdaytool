@@ -357,6 +357,51 @@ export async function GET(request: Request) {
         LEFT JOIN edit_agg ea ON ea.card_type = la.card_type
         LEFT JOIN top_model tm ON tm.card_type = la.card_type
         ORDER BY la.total_calls DESC, la.card_type ASC
+      `,
+      // 8. Monetization funnel trend by event type.
+      prisma.$queryRaw`
+        WITH date_range AS (
+          SELECT generate_series(
+            ${startDate}::date,
+            ${endDate}::date,
+            interval '1 day'
+          )::date as dt
+        ),
+        event_counts AS (
+          SELECT
+            date_trunc('day', me."createdAt")::date as dt,
+            me."eventType",
+            COUNT(me.id)::integer as count,
+            COUNT(DISTINCT me."userId")::integer as users
+          FROM "MonetizationEvent" me
+          WHERE me."createdAt" >= ${startDate}::date
+            AND me."createdAt" < (${endDate}::date + interval '1 day')
+          GROUP BY date_trunc('day', me."createdAt")::date, me."eventType"
+        )
+        SELECT
+          to_char(d.dt, 'YYYY-MM-DD') as dt,
+          COALESCE(ec."eventType", 'none') as event_type,
+          COALESCE(ec.count, 0)::integer as count,
+          COALESCE(ec.users, 0)::integer as users
+        FROM date_range d
+        LEFT JOIN event_counts ec ON ec.dt = d.dt
+        ORDER BY d.dt ASC, ec."eventType" ASC
+      `,
+      // 9. Monetization source summary.
+      prisma.$queryRaw`
+        SELECT
+          me."eventType" as event_type,
+          COALESCE(me.plan, 'unknown') as plan,
+          COALESCE(me.source, 'unknown') as source,
+          COUNT(me.id)::integer as count,
+          COUNT(DISTINCT me."userId")::integer as users,
+          COUNT(DISTINCT me."stripeSessionId") FILTER (WHERE me."stripeSessionId" IS NOT NULL)::integer as stripe_sessions
+        FROM "MonetizationEvent" me
+        WHERE me."createdAt" >= ${startDate}::date
+          AND me."createdAt" < (${endDate}::date + interval '1 day')
+        GROUP BY me."eventType", COALESCE(me.plan, 'unknown'), COALESCE(me.source, 'unknown')
+        ORDER BY count DESC
+        LIMIT 60
       `
     ]);
 
@@ -369,6 +414,8 @@ export async function GET(request: Request) {
       apiFailureStatsByVersionRaw,
       modelHealthStatsRaw,
       cardTypeConversionStatsRaw,
+      monetizationFunnelStatsRaw,
+      monetizationSourceStatsRaw,
     ] = results;
 
     // 确保返回的是数组，使用更精确的错误消息
@@ -399,6 +446,14 @@ export async function GET(request: Request) {
     if (!Array.isArray(cardTypeConversionStatsRaw)) {
       console.error("cardTypeConversionStatsRaw is not an array:", cardTypeConversionStatsRaw);
       throw new Error('cardTypeConversionStats query did not return an array');
+    }
+    if (!Array.isArray(monetizationFunnelStatsRaw)) {
+      console.error("monetizationFunnelStatsRaw is not an array:", monetizationFunnelStatsRaw);
+      throw new Error('monetizationFunnelStats query did not return an array');
+    }
+    if (!Array.isArray(monetizationSourceStatsRaw)) {
+      console.error("monetizationSourceStatsRaw is not an array:", monetizationSourceStatsRaw);
+      throw new Error('monetizationSourceStats query did not return an array');
     }
 
     // Process and format data (handle potential nulls and convert numeric types)
@@ -488,6 +543,22 @@ export async function GET(request: Request) {
       satisfaction_proxy: Number(stat.satisfaction_proxy) || 0,
     }));
 
+    const processedMonetizationFunnelStats = monetizationFunnelStatsRaw.map(stat => ({
+      dt: String(stat.dt),
+      event_type: String(stat.event_type || 'none'),
+      count: Number(stat.count) || 0,
+      users: Number(stat.users) || 0,
+    }));
+
+    const processedMonetizationSourceStats = monetizationSourceStatsRaw.map(stat => ({
+      event_type: String(stat.event_type || 'unknown'),
+      plan: String(stat.plan || 'unknown'),
+      source: String(stat.source || 'unknown'),
+      count: Number(stat.count) || 0,
+      users: Number(stat.users) || 0,
+      stripe_sessions: Number(stat.stripe_sessions) || 0,
+    }));
+
     // Ensure we have data in all arrays (even if the arrays are empty, they should exist)
     const responseData = {
       userActionStats: processedUserActionStats,
@@ -496,7 +567,9 @@ export async function GET(request: Request) {
       userCallVolumeStats: processedUserCallVolumeStats,
       apiFailureStatsByVersion: processedApiFailureStatsByVersion,
       modelHealthStats: processedModelHealthStats,
-      cardTypeConversionStats: processedCardTypeConversionStats
+      cardTypeConversionStats: processedCardTypeConversionStats,
+      monetizationFunnelStats: processedMonetizationFunnelStats,
+      monetizationSourceStats: processedMonetizationSourceStats
     };
 
     console.log("Returning response with structure:", Object.keys(responseData));

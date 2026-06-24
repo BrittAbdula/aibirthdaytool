@@ -5,7 +5,7 @@ import Stripe from 'stripe'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", {
   // @ts-ignore - Using recommended stable version
-  apiVersion: "2023-10-16", 
+  apiVersion: "2026-02-25.clover",
 })
 
 export async function GET(request: NextRequest) {
@@ -204,4 +204,4 @@ export async function POST(request: NextRequest) {
     console.error('Error reactivating subscription:', error)
     return NextResponse.json({ error: 'Failed to reactivate subscription' }, { status: 500 })
   }
-} 
+}

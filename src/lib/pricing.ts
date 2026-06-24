@@ -17,7 +17,7 @@ export interface PremiumFeatureRow {
   premium: string;
 }
 
-export type PremiumModalContext = 'default' | 'limit' | 'video' | 'privacy';
+export type PremiumModalContext = 'default' | 'limit' | 'video' | 'privacy' | 'download';
 
 export const premiumPlans: Record<PremiumPlanKey, PremiumPlan> = {
   monthly: {
@@ -40,7 +40,7 @@ export const premiumPlans: Record<PremiumPlanKey, PremiumPlan> = {
   },
 };
 
-export const premiumPlanOrder: PremiumPlanKey[] = ['yearly', 'monthly'];
+export const premiumPlanOrder: PremiumPlanKey[] = ['monthly', 'yearly'];
 
 export const premiumHighlights = [
   'Unlimited daily creations',
@@ -82,6 +82,11 @@ export const premiumModalCopy: Record<
     eyebrow: 'Private sharing',
     title: 'Keep this card private.',
     description: 'Premium cards can stay out of public idea galleries and are cleaner to send professionally.',
+  },
+  download: {
+    eyebrow: 'Cleaner download',
+    title: 'Send this card without the extra friction.',
+    description: 'Premium keeps downloads and sharing cleaner when this card is ready to go.',
   },
 };
 

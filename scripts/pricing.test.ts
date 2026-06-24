@@ -3,6 +3,7 @@ import {
   buildCheckoutRedirectUrls,
   getYearlySavingsPercent,
   normalizeCheckoutReturnPath,
+  premiumPlanOrder,
   premiumPlans,
 } from '../src/lib/pricing';
 
@@ -10,6 +11,8 @@ assert.equal(premiumPlans.monthly.price, '$6.99');
 assert.equal(premiumPlans.yearly.price, '$52.99');
 assert.equal(premiumPlans.yearly.monthlyEquivalent, '$4.42/month');
 assert.equal(getYearlySavingsPercent(), 36);
+assert.equal(premiumPlanOrder[0], 'monthly');
+assert.equal(premiumPlanOrder[1], 'yearly');
 
 assert.equal(normalizeCheckoutReturnPath('/pricing?billing=yearly#plans'), '/pricing?billing=yearly#plans');
 assert.equal(normalizeCheckoutReturnPath('https://evil.example/pricing'), '/');

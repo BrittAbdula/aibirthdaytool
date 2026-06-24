@@ -4,10 +4,12 @@ import React, { useEffect, useMemo, useState } from 'react'
 import NextImage from 'next/image'
 import Script from 'next/script'
 import { Button } from '@/components/ui/button'
+import { PremiumModal } from '@/components/PremiumModal'
 import { useToast } from '@/hooks/use-toast'
 import { recordUserAction } from '@/lib/action'
 import { CardType } from '@/lib/card-config'
 import { useParams, useSearchParams } from 'next/navigation'
+import { Crown } from 'lucide-react'
 
 export default function DownloadGatePage() {
   const { cardId, cardType } = useParams<{ cardId: string; cardType: CardType }>()
@@ -15,6 +17,7 @@ export default function DownloadGatePage() {
   const [sourceUrl, setSourceUrl] = useState<string>('')
   const [isPreparing, setIsPreparing] = useState(false)
   const [intent, setIntent] = useState<'copy' | 'download' | null>(null)
+  const [isPremiumModalOpen, setIsPremiumModalOpen] = useState(false)
   const searchParams = useSearchParams()
 
   const isSvgData = useMemo(() => sourceUrl.startsWith('data:image/svg+xml'), [sourceUrl])
@@ -144,6 +147,13 @@ export default function DownloadGatePage() {
               </div>
             </div>
             <div className="flex gap-3">
+              <Button
+                onClick={() => setIsPremiumModalOpen(true)}
+                className="bg-primary text-white hover:bg-primary/90"
+              >
+                <Crown className="mr-2 h-4 w-4" />
+                Premium
+              </Button>
               <Button onClick={handleCopy} className="bg-gradient-to-r from-pink-400 to-pink-500 text-white hover:opacity-90 shadow-md hover:shadow-lg transition-all duration-300">
                 Copy
               </Button>
@@ -161,6 +171,12 @@ export default function DownloadGatePage() {
           <div className="hidden lg:block lg:col-span-2" aria-hidden />
         </div>
       </div>
+      <PremiumModal
+        isOpen={isPremiumModalOpen}
+        onOpenChange={setIsPremiumModalOpen}
+        context="download"
+        source={`download_gate_${intent || 'unknown'}`}
+      />
     </div>
   )
 }

@@ -104,6 +104,22 @@ interface CardTypeConversionStat {
   satisfaction_proxy: number;
 }
 
+interface MonetizationFunnelStat {
+  dt: string;
+  event_type: string;
+  count: number;
+  users: number;
+}
+
+interface MonetizationSourceStat {
+  event_type: string;
+  plan: string;
+  source: string;
+  count: number;
+  users: number;
+  stripe_sessions: number;
+}
+
 const formatPercent = (value: number) => `${value.toFixed(1)}%`;
 const formatNumber = (value: number) => new Intl.NumberFormat('en-US').format(value);
 const formatSeconds = (value: number) => `${value.toFixed(2)}s`;
@@ -121,6 +137,8 @@ export default function StatsPage() {
   const [userCallVolumeStats, setUserCallVolumeStats] = useState<UserCallVolumeStat[]>([]);
   const [modelHealthStats, setModelHealthStats] = useState<ModelHealthStat[]>([]);
   const [cardTypeConversionStats, setCardTypeConversionStats] = useState<CardTypeConversionStat[]>([]);
+  const [monetizationFunnelStats, setMonetizationFunnelStats] = useState<MonetizationFunnelStat[]>([]);
+  const [monetizationSourceStats, setMonetizationSourceStats] = useState<MonetizationSourceStat[]>([]);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -133,6 +151,7 @@ export default function StatsPage() {
   const [processedApiErrorChartData, setProcessedApiErrorChartData] = useState<any[]>([]);
   const [processedApiFailureChartData, setProcessedApiFailureChartData] = useState<any[]>([]);
   const [processedApiCallChartData, setProcessedApiCallChartData] = useState<any[]>([]);
+  const [processedMonetizationChartData, setProcessedMonetizationChartData] = useState<any[]>([]);
   const [processedUserCallVolumeStats, setProcessedUserCallVolumeStats] = useState<UserCallVolumeStat[]>([]); 
   const [topPromptVersions, setTopPromptVersions] = useState<string[]>([]);
   const [topFailurePromptVersions, setTopFailurePromptVersions] = useState<string[]>([]);
@@ -185,6 +204,8 @@ export default function StatsPage() {
       setApiCallStatsByType(Array.isArray(data.apiCallStatsByType) ? data.apiCallStatsByType : []);
       setModelHealthStats(Array.isArray(data.modelHealthStats) ? data.modelHealthStats : []);
       setCardTypeConversionStats(Array.isArray(data.cardTypeConversionStats) ? data.cardTypeConversionStats : []);
+      setMonetizationFunnelStats(Array.isArray(data.monetizationFunnelStats) ? data.monetizationFunnelStats : []);
+      setMonetizationSourceStats(Array.isArray(data.monetizationSourceStats) ? data.monetizationSourceStats : []);
       
       const sortedStats = Array.isArray(data.userCallVolumeStats) 
         ? [...data.userCallVolumeStats].sort((a, b) => new Date(a.dt).getTime() - new Date(b.dt).getTime())
@@ -201,6 +222,8 @@ export default function StatsPage() {
       setUserCallVolumeStats([]);
       setModelHealthStats([]);
       setCardTypeConversionStats([]);
+      setMonetizationFunnelStats([]);
+      setMonetizationSourceStats([]);
     } finally {
       setLoading(false);
     }
@@ -221,6 +244,8 @@ export default function StatsPage() {
       setUserCallVolumeStats([]);
       setModelHealthStats([]);
       setCardTypeConversionStats([]);
+      setMonetizationFunnelStats([]);
+      setMonetizationSourceStats([]);
       return;
     }
 
@@ -366,11 +391,28 @@ export default function StatsPage() {
 
       // 用户调用量统计可以直接使用
       setProcessedUserCallVolumeStats(userCallVolumeStats);
+
+      const monetizationGroupedByDate: Record<string, { dt: string; [key: string]: any }> = {};
+
+      monetizationFunnelStats.forEach(stat => {
+        if (!monetizationGroupedByDate[stat.dt]) {
+          monetizationGroupedByDate[stat.dt] = { dt: stat.dt };
+        }
+        if (stat.event_type !== 'none') {
+          monetizationGroupedByDate[stat.dt][stat.event_type] = stat.count;
+        }
+      });
+
+      setProcessedMonetizationChartData(
+        Object.values(monetizationGroupedByDate).sort((a, b) =>
+          new Date(a.dt).getTime() - new Date(b.dt).getTime()
+        )
+      );
       
     } catch (err) {
       console.error("Error processing chart data:", err);
     }
-  }, [userActionStats, apiStatsByVersion, apiFailureStatsByVersion, apiCallStatsByType, userCallVolumeStats]);
+  }, [userActionStats, apiStatsByVersion, apiFailureStatsByVersion, apiCallStatsByType, userCallVolumeStats, monetizationFunnelStats]);
 
   if (loading) {
     return (
@@ -413,6 +455,9 @@ export default function StatsPage() {
   const uniqueActions = processedUserActionChartData.length > 0 
     ? Object.keys(processedUserActionChartData[0]).filter(key => key !== 'dt') 
     : [];
+  const monetizationEvents = Array.from(new Set(
+    processedMonetizationChartData.flatMap(row => Object.keys(row).filter(key => key !== 'dt'))
+  ));
 
   // 图表颜色
   const colors = ['#8884d8', '#82ca9d', '#ffc658', '#ff7300', '#a4de6c', '#d0ed57', '#f7f3f7', '#cc3300', '#6699cc', '#996633'];
@@ -434,6 +479,9 @@ export default function StatsPage() {
     send_rate: stat.send_rate,
     satisfaction_proxy: stat.satisfaction_proxy,
   }));
+  const monetizationRows = [...monetizationSourceStats]
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 30);
 
   return (
     <div className="container mx-auto py-8">
@@ -583,6 +631,64 @@ export default function StatsPage() {
       </div>
 
       <div className="grid grid-cols-1 gap-6 mb-8">
+        <Card>
+          <CardHeader>
+            <CardTitle>Monetization Funnel</CardTitle>
+            <p className="text-sm text-muted-foreground">
+              Checkout and Premium events by day, plus source-level rows for pricing, modal, and download-gate attribution.
+            </p>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="h-[320px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={processedMonetizationChartData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="dt" />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  {monetizationEvents.map((eventType, index) => (
+                    <Bar
+                      key={eventType}
+                      dataKey={eventType}
+                      stackId="monetization"
+                      fill={colors[index % colors.length]}
+                      name={eventType}
+                    />
+                  ))}
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Event</TableHead>
+                    <TableHead>Source</TableHead>
+                    <TableHead>Plan</TableHead>
+                    <TableHead className="text-right">Events</TableHead>
+                    <TableHead className="text-right">Users</TableHead>
+                    <TableHead className="text-right">Stripe Sessions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {monetizationRows.map((stat) => (
+                    <TableRow key={`${stat.event_type}-${stat.source}-${stat.plan}`}>
+                      <TableCell className="font-medium">{stat.event_type}</TableCell>
+                      <TableCell className="max-w-[260px] truncate" title={stat.source}>{stat.source}</TableCell>
+                      <TableCell>{stat.plan}</TableCell>
+                      <TableCell className="text-right">{formatNumber(stat.count)}</TableCell>
+                      <TableCell className="text-right">{formatNumber(stat.users)}</TableCell>
+                      <TableCell className="text-right">{formatNumber(stat.stripe_sessions)}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          </CardContent>
+        </Card>
+
         <Card>
           <CardHeader>
             <CardTitle>Model-Level Health and Behavior Signals</CardTitle>
