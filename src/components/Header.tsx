@@ -389,14 +389,16 @@ function Header({ variant = 'default' }: { variant?: HeaderVariant }) {
             </div>
 
             <div className="flex items-center gap-2 md:hidden">
-              <Link
-                href={galleryEntryHref}
-                onClick={handleSurfaceLinkClick}
-                className="inline-flex h-10 items-center rounded-full border border-pink-200 bg-pink-50/80 px-3 text-sm font-semibold text-rose-800 transition-colors hover:bg-pink-100"
-              >
-                Browse ideas
-              </Link>
-              {!isPremiumUser && (
+              {!isGeneratorLandingPage && (
+                <Link
+                  href={galleryEntryHref}
+                  onClick={handleSurfaceLinkClick}
+                  className="inline-flex h-10 items-center rounded-full border border-pink-200 bg-pink-50/80 px-3 text-sm font-semibold text-rose-800 transition-colors hover:bg-pink-100"
+                >
+                  Browse ideas
+                </Link>
+              )}
+              {!isGeneratorLandingPage && !isPremiumUser && (
                 <Link
                   href="/pricing/"
                   onClick={handleSurfaceLinkClick}

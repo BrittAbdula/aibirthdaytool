@@ -181,6 +181,20 @@ export default async function CardGeneratorPage({ params }: CardGeneratorPagePro
         label: link.label,
         description: link.description,
     }));
+    const howToSteps = [
+        {
+            name: "Add recipient and occasion details",
+            text: "Start with who the card is for, the occasion, and any names or relationship details that should shape the card.",
+        },
+        {
+            name: "Write the message and tone",
+            text: "Add the message, tone, language, and one personal detail so the generated card feels specific.",
+        },
+        {
+            name: "Choose format, generate, and share",
+            text: "Pick the output format, generate the card, then edit, download, or share the finished card by link.",
+        },
+    ];
 
     return (
         <main className="min-h-screen bg-warm-cream text-[#202A3D]">
@@ -216,65 +230,95 @@ export default async function CardGeneratorPage({ params }: CardGeneratorPagePro
             {seoSchemaLinks.length > 0 && (
                 <JsonLd data={buildItemListSchema(`${generatorName} related paths`, seoSchemaLinks)} />
             )}
-            <div className="relative mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-10 lg:px-8">
-                <section className="mb-10 grid gap-10 border-b border-[#F1D6DF]/70 pb-10 lg:grid-cols-[minmax(0,0.9fr)_minmax(320px,0.55fr)] lg:items-center">
-                    <div>
-                        <p className="text-sm font-semibold uppercase tracking-[0.24em] text-primary">
-                            {cardConfig.primaryIntent}
-                        </p>
-                        <h1 className="mt-4 max-w-4xl font-serif text-5xl font-semibold leading-tight text-[#202A3D] sm:text-6xl">
-                            {cardConfig.seoH1}
-                        </h1>
-                        <p className="mt-5 max-w-2xl text-base leading-7 text-[#6B7280] sm:text-lg">
-                            {cardConfig.seoIntro}
-                        </p>
-                        <div className="mt-7 flex flex-col gap-3 sm:flex-row">
-                            <a
-                                href="#generator"
-                                className="inline-flex min-h-[44px] items-center justify-center rounded-lg bg-primary px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-primary/90 hover:shadow-md"
-                            >
-                                Start creating
-                            </a>
-                            <Link
-                                href="#live-gallery"
-                                className="inline-flex min-h-[44px] items-center justify-center rounded-lg border border-[#F1D6DF] bg-white px-6 py-3 text-sm font-semibold text-[#202A3D] transition hover:-translate-y-0.5 hover:border-primary/30 hover:bg-[#FFF8F6]"
-                            >
-                                Browse ideas first
-                            </Link>
-                        </div>
-                    </div>
-                    <div className="mx-auto w-full max-w-sm rounded-xl border border-[#F1D6DF] bg-white p-4 shadow-xl">
-                        {/* Generator preview may come from remote storage or local public assets. */}
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                            src={imageUrl}
-                            alt={`${cardKeywordTitle} preview`}
-                            width={400}
-                            height={600}
-                            loading="eager"
-                            className="h-auto w-full rounded-lg object-contain"
-                        />
-                    </div>
-                </section>
+            <JsonLd
+                data={{
+                    "@context": "https://schema.org",
+                    "@type": "HowTo",
+                    name: isBirthdayPage ? "How to make a birthday card online" : `How to make a ${cardKeywordLower} online`,
+                    description: `Create a MewTruCard ${cardKeywordLower} with recipient details, a personal message, output settings, and a shareable card link.`,
+                    step: howToSteps.map((step, index) => ({
+                        "@type": "HowToStep",
+                        position: index + 1,
+                        name: step.name,
+                        text: step.text,
+                    })),
+                }}
+            />
 
-                <section id="generator" className="mb-16 scroll-mt-28 sm:mb-24">
-                    <Suspense
-                        fallback={
-                            <div className="flex flex-col items-center justify-center h-64 space-y-4">
-                                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-warm-coral"></div>
-                                <p className="text-gray-500">Creating magic...</p>
+            <section className="border-b border-[#F1D6DF]/70 bg-[#FFF8F6]">
+                <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-10">
+                    <div className="grid gap-8 lg:grid-cols-[minmax(280px,0.46fr)_minmax(0,0.9fr)] lg:items-start">
+                        <div className="pt-2 lg:sticky lg:top-24">
+                            <p className="text-sm font-semibold uppercase tracking-[0.24em] text-primary">
+                                {cardConfig.primaryIntent}
+                            </p>
+                            <h1 className="mt-4 max-w-3xl font-serif text-4xl font-semibold leading-tight text-[#202A3D] sm:text-5xl lg:text-6xl">
+                                {cardConfig.seoH1}
+                            </h1>
+                            <p className="mt-5 max-w-2xl text-base leading-7 text-[#525B70] sm:text-lg sm:leading-8">
+                                {cardConfig.seoIntro}
+                            </p>
+
+                            <dl className="mt-6 hidden gap-3 lg:grid" aria-label={`${cardKeywordTitle} generator benefits`}>
+                                <div className="rounded-lg border border-[#F1D6DF] bg-white px-4 py-3">
+                                    <dt className="text-sm font-semibold text-[#202A3D]">Start faster</dt>
+                                    <dd className="mt-1 text-sm leading-6 text-[#6B7280]">The generator is first, so you can create before browsing examples.</dd>
+                                </div>
+                                <div className="rounded-lg border border-[#F1D6DF] bg-white px-4 py-3">
+                                    <dt className="text-sm font-semibold text-[#202A3D]">Personal by default</dt>
+                                    <dd className="mt-1 text-sm leading-6 text-[#6B7280]">Recipient, message, tone, and relationship context guide the draft.</dd>
+                                </div>
+                                <div className="rounded-lg border border-[#F1D6DF] bg-white px-4 py-3">
+                                    <dt className="text-sm font-semibold text-[#202A3D]">Share-ready</dt>
+                                    <dd className="mt-1 text-sm leading-6 text-[#6B7280]">Edit after generation, then download or send a card link.</dd>
+                                </div>
+                            </dl>
+
+                            <div className="mt-6 hidden rounded-xl border border-[#F1D6DF] bg-white px-4 py-4 shadow-sm lg:block">
+                                <p className="text-sm font-semibold uppercase tracking-[0.18em] text-primary">
+                                    Create flow
+                                </p>
+                                <ol className="mt-3 flex flex-wrap gap-2 text-sm font-semibold text-[#202A3D]" aria-label="Card creation steps">
+                                    <li className="rounded-full bg-[#FFF1F5] px-3 py-1">1. Recipient</li>
+                                    <li className="rounded-full bg-[#FFF1F5] px-3 py-1">2. Message</li>
+                                    <li className="rounded-full bg-[#FFF1F5] px-3 py-1">3. Generate</li>
+                                </ol>
+                                <p className="mt-3 text-sm leading-6 text-[#6B7280]">
+                                    The generator is the main path on this page. Need examples before writing?{" "}
+                                    <Link
+                                        href="#live-gallery"
+                                        className="font-semibold text-primary underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+                                    >
+                                        Browse public ideas below
+                                    </Link>
+                                    .
+                                </p>
                             </div>
-                        }
-                    >
-                        <CardGenerator
-                            wishCardType={cardType}
-                            initialCardId={''}
-                            initialImgUrl={imageUrl}
-                            cardConfig={cardConfig}
-                            headingLevel="h2"
-                        />
-                    </Suspense>
-                </section>
+                        </div>
+
+                        <section id="generator" aria-label={`${cardKeywordTitle} generator`} className="scroll-mt-28">
+                            <Suspense
+                                fallback={
+                                    <div className="flex h-[560px] flex-col items-center justify-center space-y-4 rounded-xl border border-[#F1D6DF] bg-white">
+                                        <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-t-2 border-warm-coral"></div>
+                                        <p className="text-gray-500">Loading the generator...</p>
+                                    </div>
+                                }
+                            >
+                                <CardGenerator
+                                    wishCardType={cardType}
+                                    initialCardId={''}
+                                    initialImgUrl={imageUrl}
+                                    cardConfig={cardConfig}
+                                    headingLevel="h2"
+                                />
+                            </Suspense>
+                        </section>
+                    </div>
+                </div>
+            </section>
+
+            <div className="relative mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8">
 
                 {cardConfig.seoLinks.length > 0 && (
                     <section className="mb-16 sm:mb-24">

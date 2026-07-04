@@ -244,6 +244,8 @@ export default function CardGenerator({
   const [savedFormData, setSavedFormData] = useState<any | null>(null)
   const [showAdvancedOptions, setShowAdvancedOptions] = useState(false)
   const [showMobilePreview, setShowMobilePreview] = useState(false)
+  const [showMobileActionBar, setShowMobileActionBar] = useState(true)
+  const generatorRootRef = useRef<HTMLDivElement>(null)
   
   // Wizard State
   const [currentStep, setCurrentStep] = useState(1);
@@ -360,6 +362,18 @@ export default function CardGenerator({
       setShowMobilePreview(true)
     }
   }, [globalLoading, imageStates, initialImgUrl]);
+
+  useEffect(() => {
+    const node = generatorRootRef.current
+    if (!node || typeof IntersectionObserver === 'undefined') return
+
+    const observer = new IntersectionObserver(
+      ([entry]) => setShowMobileActionBar(entry.isIntersecting),
+      { threshold: 0.08 }
+    )
+    observer.observe(node)
+    return () => observer.disconnect()
+  }, [])
 
   const handleInputChange = (name: string, value: any) => {
     setFormData(prev => ({ ...prev, [name]: value }))
@@ -983,8 +997,8 @@ export default function CardGenerator({
 
   return (
     <>
-      <div className="min-h-screen bg-warm-cream pb-28 lg:pb-0">
-        <div className="mx-auto my-6 max-w-6xl overflow-hidden rounded-xl border border-[#F1D6DF] bg-white shadow-xl">
+      <div ref={generatorRootRef} className="bg-transparent pb-28 lg:pb-24">
+        <div className="mx-auto max-w-6xl overflow-hidden rounded-xl border border-[#F1D6DF] bg-white shadow-xl">
           <div className="grid lg:grid-cols-[minmax(0,1.02fr)_minmax(340px,0.98fr)]">
             <section className="p-5 sm:p-6 lg:p-8">
               <div className="space-y-6">
@@ -1043,12 +1057,6 @@ export default function CardGenerator({
                 {currentStep === 2 && renderMessageFields()}
                 {currentStep === 3 && renderFormatFields()}
 
-                <div className="hidden lg:block">
-                  {renderActionButtons()}
-                  <p className="mt-3 text-sm text-[#6B7280]">
-                    When your draft is ready, you can keep refining it, then share or download the final version.
-                  </p>
-                </div>
               </div>
             </section>
 
@@ -1137,12 +1145,31 @@ export default function CardGenerator({
           </div>
         </div>
 
-        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-[#F1D6DF] bg-white/95 backdrop-blur-xl lg:hidden">
-            <div className="mx-auto max-w-6xl px-4 py-3">
+        <div className={cn("fixed inset-x-0 bottom-0 z-40 border-t border-[#F1D6DF] bg-white/95 backdrop-blur-xl lg:hidden", !showMobileActionBar && "hidden")}>
+          <div className="mx-auto max-w-6xl px-4 py-3">
             <div className="mb-2 flex items-center justify-between gap-4 text-xs font-medium text-[#6B7280]">
               <span>Step {currentStep} of {TOTAL_STEPS}: {currentStepMeta.title}</span>
             </div>
             {renderActionButtons(true)}
+          </div>
+        </div>
+
+        <div className={cn("fixed inset-x-0 bottom-0 z-40 hidden border-t border-[#F1D6DF] bg-white/95 shadow-[0_-12px_30px_rgba(32,42,61,0.08)] backdrop-blur-xl lg:block", !showMobileActionBar && "lg:hidden")}>
+          <div className="mx-auto flex max-w-6xl items-center justify-between gap-6 px-8 py-4">
+            <div className="min-w-0">
+              <div className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">
+                Step {currentStep} of {TOTAL_STEPS}
+              </div>
+              <div className="mt-1 text-sm font-semibold text-[#202A3D]">
+                {currentStepMeta.title}
+              </div>
+              <p className="mt-1 text-sm text-[#6B7280]">
+                Continue through the generator, then refine and share the finished card.
+              </p>
+            </div>
+            <div className="w-[min(420px,40vw)]">
+              {renderActionButtons()}
+            </div>
           </div>
         </div>
       </div>
