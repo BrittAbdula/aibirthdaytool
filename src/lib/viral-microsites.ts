@@ -120,8 +120,8 @@ export const VIRAL_MICROSITES: ViralMicrositeConfig[] = [
       "You accepted the apology path. Now send a proper sorry card with style.",
     acceptedCaption: "Bonus points if you are specific, sincere, and on time.",
     replayLabel: "Try again",
-    primaryCta: { href: "/sorry/", label: "Create a sorry card" },
-    secondaryCta: { href: "/type/sorry/", label: "Browse apology ideas" },
+    primaryCta: { href: "/sorry-link/", label: "Make it personal — send a sorry link" },
+    secondaryCta: { href: "/sorry/", label: "Create a sorry card" },
     theme: "mint",
   },
   {

@@ -6,6 +6,7 @@ export interface PendingCheckout {
   plan: PremiumPlanKey;
   source: string;
   returnUrl: string;
+  taskSize?: number;
   createdAt: number;
 }
 
@@ -13,6 +14,7 @@ interface BuildPendingCheckoutInput {
   plan: PremiumPlanKey;
   source: string;
   returnUrl: string;
+  taskSize?: number;
 }
 
 function isPremiumPlanKey(value: unknown): value is PremiumPlanKey {
@@ -27,11 +29,13 @@ export function buildPendingCheckout({
   plan,
   source,
   returnUrl,
+  taskSize,
 }: BuildPendingCheckoutInput): PendingCheckout {
   return {
     plan,
     source: normalizeSource(source),
     returnUrl: normalizeCheckoutReturnPath(returnUrl),
+    taskSize: typeof taskSize === 'number' && Number.isFinite(taskSize) ? Math.max(1, Math.min(50, Math.floor(taskSize))) : undefined,
     createdAt: Date.now(),
   };
 }
@@ -51,6 +55,9 @@ export function parsePendingCheckout(raw: string | null | undefined): PendingChe
       plan: parsed.plan,
       source: normalizeSource(parsed.source),
       returnUrl,
+      taskSize: typeof parsed.taskSize === 'number' && Number.isFinite(parsed.taskSize)
+        ? Math.max(1, Math.min(50, Math.floor(parsed.taskSize)))
+        : undefined,
       createdAt: parsed.createdAt,
     };
   } catch {

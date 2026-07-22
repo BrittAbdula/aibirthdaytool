@@ -19,6 +19,10 @@ export interface EditedCardEntry {
   customUrl: string | null;
   message: string | null;
   createdAt: Date;
+  /** Recipient opened the share link (from recipient_view actions) */
+  opened?: boolean;
+  /** Recipient answered the Moment ask (e.g. tapped "yes" on Forgive me?) */
+  momentAnswered?: boolean;
   // Add other fields from EditedCard if used in the component
 }
 

@@ -26,7 +26,7 @@ export const premiumPlans: Record<PremiumPlanKey, PremiumPlan> = {
     price: '$6.99',
     amountCents: 699,
     billingLabel: 'per month',
-    description: 'Best when you need a short burst of premium card making.',
+    description: 'The complete recurring workflow for people who create team cards every month.',
   },
   yearly: {
     key: 'yearly',
@@ -35,27 +35,28 @@ export const premiumPlans: Record<PremiumPlanKey, PremiumPlan> = {
     amountCents: 5299,
     billingLabel: 'per year',
     monthlyEquivalent: '$4.42/month',
-    badge: 'Best value',
-    description: 'Lower monthly cost for birthdays, holidays, and repeat gifting.',
+    description: 'A lower effective monthly price for established recurring workflows.',
   },
 };
 
 export const premiumPlanOrder: PremiumPlanKey[] = ['monthly', 'yearly'];
+export const premiumModalPlanOrder: PremiumPlanKey[] = ['monthly'];
 
 export const premiumHighlights = [
-  'Unlimited daily creations',
-  'Premium image and video models',
-  'Private cards, no watermarks, and no ads',
+  'Unlimited recipient roster and complete batches',
+  'Reusable brand preset and 30-day occasion queue',
+  'Private cards, premium formats, no watermarks or ads',
 ];
 
 export const premiumFeatureRows: PremiumFeatureRow[] = [
-  { feature: 'Daily card creations', free: 'Limited daily credits', premium: 'Unlimited' },
-  { feature: 'Animated SVG cards', free: 'Included', premium: 'Included' },
-  { feature: 'Premium image models', free: 'Limited by credits', premium: 'Included' },
-  { feature: 'Video cards', free: 'Locked', premium: 'Included' },
+  { feature: 'Recipient roster', free: 'Up to 3 people', premium: 'Unlimited' },
+  { feature: 'Batch generation', free: 'One card preview', premium: 'Up to 50 per batch' },
+  { feature: '30-day occasion queue', free: 'Included', premium: 'Included' },
+  { feature: 'Reusable brand preset', free: 'Included', premium: 'Included' },
+  { feature: 'Batch export and reuse', free: 'Locked', premium: 'Included' },
+  { feature: 'Premium image and video', free: 'Limited or locked', premium: 'Included' },
   { feature: 'Private cards', free: 'Public gallery eligible', premium: 'Private by default' },
   { feature: 'Watermarks and ads', free: 'Included', premium: 'Removed' },
-  { feature: 'Saved card links', free: 'Included', premium: 'Included' },
   { feature: 'Cancellation', free: 'No subscription', premium: 'Cancel anytime' },
 ];
 
@@ -64,29 +65,29 @@ export const premiumModalCopy: Record<
   { eyebrow: string; title: string; description: string }
 > = {
   default: {
-    eyebrow: 'MewTruCard Premium',
-    title: 'Create more polished cards with fewer limits.',
-    description: 'Upgrade when you want premium models, private sharing, video cards, and an ad-free workspace.',
+    eyebrow: 'MewTruCard Creator Pro',
+    title: 'Turn repeat card making into one organized workflow.',
+    description: 'Keep a recipient roster, reuse your brand direction, generate complete batches, and work without ads.',
   },
   limit: {
     eyebrow: 'Daily limit reached',
-    title: 'Keep creating today.',
-    description: 'Premium removes the daily credit ceiling so you can finish every card while the idea is fresh.',
+    title: 'Keep creating — and make the next occasion easier.',
+    description: 'Creator Pro removes daily limits and adds a roster, 30-day queue, brand preset, and repeatable batches.',
   },
   video: {
-    eyebrow: 'Premium video',
-    title: 'Unlock video cards.',
-    description: 'Generate shareable motion cards for birthdays, anniversaries, apologies, and big moments.',
+    eyebrow: 'Creator Pro video',
+    title: 'Unlock video cards and the complete creator workflow.',
+    description: 'Create premium motion cards while keeping recurring recipients, batches, and brand direction organized.',
   },
   privacy: {
     eyebrow: 'Private sharing',
     title: 'Keep this card private.',
-    description: 'Premium cards can stay out of public idea galleries and are cleaner to send professionally.',
+    description: 'Creator Pro cards stay out of public galleries and are cleaner to send professionally.',
   },
   download: {
     eyebrow: 'Cleaner download',
     title: 'Send this card without the extra friction.',
-    description: 'Premium keeps downloads and sharing cleaner when this card is ready to go.',
+    description: 'Creator Pro keeps downloads, batch exports, and sharing cleaner when the work is ready to go.',
   },
 };
 
@@ -104,19 +105,10 @@ export function normalizeCheckoutReturnPath(returnPath: string | null | undefine
 
   try {
     const url = new URL(returnPath, 'https://mewtrucard.local');
-    return `${url.pathname}${url.search}${url.hash}` || '/';
+    return url.pathname || '/';
   } catch {
     return '/';
   }
-}
-
-function appendCheckoutParams(returnPath: string, params: string): string {
-  const hashIndex = returnPath.indexOf('#');
-  const pathAndSearch = hashIndex >= 0 ? returnPath.slice(0, hashIndex) : returnPath;
-  const hash = hashIndex >= 0 ? returnPath.slice(hashIndex) : '';
-  const separator = pathAndSearch.includes('?') ? '&' : '?';
-
-  return `${pathAndSearch}${separator}${params}${hash}`;
 }
 
 export function buildCheckoutRedirectUrls(origin: string, returnPath: string | null | undefined) {
@@ -124,10 +116,7 @@ export function buildCheckoutRedirectUrls(origin: string, returnPath: string | n
   const normalizedReturnPath = normalizeCheckoutReturnPath(returnPath);
 
   return {
-    successUrl: `${normalizedOrigin}${appendCheckoutParams(
-      normalizedReturnPath,
-      'status=success&session_id={CHECKOUT_SESSION_ID}'
-    )}`,
-    cancelUrl: `${normalizedOrigin}${appendCheckoutParams(normalizedReturnPath, 'status=cancelled')}`,
+    successUrl: `${normalizedOrigin}${normalizedReturnPath}?status=success&session_id={CHECKOUT_SESSION_ID}`,
+    cancelUrl: `${normalizedOrigin}${normalizedReturnPath}?status=cancelled`,
   };
 }

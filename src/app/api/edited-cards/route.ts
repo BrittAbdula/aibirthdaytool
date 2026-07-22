@@ -1,14 +1,28 @@
 import { NextResponse } from 'next/server'
+import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import { uploadSvgToR2 } from '@/lib/r2'
 import { auth } from '@/auth'
+import { parseMomentConfig } from '@/lib/moment-config'
 
 export async function POST(request: Request) {
   try {
     const session = await auth()
     const userId = session?.user?.id || null
 
-    const { editedCardId, cardType, originalCardId, editedContent, spotifyTrackId, customUrl, relationship, message, r2Url, isPublic, requirements, senderName, recipientName } = await request.json()
+    const { editedCardId, cardType, originalCardId, editedContent, spotifyTrackId, customUrl, relationship, message, r2Url, isPublic, requirements, senderName, recipientName, momentConfig } = await request.json()
+
+    // momentConfig: validated object to set, explicit null to clear, undefined to leave untouched
+    let momentConfigUpdate: Prisma.NullTypes.JsonNull | ReturnType<typeof parseMomentConfig> & {} | undefined
+    if (momentConfig === null) {
+      momentConfigUpdate = Prisma.JsonNull
+    } else if (momentConfig !== undefined) {
+      const parsed = parseMomentConfig(momentConfig)
+      if (!parsed) {
+        return NextResponse.json({ error: 'Invalid moment configuration' }, { status: 400 })
+      }
+      momentConfigUpdate = parsed
+    }
     console.log('-------------:', editedCardId, cardType, originalCardId, editedContent, spotifyTrackId, customUrl, relationship, message, r2Url, isPublic, requirements, senderName, recipientName)
     console.log('r2UrlImage:', r2Url)
 
@@ -58,7 +72,8 @@ export async function POST(request: Request) {
           requirements,
           senderName,
           recipientName,
-          ...(model ? { model } : {})
+          ...(model ? { model } : {}),
+          ...(momentConfigUpdate !== undefined ? { momentConfig: momentConfigUpdate } : {})
         },
       })
       return NextResponse.json({ id: editedCardId, customUrl: customUrl }, { status: 200 })
@@ -98,7 +113,8 @@ export async function POST(request: Request) {
           requirements,
           senderName,
           recipientName,
-          model
+          model,
+          ...(momentConfigUpdate !== undefined ? { momentConfig: momentConfigUpdate } : {})
         },
       })
       return NextResponse.json({ id: editedCard.id, customUrl: customUrl }, { status: 201 })

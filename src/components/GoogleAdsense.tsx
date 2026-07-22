@@ -15,12 +15,13 @@ const DISALLOW_PATHS = [
   '/will-you-be-my-bridesmaid',
 ]
 
-const DISALLOW_PREFIXES = ['/type/', '/relationship/']
+const DISALLOW_PREFIXES = ['/type/', '/relationship/', '/for/', '/creator']
 const DISALLOW_EXACT_PATHS = new Set([
   '/cards',
   '/card-gallery',
   '/about',
   '/how-it-works',
+  '/pricing',
   '/ai-and-editorial-policy',
   ...CARD_TYPES.map((cardType) => `/${cardType.type}`),
 ])

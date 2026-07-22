@@ -1,0 +1,79 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "mewtrucard-preview",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2026-07-13",
+  "compatibility_flags": ["nodejs_compat"],
+  "workers_dev": true,
+  "preview_urls": true,
+  "observability": {
+    "enabled": true
+  },
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "vars": {
+    "CF_ACCOUNT_ID": "e2bf13917f6dff565f6357f7237ce9fa",
+    "NEXT_PUBLIC_BASE_URL": "https://mewtrucard-preview.auroroa.workers.dev/",
+    "NEXT_PUBLIC_SITE_URL": "https://mewtrucard-preview.auroroa.workers.dev/",
+    "NEXTAUTH_URL": "https://mewtrucard-preview.auroroa.workers.dev/",
+    "AUTH_URL": "https://mewtrucard-preview.auroroa.workers.dev/"
+  },
+  "services": [
+    {
+      "binding": "WORKER_SELF_REFERENCE",
+      "service": "mewtrucard-preview"
+    }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "NEXT_INC_CACHE_R2_BUCKET",
+      "bucket_name": "mewtrucard-next-cache-preview"
+    },
+    {
+      "binding": "CARD_ASSETS_BUCKET",
+      "bucket_name": "celeprime"
+    }
+  ],
+  "env": {
+    "production": {
+      "name": "mewtrucard",
+      "workers_dev": false,
+      "preview_urls": false,
+      "routes": [
+        {
+          "pattern": "mewtrucard.com",
+          "custom_domain": true
+        },
+        {
+          "pattern": "www.mewtrucard.com",
+          "custom_domain": true
+        }
+      ],
+      "vars": {
+        "CF_ACCOUNT_ID": "e2bf13917f6dff565f6357f7237ce9fa",
+        "NEXT_PUBLIC_BASE_URL": "https://mewtrucard.com/",
+        "NEXT_PUBLIC_SITE_URL": "https://mewtrucard.com/",
+        "NEXTAUTH_URL": "https://mewtrucard.com/",
+        "AUTH_URL": "https://mewtrucard.com/"
+      },
+      "services": [
+        {
+          "binding": "WORKER_SELF_REFERENCE",
+          "service": "mewtrucard"
+        }
+      ],
+      "r2_buckets": [
+        {
+          "binding": "NEXT_INC_CACHE_R2_BUCKET",
+          "bucket_name": "mewtrucard-next-cache"
+        },
+        {
+          "binding": "CARD_ASSETS_BUCKET",
+          "bucket_name": "celeprime"
+        }
+      ]
+    }
+  }
+}

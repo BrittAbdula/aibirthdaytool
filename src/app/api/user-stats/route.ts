@@ -1,6 +1,16 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAdminRequest } from "@/lib/admin-auth";
+import {
+  SUBSCRIPTION_LIFECYCLE_RELIABLE_FROM,
+  StatsDateRangeError,
+  buildFunnelMetrics,
+  calculateChange,
+  calculateRate,
+  calculateSubscriptionValue,
+  isSubscriptionLifecyclePartial,
+  parseStatsDateRange,
+} from '@/lib/stats-metrics';
 
 export const dynamic = 'force-dynamic';
 
@@ -12,8 +22,21 @@ export async function GET(request: Request) {
     }
 
     const { searchParams } = new URL(request.url);
-    const startDate = searchParams.get('startDate') || new Date(Date.now() - 29 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-    const endDate = searchParams.get('endDate') || new Date().toISOString().split('T')[0];
+    const range = parseStatsDateRange({
+      startDate: searchParams.get('startDate'),
+      endDate: searchParams.get('endDate'),
+    });
+    const {
+      startDate,
+      endDate,
+      previousStartDate,
+      previousEndDate,
+    } = range;
+    const monthlyPriceId = process.env.STRIPE_MONTHLY_PRICE_ID;
+    const yearlyPriceId = process.env.STRIPE_YEARLY_PRICE_ID;
+    if (!monthlyPriceId || !yearlyPriceId) {
+      throw new Error('Stripe price IDs are not configured');
+    }
 
 
     // Collect raw query results first, without destructuring
@@ -402,6 +425,160 @@ export async function GET(request: Request) {
         GROUP BY me."eventType", COALESCE(me.plan, 'unknown'), COALESCE(me.source, 'unknown')
         ORDER BY count DESC
         LIMIT 60
+      `,
+      // 10. Executive summary for the selected and previous equal-length periods.
+      prisma.$queryRaw`
+        SELECT
+          (SELECT COUNT(*)::integer FROM "User" WHERE "createdAt" >= ${startDate}::date AND "createdAt" < (${endDate}::date + interval '1 day')) AS new_users,
+          (SELECT COUNT(DISTINCT "userId")::integer FROM "ApiLog" WHERE timestamp >= ${startDate}::date AND timestamp < (${endDate}::date + interval '1 day')) AS active_creators,
+          (SELECT COUNT(*)::integer FROM "ApiLog" WHERE timestamp >= ${startDate}::date AND timestamp < (${endDate}::date + interval '1 day')) AS total_generations,
+          (SELECT COUNT(*)::integer FROM "ApiLog" WHERE timestamp >= ${startDate}::date AND timestamp < (${endDate}::date + interval '1 day') AND status = 'completed') AS completed_generations,
+          (SELECT COUNT(*)::integer FROM "ApiLog" WHERE timestamp >= ${startDate}::date AND timestamp < (${endDate}::date + interval '1 day') AND (status IN ('failed', 'error') OR "isError" = true)) AS failed_generations,
+          (SELECT COUNT(*)::integer FROM "ApiLog" WHERE timestamp >= ${startDate}::date AND timestamp < (${endDate}::date + interval '1 day') AND status IN ('pending', 'processing') AND timestamp < now() - interval '24 hours') AS stale_generations,
+          (SELECT COUNT(*)::integer FROM "User" WHERE "createdAt" >= ${previousStartDate}::date AND "createdAt" < (${previousEndDate}::date + interval '1 day')) AS previous_new_users,
+          (SELECT COUNT(DISTINCT "userId")::integer FROM "ApiLog" WHERE timestamp >= ${previousStartDate}::date AND timestamp < (${previousEndDate}::date + interval '1 day')) AS previous_active_creators,
+          (SELECT COUNT(*)::integer FROM "ApiLog" WHERE timestamp >= ${previousStartDate}::date AND timestamp < (${previousEndDate}::date + interval '1 day')) AS previous_total_generations,
+          (SELECT COUNT(*)::integer FROM "ApiLog" WHERE timestamp >= ${previousStartDate}::date AND timestamp < (${previousEndDate}::date + interval '1 day') AND status = 'completed') AS previous_completed_generations,
+          (SELECT COUNT(*)::integer FROM "ApiLog" WHERE timestamp >= ${previousStartDate}::date AND timestamp < (${previousEndDate}::date + interval '1 day') AND (status IN ('failed', 'error') OR "isError" = true)) AS previous_failed_generations
+      `,
+      // 11. Daily business trend.
+      prisma.$queryRaw`
+        WITH date_range AS (
+          SELECT generate_series(${startDate}::date, ${endDate}::date, interval '1 day')::date AS dt
+        ),
+        users AS (
+          SELECT date_trunc('day', "createdAt")::date AS dt, COUNT(*)::integer AS new_users
+          FROM "User"
+          WHERE "createdAt" >= ${startDate}::date AND "createdAt" < (${endDate}::date + interval '1 day')
+          GROUP BY 1
+        ),
+        generations AS (
+          SELECT
+            date_trunc('day', timestamp)::date AS dt,
+            COUNT(*)::integer AS total_generations,
+            COUNT(*) FILTER (WHERE status = 'completed')::integer AS completed_generations,
+            COUNT(*) FILTER (WHERE status IN ('failed', 'error') OR "isError" = true)::integer AS failed_generations,
+            COUNT(DISTINCT "userId")::integer AS active_creators
+          FROM "ApiLog"
+          WHERE timestamp >= ${startDate}::date AND timestamp < (${endDate}::date + interval '1 day')
+          GROUP BY 1
+        )
+        SELECT
+          to_char(d.dt, 'YYYY-MM-DD') AS dt,
+          COALESCE(u.new_users, 0)::integer AS new_users,
+          COALESCE(g.active_creators, 0)::integer AS active_creators,
+          COALESCE(g.total_generations, 0)::integer AS total_generations,
+          COALESCE(g.completed_generations, 0)::integer AS completed_generations,
+          COALESCE(g.failed_generations, 0)::integer AS failed_generations
+        FROM date_range d
+        LEFT JOIN users u ON u.dt = d.dt
+        LEFT JOIN generations g ON g.dt = d.dt
+        ORDER BY d.dt ASC
+      `,
+      // 12. Current verified live subscription snapshot and revenue.
+      prisma.$queryRaw`
+        WITH verified AS (
+          SELECT *
+          FROM "Subscription"
+          WHERE "stripeLivemode" = true
+            AND "stripePriceId" IN (${monthlyPriceId}, ${yearlyPriceId})
+        )
+        SELECT
+          COUNT(*) FILTER (WHERE status IN ('active', 'trialing'))::integer AS live_subscribers,
+          COUNT(*) FILTER (WHERE status IN ('active', 'trialing') AND "billingPeriod" = 'MONTHLY')::integer AS monthly_subscribers,
+          COUNT(*) FILTER (WHERE status IN ('active', 'trialing') AND "billingPeriod" = 'YEARLY')::integer AS yearly_subscribers,
+          COUNT(*) FILTER (WHERE status IN ('active', 'trialing') AND "cancelAtPeriodEnd" = true)::integer AS scheduled_to_cancel,
+          (SELECT COUNT(*)::integer
+            FROM "User" u
+            LEFT JOIN "Subscription" s ON s."userId" = u.id
+            WHERE u.plan = 'PREMIUM'
+              AND NOT (
+                COALESCE(s."stripeLivemode", false) = true
+                AND s."stripePriceId" IN (${monthlyPriceId}, ${yearlyPriceId})
+                AND s.status IN ('active', 'trialing')
+              )) AS unmapped_premium_entitlements,
+          (SELECT COALESCE(SUM(amount), 0)::integer
+            FROM "StripeLog"
+            WHERE "stripeLivemode" = true
+              AND "stripePriceId" IN (${monthlyPriceId}, ${yearlyPriceId})
+              AND "eventType" = 'invoice.payment_succeeded'
+              AND "createdAt" >= ${startDate}::date
+              AND "createdAt" < (${endDate}::date + interval '1 day')) AS gross_revenue_cents,
+          (SELECT COALESCE(SUM(amount), 0)::integer
+            FROM "StripeLog"
+            WHERE "stripeLivemode" = true
+              AND "stripePriceId" IN (${monthlyPriceId}, ${yearlyPriceId})
+              AND "eventType" = 'invoice.payment_succeeded'
+              AND "createdAt" >= ${previousStartDate}::date
+              AND "createdAt" < (${previousEndDate}::date + interval '1 day')) AS previous_gross_revenue_cents
+        FROM verified
+      `,
+      // 13. Subscription lifecycle and cash trend.
+      prisma.$queryRaw`
+        WITH date_range AS (
+          SELECT generate_series(${startDate}::date, ${endDate}::date, interval '1 day')::date AS dt
+        ),
+        stripe_daily AS (
+          SELECT
+            date_trunc('day', "createdAt")::date AS dt,
+            COUNT(DISTINCT "stripeSubscriptionId") FILTER (WHERE "eventType" = 'customer.subscription.created')::integer AS new_subscriptions,
+            COUNT(DISTINCT "stripeSubscriptionId") FILTER (WHERE "eventType" = 'customer.subscription.deleted')::integer AS ended_subscriptions,
+            COALESCE(SUM(amount) FILTER (WHERE "eventType" = 'invoice.payment_succeeded'), 0)::integer AS gross_revenue_cents
+          FROM "StripeLog"
+          WHERE "stripeLivemode" = true
+            AND "stripePriceId" IN (${monthlyPriceId}, ${yearlyPriceId})
+            AND "createdAt" >= ${startDate}::date
+            AND "createdAt" < (${endDate}::date + interval '1 day')
+          GROUP BY 1
+        )
+        SELECT
+          to_char(d.dt, 'YYYY-MM-DD') AS dt,
+          COALESCE(s.new_subscriptions, 0)::integer AS new_subscriptions,
+          COALESCE(s.ended_subscriptions, 0)::integer AS ended_subscriptions,
+          (COALESCE(s.new_subscriptions, 0) - COALESCE(s.ended_subscriptions, 0))::integer AS net_growth,
+          COALESCE(s.gross_revenue_cents, 0)::integer AS gross_revenue_cents
+        FROM date_range d
+        LEFT JOIN stripe_daily s ON s.dt = d.dt
+        ORDER BY d.dt ASC
+      `,
+      // 14. Status mix for all recognized live subscriptions.
+      prisma.$queryRaw`
+        SELECT status, COUNT(*)::integer AS count
+        FROM "Subscription"
+        WHERE "stripeLivemode" = true
+          AND "stripePriceId" IN (${monthlyPriceId}, ${yearlyPriceId})
+        GROUP BY status
+        ORDER BY count DESC, status ASC
+      `,
+      // 15. Active plan mix and value inputs.
+      prisma.$queryRaw`
+        SELECT
+          "billingPeriod"::text AS billing_period,
+          COALESCE("stripeUnitAmount", 0)::integer AS unit_amount,
+          COALESCE("stripeCurrency", 'usd') AS currency,
+          COUNT(*)::integer AS count
+        FROM "Subscription"
+        WHERE "stripeLivemode" = true
+          AND "stripePriceId" IN (${monthlyPriceId}, ${yearlyPriceId})
+          AND status IN ('active', 'trialing')
+        GROUP BY "billingPeriod", "stripeUnitAmount", "stripeCurrency"
+        ORDER BY billing_period ASC
+      `,
+      // 16. Unique-user monetization funnel.
+      prisma.$queryRaw`
+        WITH events AS (
+          SELECT "eventType", "userId"
+          FROM "MonetizationEvent"
+          WHERE "userId" IS NOT NULL
+            AND "createdAt" >= ${startDate}::date
+            AND "createdAt" < (${endDate}::date + interval '1 day')
+        )
+        SELECT
+          COUNT(DISTINCT "userId") FILTER (WHERE "eventType" IN ('premium_modal_view', 'pricing_page_view'))::integer AS upgrade_intent,
+          COUNT(DISTINCT "userId") FILTER (WHERE "eventType" = 'pricing_cta_click')::integer AS cta_users,
+          COUNT(DISTINCT "userId") FILTER (WHERE "eventType" = 'checkout_session_created')::integer AS checkout_users,
+          COUNT(DISTINCT "userId") FILTER (WHERE "eventType" = 'subscription_activated')::integer AS activated_users
+        FROM events
       `
     ]);
 
@@ -416,6 +593,13 @@ export async function GET(request: Request) {
       cardTypeConversionStatsRaw,
       monetizationFunnelStatsRaw,
       monetizationSourceStatsRaw,
+      overviewSummaryRaw,
+      businessTrendRaw,
+      subscriptionCurrentRaw,
+      subscriptionTrendRaw,
+      subscriptionStatusMixRaw,
+      subscriptionPlanMixRaw,
+      subscriptionFunnelRaw,
     ] = results;
 
     // 确保返回的是数组，使用更精确的错误消息
@@ -455,6 +639,26 @@ export async function GET(request: Request) {
       console.error("monetizationSourceStatsRaw is not an array:", monetizationSourceStatsRaw);
       throw new Error('monetizationSourceStats query did not return an array');
     }
+    for (const [name, value] of [
+      ['overviewSummary', overviewSummaryRaw],
+      ['businessTrend', businessTrendRaw],
+      ['subscriptionCurrent', subscriptionCurrentRaw],
+      ['subscriptionTrend', subscriptionTrendRaw],
+      ['subscriptionStatusMix', subscriptionStatusMixRaw],
+      ['subscriptionPlanMix', subscriptionPlanMixRaw],
+      ['subscriptionFunnel', subscriptionFunnelRaw],
+    ] as const) {
+      if (!Array.isArray(value)) {
+        throw new Error(`${name} query did not return an array`);
+      }
+    }
+    const overviewSummaryRows = overviewSummaryRaw as Record<string, unknown>[];
+    const businessTrendRows = businessTrendRaw as Record<string, unknown>[];
+    const subscriptionCurrentRows = subscriptionCurrentRaw as Record<string, unknown>[];
+    const subscriptionTrendRows = subscriptionTrendRaw as Record<string, unknown>[];
+    const subscriptionStatusMixRows = subscriptionStatusMixRaw as Record<string, unknown>[];
+    const subscriptionPlanMixRows = subscriptionPlanMixRaw as Record<string, unknown>[];
+    const subscriptionFunnelRows = subscriptionFunnelRaw as Record<string, unknown>[];
 
     // Process and format data (handle potential nulls and convert numeric types)
     const processedUserActionStats = userActionStatsRaw.map(stat => ({
@@ -559,6 +763,111 @@ export async function GET(request: Request) {
       stripe_sessions: Number(stat.stripe_sessions) || 0,
     }));
 
+    const numberValue = (value: unknown) => Number(value) || 0;
+    const overviewRow = overviewSummaryRows[0] || {};
+    const subscriptionCurrentRow = subscriptionCurrentRows[0] || {};
+    const funnelRow = subscriptionFunnelRows[0] || {};
+    const completedGenerations = numberValue(overviewRow.completed_generations);
+    const failedGenerations = numberValue(overviewRow.failed_generations);
+    const previousCompletedGenerations = numberValue(overviewRow.previous_completed_generations);
+    const previousFailedGenerations = numberValue(overviewRow.previous_failed_generations);
+    const successRate = calculateRate(
+      completedGenerations,
+      completedGenerations + failedGenerations
+    );
+    const previousSuccessRate = calculateRate(
+      previousCompletedGenerations,
+      previousCompletedGenerations + previousFailedGenerations
+    );
+
+    const processedBusinessTrend = businessTrendRows.map(stat => ({
+      dt: String(stat.dt),
+      new_users: numberValue(stat.new_users),
+      active_creators: numberValue(stat.active_creators),
+      total_generations: numberValue(stat.total_generations),
+      completed_generations: numberValue(stat.completed_generations),
+      failed_generations: numberValue(stat.failed_generations),
+    }));
+    const processedSubscriptionTrend = subscriptionTrendRows.map(stat => ({
+      dt: String(stat.dt),
+      new_subscriptions: numberValue(stat.new_subscriptions),
+      ended_subscriptions: numberValue(stat.ended_subscriptions),
+      net_growth: numberValue(stat.net_growth),
+      gross_revenue_cents: numberValue(stat.gross_revenue_cents),
+    }));
+    const processedSubscriptionStatusMix = subscriptionStatusMixRows.map(stat => ({
+      status: String(stat.status || 'unknown'),
+      count: numberValue(stat.count),
+    }));
+    const processedSubscriptionPlanMix = subscriptionPlanMixRows.map(stat => ({
+      billing_period: String(stat.billing_period || 'UNKNOWN'),
+      unit_amount: numberValue(stat.unit_amount),
+      currency: String(stat.currency || 'usd'),
+      count: numberValue(stat.count),
+    }));
+    const subscriptionValue = calculateSubscriptionValue(
+      processedSubscriptionPlanMix
+        .filter(stat => stat.billing_period === 'MONTHLY' || stat.billing_period === 'YEARLY')
+        .map(stat => ({
+          billingPeriod: stat.billing_period as 'MONTHLY' | 'YEARLY',
+          unitAmount: stat.unit_amount,
+          count: stat.count,
+        }))
+    );
+    const subscriptionFunnel = buildFunnelMetrics({
+      upgradeIntent: numberValue(funnelRow.upgrade_intent),
+      ctaUsers: numberValue(funnelRow.cta_users),
+      checkoutUsers: numberValue(funnelRow.checkout_users),
+      activatedUsers: numberValue(funnelRow.activated_users),
+    });
+    const grossRevenueCents = numberValue(subscriptionCurrentRow.gross_revenue_cents);
+    const previousGrossRevenueCents = numberValue(subscriptionCurrentRow.previous_gross_revenue_cents);
+
+    const overview = {
+      newUsers: {
+        value: numberValue(overviewRow.new_users),
+        previous: numberValue(overviewRow.previous_new_users),
+        changePct: calculateChange(
+          numberValue(overviewRow.new_users),
+          numberValue(overviewRow.previous_new_users)
+        ),
+      },
+      activeCreators: {
+        value: numberValue(overviewRow.active_creators),
+        previous: numberValue(overviewRow.previous_active_creators),
+        changePct: calculateChange(
+          numberValue(overviewRow.active_creators),
+          numberValue(overviewRow.previous_active_creators)
+        ),
+      },
+      totalGenerations: {
+        value: numberValue(overviewRow.total_generations),
+        previous: numberValue(overviewRow.previous_total_generations),
+        changePct: calculateChange(
+          numberValue(overviewRow.total_generations),
+          numberValue(overviewRow.previous_total_generations)
+        ),
+      },
+      successRate: {
+        value: successRate,
+        previous: previousSuccessRate,
+        changePct: successRate === null || previousSuccessRate === null
+          ? null
+          : calculateChange(successRate, previousSuccessRate),
+      },
+      failedGenerations: {
+        value: failedGenerations,
+        previous: previousFailedGenerations,
+        changePct: calculateChange(failedGenerations, previousFailedGenerations),
+      },
+      grossRevenueCents: {
+        value: grossRevenueCents,
+        previous: previousGrossRevenueCents,
+        changePct: calculateChange(grossRevenueCents, previousGrossRevenueCents),
+      },
+      staleGenerations: numberValue(overviewRow.stale_generations),
+    };
+
     // Ensure we have data in all arrays (even if the arrays are empty, they should exist)
     const responseData = {
       userActionStats: processedUserActionStats,
@@ -569,7 +878,36 @@ export async function GET(request: Request) {
       modelHealthStats: processedModelHealthStats,
       cardTypeConversionStats: processedCardTypeConversionStats,
       monetizationFunnelStats: processedMonetizationFunnelStats,
-      monetizationSourceStats: processedMonetizationSourceStats
+      monetizationSourceStats: processedMonetizationSourceStats,
+      meta: {
+        startDate: range.startDate,
+        endDate: range.endDate,
+        previousStartDate: range.previousStartDate,
+        previousEndDate: range.previousEndDate,
+        timezone: 'UTC',
+        generatedAt: new Date().toISOString(),
+        subscriptionLifecycleReliableFrom: SUBSCRIPTION_LIFECYCLE_RELIABLE_FROM,
+        subscriptionLifecyclePartial: isSubscriptionLifecyclePartial(range.startDate),
+      },
+      overview,
+      businessTrend: processedBusinessTrend,
+      subscriptions: {
+        current: {
+          liveSubscribers: numberValue(subscriptionCurrentRow.live_subscribers),
+          monthlySubscribers: numberValue(subscriptionCurrentRow.monthly_subscribers),
+          yearlySubscribers: numberValue(subscriptionCurrentRow.yearly_subscribers),
+          scheduledToCancel: numberValue(subscriptionCurrentRow.scheduled_to_cancel),
+          unmappedPremiumEntitlements: numberValue(subscriptionCurrentRow.unmapped_premium_entitlements),
+          mrrCents: subscriptionValue.mrrCents,
+          arrCents: subscriptionValue.arrCents,
+          grossRevenueCents,
+          currency: processedSubscriptionPlanMix[0]?.currency || 'usd',
+        },
+        trend: processedSubscriptionTrend,
+        statusMix: processedSubscriptionStatusMix,
+        planMix: processedSubscriptionPlanMix,
+        funnel: subscriptionFunnel,
+      },
     };
 
     console.log("Returning response with structure:", Object.keys(responseData));
@@ -579,6 +917,12 @@ export async function GET(request: Request) {
     return response;
   } catch (error) {
     console.error("Error fetching user stats:", error);
+    if (error instanceof StatsDateRangeError) {
+      return NextResponse.json(
+        { error: error.message, code: 'INVALID_DATE_RANGE' },
+        { status: 400 }
+      );
+    }
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Failed to fetch user stats' },
       { status: 500 }

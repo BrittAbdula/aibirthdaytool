@@ -17,12 +17,14 @@ interface PricingCheckoutButtonProps extends ButtonProps {
   plan: PremiumPlanKey
   source: string
   loadingLabel?: string
+  taskSize?: number
 }
 
 export function PricingCheckoutButton({
   plan,
   source,
   loadingLabel = "Opening checkout...",
+  taskSize,
   children,
   disabled,
   onClick,
@@ -37,17 +39,18 @@ export function PricingCheckoutButton({
 
     if (status === "loading") return
 
-    const returnUrl = `${window.location.pathname}${window.location.search}${window.location.hash}`
+    const returnUrl = window.location.pathname
 
     trackMonetizationEvent({
       eventType: "pricing_cta_click",
       plan,
       source,
       path: returnUrl,
+      metadata: taskSize ? { taskSize } : undefined,
     })
 
     if (!session) {
-      const pendingCheckout = buildPendingCheckout({ plan, source, returnUrl })
+      const pendingCheckout = buildPendingCheckout({ plan, source, returnUrl, taskSize })
       window.localStorage.setItem(PENDING_CHECKOUT_STORAGE_KEY, JSON.stringify(pendingCheckout))
       await signIn("google", { callbackUrl: returnUrl })
       return
@@ -59,7 +62,7 @@ export function PricingCheckoutButton({
       const response = await fetch("/api/create-checkout-session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ plan, returnUrl, source }),
+        body: JSON.stringify({ plan, returnUrl, source, taskSize }),
       })
       const data = await response.json()
 
@@ -84,10 +87,10 @@ export function PricingCheckoutButton({
 
   return (
     <Button {...props} disabled={disabled || isLoading || status === "loading"} onClick={handleClick}>
-      {isLoading ? (
+      {isLoading || status === "loading" ? (
         <>
           <Loader2 className="h-4 w-4 animate-spin" />
-          {loadingLabel}
+          {isLoading ? loadingLabel : "Getting checkout ready..."}
         </>
       ) : (
         children

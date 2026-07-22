@@ -12,11 +12,10 @@ import {
 import { Button } from "@/components/ui/button"
 import { PricingCheckoutButton } from "@/components/PricingCheckoutButton"
 import {
-  getYearlySavingsPercent,
   premiumFeatureRows,
   premiumHighlights,
   premiumModalCopy,
-  premiumPlanOrder,
+  premiumModalPlanOrder,
   premiumPlans,
   type PremiumModalContext,
   type PremiumPlanKey,
@@ -98,7 +97,7 @@ export function PremiumModal({
           <div className="p-6">
             <div className="flex items-center justify-between gap-4">
               <div>
-                <h3 className="text-2xl font-semibold text-[#202A3D]">Premium</h3>
+                <h3 className="text-2xl font-semibold text-[#202A3D]">Creator Pro</h3>
                 <p className="mt-1 text-sm text-[#6B7280]">Secure checkout through Stripe.</p>
               </div>
               <div className="rounded-full bg-[#FFF1F5] p-3 text-primary">
@@ -107,7 +106,7 @@ export function PremiumModal({
             </div>
 
             <div className="mt-6 grid gap-3">
-              {premiumPlanOrder.map((planKey) => {
+              {premiumModalPlanOrder.map((planKey) => {
                 const option = premiumPlans[planKey]
                 const isSelected = selectedPlan === option.key
 
@@ -165,7 +164,7 @@ export function PremiumModal({
 
             <div className="mt-4 flex items-center justify-center gap-2 text-sm text-[#6B7280]">
               <ShieldCheck className="h-4 w-4 text-primary" />
-              Cancel anytime. Yearly saves {getYearlySavingsPercent()}%.
+              $6.99 per month. Cancel anytime.
             </div>
 
             <Link
@@ -192,7 +191,7 @@ export function PremiumButton() {
         className="flex items-center gap-1 border-primary bg-primary text-white hover:bg-primary/90 hover:text-white"
       >
         <Crown className="h-4 w-4" />
-        <span>Premium</span>
+        <span>Creator Pro</span>
       </Button>
       <PremiumModal isOpen={isOpen} onOpenChange={setIsOpen} source="premium_button" />
     </>

@@ -1,42 +1,21 @@
-import { S3Client, PutObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
+import { getCloudflareContext } from '@opennextjs/cloudflare';
 
-interface R2ClientConfig {
-    accountId: string;
-    accessKeyId: string;
-    secretAccessKey: string;
-    bucketName: string;
+interface CardAssetsBucket {
+    put(
+        key: string,
+        value: string | Uint8Array,
+        options?: { httpMetadata?: { contentType?: string } }
+    ): Promise<unknown>;
+    delete(key: string): Promise<void>;
 }
 
-let cachedR2Client: S3Client | null = null;
-
-function getR2Config(): R2ClientConfig {
-    const accountId = process.env.R2_ACCOUNT_ID;
-    const accessKeyId = process.env.R2_ACCESS_KEY_ID;
-    const secretAccessKey = process.env.R2_SECRET_ACCESS_KEY;
-    const bucketName = process.env.R2_BUCKET_NAME;
-
-    if (!accountId || !accessKeyId || !secretAccessKey || !bucketName) {
-        throw new Error('Missing required R2 configuration environment variables');
+function getAssetsBucket(): CardAssetsBucket {
+    const env = getCloudflareContext().env as unknown as { CARD_ASSETS_BUCKET?: CardAssetsBucket };
+    const bucket = env.CARD_ASSETS_BUCKET;
+    if (!bucket) {
+        throw new Error('CARD_ASSETS_BUCKET binding is not configured');
     }
-
-    return { accountId, accessKeyId, secretAccessKey, bucketName };
-}
-
-function getR2Client(): { client: S3Client; config: R2ClientConfig } {
-    const config = getR2Config();
-
-    if (!cachedR2Client) {
-        cachedR2Client = new S3Client({
-            region: 'auto',
-            endpoint: `https://${config.accountId}.r2.cloudflarestorage.com`,
-            credentials: {
-                accessKeyId: config.accessKeyId,
-                secretAccessKey: config.secretAccessKey,
-            },
-        });
-    }
-
-    return { client: cachedR2Client, config };
+    return bucket;
 }
 
 export type StorageDeletionProvider =
@@ -138,7 +117,7 @@ export function classifyStorageUrl(fileUrl: string | null | undefined): StorageD
 
 export async function uploadSvgToR2(svgContent: string, cardId: string, createdAt: Date): Promise<string> {
     try {
-        const { client, config } = getR2Client();
+        const bucket = getAssetsBucket();
         // 使用 UTC 时间来保持一致性
         const year = createdAt.getUTCFullYear()
         const month = String(createdAt.getUTCMonth() + 1).padStart(2, '0')
@@ -147,22 +126,13 @@ export async function uploadSvgToR2(svgContent: string, cardId: string, createdA
         // 构建存储路径：cards/年/月/日/cardId.svg
         const key = `cards/${year}/${month}/${day}/${cardId}.svg`
         
-        await client.send(
-            new PutObjectCommand({
-                Bucket: config.bucketName,
-                Key: key,
-                Body: svgContent,
-                ContentType: 'image/svg+xml',
-            })
-        );
+        await bucket.put(key, svgContent, {
+            httpMetadata: { contentType: 'image/svg+xml' },
+        });
 
         return `https://store.celeprime.com/${key}`;
     } catch (error) {
-        console.error('R2 upload error details:', {
-            error,
-            accountId: process.env.R2_ACCOUNT_ID,
-            bucketName: process.env.R2_BUCKET_NAME
-        });
+        console.error('R2 upload error details:', error);
         throw new Error(`Failed to upload to R2: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
 }
@@ -186,13 +156,8 @@ export async function deleteStoredObjectByUrl(fileUrl: string | null | undefined
     }
 
     try {
-        const { client, config } = getR2Client();
-        await client.send(
-            new DeleteObjectCommand({
-                Bucket: config.bucketName,
-                Key: target.key,
-            })
-        );
+        const bucket = getAssetsBucket();
+        await bucket.delete(target.key!);
         return {
             ...target,
             status: 'deleted',
@@ -210,7 +175,7 @@ export async function deleteStoredObjectByUrl(fileUrl: string | null | undefined
 
 export async function uploadImageToR2(imageBuffer: Buffer, taskId: string): Promise<string> {
   try {
-      const { client, config } = getR2Client();
+      const bucket = getAssetsBucket();
       const now = new Date();
       const year = now.getUTCFullYear();
       const month = String(now.getUTCMonth() + 1).padStart(2, '0');
@@ -218,14 +183,9 @@ export async function uploadImageToR2(imageBuffer: Buffer, taskId: string): Prom
       
       const key = `images/${year}/${month}/${day}/${taskId}.png`;
       
-      await client.send(
-          new PutObjectCommand({
-              Bucket: config.bucketName,
-              Key: key,
-              Body: imageBuffer,
-              ContentType: 'image/png',
-          })
-      );
+      await bucket.put(key, imageBuffer, {
+          httpMetadata: { contentType: 'image/png' },
+      });
 
       return `https://store.celeprime.com/${key}`;
   } catch (error) {
@@ -239,7 +199,7 @@ export async function uploadImageToR2(imageBuffer: Buffer, taskId: string): Prom
 // upload video to r2
 export async function uploadVideoToR2(url: string, taskId: string): Promise<string> {
   try {
-    const { client, config } = getR2Client();
+    const bucket = getAssetsBucket();
     const now = new Date();
     const year = now.getUTCFullYear();
     const month = String(now.getUTCMonth() + 1).padStart(2, '0');
@@ -248,16 +208,14 @@ export async function uploadVideoToR2(url: string, taskId: string): Promise<stri
     const key = `videos/${year}/${month}/${day}/${taskId}.mp4`;
 
     const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`Video download failed: ${response.status}`);
+    }
     const videoBuffer = Buffer.from(await response.arrayBuffer());
 
-    await client.send(
-        new PutObjectCommand({
-            Bucket: config.bucketName,
-            Key: key,
-            Body: videoBuffer,
-            ContentType: 'video/mp4',
-        })
-    );
+    await bucket.put(key, videoBuffer, {
+        httpMetadata: { contentType: 'video/mp4' },
+    });
     
     return `https://store.celeprime.com/${key}`;
   } catch (error) {

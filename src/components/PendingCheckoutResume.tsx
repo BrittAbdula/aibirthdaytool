@@ -32,6 +32,7 @@ export function PendingCheckoutResume() {
         plan: pending.plan,
         returnUrl: pending.returnUrl || pathname,
         source: pending.source,
+        taskSize: pending.taskSize,
       }),
     })
       .then(async (response) => {

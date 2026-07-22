@@ -21,7 +21,27 @@ import { Label } from "@/components/ui/label"
 import { RecommendedCards } from '@/components/RecommendedCards'
 import { useSession } from 'next-auth/react'
 import { PremiumModal } from '@/components/PremiumModal'
-import { Crown, MessageCircle } from "lucide-react"
+import { Crown, MessageCircle, Sparkles } from "lucide-react"
+import {
+  getDefaultMomentConfig,
+  isMomentDefaultEnabled,
+  parseMomentConfig,
+  type MomentConfig,
+} from '@/lib/moment-config'
+
+const WHATSAPP_SHARE_TEXT: Record<string, string> = {
+  sorry: 'I made something for you. Please open it 🥺',
+  birthday: 'I made you a little surprise 🎁 Open it:',
+  love: 'Made this thinking of you 💌',
+  valentine: 'Made this thinking of you 💌',
+  anniversary: 'For us. Open it 💕',
+  thankyou: 'A little thank you, just for you 💛',
+}
+
+function getWhatsappShareText(cardType: string, link: string): string {
+  const intro = WHATSAPP_SHARE_TEXT[cardType] || 'I made this for you 💌'
+  return `${intro} ${link}`
+}
 
 const IsMobileWrapper = dynamic(() => import('@/components/IsMobileWrapper'), { ssr: false })
 
@@ -57,6 +77,11 @@ export default function EditCardClient({ params }: { params: { cardId: string, c
   const [message, setMessage] = useState('')
   const [requirements, setRequirements] = useState('')
   const [isPublic, setIsPublic] = useState(true)
+  // Interactive Moment layer (e.g. the "Forgive me?" game on sorry cards)
+  const [momentEnabled, setMomentEnabled] = useState(false)
+  const [momentConfig, setMomentConfig] = useState<MomentConfig | null>(null)
+  const [momentDirty, setMomentDirty] = useState(false)
+  const [isPersonalizingMoment, setIsPersonalizingMoment] = useState(false)
   const [isPremiumModalOpen, setIsPremiumModalOpen] = useState(false)
   const [showPremiumTooltip, setShowPremiumTooltip] = useState(false)
   const { data: session } = useSession()
@@ -91,6 +116,8 @@ export default function EditCardClient({ params }: { params: { cardId: string, c
             setOriginalCardId('1')
             setRelationship('')
             setMessage('')
+            setMomentConfig(getDefaultMomentConfig(cardType))
+            setMomentEnabled(isMomentDefaultEnabled(cardType))
             setEditableFields(extractEditableFields(content))
             updateImageSrc(content)
           } else {
@@ -122,6 +149,14 @@ export default function EditCardClient({ params }: { params: { cardId: string, c
           setMessage(data.message)
           setRequirements(data.requirements)
           setIsPublic(data.isPublic)
+          const savedMoment = parseMomentConfig(data.momentConfig)
+          if (savedMoment) {
+            setMomentConfig(savedMoment)
+            setMomentEnabled(true)
+          } else {
+            setMomentConfig(getDefaultMomentConfig(cardType))
+            setMomentEnabled(data.id ? false : isMomentDefaultEnabled(cardType))
+          }
           setEditableFields(extractEditableFields(content))
           if (content) {
             updateImageSrc(content)
@@ -294,7 +329,7 @@ export default function EditCardClient({ params }: { params: { cardId: string, c
   const handleSend = async () => {
     setIsSending(true)
     try {
-      if (svgContent === originalContent && editedCardId && !customUrl) {
+      if (svgContent === originalContent && editedCardId && !customUrl && !momentDirty) {
         const shareUrl = editedCardId ?
           `${window.location.origin}/to/${customUrl || editedCardId}` :
           `${window.location.origin}/`
@@ -322,26 +357,34 @@ export default function EditCardClient({ params }: { params: { cardId: string, c
           message: message,
           requirements: requirements,
           isPublic: isPublic,
+          momentConfig: momentEnabled && momentConfig ? momentConfig : null,
         }),
       })
 
-      if (response.ok) {
-        const { id, customUrl: responseCustomUrl } = await response.json()
-        setEditedCardId(id)
-        const shareUrl = `${window.location.origin}/to/${responseCustomUrl || id}`
-        setShareLink(shareUrl)
-        setOriginalContent(svgContent)
-        setIsModalOpen(true)
-        await recordUserAction(cardId, 'send')
-
-        toast({
-          description: responseCustomUrl ?
-            `Card created with custom URL: ${responseCustomUrl}` :
-            "Card created successfully",
-        })
-      } else {
-        throw new Error('Failed to save edited card')
+      if (!response.ok) {
+        const errorPayload = await response.json().catch(() => null)
+        throw new Error(errorPayload?.error || 'Failed to save edited card')
       }
+
+      const { id, customUrl: responseCustomUrl } = await response.json()
+      setEditedCardId(id)
+      const shareUrl = `${window.location.origin}/to/${responseCustomUrl || id}`
+      setShareLink(shareUrl)
+      setOriginalContent(svgContent)
+      setMomentDirty(false)
+      setIsModalOpen(true)
+
+      toast({
+        description: responseCustomUrl ?
+          `Card created with custom URL: ${responseCustomUrl}` :
+          "Card created successfully",
+      })
+
+      // Analytics is best-effort and must not turn a successful save into a
+      // failed send. UserAction references the original ApiLog card ID.
+      void recordUserAction(originalCardId || cardId, 'send').catch((error) => {
+        console.error('Failed to record send action:', error)
+      })
     } catch (error) {
       console.error('Error sending card:', error)
       toast({
@@ -373,10 +416,56 @@ export default function EditCardClient({ params }: { params: { cardId: string, c
         url = `mailto:?body=${encodeURIComponent(shareLink)}`
         break
       case 'whatsapp':
-        url = `https://wa.me/?text=${encodeURIComponent(shareLink)}`
+        url = `https://wa.me/?text=${encodeURIComponent(getWhatsappShareText(cardType, shareLink))}`
         break
     }
     window.open(url, '_blank')
+  }
+
+  const updateMomentField = (patch: Partial<MomentConfig>) => {
+    setMomentConfig((current) => (current ? { ...current, ...patch } : current))
+    setMomentDirty(true)
+  }
+
+  const handleMomentToggle = (checked: boolean) => {
+    setMomentEnabled(checked)
+    setMomentDirty(true)
+    if (checked && !momentConfig) {
+      setMomentConfig(getDefaultMomentConfig(cardType))
+    }
+  }
+
+  const handlePersonalizeMoment = async () => {
+    setIsPersonalizingMoment(true)
+    try {
+      const response = await fetch('/api/personalize-moment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          cardType,
+          recipientName,
+          message,
+          context: requirements,
+        }),
+      })
+      if (!response.ok) throw new Error('Personalization failed')
+      const data = await response.json()
+      const personalized = parseMomentConfig(data.momentConfig)
+      if (personalized) {
+        setMomentConfig(personalized)
+        setMomentDirty(true)
+        toast({
+          description: data.personalized
+            ? 'Moment personalized from your words ✨'
+            : 'Add a personal message first so we have something to work with',
+        })
+      }
+    } catch (error) {
+      console.error('Failed to personalize moment:', error)
+      toast({ variant: 'destructive', description: 'Could not personalize right now. Your current text is kept.' })
+    } finally {
+      setIsPersonalizingMoment(false)
+    }
   }
 
   const handlePublicToggle = (checked: boolean) => {
@@ -526,7 +615,7 @@ export default function EditCardClient({ params }: { params: { cardId: string, c
               </IsMobileWrapper>
               <Button
                 onClick={handleSend}
-                disabled={isSending}
+                disabled={isSending || isLoading || !originalCardId}
                 className={cn(
                   "flex-1 text-white shadow-md hover:shadow-lg transition-all duration-300",
                   isSending
@@ -637,6 +726,80 @@ export default function EditCardClient({ params }: { params: { cardId: string, c
                   }}
                 />
               )}
+
+              {/* Interactive Moment Section */}
+              {getDefaultMomentConfig(cardType) && (
+                <div className="mt-6 pt-4 border-t border-pink-100">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="space-y-1">
+                      <label className="text-sm font-medium">
+                        {momentConfig?.type === 'forgive-me' ? 'The "Forgive me?" game' : 'The "Will you?" game'}
+                        <span className="ml-2 text-xs text-pink-500 font-normal">Free</span>
+                      </label>
+                      <p className="text-xs text-muted-foreground">
+                        After your message, they get a question — and a &quot;no&quot; button that playfully runs away
+                      </p>
+                    </div>
+                    <Switch
+                      checked={momentEnabled}
+                      onCheckedChange={handleMomentToggle}
+                      className="data-[state=checked]:bg-pink-400"
+                    />
+                  </div>
+
+                  {momentEnabled && momentConfig && (
+                    <div className="mt-3 space-y-3">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={handlePersonalizeMoment}
+                        disabled={isPersonalizingMoment}
+                        className="w-full border-pink-200 text-pink-600 hover:bg-pink-50"
+                      >
+                        <Sparkles className={cn('mr-2 h-4 w-4', isPersonalizingMoment && 'animate-spin')} />
+                        {isPersonalizingMoment ? 'Writing from your words...' : 'Personalize from my message ✨'}
+                      </Button>
+                      <div>
+                        <Label className="text-xs text-muted-foreground">The question</Label>
+                        <Input
+                          value={momentConfig.askText}
+                          maxLength={120}
+                          onChange={(e) => updateMomentField({ askText: e.target.value })}
+                          className="mt-1 bg-white/50 border-2 border-pink-100 rounded-xl"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-xs text-muted-foreground">
+                          Lines the &quot;no&quot; button says as it dodges (one per line)
+                        </Label>
+                        <Textarea
+                          value={momentConfig.dodgePhrases.join('\n')}
+                          rows={4}
+                          onChange={(e) =>
+                            updateMomentField({
+                              dodgePhrases: e.target.value
+                                .split('\n')
+                                .map((line) => line.trim().slice(0, 120))
+                                .filter(Boolean)
+                                .slice(0, 8),
+                            })
+                          }
+                          className="mt-1 bg-white/50 border-2 border-pink-100 rounded-xl"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-xs text-muted-foreground">After they say yes</Label>
+                        <Input
+                          value={momentConfig.resolutionText}
+                          maxLength={160}
+                          onChange={(e) => updateMomentField({ resolutionText: e.target.value })}
+                          className="mt-1 bg-white/50 border-2 border-pink-100 rounded-xl"
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Action Buttons (Mobile only) */}
@@ -661,7 +824,7 @@ export default function EditCardClient({ params }: { params: { cardId: string, c
               </IsMobileWrapper>
               <Button
                 onClick={handleSend}
-                disabled={isSending}
+                disabled={isSending || isLoading || !originalCardId}
                 className={cn(
                   "flex-1 text-white shadow-md hover:shadow-lg transition-all duration-300",
                   isSending
@@ -699,7 +862,15 @@ export default function EditCardClient({ params }: { params: { cardId: string, c
               <div className="rounded-lg border border-[#D9CEC0] bg-[#F8F4EC] p-3">
                 <code className="text-sm font-mono break-all text-[#172326]">{shareLink}</code>
               </div>
-              <div className="mt-5 grid gap-3 sm:grid-cols-2">
+              {/* WhatsApp first — it's how this audience actually sends cards */}
+              <Button
+                onClick={() => handleShare('whatsapp')}
+                className="mt-5 w-full bg-[#25D366] text-white hover:bg-[#1ebe5b] text-base py-6 shadow-md"
+              >
+                <MessageCircle className="mr-2 h-5 w-5" />
+                Send on WhatsApp 💌
+              </Button>
+              <div className="mt-3 grid gap-3 sm:grid-cols-2">
                 <Button
                   onClick={handleCopyLink}
                   className="bg-primary text-white hover:bg-primary/90"
@@ -718,13 +889,6 @@ export default function EditCardClient({ params }: { params: { cardId: string, c
                     </Button>
                   )}
                 </IsMobileWrapper>
-                <Button
-                  onClick={() => handleShare('whatsapp')}
-                  className="border border-[#D9CEC0] bg-white text-[#172326] hover:bg-[#F8F4EC]"
-                >
-                  <MessageCircle className="mr-2 h-4 w-4" />
-                  WhatsApp
-                </Button>
                 <Button
                   onClick={() => handleShare('email')}
                   className="border border-[#D9CEC0] bg-white text-[#172326] hover:bg-[#F8F4EC]"

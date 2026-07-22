@@ -24,6 +24,12 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { Switch } from "@/components/ui/switch"
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover"
 import { getSeoCardTypeLabel } from '@/lib/seo'
+import {
+  PENDING_CARD_GENERATION_STORAGE_KEY,
+  buildPendingCardGeneration,
+  parsePendingCardGeneration,
+} from '@/lib/pending-card-generation'
+import { RepeatCreatorNudge } from '@/components/creator/RepeatCreatorNudge'
 
 const MagicalCardCreation = () => {
   const [loadingText, setLoadingText] = useState("Weaving your magical words...");
@@ -212,7 +218,6 @@ export default function CardGenerator({
   cardConfig: CardConfig
   headingLevel?: 'h1' | 'h2'
 }) {
-  const AUTH_DRAFT_KEY = 'mewtrucard.authDraft.v1'
   const { data: session, status } = useSession()
   const searchParams = useSearchParams()
   const searchParamString = searchParams.toString()
@@ -239,9 +244,7 @@ export default function CardGenerator({
   const [isPremiumUser, setIsPremiumUser] = useState(false)
   const [isPrivateCard, setIsPrivateCard] = useState(false)
   const [errorToast, setErrorToast] = useState<{title: string; message: string; type: 'error' | 'warning' | 'info'} | null>(null);
-  const pendingAuthRef = useRef<boolean>(false)
-  const generateAfterAuthRef = useRef<(() => void) | null>(null)
-  const [savedFormData, setSavedFormData] = useState<any | null>(null)
+  const hasResumedPendingGenerationRef = useRef(false)
   const [showAdvancedOptions, setShowAdvancedOptions] = useState(false)
   const [showMobilePreview, setShowMobilePreview] = useState(false)
   const [showMobileActionBar, setShowMobileActionBar] = useState(true)
@@ -319,20 +322,6 @@ export default function CardGenerator({
     const defaultImgUrl = cardConfig.isSystem ? `https://store.celeprime.com/${wishCardType}.svg` : sampleCard;
     initializeImageStates(imageCount, defaultImgUrl);
   }, [wishCardType, cardConfig, sampleCard, imageCount, initializeImageStates, prefilledValues]);
-
-  useEffect(() => {
-    if (pendingAuthRef.current && session && savedFormData) {
-      pendingAuthRef.current = false;
-      setFormData(savedFormData.formData);
-      setCustomValues(savedFormData.customValues);
-      setSelectedSize(savedFormData.selectedSize);
-      if (savedFormData.selectedModel) setSelectedModel(savedFormData.selectedModel);
-      setIsPrivateCard(savedFormData.isPrivate ?? false);
-      setShowAuthDialog(false);
-      const timeout = window.setTimeout(() => generateAfterAuthRef.current?.(), 500);
-      return () => window.clearTimeout(timeout);
-    }
-  }, [session, savedFormData, setShowAuthDialog]);
 
   useEffect(() => {
     if (session?.user) setIsPremiumUser((session as any).user?.plan === 'PREMIUM');
@@ -438,10 +427,59 @@ export default function CardGenerator({
       });
   };
 
+  const runGeneration = React.useCallback(async (options: Parameters<typeof generateCards>[0]) => {
+    try {
+      const result = await generateCards(options);
+      if (result.success) setSubmited(true);
+      else if (result.error === 'rate_limit') {
+        setShowLimitDialog(false);
+        setPremiumModalContext('limit');
+        setIsPremiumModalOpen(true);
+        setErrorToast({
+          title: 'Daily limit reached',
+          message: 'Creator Pro keeps today moving and organizes the next occasion too.',
+          type: 'warning'
+        });
+      }
+      else if (result.error === 'premium_required') {
+        setPremiumModalContext('video');
+        setIsPremiumModalOpen(true);
+      }
+      else setErrorToast({ title: 'Generation Failed', message: result.error || 'Error generating card', type: 'error' });
+    } catch {
+      setErrorToast({ title: 'System Error', message: 'Something went wrong', type: 'error' });
+    }
+  }, [generateCards, setShowLimitDialog]);
+
   const handleGenerateCard = React.useCallback(async () => {
     if (!session) {
-      setSavedFormData({ formData: { ...formData }, customValues: { ...customValues }, selectedSize, selectedModel, isPrivate: isPrivateCard });
-      pendingAuthRef.current = true;
+      const pendingGeneration = buildPendingCardGeneration({
+        generatorCardType: wishCardType,
+        cardType: currentCardType,
+        formData: { ...formData },
+        customValues: { ...customValues },
+        selectedSize,
+        selectedModelId: selectedModel.id,
+        selectedFormat,
+        selectedStyleId,
+        selectedTier,
+        uploadedRefUrls: [...uploadedRefUrls],
+        isPrivateCard,
+        currentStep,
+      });
+      try {
+        window.localStorage.setItem(
+          PENDING_CARD_GENERATION_STORAGE_KEY,
+          JSON.stringify(pendingGeneration)
+        );
+      } catch {
+        setErrorToast({
+          title: 'Could not save your draft',
+          message: 'Please enable browser storage before signing in.',
+          type: 'error'
+        });
+        return;
+      }
       setIsPremiumUser(false);
       setShowAuthDialog(true);
       return;
@@ -464,49 +502,86 @@ export default function CardGenerator({
       outputFormat: selectedFormat
     };
 
-    try {
-      const result = await generateCards(options);
-      if (result.success) setSubmited(true);
-      else if (result.error === 'rate_limit') {
-        setShowLimitDialog(false);
-        setPremiumModalContext('limit');
-        setIsPremiumModalOpen(true);
-        setErrorToast({
-          title: 'Daily limit reached',
-          message: 'Upgrade to Premium to keep creating today.',
-          type: 'warning'
-        });
-      }
-      else if (result.error === 'premium_required') {
-        setPremiumModalContext('video');
-        setIsPremiumModalOpen(true);
-      }
-      else setErrorToast({ title: 'Generation Failed', message: result.error || 'Error generating card', type: 'error' });
-    } catch (err) {
-      setErrorToast({ title: 'System Error', message: 'Something went wrong', type: 'error' });
-    }
+    await runGeneration(options);
   }, [
+    currentStep,
     currentCardType,
     customValues,
     formData,
-    generateCards,
     isPrivateCard,
     isPremiumUser,
+    runGeneration,
     selectedFormat,
     selectedModel,
     selectedSize,
     selectedStyleId,
+    selectedTier,
     session,
     setShowAuthDialog,
-    setShowLimitDialog,
     uploadedRefUrls,
+    wishCardType,
   ]);
 
   useEffect(() => {
-    generateAfterAuthRef.current = () => {
-      void handleGenerateCard()
+    if (status !== 'authenticated' || !session || hasResumedPendingGenerationRef.current) return
+
+    const rawPendingGeneration = window.localStorage.getItem(PENDING_CARD_GENERATION_STORAGE_KEY)
+    const pendingGeneration = parsePendingCardGeneration(rawPendingGeneration)
+    if (!pendingGeneration) {
+      if (rawPendingGeneration) {
+        window.localStorage.removeItem(PENDING_CARD_GENERATION_STORAGE_KEY)
+      }
+      return
     }
-  }, [handleGenerateCard])
+    if (pendingGeneration.generatorCardType !== wishCardType) return
+
+    const pendingModel = modelConfigs.find(model => model.id === pendingGeneration.selectedModelId)
+    if (!pendingModel) {
+      window.localStorage.removeItem(PENDING_CARD_GENERATION_STORAGE_KEY)
+      return
+    }
+
+    hasResumedPendingGenerationRef.current = true
+    window.localStorage.removeItem(PENDING_CARD_GENERATION_STORAGE_KEY)
+    setCurrentCardType(pendingGeneration.cardType as CardType)
+    setFormData(pendingGeneration.formData)
+    setCustomValues(pendingGeneration.customValues)
+    setSelectedSize(pendingGeneration.selectedSize)
+    setSelectedModel(pendingModel)
+    setSelectedFormat(pendingGeneration.selectedFormat)
+    setSelectedStyleId(pendingGeneration.selectedStyleId)
+    setSelectedTier(pendingGeneration.selectedTier)
+    setUploadedRefUrls(pendingGeneration.uploadedRefUrls)
+    setIsPrivateCard(pendingGeneration.isPrivateCard)
+    setCurrentStep(pendingGeneration.currentStep)
+    setShowAuthDialog(false)
+
+    const userIsPremium = (session as any).user?.plan === 'PREMIUM'
+    setIsPremiumUser(userIsPremium)
+    if (pendingGeneration.selectedFormat === 'video' && !userIsPremium) {
+      setPremiumModalContext('video')
+      setIsPremiumModalOpen(true)
+      return
+    }
+
+    void runGeneration({
+      cardType: pendingGeneration.cardType,
+      size: pendingGeneration.selectedSize,
+      modelId: pendingGeneration.selectedModelId,
+      formData: {
+        ...pendingGeneration.formData,
+        isPublic: !pendingGeneration.isPrivateCard,
+      },
+      imageCount: 1,
+      referenceImageUrls: pendingGeneration.selectedFormat === 'image'
+        ? pendingGeneration.uploadedRefUrls
+        : [],
+      styleId: pendingGeneration.selectedFormat === 'image'
+        ? (pendingGeneration.selectedStyleId || undefined)
+        : undefined,
+      outputFormat: pendingGeneration.selectedFormat,
+    })
+  }, [runGeneration, session, setShowAuthDialog, status, wishCardType])
 
   const handleLogin = async () => {
     try {
@@ -998,6 +1073,9 @@ export default function CardGenerator({
   return (
     <>
       <div ref={generatorRootRef} className="bg-transparent pb-28 lg:pb-24">
+        <div className="mx-auto max-w-6xl">
+          <RepeatCreatorNudge />
+        </div>
         <div className="mx-auto max-w-6xl overflow-hidden rounded-xl border border-[#F1D6DF] bg-white shadow-xl">
           <div className="grid lg:grid-cols-[minmax(0,1.02fr)_minmax(340px,0.98fr)]">
             <section className="p-5 sm:p-6 lg:p-8">
@@ -1190,7 +1268,7 @@ export default function CardGenerator({
           <DialogHeader>
             <DialogTitle>Daily limit reached</DialogTitle>
             <DialogDescription>
-              Premium removes the daily credit ceiling so you can finish this card now.
+              Creator Pro removes the daily credit ceiling and adds a reusable team workflow.
             </DialogDescription>
           </DialogHeader>
           <Button

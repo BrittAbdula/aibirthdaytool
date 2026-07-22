@@ -27,7 +27,11 @@ const root = process.cwd();
 const routeSource = readFileSync(join(root, 'src/app/api/card-status/route.ts'), 'utf8');
 const terminalReturnIndex = routeSource.indexOf('isTerminalCardStatus(card.status)');
 const firstProviderStatusIndex = routeSource.indexOf('await requestGptImage2Status');
+const authCheckIndex = routeSource.indexOf('const session = await auth()');
+const ownershipCheckIndex = routeSource.indexOf('card.userId !== session.user.id');
 
+assert.notEqual(authCheckIndex, -1, 'card-status route should require authentication');
+assert.notEqual(ownershipCheckIndex, -1, 'card-status route should verify card ownership');
 assert.notEqual(terminalReturnIndex, -1, 'card-status route should check terminal DB status');
 assert.notEqual(firstProviderStatusIndex, -1, 'card-status route should still contain provider status handling');
 assert.ok(

@@ -32,6 +32,8 @@ export interface GeneratorSeoInput {
 const CURATED_GENERATOR_SITEMAP_SLUGS = [
   "happy-birthday",
   "friendship-card",
+  "sorry-link",
+  "sorry-card-for-gf",
 ] as const;
 
 const generatorSeoOverrides: Record<string, Partial<GeneratorSeoConfig>> = {
@@ -97,6 +99,11 @@ const generatorSeoOverrides: Record<string, Partial<GeneratorSeoConfig>> = {
     seoIntro:
       "Use this apology card maker when a plain text message does not feel thoughtful enough. Write a specific apology, make it personal, and share a sorry card or apology link.",
     seoLinks: [
+      {
+        href: "/sorry-link/",
+        label: "Send a sorry link",
+        description: "An interactive apology they open on their phone — card, message, and a Forgive me? question.",
+      },
       {
         href: "/forgive-me/",
         label: "Forgive me apology link",
@@ -215,6 +222,125 @@ const generatorSeoOverrides: Record<string, Partial<GeneratorSeoConfig>> = {
     seoH1: "Friendship Card Maker",
     seoIntro:
       "This curated friendship card page is for users who want a warm card for a friend without starting from a broad greeting card page.",
+  },
+  love: {
+    seoTitle: "Love Card for Girlfriend or Boyfriend | Animated, Free, Send as a Link - MewTruCard",
+    seoDescription:
+      "Make an animated love card with their name and your message, free. Send it as a link they open on their phone — with music and a surprise reveal.",
+    primaryIntent: "love card for girlfriend",
+    seoH1: "Make a Love Card They Open as a Link",
+    seoIntro:
+      "Write what you feel, add their name, and turn it into an animated love card. Share it as a link on WhatsApp — they tap, the envelope opens, your words appear.",
+    seoLinks: [
+      {
+        href: "/will-you-be-my-valentine/",
+        label: "Will you be mine?",
+        description: "Send an interactive ask before the card.",
+      },
+      {
+        href: "/type/love/for/girlfriend/",
+        label: "Love cards for girlfriend",
+        description: "Browse romantic examples for a girlfriend.",
+      },
+      {
+        href: "/type/love/for/boyfriend/",
+        label: "Love cards for boyfriend",
+        description: "Find love card ideas for a boyfriend.",
+      },
+      {
+        href: "/type/love/",
+        label: "Love card ideas",
+        description: "Compare public love card examples before creating.",
+      },
+    ],
+  },
+  "sorry-link": {
+    seoTitle: "Sorry Link — Send an Interactive Apology They Open on Their Phone | MewTruCard",
+    seoDescription:
+      "Make a sorry link for your girlfriend, boyfriend, or friend: an animated apology card with your message, music, and a Forgive me? question. Free, share on WhatsApp.",
+    primaryIntent: "sorry link",
+    indexPolicy: "index",
+    curatedCanonical: "/sorry-link/",
+    seoH1: "Send a Sorry Link — an Apology They Open on Their Phone",
+    seoIntro:
+      "A sorry link is more than a card. They tap your link, an envelope opens, your apology appears word by word — then a Forgive me? question with a no button that playfully runs away. Write what happened, and we turn it into a moment.",
+    seoLinks: [
+      {
+        href: "/sorry/",
+        label: "Sorry card maker",
+        description: "Start with the full apology card maker.",
+      },
+      {
+        href: "/forgive-me/",
+        label: "Forgive me page",
+        description: "Try the interactive apology experience first.",
+      },
+      {
+        href: "/type/sorry/for/girlfriend/",
+        label: "Sorry ideas for girlfriend",
+        description: "Browse apology examples for a girlfriend.",
+      },
+      {
+        href: "/type/sorry/for/boyfriend/",
+        label: "Sorry ideas for boyfriend",
+        description: "Browse apology examples for a boyfriend.",
+      },
+    ],
+    seoFaqs: [
+      {
+        question: "What is a sorry link?",
+        answer:
+          "A sorry link is a personal apology page you send instead of a plain text. The person you hurt opens the link, an animated card reveals itself, your message types out, and a Forgive me? question lets them answer — playfully.",
+      },
+      {
+        question: "Can I send the sorry link on WhatsApp?",
+        answer:
+          "Yes. After creating your apology, tap Send on WhatsApp and the link goes out with a preview image. It works in any chat app or text message.",
+      },
+      {
+        question: "Is the sorry link free?",
+        answer:
+          "Yes. Creating an animated sorry card, adding your message, and sharing the link — including the Forgive me? game — is free.",
+      },
+      {
+        question: "Can I make a sorry link for my girlfriend or boyfriend?",
+        answer:
+          "Yes. Tell us what happened and who it is for, and the card, message, and Forgive me? moment are personalized to them.",
+      },
+      {
+        question: "Will I know if they forgive me?",
+        answer:
+          "Yes. When they answer the Forgive me? question, the answer is saved with your card so you can see it in My Cards.",
+      },
+    ],
+  },
+  "sorry-card-for-gf": {
+    seoTitle: "Sorry Card for GF — Animated Apology Card with Her Name | MewTruCard",
+    seoDescription:
+      "Make a sorry card for your gf with her name and your own words. She opens it as a link: animated card, your apology, and a Forgive me? question. Free.",
+    primaryIntent: "sorry card for gf",
+    indexPolicy: "index",
+    curatedCanonical: "/sorry-card-for-gf/",
+    seoH1: "Sorry Card for Your GF She Opens as a Link",
+    seoIntro:
+      "When a text is not enough: write what happened in your own words, add her name, and send her a link. She taps it, the envelope opens, your apology appears — then she gets to answer Forgive me?",
+    seoLinks: [
+      {
+        href: "/sorry-link/",
+        label: "What is a sorry link?",
+        description: "See how the interactive apology works.",
+      },
+      {
+        href: "/sorry/",
+        label: "Sorry card maker",
+        description: "Start with the full apology card maker.",
+      },
+      {
+        href: "/type/sorry/for/girlfriend/",
+        label: "Sorry ideas for girlfriend",
+        description: "Browse apology examples for a girlfriend.",
+      },
+    ],
   },
   "will-you-be-my-valentine-manghud": {
     primaryIntent: "will you be my valentine interactive page",

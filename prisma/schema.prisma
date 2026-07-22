@@ -1,5 +1,6 @@
 generator client {
   provider = "prisma-client-js"
+  engineType = "client"
 }
 
 datasource db {
@@ -39,6 +40,7 @@ model ApiLog {
   user            User?        @relation(fields: [userId], references: [id])
   userActions     UserAction[]
   editedCards     EditedCard[] @relation("OriginalCard")
+  creatorBatchItems CreatorBatchItem[]
 }
 model Template {
   id             String   @id @default(cuid())
@@ -83,6 +85,8 @@ model EditedCard {
   customUrl      String?
   message        String?
   requirements   String?
+  momentConfig   Json?    // interactive Moment: { type, askText, yesLabel, noLabel, dodgePhrases[], resolutionText }
+  momentResponse Json?    // recipient's answer: { answer, attempts, answeredAt }
   isPublic       Boolean  @default(false)
   deleted        Boolean  @default(false)
   createdAt      DateTime @default(now())
@@ -159,6 +163,7 @@ model User {
   email         String?        @unique
   emailVerified DateTime?
   image         String?
+  referredByCardId String?     // EditedCard.id of the shared card that brought this user in
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
   accounts      Account[]
@@ -173,6 +178,76 @@ model User {
   bonusCredits  BonusCredit[]
   stripeLogs    StripeLog[]
   monetizationEvents MonetizationEvent[]
+  creatorRecipients CreatorRecipient[]
+  creatorBrandPreset CreatorBrandPreset?
+  creatorBatches CreatorBatch[]
+}
+
+model CreatorRecipient {
+  id             String   @id @default(cuid())
+  userId         String
+  name           String
+  occasionType   String
+  occasionDate   DateTime @db.Date
+  notes          String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  batchItems     CreatorBatchItem[]
+
+  @@unique([userId, name, occasionType, occasionDate])
+  @@index([userId, occasionDate])
+}
+
+model CreatorBrandPreset {
+  id               String   @id @default(cuid())
+  userId           String   @unique
+  organizationName String
+  primaryColor     String   @default("#B4375F")
+  tone             String   @default("warm-professional")
+  logoUrl          String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  batches          CreatorBatch[]
+}
+
+model CreatorBatch {
+  id            String   @id @default(cuid())
+  userId        String
+  brandPresetId String?
+  title         String
+  status        String   @default("draft")
+  isPreview     Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  brandPreset   CreatorBrandPreset? @relation(fields: [brandPresetId], references: [id], onDelete: SetNull)
+  items         CreatorBatchItem[]
+
+  @@index([userId, createdAt])
+  @@index([userId, isPreview])
+}
+
+model CreatorBatchItem {
+  id             String   @id @default(cuid())
+  batchId        String
+  recipientId    String?
+  recipientName  String
+  occasionType   String
+  occasionDate   DateTime @db.Date
+  cardId         String?
+  status         String   @default("pending")
+  errorMessage   String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  batch          CreatorBatch @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  recipient      CreatorRecipient? @relation(fields: [recipientId], references: [id], onDelete: SetNull)
+  card           ApiLog? @relation(fields: [cardId], references: [cardId], onDelete: SetNull)
+
+  @@unique([batchId, recipientId])
+  @@index([batchId, status])
+  @@index([cardId])
 }
 
 model ApiUsage {
@@ -194,6 +269,12 @@ model Subscription {
   userId        String       @unique
   plan          PlanType     @default(FREE)
   billingPeriod BillingPeriod?
+  stripeSubscriptionId String? @unique
+  stripeCustomerId String?
+  stripePriceId String?
+  stripeUnitAmount Int?
+  stripeCurrency String?
+  stripeLivemode Boolean?
   startDate     DateTime     @default(now())
   endDate       DateTime?
   status        String       @default("active")
@@ -204,6 +285,9 @@ model Subscription {
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @updatedAt
   user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([stripeLivemode, stripePriceId, status])
+  @@index([stripeCustomerId])
 }
 
 model BonusCredit {
@@ -268,6 +352,9 @@ model StripeLog {
   amount          Int?          // Amount in cents
   currency        String?       // Currency code
   status          String?       // Status of the payment/subscription
+  stripeSubscriptionId String?
+  stripePriceId   String?
+  stripeLivemode  Boolean?
   paymentMethod   String?       // Payment method used
   description     String?       // Description of the transaction
   metadata        Json?         // Additional metadata
@@ -279,6 +366,8 @@ model StripeLog {
   @@index([eventType])
   @@index([objectId])
   @@index([createdAt])
+  @@index([stripePriceId, eventType, createdAt])
+  @@index([stripeSubscriptionId, createdAt])
 }
 
 model MonetizationEvent {

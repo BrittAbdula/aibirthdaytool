@@ -55,6 +55,8 @@ interface SelectableImageViewerWithRecipientProps extends SelectableImageViewerP
   customUrl?: string | null;
   message?: string | null;
   showRecipient?: boolean;
+  opened?: boolean;
+  momentAnswered?: boolean;
 }
 
 function SelectableImageViewer({ 
@@ -81,9 +83,10 @@ function SelectableImageViewer({
   );
 }
 
-function SelectableImageViewerWithRecipient({ 
-  cardId, cardType, imgUrl, svgContent, alt, isNewCard, 
-  isSelected, onSelectedChange, recipientName, customUrl, message, showRecipient = false
+function SelectableImageViewerWithRecipient({
+  cardId, cardType, imgUrl, svgContent, alt, isNewCard,
+  isSelected, onSelectedChange, recipientName, customUrl, message, showRecipient = false,
+  opened = false, momentAnswered = false
 }: SelectableImageViewerWithRecipientProps) {
   const cardUrl = customUrl ? `/to/${customUrl}` : `/to/${cardId}`
 
@@ -122,6 +125,19 @@ function SelectableImageViewerWithRecipient({
             <p className="text-sm font-medium text-gray-800 truncate">
               {recipientName}
             </p>
+            {(opened || momentAnswered) && (
+              <div className="flex flex-wrap gap-1 pt-0.5">
+                {momentAnswered ? (
+                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-pink-50 text-pink-600 text-[11px] font-medium border border-pink-100">
+                    💖 They said yes
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-emerald-50 text-emerald-600 text-[11px] font-medium border border-emerald-100">
+                    💌 Opened
+                  </span>
+                )}
+              </div>
+            )}
             {message && (
               <div className="pt-1">
                 <p className="text-xs text-gray-500 italic leading-relaxed line-clamp-2">
@@ -410,6 +426,8 @@ export function MyCardsClient({ initialGeneratedCards, initialSentCards, initial
               customUrl={card.customUrl}
               message={card.message}
               showRecipient={true}
+              opened={card.opened}
+              momentAnswered={card.momentAnswered}
             />
           ))}
         </div>

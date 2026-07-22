@@ -12,6 +12,16 @@ export const MONETIZATION_EVENT_TYPES = [
   'checkout_cancelled',
   'checkout_success_return',
   'subscription_activated',
+  'creator_landing_view',
+  'creator_workspace_view',
+  'creator_roster_created',
+  'creator_batch_preview_started',
+  'creator_batch_preview_completed',
+  'creator_batch_started',
+  'creator_batch_completed',
+  'creator_paywall_view',
+  'creator_week_2_active',
+  'creator_day_30_retained',
 ] as const;
 
 export type MonetizationEventType = typeof MONETIZATION_EVENT_TYPES[number];
@@ -56,13 +66,24 @@ function normalizePlan(value: unknown): PremiumPlanKey | null {
 
 function normalizePath(value: unknown): string | null {
   if (typeof value !== 'string') return null;
-  const normalized = normalizeCheckoutReturnPath(value);
-  return normalized === value ? normalized : null;
+  if (!value.startsWith('/') || value.startsWith('//')) return null;
+  return normalizeCheckoutReturnPath(value);
 }
 
 function normalizeMetadata(value: unknown): Record<string, unknown> | null {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
-  return value as Record<string, unknown>;
+  const blockedKeys = new Set(['name', 'recipientName', 'message', 'notes', 'returnUrl', 'content', 'userInputs']);
+  return Object.fromEntries(
+    Object.entries(value as Record<string, unknown>)
+      .filter(([key]) => !blockedKeys.has(key))
+      .slice(0, 20)
+      .map(([key, entry]) => {
+        if (typeof entry === 'string') return [key, entry.slice(0, 200)];
+        if (typeof entry === 'number' || typeof entry === 'boolean' || entry === null) return [key, entry];
+        return [key, undefined];
+      })
+      .filter(([, entry]) => entry !== undefined)
+  );
 }
 
 export function normalizeMonetizationEventInput(
@@ -105,5 +126,41 @@ export async function recordMonetizationEvent(
   } catch (error) {
     console.error('Failed to record monetization event:', error);
     return null;
+  }
+}
+
+export async function recordCreatorRetentionMilestones(userId: string) {
+  try {
+    const subscription = await prisma.subscription.findUnique({
+      where: { userId },
+      select: { plan: true, startDate: true },
+    });
+    if (subscription?.plan !== 'PREMIUM') return;
+
+    const activeDays = Math.floor((Date.now() - subscription.startDate.getTime()) / 86_400_000);
+    const milestones = [
+      { days: 14, eventType: 'creator_week_2_active' as const },
+      { days: 30, eventType: 'creator_day_30_retained' as const },
+    ];
+
+    for (const milestone of milestones) {
+      if (activeDays < milestone.days) continue;
+      const existing = await prisma.monetizationEvent.findFirst({
+        where: { userId, eventType: milestone.eventType },
+        select: { id: true },
+      });
+      if (existing) continue;
+      await prisma.monetizationEvent.create({
+        data: {
+          userId,
+          eventType: milestone.eventType,
+          source: 'creator_workspace',
+          path: '/creator',
+          metadata: { activeDays },
+        },
+      });
+    }
+  } catch (error) {
+    console.error('Failed to record Creator Pro retention milestone:', error);
   }
 }

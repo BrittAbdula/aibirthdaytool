@@ -115,18 +115,27 @@ function isFieldArray(fields: unknown): fields is Field[] {
   return Array.isArray(fields) && fields.every(isField);
 }
 
+// Curated SEO landing pages that reuse an existing generator's form/prompt
+// but carry their own slug, title, and copy (configured in generator-seo.ts).
+// Lets us ship pages like /sorry-link/ without touching the CardGenerator table.
+const CURATED_GENERATOR_ALIASES: Record<string, string> = {
+  'sorry-link': 'sorry',
+  'sorry-card-for-gf': 'sorry',
+};
+
 // Replace unstable_cache with React's cache for more reliable caching
 export const getCardConfig = cache(
   async (cardType: CardType): Promise<CardConfig | null> => {
+    const baseSlug = CURATED_GENERATOR_ALIASES[cardType] || cardType;
     const generator = await prisma.cardGenerator.findFirst({
       where: {
         OR: [
-          { isSystem: true, slug: cardType },
-          { isPublic: true, slug: cardType }
+          { isSystem: true, slug: baseSlug },
+          { isPublic: true, slug: baseSlug }
         ]
       }
     });
-    
+
     if (!generator) return null;
 
     // 类型安全的字段转换
@@ -137,8 +146,10 @@ export const getCardConfig = cache(
     const why = Array.isArray(generator.why) ? 
       generator.why.filter((item): item is string => typeof item === 'string')
       : undefined;
+    // Use the requested slug (not the base generator's) so curated aliases
+    // pick up their own SEO overrides and canonical
     const seoConfig = getGeneratorSeoConfig({
-      slug: generator.slug,
+      slug: cardType,
       label: generator.label,
       isSystem: generator.isSystem,
     });

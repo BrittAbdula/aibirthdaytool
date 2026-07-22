@@ -5,7 +5,6 @@ import OpenAI from 'openai';
 import { uploadImageToR2} from '@/lib/r2';
 import { GoogleGenAI, Modality } from "@google/genai";
 import { nanoid } from 'nanoid';
-import { v2 as cloudinary } from 'cloudinary';
 import { GPT_IMAGE_2_EDIT_MODEL, requestGptImage2Edit } from './gpt-image-2';
 import { SEEDANCE_VIDEO_MODEL, requestSeedanceVideoGeneration } from './seedance-video';
 

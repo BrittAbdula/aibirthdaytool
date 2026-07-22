@@ -1,6 +1,10 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@/auth';
-import { normalizeMonetizationEventInput, recordMonetizationEvent } from '@/lib/monetization';
+import {
+  normalizeMonetizationEventInput,
+  recordCreatorRetentionMilestones,
+  recordMonetizationEvent,
+} from '@/lib/monetization';
 
 export async function POST(request: Request) {
   try {
@@ -12,6 +16,9 @@ export async function POST(request: Request) {
       ...body,
       userId: session?.user?.id || null,
     });
+    if (body.eventType === 'creator_workspace_view' && session?.user?.id) {
+      await recordCreatorRetentionMilestones(session.user.id);
+    }
 
     return NextResponse.json({ ok: true });
   } catch (error) {

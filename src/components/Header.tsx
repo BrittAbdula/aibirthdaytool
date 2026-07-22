@@ -307,17 +307,14 @@ function Header({ variant = 'default' }: { variant?: HeaderVariant }) {
               >
                 Browse ideas
               </Link>
-              {!isPremiumUser && (
-                <Link
-                  href="/pricing/"
-                  className="inline-flex h-10 items-center gap-2 rounded-full border border-primary/20 bg-white px-4 text-sm font-semibold text-primary transition-colors hover:bg-primary/10"
-                >
-                  <Crown className="h-4 w-4" />
-                  Upgrade
-                </Link>
-              )}
               {status === 'authenticated' && session ? (
                 <>
+                  <Link
+                    href="/creator/"
+                    className="inline-flex h-10 items-center rounded-full border border-primary/20 bg-white px-4 text-sm font-semibold text-primary transition-colors hover:bg-primary/10"
+                  >
+                    Creator workspace
+                  </Link>
                   <Link
                     href="/my-cards/"
                     className="inline-flex h-10 items-center rounded-full border border-gray-200 bg-white px-4 text-sm font-semibold text-gray-700 transition-colors hover:border-primary/20 hover:text-primary"
@@ -359,7 +356,7 @@ function Header({ variant = 'default' }: { variant?: HeaderVariant }) {
                           {isPremiumUser && (
                             <span className="flex items-center mt-1 text-xs text-primary font-medium">
                               <Crown className="h-3 w-3 mr-1" />
-                              Premium user
+                              Creator Pro member
                             </span>
                           )}
                         </div>
@@ -398,16 +395,6 @@ function Header({ variant = 'default' }: { variant?: HeaderVariant }) {
                   Browse ideas
                 </Link>
               )}
-              {!isGeneratorLandingPage && !isPremiumUser && (
-                <Link
-                  href="/pricing/"
-                  onClick={handleSurfaceLinkClick}
-                  className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-primary/20 bg-white text-primary"
-                  aria-label="View Premium pricing"
-                >
-                  <Crown className="h-4 w-4" />
-                </Link>
-              )}
               {status === 'authenticated' && session ? (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -426,6 +413,9 @@ function Header({ variant = 'default' }: { variant?: HeaderVariant }) {
                     </button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-48 rounded-2xl p-2 bg-white/95 backdrop-blur shadow-xl border-pink-100">
+                    <DropdownMenuItem asChild className="rounded-xl">
+                      <Link href="/creator/">Creator workspace</Link>
+                    </DropdownMenuItem>
                     <DropdownMenuItem asChild className="rounded-xl">
                       <Link href="/my-cards/">My cards</Link>
                     </DropdownMenuItem>
@@ -535,6 +525,9 @@ function Header({ variant = 'default' }: { variant?: HeaderVariant }) {
             <Link href="/my-cards/" className="text-gray-700 hover:text-primary font-quicksand font-semibold transition-colors text-base">
               My cards
             </Link>
+            <Link href={status === 'authenticated' ? '/creator/' : '/for/employee-birthday-cards/'} className="text-gray-700 hover:text-primary font-quicksand font-semibold transition-colors text-base">
+              {status === 'authenticated' ? 'Creator workspace' : 'For teams'}
+            </Link>
             <Link href="/pricing/" className="text-gray-700 hover:text-primary font-quicksand font-semibold transition-colors text-base">
               Pricing
             </Link>
@@ -642,15 +635,6 @@ function Header({ variant = 'default' }: { variant?: HeaderVariant }) {
 
             {status === 'authenticated' && session ? (
               <>
-              {!isPremiumUser && (
-                <Link
-                  href="/pricing/"
-                  className="inline-flex min-h-[44px] items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-primary/90"
-                >
-                  <Crown className="h-4 w-4" />
-                  Upgrade
-                </Link>
-              )}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button className="flex items-center space-x-2 hover:opacity-80 transition-opacity">
@@ -686,7 +670,7 @@ function Header({ variant = 'default' }: { variant?: HeaderVariant }) {
                       {isPremiumUser && (
                         <span className="flex items-center mt-1 text-xs text-primary font-medium">
                           <Crown className="h-3 w-3 mr-1" />
-                          Premium user
+                          Creator Pro member
                         </span>
                       )}
                     </div>
@@ -855,6 +839,9 @@ function Header({ variant = 'default' }: { variant?: HeaderVariant }) {
               <Link href="/my-cards/" className="flex items-center px-4 py-3 text-gray-700 hover:bg-pink-50 rounded-xl transition-colors font-medium text-lg">
                 My Cards
               </Link>
+              <Link href={status === 'authenticated' ? '/creator/' : '/for/employee-birthday-cards/'} className="flex items-center px-4 py-3 text-gray-700 hover:bg-pink-50 rounded-xl transition-colors font-medium text-lg">
+                {status === 'authenticated' ? 'Creator workspace' : 'For teams'}
+              </Link>
               <Link href="/pricing/" className="flex items-center px-4 py-3 text-gray-700 hover:bg-pink-50 rounded-xl transition-colors font-medium text-lg">
                 Pricing
               </Link>
@@ -915,7 +902,7 @@ function Header({ variant = 'default' }: { variant?: HeaderVariant }) {
                       <span className="font-semibold text-gray-800">{session.user?.name}</span>
                       {isPremiumUser && (
                         <span className="text-xs text-primary font-medium flex items-center">
-                          <Crown className="h-3 w-3 mr-1" /> Premium Member
+                          <Crown className="h-3 w-3 mr-1" /> Creator Pro member
                         </span>
                       )}
                     </div>

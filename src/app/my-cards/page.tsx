@@ -31,6 +31,8 @@ interface EditedCardEntry {
   customUrl: string | null;
   message: string | null;
   createdAt: Date;
+  opened?: boolean;
+  momentAnswered?: boolean;
 }
 
 interface RecipientRelationship {
@@ -99,6 +101,8 @@ export default async function MyCardsPage() {
         customUrl: true,
         message: true,
         createdAt: true,
+        originalCardId: true,
+        momentResponse: true,
       }
     }),
     prisma.editedCard.findMany({
@@ -124,14 +128,32 @@ export default async function MyCardsPage() {
   ])
 
   const generatedCards: ApiLogEntry[] = generatedCardsData.map(card => ({ ...card, id: Number(card.id), timestamp: card.timestamp, r2Url: card.r2Url }))
-  const sentCards: EditedCardEntry[] = sentCardsData.map(card => ({ 
-    ...card, 
+
+  // "They opened it" status: recipient_view actions are recorded against the
+  // original card id when someone lands on /to/[cardId]
+  const sentOriginalCardIds = Array.from(new Set(sentCardsData.map(card => card.originalCardId).filter(Boolean)))
+  const viewedActions = sentOriginalCardIds.length > 0
+    ? await prisma.userAction.findMany({
+        where: {
+          action: 'recipient_view',
+          cardId: { in: sentOriginalCardIds }
+        },
+        select: { cardId: true },
+        distinct: ['cardId']
+      })
+    : []
+  const viewedCardIds = new Set(viewedActions.map(action => action.cardId))
+
+  const sentCards: EditedCardEntry[] = sentCardsData.map(({ originalCardId, momentResponse, ...card }) => ({
+    ...card,
     model: card.model,
     createdAt: card.createdAt,
     relationship: card.relationship,
     recipientName: card.recipientName,
     customUrl: card.customUrl,
-    message: card.message
+    message: card.message,
+    opened: viewedCardIds.has(originalCardId),
+    momentAnswered: Boolean(momentResponse)
   }))
   
   // 处理关系和收件人数据 - 在应用层分组

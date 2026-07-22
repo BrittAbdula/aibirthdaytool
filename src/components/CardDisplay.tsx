@@ -286,6 +286,8 @@ export default function CardDisplay({ card }: CardDisplayProps) {
       setShowCard(true);
       setShowBurst(false); // End burst
       requestAnimationFrame(triggerElegantConfetti);
+      // Let the Moment layer (typed message + ask) start after the reveal
+      window.dispatchEvent(new CustomEvent('mtc:card-revealed'));
     }, 1800);
   }, [stage, triggerElegantConfetti]);
 

@@ -3,10 +3,15 @@ import { auth } from "@/auth"
 import Stripe from "stripe"
 import { buildCheckoutRedirectUrls } from "@/lib/pricing"
 import { recordMonetizationEvent } from "@/lib/monetization"
+import { getCreatorDevice } from "@/lib/creator-pro"
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", {
   // @ts-ignore - Using recommended stable version instead of the hardcoded preview version
   apiVersion: "2026-02-25.clover",
+  // OpenNext bundles the Node entrypoint, whose default Node HTTP transport can
+  // hang under workerd. Stripe's fetch transport uses the Workers-native API.
+  httpClient: Stripe.createFetchHttpClient(),
+  timeout: 20_000,
 })
 
 
@@ -15,6 +20,9 @@ export async function POST(request: Request) {
   let plan: string | null = null
   let source = "unknown"
   let returnUrl: string | null = null
+  let taskSize: number | null = null
+  let country = "ZZ"
+  let device: ReturnType<typeof getCreatorDevice> = "unknown"
 
   try {
     const session = await auth()
@@ -31,6 +39,15 @@ export async function POST(request: Request) {
     plan = body.plan
     returnUrl = body.returnUrl
     source = typeof body.source === "string" ? body.source : "unknown"
+    taskSize = typeof body.taskSize === "number" && Number.isFinite(body.taskSize)
+      ? Math.max(1, Math.min(50, Math.floor(body.taskSize)))
+      : null
+    const countryHeader = (request.headers.get("cf-ipcountry") || request.headers.get("x-vercel-ip-country") || "")
+      .trim()
+      .toUpperCase()
+    country = /^[A-Z]{2}$/.test(countryHeader) ? countryHeader : "ZZ"
+    device = getCreatorDevice(request.headers.get("user-agent"))
+    const checkoutMetadata = { country, device, ...(taskSize ? { taskSize } : {}) }
 
     await recordMonetizationEvent({
       eventType: "checkout_session_create_attempt",
@@ -38,6 +55,7 @@ export async function POST(request: Request) {
       plan,
       source,
       path: returnUrl,
+      metadata: checkoutMetadata,
     })
     
     if (!plan || (plan !== "monthly" && plan !== "yearly")) {
@@ -47,6 +65,7 @@ export async function POST(request: Request) {
         plan,
         source,
         path: returnUrl,
+        metadata: checkoutMetadata,
         errorCode: "invalid_plan",
         errorMessage: "Invalid plan selected",
       })
@@ -72,6 +91,7 @@ export async function POST(request: Request) {
         plan,
         source,
         path: returnUrl,
+        metadata: checkoutMetadata,
         errorCode: "missing_price_id",
         errorMessage: "Price ID not configured for the selected plan",
       })
@@ -85,7 +105,6 @@ export async function POST(request: Request) {
     const checkoutSession = await stripe.checkout.sessions.create({
       customer_email: customer_email || undefined,
       client_reference_id: userId,
-      payment_method_types: ["card"],
       line_items: [
         {
           price: priceId,
@@ -98,6 +117,9 @@ export async function POST(request: Request) {
         metadata: {
           userId,
           source,
+          country,
+          device,
+          ...(taskSize ? { taskSize: String(taskSize) } : {}),
         },
       },
       success_url: successUrl,
@@ -106,6 +128,9 @@ export async function POST(request: Request) {
         userId,
         plan,
         source,
+        country,
+        device,
+        ...(taskSize ? { taskSize: String(taskSize) } : {}),
       },
     })
 
@@ -116,6 +141,7 @@ export async function POST(request: Request) {
       source,
       path: returnUrl,
       stripeSessionId: checkoutSession.id,
+      metadata: checkoutMetadata,
     })
 
     return NextResponse.json({ url: checkoutSession.url })
@@ -127,6 +153,7 @@ export async function POST(request: Request) {
       plan,
       source,
       path: returnUrl,
+      metadata: { country, device, ...(taskSize ? { taskSize } : {}) },
       errorCode: "checkout_session_error",
       errorMessage: error instanceof Error ? error.message : "Something went wrong",
     })

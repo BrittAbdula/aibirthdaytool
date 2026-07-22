@@ -54,4 +54,9 @@ assert.equal(lowQualitySeo.indexPolicy, "redirect");
 assert.equal(lowQualitySeo.curatedCanonical, "/will-you-be-my-valentine/");
 
 const curatedSitemapSlugs = getCuratedGeneratorSitemapSlugs();
-assert.deepEqual(curatedSitemapSlugs, ["happy-birthday", "friendship-card"]);
+assert.deepEqual(curatedSitemapSlugs, [
+  "happy-birthday",
+  "friendship-card",
+  "sorry-link",
+  "sorry-card-for-gf",
+]);

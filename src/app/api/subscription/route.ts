@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/auth'
 import { prisma } from '@/lib/prisma'
 import Stripe from 'stripe'
+import { getUserPlanForSubscriptionStatus } from '@/lib/subscription-status'
+import { getStripeSubscriptionAnalytics, getSubscriptionPeriod } from '@/lib/stripe-webhook'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", {
   // @ts-ignore - Using recommended stable version
@@ -26,7 +28,48 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'No subscription found' }, { status: 404 })
     }
 
-    const subscription = user.subscription
+    let subscription = user.subscription
+
+    // Webhooks remain the primary source of truth. This read-time reconciliation
+    // repairs access when a webhook was delayed or temporarily unavailable.
+    if (subscription.stripeSubscriptionId) {
+      try {
+        const stripeSubscription = await stripe.subscriptions.retrieve(subscription.stripeSubscriptionId, {
+          expand: ['items.data.price'],
+        })
+        const priceId = stripeSubscription.items.data[0]?.price.id
+        const billingPeriod = priceId === process.env.STRIPE_MONTHLY_PRICE_ID
+          ? 'MONTHLY'
+          : priceId === process.env.STRIPE_YEARLY_PRICE_ID
+            ? 'YEARLY'
+            : null
+
+        if (billingPeriod) {
+          const plan = getUserPlanForSubscriptionStatus(stripeSubscription.status)
+          const period = getSubscriptionPeriod(stripeSubscription)
+          const analytics = getStripeSubscriptionAnalytics(stripeSubscription)
+          const [updatedSubscription] = await prisma.$transaction([
+            prisma.subscription.update({
+              where: { userId: user.id },
+              data: {
+                plan,
+                billingPeriod,
+                status: stripeSubscription.status,
+                cancelAtPeriodEnd: stripeSubscription.cancel_at_period_end,
+                startDate: period.periodStart,
+                endDate: period.periodEnd,
+                nextBillingAt: period.periodEnd,
+                ...analytics,
+              },
+            }),
+            prisma.user.update({ where: { id: user.id }, data: { plan } }),
+          ])
+          subscription = updatedSubscription
+        }
+      } catch (error) {
+        console.error('Stripe subscription reconciliation failed; using local state:', error)
+      }
+    }
 
     return NextResponse.json({
       id: subscription.id.toString(),
