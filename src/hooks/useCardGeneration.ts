@@ -35,7 +35,6 @@ export const useCardGeneration = () => {
   const [globalLoading, setGlobalLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showAuthDialog, setShowAuthDialog] = useState(false);
-  const [showLimitDialog, setShowLimitDialog] = useState(false);
   const pendingAuthRef = useRef<boolean>(false);
   const [savedAuthData, setSavedAuthData] = useState<CardGenerationOptions | null>(null);
 
@@ -173,10 +172,9 @@ export const useCardGeneration = () => {
               errorPayload = {};
             }
 
-            if (response.status === 429) { setShowLimitDialog(true); throw new Error('rate_limit'); }
+            if (response.status === 429) { throw new Error('rate_limit'); }
             if (response.status === 401) { throw new Error('auth'); }
             if (errorPayload.error === 'premium_required') { throw new Error('premium_required'); }
-            if (errorPayload.error === 'first_day_svg_only') { throw new Error(errorPayload.message || 'first_day_svg_only'); }
             throw new Error(errorPayload.message || errorPayload.error || 'Failed to start card generation');
           }
 
@@ -315,7 +313,7 @@ export const useCardGeneration = () => {
         if(authError) throw new Error('auth'); // Re-throw to trigger auth dialog
 
         const rateLimitError = failedResults.find(r => r.error === 'rate_limit');
-        if(rateLimitError) { setShowLimitDialog(true); throw new Error('rate_limit'); } // Re-throw to trigger limit dialog
+        if(rateLimitError) { throw new Error('rate_limit'); } // Re-throw so the caller can open the paywall
 
         const premiumRequiredError = failedResults.find(r => r.error === 'premium_required');
         if(premiumRequiredError) { throw new Error('premium_required'); }
@@ -355,7 +353,7 @@ export const useCardGeneration = () => {
       setGlobalLoading(false);
       // Individual timers are cleared within each promise now or by useEffect on unmount
     }
-  }, [session, triggerConfettiForImage, setShowAuthDialog, setShowLimitDialog]);
+  }, [session, triggerConfettiForImage, setShowAuthDialog]);
 
   // Effect to handle post-auth generation
   useEffect(() => {
@@ -380,8 +378,6 @@ export const useCardGeneration = () => {
     error,
     showAuthDialog,
     setShowAuthDialog,
-    showLimitDialog,
-    setShowLimitDialog,
     imageRefs, // Return ref to attach in parent
     initializeImageStates // Add initialization function
   };

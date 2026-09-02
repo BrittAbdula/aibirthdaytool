@@ -16,9 +16,11 @@ import { useSession, signIn } from "next-auth/react"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Loader2, Crown, AlertCircle, ChevronRight, Check, Sparkles, Wand2, ChevronDown } from 'lucide-react'
 import { useCardGeneration } from '@/hooks/useCardGeneration'
-import { PremiumModal } from '@/components/PremiumModal'
+import { Paywall } from '@/components/paywall/Paywall'
+import { QuotaMeter } from '@/components/paywall/QuotaMeter'
+import { useQuota } from '@/hooks/useQuota'
 import { modelConfigs, type ModelConfig } from '@/lib/model-config'
-import type { PremiumModalContext } from '@/lib/pricing'
+import type { PaywallIntent } from '@/lib/pricing/paywall'
 import { stylePresets, getPresetsForFormat, type OutputFormat } from '@/lib/style-presets'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { Switch } from "@/components/ui/switch"
@@ -239,9 +241,12 @@ export default function CardGenerator({
   const [isRefUploading, setIsRefUploading] = useState(false)
   const refPhotoInputRef = useRef<HTMLInputElement>(null)
   const [isAuthLoading, setIsAuthLoading] = useState(false)
-  const [isPremiumModalOpen, setIsPremiumModalOpen] = useState(false)
-  const [premiumModalContext, setPremiumModalContext] = useState<PremiumModalContext>('default')
-  const [isPremiumUser, setIsPremiumUser] = useState(false)
+  const [isPaywallOpen, setIsPaywallOpen] = useState(false)
+  const [paywallIntent, setPaywallIntent] = useState<PaywallIntent>('default')
+  const { quota, refresh: refreshQuota } = useQuota()
+  // Pack credits buy the same capabilities a subscription does, so the gates ask
+  // about paid access rather than about a subscription.
+  const isPremiumUser = !!quota?.hasPaidAccess
   const [isPrivateCard, setIsPrivateCard] = useState(false)
   const [errorToast, setErrorToast] = useState<{title: string; message: string; type: 'error' | 'warning' | 'info'} | null>(null);
   const hasResumedPendingGenerationRef = useRef(false)
@@ -266,8 +271,6 @@ export default function CardGenerator({
     error: generationError,
     showAuthDialog,
     setShowAuthDialog,
-    showLimitDialog,
-    setShowLimitDialog,
     imageRefs,
     initializeImageStates
   } = useCardGeneration()
@@ -322,11 +325,6 @@ export default function CardGenerator({
     const defaultImgUrl = cardConfig.isSystem ? `https://store.celeprime.com/${wishCardType}.svg` : sampleCard;
     initializeImageStates(imageCount, defaultImgUrl);
   }, [wishCardType, cardConfig, sampleCard, imageCount, initializeImageStates, prefilledValues]);
-
-  useEffect(() => {
-    if (session?.user) setIsPremiumUser((session as any).user?.plan === 'PREMIUM');
-    else setIsPremiumUser(false);
-  }, [session]);
 
   useEffect(() => {
     if (!selectedFormat) return;
@@ -430,26 +428,25 @@ export default function CardGenerator({
   const runGeneration = React.useCallback(async (options: Parameters<typeof generateCards>[0]) => {
     try {
       const result = await generateCards(options);
-      if (result.success) setSubmited(true);
+      if (result.success) {
+        setSubmited(true);
+        // A generation just spent cards; the meter should say so immediately.
+        void refreshQuota();
+      }
       else if (result.error === 'rate_limit') {
-        setShowLimitDialog(false);
-        setPremiumModalContext('limit');
-        setIsPremiumModalOpen(true);
-        setErrorToast({
-          title: 'Daily limit reached',
-          message: 'Creator Pro keeps today moving and organizes the next occasion too.',
-          type: 'warning'
-        });
+        void refreshQuota();
+        setPaywallIntent('daily_limit');
+        setIsPaywallOpen(true);
       }
       else if (result.error === 'premium_required') {
-        setPremiumModalContext('video');
-        setIsPremiumModalOpen(true);
+        setPaywallIntent(selectedFormat === 'video' ? 'video' : 'premium_style');
+        setIsPaywallOpen(true);
       }
       else setErrorToast({ title: 'Generation Failed', message: result.error || 'Error generating card', type: 'error' });
     } catch {
       setErrorToast({ title: 'System Error', message: 'Something went wrong', type: 'error' });
     }
-  }, [generateCards, setShowLimitDialog]);
+  }, [generateCards, refreshQuota, selectedFormat]);
 
   const handleGenerateCard = React.useCallback(async () => {
     if (!session) {
@@ -480,14 +477,13 @@ export default function CardGenerator({
         });
         return;
       }
-      setIsPremiumUser(false);
       setShowAuthDialog(true);
       return;
     }
 
     if (selectedFormat === 'video' && !isPremiumUser) {
-      setPremiumModalContext('video')
-      setIsPremiumModalOpen(true);
+      setPaywallIntent('video')
+      setIsPaywallOpen(true);
       return;
     }
 
@@ -523,65 +519,70 @@ export default function CardGenerator({
   ]);
 
   useEffect(() => {
-    if (status !== 'authenticated' || !session || hasResumedPendingGenerationRef.current) return
+    // The resume path asks the server for fresh entitlements, so it has to be
+    // async; useEffect callbacks cannot be.
+    const resumePendingGeneration = async () => {
+      if (status !== 'authenticated' || !session || hasResumedPendingGenerationRef.current) return
 
-    const rawPendingGeneration = window.localStorage.getItem(PENDING_CARD_GENERATION_STORAGE_KEY)
-    const pendingGeneration = parsePendingCardGeneration(rawPendingGeneration)
-    if (!pendingGeneration) {
-      if (rawPendingGeneration) {
-        window.localStorage.removeItem(PENDING_CARD_GENERATION_STORAGE_KEY)
+      const rawPendingGeneration = window.localStorage.getItem(PENDING_CARD_GENERATION_STORAGE_KEY)
+      const pendingGeneration = parsePendingCardGeneration(rawPendingGeneration)
+      if (!pendingGeneration) {
+        if (rawPendingGeneration) {
+          window.localStorage.removeItem(PENDING_CARD_GENERATION_STORAGE_KEY)
+        }
+        return
       }
-      return
-    }
-    if (pendingGeneration.generatorCardType !== wishCardType) return
+      if (pendingGeneration.generatorCardType !== wishCardType) return
 
-    const pendingModel = modelConfigs.find(model => model.id === pendingGeneration.selectedModelId)
-    if (!pendingModel) {
+      const pendingModel = modelConfigs.find(model => model.id === pendingGeneration.selectedModelId)
+      if (!pendingModel) {
+        window.localStorage.removeItem(PENDING_CARD_GENERATION_STORAGE_KEY)
+        return
+      }
+
+      hasResumedPendingGenerationRef.current = true
       window.localStorage.removeItem(PENDING_CARD_GENERATION_STORAGE_KEY)
-      return
+      setCurrentCardType(pendingGeneration.cardType as CardType)
+      setFormData(pendingGeneration.formData)
+      setCustomValues(pendingGeneration.customValues)
+      setSelectedSize(pendingGeneration.selectedSize)
+      setSelectedModel(pendingModel)
+      setSelectedFormat(pendingGeneration.selectedFormat)
+      setSelectedStyleId(pendingGeneration.selectedStyleId)
+      setSelectedTier(pendingGeneration.selectedTier)
+      setUploadedRefUrls(pendingGeneration.uploadedRefUrls)
+      setIsPrivateCard(pendingGeneration.isPrivateCard)
+      setCurrentStep(pendingGeneration.currentStep)
+      setShowAuthDialog(false)
+
+      const refreshed = await refreshQuota()
+      if (pendingGeneration.selectedFormat === 'video' && !refreshed?.hasPaidAccess) {
+        setPaywallIntent('video')
+        setIsPaywallOpen(true)
+        return
+      }
+
+      void runGeneration({
+        cardType: pendingGeneration.cardType,
+        size: pendingGeneration.selectedSize,
+        modelId: pendingGeneration.selectedModelId,
+        formData: {
+          ...pendingGeneration.formData,
+          isPublic: !pendingGeneration.isPrivateCard,
+        },
+        imageCount: 1,
+        referenceImageUrls: pendingGeneration.selectedFormat === 'image'
+          ? pendingGeneration.uploadedRefUrls
+          : [],
+        styleId: pendingGeneration.selectedFormat === 'image'
+          ? (pendingGeneration.selectedStyleId || undefined)
+          : undefined,
+        outputFormat: pendingGeneration.selectedFormat,
+      })
     }
 
-    hasResumedPendingGenerationRef.current = true
-    window.localStorage.removeItem(PENDING_CARD_GENERATION_STORAGE_KEY)
-    setCurrentCardType(pendingGeneration.cardType as CardType)
-    setFormData(pendingGeneration.formData)
-    setCustomValues(pendingGeneration.customValues)
-    setSelectedSize(pendingGeneration.selectedSize)
-    setSelectedModel(pendingModel)
-    setSelectedFormat(pendingGeneration.selectedFormat)
-    setSelectedStyleId(pendingGeneration.selectedStyleId)
-    setSelectedTier(pendingGeneration.selectedTier)
-    setUploadedRefUrls(pendingGeneration.uploadedRefUrls)
-    setIsPrivateCard(pendingGeneration.isPrivateCard)
-    setCurrentStep(pendingGeneration.currentStep)
-    setShowAuthDialog(false)
-
-    const userIsPremium = (session as any).user?.plan === 'PREMIUM'
-    setIsPremiumUser(userIsPremium)
-    if (pendingGeneration.selectedFormat === 'video' && !userIsPremium) {
-      setPremiumModalContext('video')
-      setIsPremiumModalOpen(true)
-      return
-    }
-
-    void runGeneration({
-      cardType: pendingGeneration.cardType,
-      size: pendingGeneration.selectedSize,
-      modelId: pendingGeneration.selectedModelId,
-      formData: {
-        ...pendingGeneration.formData,
-        isPublic: !pendingGeneration.isPrivateCard,
-      },
-      imageCount: 1,
-      referenceImageUrls: pendingGeneration.selectedFormat === 'image'
-        ? pendingGeneration.uploadedRefUrls
-        : [],
-      styleId: pendingGeneration.selectedFormat === 'image'
-        ? (pendingGeneration.selectedStyleId || undefined)
-        : undefined,
-      outputFormat: pendingGeneration.selectedFormat,
-    })
-  }, [runGeneration, session, setShowAuthDialog, status, wishCardType])
+    void resumePendingGeneration()
+  }, [refreshQuota, runGeneration, session, setShowAuthDialog, status, wishCardType])
 
   const handleLogin = async () => {
     try {
@@ -1023,8 +1024,8 @@ export default function CardGenerator({
                     setIsPrivateCard(!checked)
                     return
                   }
-                  setPremiumModalContext('privacy')
-                  setIsPremiumModalOpen(true)
+                  setPaywallIntent('privacy')
+                  setIsPaywallOpen(true)
                 }}
               />
             </div>
@@ -1036,6 +1037,14 @@ export default function CardGenerator({
 
   const renderActionButtons = (mobile = false) => (
     <div className={cn("flex items-center gap-3", mobile && "w-full")}>
+      <QuotaMeter
+        quota={quota}
+        className="mr-auto"
+        onUpgradeClick={() => {
+          setPaywallIntent('daily_limit')
+          setIsPaywallOpen(true)
+        }}
+      />
       {currentStep > 1 && (
         <WarmButton
           variant="outline"
@@ -1263,31 +1272,12 @@ export default function CardGenerator({
         </DialogContent>
       </Dialog>
       
-      <Dialog open={showLimitDialog} onOpenChange={setShowLimitDialog}>
-         <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Daily limit reached</DialogTitle>
-            <DialogDescription>
-              Creator Pro removes the daily credit ceiling and adds a reusable team workflow.
-            </DialogDescription>
-          </DialogHeader>
-          <Button
-            onClick={() => {
-              setShowLimitDialog(false)
-              setPremiumModalContext('limit')
-              setIsPremiumModalOpen(true)
-            }}
-          >
-            Upgrade to keep creating
-          </Button>
-        </DialogContent>
-      </Dialog>
-
-      <PremiumModal
-        isOpen={isPremiumModalOpen}
-        onOpenChange={setIsPremiumModalOpen}
-        context={premiumModalContext}
-        source={`card_generator_${premiumModalContext}`}
+      <Paywall
+        isOpen={isPaywallOpen}
+        onOpenChange={setIsPaywallOpen}
+        intent={paywallIntent}
+        source={`card_generator_${paywallIntent}`}
+        onCardsEarned={refreshQuota}
       />
 
       {/* Style Dialog Re-implementation */}

@@ -1,22 +1,6 @@
 import { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
-import { Suspense } from "react";
-import {
-  ArrowRight,
-  Download,
-  Heart,
-  Link2,
-  Mail,
-  MessageCircle,
-  PenTool,
-  Search,
-  Send,
-  Sparkles,
-} from "lucide-react";
-import CardMarquee from "@/components/CardMarquee";
-import { GalleryCardsResult, getFeaturedCardsServer } from "@/lib/cards";
-import { GALLERY_PAGE_SIZE } from "@/lib/gallery-pagination";
+import { ArrowRight, Link2, Search } from "lucide-react";
 import {
   Accordion,
   AccordionContent,
@@ -24,20 +8,16 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { WarmButton } from "@/components/ui/warm-button";
-import ViralMicrositeGrid from "@/components/viral/ViralMicrositeGrid";
+import SurpriseTheater from "@/components/viral/SurpriseTheater";
+import CardStudioDemo from "@/components/home/CardStudioDemo";
+import Image from "next/image";
+import { HeartArt, PaperGrain, RingsArt } from "@/components/home/card-art";
 import JsonLd from "@/components/JsonLd";
 import { buildFaqSchema, buildItemListSchema, type SeoFaq } from "@/lib/seo";
 import {
   BROWSE_INTENT_LINKS,
-  FUNNEL_METRICS,
   PRIMARY_CREATION_PATHS,
 } from "@/lib/experience-config";
-
-interface FeatureCardProps {
-  title: string;
-  description: string;
-  icon: React.ReactNode;
-}
 
 export const metadata: Metadata = {
   title: "AI Greeting Card Generator & Birthday Card Maker | MewTruCard",
@@ -73,19 +53,7 @@ export const metadata: Metadata = {
 
 export const revalidate = 300;
 
-export default async function Home() {
-  let initialCardsData: GalleryCardsResult = {
-    cards: [],
-    hasMore: false,
-    totalPages: 0,
-  };
-
-  try {
-    initialCardsData = await getFeaturedCardsServer(1, GALLERY_PAGE_SIZE, "");
-  } catch (error) {
-    console.error("Failed to load homepage card data", error);
-  }
-
+export default function Home() {
   const homeEntryLinks = [
     ...PRIMARY_CREATION_PATHS.map((path) => ({
       href: path.href,
@@ -102,40 +70,27 @@ export default async function Home() {
         data={buildItemListSchema("MewTruCard main entry points", homeEntryLinks)}
       />
 
-      <section className="border-b border-[#F1D6DF]/70 bg-[#FFF8F6]">
-        <div className="mx-auto grid min-h-[calc(100svh-5rem)] max-w-7xl items-center gap-12 px-4 py-12 sm:px-6 lg:grid-cols-[minmax(0,0.92fr)_minmax(420px,1fr)] lg:px-8 lg:py-16">
+      {/* ————— Hero ————— */}
+      <section className="relative border-b border-[#F1D6DF]/70 bg-[#FFF8F6]">
+        <PaperGrain id="grain-hero-bg" className="absolute inset-0 opacity-[0.16]" />
+        <div className="relative mx-auto grid max-w-7xl items-center gap-14 px-4 py-16 sm:px-6 lg:grid-cols-[minmax(0,1fr)_minmax(400px,0.9fr)] lg:px-8 lg:py-24">
           <div className="max-w-2xl">
-            <p className="text-sm font-semibold uppercase tracking-[0.24em] text-primary">
-              MewTruCard greeting card maker
+            <p className="text-sm font-semibold uppercase tracking-[0.22em] text-primary">
+              The greeting card studio
             </p>
-            <h1 className="mt-5 max-w-3xl font-serif text-4xl font-semibold leading-[1.08] tracking-normal text-[#202A3D] sm:text-6xl lg:text-7xl">
-              Create a birthday card people can open anywhere.
+            <h1 className="mt-5 max-w-3xl font-serif text-4xl font-semibold leading-[1.04] tracking-tight text-[#202A3D] sm:text-6xl lg:text-[4.4rem] ">
+              Make them
+              <br />
+              a birthday card{" "}
+              <em className="font-light italic text-primary">worth keeping.</em>
             </h1>
-            <p className="mt-6 max-w-xl text-base leading-7 text-[#525B70] sm:text-lg sm:leading-8">
-              Start with who the card is for, add the message, then choose the
-              format. MewTruCard turns that into a saved card link or download
-              without making you design from scratch.
+            <p className="mt-6 max-w-xl text-base leading-7 text-[#47536B] sm:text-lg sm:leading-8">
+              Tell us who it&rsquo;s for and what you want them to feel.
+              MewTruCard designs the card around your words. Then you send it
+              as a link, a download, or a little surprise page.
             </p>
 
-            <div className="mt-6 grid grid-cols-3 gap-2 lg:hidden" aria-label="Card preview examples">
-              {PRIMARY_CREATION_PATHS.slice(0, 3).map((path) => (
-                <div
-                  key={path.href}
-                  className="flex h-32 items-center justify-center rounded-lg border border-[#F1D6DF] bg-white p-2 shadow-sm"
-                >
-                  <Image
-                    src={path.preview}
-                    alt={`${path.label} card preview`}
-                    width={120}
-                    height={160}
-                    priority
-                    className="h-full w-auto object-contain"
-                  />
-                </div>
-              ))}
-            </div>
-
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+            <div className="mt-9 flex flex-col gap-3 sm:flex-row">
               <Link href="/birthday/" className="sm:w-auto">
                 <WarmButton size="lg" className="w-full sm:w-auto">
                   Create a birthday card
@@ -150,340 +105,349 @@ export default async function Home() {
               </Link>
             </div>
 
-            <div className="mt-10 grid gap-4 sm:grid-cols-3">
-              {FUNNEL_METRICS.map((metric) => (
-                <div key={metric.label} className="border-l border-primary/25 pl-4">
-                  <div className="font-serif text-2xl font-semibold text-primary">
-                    {metric.value}
-                  </div>
-                  <div className="mt-1 text-sm font-semibold text-[#202A3D]">
-                    {metric.label}
-                  </div>
-                  <p className="mt-1 text-sm leading-6 text-[#6B7280]">
-                    {metric.description}
-                  </p>
-                </div>
-              ))}
-            </div>
+            <p className="mt-8 text-sm leading-6 text-[#76819A]">
+              Free to start. No design skills needed.
+            </p>
           </div>
 
-          <div className="relative hidden min-h-[560px] lg:block">
-            <div className="absolute left-2 top-8 w-[42%] rotate-[-8deg] rounded-2xl border border-[#F1D6DF] bg-white p-3 shadow-xl transition-transform duration-300 hover:rotate-[-5deg]">
-              <Image
-                src="/card/birthday.svg"
-                alt="Birthday card preview"
-                width={420}
-                height={600}
-                priority
-                className="h-auto w-full rounded-xl object-contain"
-              />
-            </div>
-            <div className="absolute left-[30%] top-0 z-10 w-[44%] rounded-2xl border border-primary/20 bg-white p-3 shadow-2xl transition-transform duration-300 hover:-translate-y-1">
-              <Image
-                src="/card/valentine.svg"
-                alt="Valentine card preview"
-                width={420}
-                height={600}
-                priority
-                className="h-auto w-full rounded-xl object-contain"
-              />
-            </div>
-            <div className="absolute right-2 top-24 w-[40%] rotate-[7deg] rounded-2xl border border-[#F1D6DF] bg-white p-3 shadow-xl transition-transform duration-300 hover:rotate-[4deg]">
-              <Image
-                src="/card/anniversary.svg"
-                alt="Anniversary card preview"
-                width={420}
-                height={600}
-                priority
-                className="h-auto w-full rounded-xl object-contain"
-              />
-            </div>
-            <div className="absolute bottom-10 left-1/2 z-20 w-[min(92%,560px)] -translate-x-1/2 rounded-xl border border-[#F1D6DF] bg-white/95 p-5 shadow-xl backdrop-blur">
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                  <p className="text-sm font-semibold uppercase tracking-[0.18em] text-primary">
-                    Share-ready
-                  </p>
-                  <h2 className="mt-1 text-xl font-semibold text-[#202A3D]">
-                    Copy the link, download the card, or send a surprise page.
-                  </h2>
-                </div>
-                <div className="flex gap-2 text-primary">
-                  <Link2 className="h-5 w-5" />
-                  <Download className="h-5 w-5" />
-                  <Send className="h-5 w-5" />
-                </div>
-              </div>
-            </div>
-          </div>
+          <HeroCardScene />
         </div>
       </section>
 
-      <section className="border-b border-[#F1D6DF]/70 bg-white">
-        <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
-          <SectionIntro
-            eyebrow="Create"
-            title="What do you want to make?"
-            description="Pick the moment first. Each path opens a focused generator instead of dropping you into a generic form."
-          />
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            {PRIMARY_CREATION_PATHS.map((path) => (
-              <Link
-                key={path.href}
-                href={path.href}
-                className="group flex min-h-[360px] flex-col overflow-hidden rounded-xl border border-[#F1D6DF] bg-[#FFF8F6] transition-all duration-300 hover:-translate-y-1 hover:border-primary/30 hover:bg-white hover:shadow-xl"
-              >
-                <div className="relative flex h-48 items-center justify-center bg-white">
-                  <Image
-                    src={path.preview}
-                    alt={`${path.label} card preview`}
-                    width={220}
-                    height={300}
-                    className="h-40 w-auto object-contain transition-transform duration-300 group-hover:scale-105"
-                  />
-                </div>
-                <div className="flex flex-1 flex-col p-5">
-                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">
-                    {path.eyebrow}
-                  </p>
-                  <h3 className="mt-3 text-2xl font-semibold text-[#202A3D]">
-                    {path.label}
-                  </h3>
-                  <p className="mt-3 flex-1 text-sm leading-6 text-[#6B7280]">
-                    {path.description}
-                  </p>
-                  <span className="mt-6 inline-flex items-center text-sm font-semibold text-primary">
-                    Open this maker
-                    <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
-                  </span>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="bg-[#FFF8F6]">
-        <div className="mx-auto grid max-w-7xl gap-10 px-4 py-16 sm:px-6 lg:grid-cols-[0.8fr_1.2fr] lg:px-8">
-          <SectionIntro
-            eyebrow="Browse"
-            title="Need ideas before writing?"
-            description="A strong creation flow still needs an escape hatch for people who do not know what to say yet."
-            align="left"
-          />
-          <div className="grid gap-3 sm:grid-cols-2">
-            {BROWSE_INTENT_LINKS.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className="group rounded-xl border border-[#F1D6DF] bg-white p-5 transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-md"
-              >
-                <h3 className="text-lg font-semibold text-[#202A3D]">
-                  {link.label}
-                </h3>
-                <p className="mt-2 text-sm leading-6 text-[#6B7280]">
-                  {link.description}
-                </p>
-                <span className="mt-4 inline-flex items-center text-sm font-semibold text-primary">
-                  Browse this path
-                  <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
-                </span>
-              </Link>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <HomepageAdStrip />
-
-      <section className="bg-white py-16">
+      {/* ————— The core demo: three questions become a card ————— */}
+      <section className="bg-white py-20 lg:py-24">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <SectionIntro
-            eyebrow="Examples"
-            title="See what people are making"
-            description="Use real public cards for tone, composition, and message inspiration before creating your own."
-          />
-          <Suspense
-            fallback={
-              <div className="flex h-64 items-center justify-center rounded-xl border border-[#F1D6DF] bg-[#FFF8F6]">
-                <div className="h-10 w-10 animate-spin rounded-full border-b-2 border-t-2 border-primary" />
-              </div>
-            }
-          >
-            <CardMarquee wishCardType="birthday" initialCardsData={initialCardsData} />
-          </Suspense>
+          <CardStudioDemo />
         </div>
       </section>
 
-      <HowItWorks />
+      {/* ————— Occasions as the house collection ————— */}
+      <section className="relative border-y border-[#F1D6DF]/70 bg-warm-cream py-20">
+        <PaperGrain id="grain-desk-bg" className="absolute inset-0 opacity-[0.16]" />
+        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="mx-auto mb-12 max-w-2xl text-center">
+            <h2 className="font-serif text-4xl font-semibold leading-tight text-[#202A3D] sm:text-5xl [text-wrap:balance]">
+              What are you celebrating?
+            </h2>
+            <p className="mt-4 text-base leading-7 text-[#525B70] sm:text-lg">
+              Six house layouts to start from. Pick the moment — your words and
+              their name take it from there.
+            </p>
+          </div>
 
-      <ViralMicrositeGrid
-        title="Interactive surprise links"
-        description="Use a lightweight reveal page when the moment needs more than a direct card link."
-      />
+          {/* the desk: one composed cluster of cards */}
+          <div className="relative mx-auto flex max-w-4xl flex-wrap items-start justify-center gap-6 lg:block lg:h-[680px]">
+            <HouseCardBigOne />
+            <HouseCardBirthday />
+            <HouseCardLove />
+            <HouseCardSorry />
+            <HouseCardThanks />
+            <HouseCardAnniversary />
+          </div>
 
+          <p className="mt-6 text-center text-sm leading-6 text-[#76819A]">
+            Also valentine, thank-you, wedding, and more —{" "}
+            <Link
+              href="/cards/"
+              className="font-semibold text-primary underline decoration-primary/30 underline-offset-4 transition-colors hover:decoration-primary"
+            >
+              browse every occasion
+            </Link>
+            .
+          </p>
+        </div>
+      </section>
+
+      {/* ————— Surprise links: the theatrical peak ————— */}
+      <section className="bg-[#202A3D] py-24 text-white">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <SurpriseTheater />
+        </div>
+      </section>
+
+      {/* ————— FAQ: the small print ————— */}
       <section className="bg-white py-16">
-        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-          <SectionIntro
-            eyebrow="Sharing"
-            title="The final step is clear"
-            description="Generated cards should end with practical sending actions, not another maze of options."
-          />
-          <div className="grid gap-4 md:grid-cols-3">
-            <FeatureCard
-              title="Copy the card link"
-              description="Use the same kind of shareable URL people already expect from gift lists and registries."
-              icon={<Link2 className="h-5 w-5" />}
-            />
-            <FeatureCard
-              title="Download the finished card"
-              description="Save the image or video for apps where direct links are not the best fit."
-              icon={<Download className="h-5 w-5" />}
-            />
-            <FeatureCard
-              title="Send through familiar apps"
-              description="WhatsApp, email, text, and social sharing stay one tap away after editing."
-              icon={<Mail className="h-5 w-5" />}
-            />
+        <div className="mx-auto max-w-3xl px-4 sm:px-6">
+          <div className="rounded-2xl border border-[#EADFD6] bg-[#FFF8F6] px-6 py-8 sm:px-10">
+            <h2 className="text-center font-serif text-3xl font-semibold text-[#202A3D]">
+              Good to know
+            </h2>
+            <div className="mt-6">
+              <FAQ />
+            </div>
           </div>
         </div>
       </section>
 
-      <section className="border-t border-[#F1D6DF]/70 bg-[#FFF8F6] py-16">
-        <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
-          <SectionIntro
-            eyebrow="FAQ"
-            title="Common questions"
-            description="Operational details stay available after the creation path is clear."
+      {/* ————— The send-off ————— */}
+      <section className="relative border-t border-[#F1D6DF]/70 bg-[#FFF8F6]">
+        <PaperGrain id="grain-sendoff-bg" className="absolute inset-0 opacity-[0.16]" />
+        <div className="relative mx-auto max-w-2xl px-4 py-24 text-center sm:px-6 sm:py-28">
+          <Image
+            src="/props/sealed-envelope.jpg"
+            alt="A sealed blush envelope with a raspberry wax seal"
+            width={820}
+            height={615}
+            className="mtc-bob-slow mx-auto w-56 mix-blend-multiply sm:w-64"
           />
-          <FAQ />
+          <h2 className="mt-10 font-serif text-3xl font-semibold leading-tight text-[#202A3D] sm:text-5xl [text-wrap:balance]">
+            Someone&rsquo;s about to{" "}
+            <span className="whitespace-nowrap">keep this one.</span>
+          </h2>
+          <p className="mx-auto mt-4 max-w-md font-serif text-base italic leading-7 text-[#525B70] sm:text-lg">
+            The best card isn&rsquo;t the prettiest one — it&rsquo;s the one
+            that sounds like you.
+          </p>
+          <div className="mt-8 flex justify-center">
+            <Link href="/birthday/">
+              <WarmButton size="lg">
+                Start their card
+                <ArrowRight className="ml-2 h-5 w-5" />
+              </WarmButton>
+            </Link>
+          </div>
         </div>
       </section>
     </main>
   );
 }
 
-function SectionIntro({
-  eyebrow,
-  title,
-  description,
-  align = "center",
+/* ————— The house collection: one design language, six typographic
+   personalities, arranged as a composed desk scatter on large screens. ————— */
+
+function HouseMat({
+  href,
+  wrapper,
+  tilt,
+  label,
+  shadow = "shadow-[0_2px_3px_rgba(32,42,61,0.1),10px_16px_30px_-16px_rgba(32,42,61,0.4)]",
+  children,
 }: {
-  eyebrow: string;
-  title: string;
-  description: string;
-  align?: "left" | "center";
+  href: string;
+  wrapper: string;
+  tilt: number;
+  label: string;
+  shadow?: string;
+  children: React.ReactNode;
 }) {
   return (
-    <div className={align === "center" ? "mx-auto mb-10 max-w-3xl text-center" : "max-w-xl"}>
-      <p className="text-sm font-semibold uppercase tracking-[0.22em] text-primary">
-        {eyebrow}
-      </p>
-      <h2 className="mt-3 font-serif text-4xl font-semibold leading-tight text-[#202A3D] sm:text-5xl">
-        {title}
-      </h2>
-      <p className="mt-4 text-base leading-7 text-[#6B7280] sm:text-lg">
-        {description}
-      </p>
-    </div>
-  );
-}
-
-function HomepageAdStrip() {
-  return (
-    <section className="border-y border-[#F1D6DF]/70 bg-[#FFF8F6] py-10">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <a
-          href="https://www.skymakermodel.com"
-          target="_blank"
-          rel="noopener noreferrer sponsored"
-          aria-label="Visit Skymaker Model"
-          className="group grid gap-4 rounded-xl border border-[#F1D6DF] bg-white p-5 transition-all duration-300 hover:border-primary/30 hover:shadow-md md:grid-cols-[1fr_auto] md:items-center"
-        >
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#9A5A25]">
-              Sponsored
-            </p>
-            <h2 className="mt-2 text-xl font-semibold text-[#202A3D]">
-              Explore detailed model kits and maker builds at Skymaker Model.
-            </h2>
-            <p className="mt-1 text-sm leading-6 text-[#6B7280]">
-              Visit skymakermodel.com for scale model products, project ideas,
-              and more.
-            </p>
-          </div>
-          <span className="inline-flex min-h-[44px] items-center justify-center rounded-lg bg-primary px-5 text-sm font-semibold text-white transition-transform group-hover:-translate-y-0.5">
-            Visit site
-            <ArrowRight className="ml-2 h-4 w-4" />
-          </span>
-        </a>
+    <Link href={href} className={`group block ${wrapper}`}>
+      <div
+        className={`rounded-lg bg-white p-2 ring-1 ring-[#EADFD6] ${shadow} transition-all duration-300 group-hover:-translate-y-1.5 group-hover:rotate-0 group-hover:shadow-[10px_22px_40px_-16px_rgba(180,55,95,0.4)]`}
+        style={{ transform: `rotate(${tilt}deg)` }}
+      >
+        {children}
       </div>
-    </section>
+      <p className="mt-2.5 text-center font-hand text-lg text-[#525B70] transition-colors group-hover:text-primary">
+        {label}
+      </p>
+    </Link>
   );
 }
 
-function FeatureCard({ title, description, icon }: FeatureCardProps) {
+function HouseCardBirthday() {
   return (
-    <div className="rounded-xl border border-[#F1D6DF] bg-[#FFF8F6] p-6">
-      <div className="mb-5 inline-flex h-11 w-11 items-center justify-center rounded-lg bg-primary text-white">
-        {icon}
-      </div>
-      <h3 className="text-xl font-semibold text-[#202A3D]">{title}</h3>
-      <p className="mt-3 text-sm leading-6 text-[#6B7280]">{description}</p>
-    </div>
-  );
-}
-
-function HowItWorks() {
-  const steps = [
-    {
-      title: "Recipient & occasion",
-      description:
-        "Choose the moment, relationship, and recipient details before touching output settings.",
-      icon: <Heart className="h-5 w-5" />,
-    },
-    {
-      title: "Message & tone",
-      description:
-        "Write the feeling first. Tone, language, and signature support the message instead of distracting from it.",
-      icon: <MessageCircle className="h-5 w-5" />,
-    },
-    {
-      title: "Format & sharing",
-      description:
-        "Pick image, animation, or video only after the card has enough personal context.",
-      icon: <PenTool className="h-5 w-5" />,
-    },
-  ];
-
-  return (
-    <section className="border-y border-[#F1D6DF]/70 bg-[#FFF8F6] py-16">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <SectionIntro
-          eyebrow="Workflow"
-          title="A simpler three-step creator"
-          description="The generator now follows the way people think about cards: who it is for, what it should say, then how it should be sent."
-        />
-        <div className="grid gap-4 md:grid-cols-3">
-          {steps.map((step, index) => (
-            <div key={step.title} className="rounded-xl border border-[#F1D6DF] bg-white p-6">
-              <div className="flex items-center gap-3">
-                <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-sm font-semibold text-white">
-                  {index + 1}
-                </span>
-                <div className="text-primary">{step.icon}</div>
-              </div>
-              <h3 className="mt-6 text-xl font-semibold text-[#202A3D]">
-                {step.title}
-              </h3>
-              <p className="mt-3 text-sm leading-6 text-[#6B7280]">
-                {step.description}
-              </p>
-            </div>
-          ))}
+    <HouseMat
+      href="/birthday/"
+      label="Birthday"
+      wrapper="w-48 sm:w-64 lg:absolute lg:left-[25%] lg:top-0 lg:z-30"
+      tilt={0}
+      shadow="shadow-[0_3px_5px_rgba(32,42,61,0.12),14px_24px_44px_-16px_rgba(32,42,61,0.45)]"
+    >
+      <div className="relative overflow-hidden rounded-md bg-primary px-5 pb-6 pt-6 text-left">
+        <PaperGrain id="grain-hc-bday" className="absolute inset-0 opacity-[0.35]" />
+        <div className="relative">
+          <p className="text-[9px] font-semibold uppercase tracking-[0.22em] text-[#FBD3DF]">
+            Maya · 28
+          </p>
+          <p className="mt-3 font-serif text-[2rem] font-bold uppercase leading-[0.96] tracking-tight text-[#FFF8F6]">
+            Happy
+            <br />
+            birthday,
+            <br />
+            <em className="font-semibold normal-case italic text-[#F9DF9C]">Maya.</em>
+          </p>
+          <p className="mt-4 font-hand text-lg leading-6 text-[#FBD3DF]">
+            Save me the corner piece. — Nadia
+          </p>
         </div>
       </div>
-    </section>
+    </HouseMat>
+  );
+}
+
+function HouseCardBigOne() {
+  return (
+    <HouseMat
+      href="/birthday/"
+      label="Birthday — milestone"
+      wrapper="w-40 sm:w-48 lg:absolute lg:left-[6%] lg:top-[10%] lg:z-20"
+      tilt={2}
+    >
+      <div className="rounded-md bg-[#232E45] px-4 pb-7 pt-8 text-center ring-1 ring-white/10">
+        <p className="text-[9px] font-semibold uppercase tracking-[0.22em] text-[#E5B72E]">
+          Alex · the big one
+        </p>
+        <p className="mt-3 bg-gradient-to-b from-[#F4D06A] via-[#E5B72E] to-[#B98D1F] bg-clip-text font-serif text-7xl font-semibold italic leading-none text-transparent drop-shadow-[0_1px_1px_rgba(0,0,0,0.45)]">
+          30
+        </p>
+        <p className="mx-auto mt-3 max-w-[170px] font-serif text-sm italic leading-6 text-[#F6EFE9]">
+          Brilliant, actually.
+        </p>
+        <div className="mx-auto mt-5 h-px w-10 bg-white/25" aria-hidden />
+        <p className="mt-4 font-hand text-base text-[#9AA6C0]">— the whole crew</p>
+      </div>
+    </HouseMat>
+  );
+}
+
+function HouseCardLove() {
+  return (
+    <HouseMat
+      href="/valentine/"
+      label="Love & Valentine"
+      wrapper="w-52 sm:w-64 lg:absolute lg:left-[51%] lg:top-[10%] lg:z-20"
+      tilt={-1.5}
+    >
+      <div className="relative overflow-hidden rounded-md border border-[#F1D6DF] bg-[#FFE8F0] px-6 pb-6 pt-5 text-left">
+        <PaperGrain id="grain-hc-love" className="absolute inset-0 opacity-[0.4]" />
+        <HeartArt className="absolute -bottom-10 -right-8 w-40 rotate-12 opacity-[0.12]" />
+        <div className="relative">
+          <p className="font-serif text-base text-[#202A3D]">All my heart,</p>
+          <p className="font-serif text-5xl italic leading-[1.05] text-primary">always.</p>
+          <HeartArt className="mtc-breathe -mt-1 ml-auto w-10" />
+        </div>
+      </div>
+    </HouseMat>
+  );
+}
+
+function HouseCardSorry() {
+  return (
+    <HouseMat
+      href="/sorry/"
+      label="Sorry"
+      wrapper="w-44 sm:w-52 lg:absolute lg:left-[14%] lg:top-[50%] lg:z-10"
+      tilt={-2}
+    >
+      <div
+        className="relative overflow-hidden rounded-md border border-[#DDE3D6] bg-[#F3F5EF] pb-5 pl-9 pr-5 pt-6 text-left"
+        style={{
+          backgroundImage:
+            "repeating-linear-gradient(transparent, transparent 27px, rgba(98,115,92,0.18) 27px, rgba(98,115,92,0.18) 28px)",
+        }}
+      >
+        <PaperGrain id="grain-hc-sorry" className="absolute inset-0 opacity-[0.4]" />
+        <span aria-hidden className="absolute inset-y-0 left-6 w-px bg-[#D98A8A]/60" />
+        <div className="relative">
+          <p className="text-right font-hand text-base text-[#62735C]">Tuesday.</p>
+          <p className="mt-2 font-hand text-[22px] leading-[28px] text-[#2C3A2F]">
+            I was wrong — and worse, slow to say so.
+          </p>
+          <p className="mt-3 font-hand text-lg text-[#62735C]">— Sam</p>
+        </div>
+      </div>
+    </HouseMat>
+  );
+}
+
+function HouseCardAnniversary() {
+  return (
+    <HouseMat
+      href="/anniversary/"
+      label="Anniversary"
+      wrapper="w-40 sm:w-48 lg:absolute lg:left-[65%] lg:top-[48%] lg:z-10"
+      tilt={1.5}
+    >
+      <div className="relative overflow-hidden rounded-md border border-[#EFDFC8] bg-[#FFFEFB] px-4 pb-6 pt-7 text-center">
+        <PaperGrain id="grain-hc-anniv" className="absolute inset-0 opacity-[0.4]" />
+        <div className="relative border-y-[3px] border-double border-[#C9A227]/60 py-4">
+          <p className="font-serif text-4xl font-semibold uppercase leading-[0.95] tracking-tight text-[#202A3D]">
+            Ten
+            <br />
+            <em className="font-light lowercase italic text-primary">years</em>
+          </p>
+          <RingsArt className="mx-auto mt-3 w-12" />
+          <p className="mt-3 text-[9px] font-semibold uppercase tracking-[0.22em] text-[#B99A4E]">
+            Still us · 2016—2026
+          </p>
+        </div>
+      </div>
+    </HouseMat>
+  );
+}
+
+function HouseCardThanks() {
+  return (
+    <HouseMat
+      href="/thankyou/"
+      label="Thank you"
+      wrapper="w-40 sm:w-48 lg:absolute lg:left-[41%] lg:top-[56%] lg:z-0"
+      tilt={-1}
+    >
+      <div className="relative flex min-h-[180px] flex-col justify-end overflow-hidden rounded-md border border-[#D9D5E8] bg-[#EBE9F4] px-5 pb-5 pt-4 text-left">
+        <PaperGrain id="grain-hc-thanks" className="absolute inset-0 opacity-[0.35]" />
+        <div className="relative">
+          <p className="font-serif text-base italic leading-6 text-[#2E2A4D]">
+            Thank you for showing up.
+            <br />
+            Every single time.
+          </p>
+          <p className="mt-2 font-hand text-base text-[#8B84AC]">— M, for R</p>
+        </div>
+      </div>
+    </HouseMat>
+  );
+}
+
+/* ————— Hero card scene: the studio-illustrated envelope prop with
+   live typesetting overlaid on the blank card face. ————— */
+
+function HeroCardScene() {
+  return (
+    <div className="relative mx-auto w-full max-w-[320px] sm:max-w-[430px]">
+      <div
+        aria-hidden
+        className="absolute -inset-10 rounded-full bg-[radial-gradient(closest-side,rgba(255,232,240,0.9)_0%,transparent_72%)]"
+      />
+      <div
+        className="relative aspect-[900/1206]"
+        role="img"
+        aria-label="A personalized birthday card rising out of an opened blush envelope, with its shareable link"
+      >
+        <Image
+          src="/props/hero-envelope.jpg"
+          alt=""
+          width={900}
+          height={1206}
+          priority
+          className="h-full w-full mix-blend-multiply"
+        />
+
+        {/* live typesetting on the blank card face */}
+        <div className="pointer-events-none absolute inset-x-[25%] top-[39.5%] -rotate-1 text-center">
+          <p className="text-[9px] font-semibold uppercase tracking-[0.24em] text-primary sm:text-[11px]">
+            For June · turning 30
+          </p>
+          <p className="mt-2 font-serif text-2xl font-semibold leading-[1.05] text-[#202A3D] [text-shadow:0_1px_0_rgba(255,255,255,0.9)] sm:mt-3 sm:text-[2.1rem]">
+            Happy
+            <br />
+            <em className="italic text-primary">Birthday</em>
+          </p>
+          <p className="mt-2 font-hand text-base text-[#76819A] sm:mt-3 sm:text-xl">
+            — love, Dad
+          </p>
+        </div>
+
+        {/* shareable-link pill, tucked onto the envelope's bottom edge */}
+        <div className="absolute bottom-[4%] left-1/2 z-30 flex -translate-x-1/2 items-center gap-2 whitespace-nowrap rounded-full bg-white py-2 pl-3 pr-4 shadow-[0_12px_24px_-10px_rgba(32,42,61,0.4)] ring-1 ring-[#F1D6DF]">
+          <Link2 className="h-4 w-4 text-primary" />
+          <span className="text-[11px] font-semibold tracking-tight text-[#202A3D] sm:text-xs">
+            mewtrucard.com/c/june-30
+          </span>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -517,14 +481,14 @@ const homeFaqs: SeoFaq[] = [
 
 function FAQ() {
   return (
-    <Accordion type="single" collapsible className="space-y-3">
+    <Accordion type="single" collapsible className="border-t border-[#EADFD6]">
       {homeFaqs.map((faq, idx) => (
         <AccordionItem
           key={idx}
           value={`question-${idx}`}
-          className="rounded-xl border border-[#F1D6DF] bg-white px-5"
+          className="border-b border-[#EADFD6]"
         >
-          <AccordionTrigger className="text-left font-semibold text-[#202A3D] hover:no-underline">
+          <AccordionTrigger className="py-4 text-left text-base font-semibold text-[#202A3D] hover:no-underline hover:text-primary">
             {faq.question}
           </AccordionTrigger>
           <AccordionContent className="leading-7 text-[#6B7280]">

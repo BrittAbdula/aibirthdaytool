@@ -22,11 +22,11 @@ async function getCard(cardId: string) {
        originalCardId: 'test-card',
        cardType: 'birthday',
        editedContent: '',
-       r2Url: 'https://images.unsplash.com/photo-1513151233558-d860c539d99f?q=80&w=2075&auto=format&fit=crop',
+       r2Url: 'https://store.celeprime.com/cdn-cgi/imagedelivery/DEOVdDdfeGzASe0KdtD7FA/edf4d096-3a78-4840-4ead-cc7f2aa7f700/public',
        spotifyTrackId: null,
        message: 'Happy Birthday! This card has magical vibes now.',
        customUrl: 'test-card',
-       recipientName: null,
+       recipientName: 'June',
        momentConfig: null,
        momentResponse: null
      }
@@ -152,7 +152,7 @@ export default async function EditedCardPage({ params }: Props) {
                 </div>
               }
             >
-              <CardDisplay card={{ cardType: card.cardType, r2Url: card.r2Url || '', svgContent: card.editedContent || '' }} />
+              <CardDisplay card={{ cardType: card.cardType, r2Url: card.r2Url || '', svgContent: card.editedContent || '' }} recipientName={card.recipientName} />
             </Suspense>
 
             {momentConfig ? (
@@ -171,13 +171,12 @@ export default async function EditedCardPage({ params }: Props) {
             ) : (
               card.message && (
                 <div className="p-4 animate-[fadeUp_0.8s_ease-out_0.3s_forwards] opacity-0">
-                  <div className="relative">
-                    <div className="absolute -left-2 -top-2 text-lg opacity-60">❝</div>
-                    <p className="italic text-center font-serif text-lg px-4" style={{ color: theme.textColor }}>
-                      {card.message}
-                    </p>
-                    <div className="absolute -right-2 -bottom-2 text-lg opacity-60">❞</div>
-                  </div>
+                  <p
+                    className="mx-auto max-w-md text-center font-hand text-2xl leading-8"
+                    style={{ color: theme.textColor }}
+                  >
+                    &ldquo;{card.message}&rdquo;
+                  </p>
                 </div>
               )
             )}
@@ -203,21 +202,16 @@ export default async function EditedCardPage({ params }: Props) {
         />
 
         <footer className="mt-8 sm:mt-10 text-center animate-[fadeUp_0.8s_ease-out_1s_forwards] opacity-0">
-          <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white/50 backdrop-blur-sm border border-white/60 shadow-sm">
+          <div className="inline-flex items-center gap-1.5 rounded-full border border-white/60 bg-white/60 px-5 py-2.5 shadow-sm backdrop-blur-sm">
             <span className="text-sm" style={{ color: theme.textColor }}>
-              Created with
+              Made on
             </span>
-            <span className="inline-block animate-pulse" style={{ color: theme.accent }}>❤️</span>
-            <span className="text-sm" style={{ color: theme.textColor }}>on</span>
             <Link
               href="/"
-              className="transition-colors duration-300 font-semibold group"
+              className="font-serif text-sm font-semibold transition-colors duration-300"
               style={{ color: theme.accent }}
             >
               MewTruCard
-              <span className="inline-block ml-1 group-hover:rotate-12 transition-transform duration-300">
-                {theme.footerEmoji}
-              </span>
             </Link>
           </div>
         </footer>

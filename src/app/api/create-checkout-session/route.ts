@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server"
 import { auth } from "@/auth"
 import Stripe from "stripe"
-import { buildCheckoutRedirectUrls } from "@/lib/pricing"
+import { buildCheckoutRedirectUrls } from "@/lib/pricing/checkout"
+import { SKUS, getStripePriceId, isSkuKey } from "@/lib/pricing/plans"
 import { recordMonetizationEvent } from "@/lib/monetization"
 import { getCreatorDevice } from "@/lib/creator-pro"
 
@@ -17,7 +18,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", {
 
 export async function POST(request: Request) {
   let userId: string | null = null
-  let plan: string | null = null
+  let sku: string | null = null
   let source = "unknown"
   let returnUrl: string | null = null
   let taskSize: number | null = null
@@ -26,17 +27,15 @@ export async function POST(request: Request) {
 
   try {
     const session = await auth()
-    
+
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
     userId = session.user.id
     const customer_email = session.user.email
-    // const userId = "cm56ic66y000110jijyw2ir8r"
-    // const customer_email = "auroroa@gmail.com"
     const body = await request.json()
-    plan = body.plan
+    sku = body.sku
     returnUrl = body.returnUrl
     source = typeof body.source === "string" ? body.source : "unknown"
     taskSize = typeof body.taskSize === "number" && Number.isFinite(body.taskSize)
@@ -52,48 +51,43 @@ export async function POST(request: Request) {
     await recordMonetizationEvent({
       eventType: "checkout_session_create_attempt",
       userId,
-      plan,
+      plan: isSkuKey(sku) ? sku : null,
       source,
       path: returnUrl,
-      metadata: checkoutMetadata,
+      metadata: { ...checkoutMetadata, ...(isSkuKey(sku) ? {} : { requestedSku: String(sku) }) },
     })
-    
-    if (!plan || (plan !== "monthly" && plan !== "yearly")) {
+
+    if (!isSkuKey(sku)) {
       await recordMonetizationEvent({
         eventType: "checkout_session_create_failed",
         userId,
-        plan,
         source,
         path: returnUrl,
         metadata: checkoutMetadata,
-        errorCode: "invalid_plan",
-        errorMessage: "Invalid plan selected",
+        errorCode: "invalid_sku",
+        errorMessage: "Unknown SKU requested",
       })
       return NextResponse.json(
-        { error: "Invalid plan selected", code: "invalid_plan" },
+        { error: "Invalid plan selected", code: "invalid_sku" },
         { status: 400 }
       )
     }
 
-    // Get base URL for success and cancel URLs
-    const origin = request.headers.get("origin") || "http://localhost:3000"
-    const { successUrl, cancelUrl } = buildCheckoutRedirectUrls(origin, returnUrl)
-    
-    // Set price ID based on the selected plan
-    const priceId = plan === "monthly" 
-      ? process.env.STRIPE_MONTHLY_PRICE_ID
-      : process.env.STRIPE_YEARLY_PRICE_ID
-    
-    if (!priceId) {
+    const selectedSku = SKUS[sku]
+
+    let priceId: string
+    try {
+      priceId = getStripePriceId(sku)
+    } catch (error) {
       await recordMonetizationEvent({
         eventType: "checkout_session_create_failed",
         userId,
-        plan,
+        plan: sku,
         source,
         path: returnUrl,
         metadata: checkoutMetadata,
         errorCode: "missing_price_id",
-        errorMessage: "Price ID not configured for the selected plan",
+        errorMessage: error instanceof Error ? error.message : "Price ID not configured",
       })
       return NextResponse.json(
         { error: "Price ID not configured for the selected plan", code: "missing_price_id" },
@@ -101,43 +95,41 @@ export async function POST(request: Request) {
       )
     }
 
-    // Create Stripe checkout session
+    const origin = request.headers.get("origin") || "http://localhost:3000"
+    const { successUrl, cancelUrl } = buildCheckoutRedirectUrls(origin, returnUrl)
+
+    // The webhook resolves what to grant from priceId, so it travels with the
+    // session rather than being re-derived from an expanded line item later.
+    const metadata = {
+      userId,
+      sku,
+      priceId,
+      source,
+      country,
+      device,
+      ...(taskSize ? { taskSize: String(taskSize) } : {}),
+    }
+
+    const isPack = selectedSku.kind === "pack"
+
     const checkoutSession = await stripe.checkout.sessions.create({
       customer_email: customer_email || undefined,
       client_reference_id: userId,
-      line_items: [
-        {
-          price: priceId,
-          quantity: 1,
-        },
-      ],
-      mode: "subscription",
+      line_items: [{ price: priceId, quantity: 1 }],
+      mode: isPack ? "payment" : "subscription",
       allow_promotion_codes: true,
-      subscription_data: {
-        metadata: {
-          userId,
-          source,
-          country,
-          device,
-          ...(taskSize ? { taskSize: String(taskSize) } : {}),
-        },
-      },
+      ...(isPack
+        ? { payment_intent_data: { metadata } }
+        : { subscription_data: { metadata } }),
       success_url: successUrl,
       cancel_url: cancelUrl,
-      metadata: {
-        userId,
-        plan,
-        source,
-        country,
-        device,
-        ...(taskSize ? { taskSize: String(taskSize) } : {}),
-      },
+      metadata,
     })
 
     await recordMonetizationEvent({
       eventType: "checkout_session_created",
       userId,
-      plan,
+      plan: sku,
       source,
       path: returnUrl,
       stripeSessionId: checkoutSession.id,
@@ -150,7 +142,7 @@ export async function POST(request: Request) {
     await recordMonetizationEvent({
       eventType: "checkout_session_create_failed",
       userId,
-      plan,
+      plan: isSkuKey(sku) ? sku : null,
       source,
       path: returnUrl,
       metadata: { country, device, ...(taskSize ? { taskSize } : {}) },

@@ -1,5 +1,5 @@
 import type Stripe from 'stripe';
-import type { PremiumPlanKey } from './pricing';
+import { getPackForPriceId, getTierForPriceId, type PlanTier, type Sku } from './pricing/plans';
 
 export const STRIPE_WEBHOOK_EVENT_TYPES = [
   'checkout.session.completed',
@@ -9,25 +9,34 @@ export const STRIPE_WEBHOOK_EVENT_TYPES = [
   'invoice.payment_succeeded',
 ] as const;
 
-export interface StripePriceConfig {
-  monthlyPriceId: string;
-  yearlyPriceId: string;
-}
+export type StripeEnv = Record<string, string | undefined>;
 
 export interface StripeWebhookClient {
   constructEvent(body: string, signature: string, secret: string): Stripe.Event;
   retrieveSubscription(subscriptionId: string): Promise<Stripe.Subscription>;
 }
 
-export interface PreparedStripeEvent {
+export interface PreparedSubscriptionEvent {
+  kind: 'subscription';
   event: Stripe.Event;
   userId: string;
-  plan: PremiumPlanKey;
+  tier: PlanTier;
+  interval: 'month' | 'year';
   subscription: Stripe.Subscription;
   periodStart: Date;
   periodEnd: Date;
   isBillingEvent: boolean;
 }
+
+export interface PreparedPackPurchaseEvent {
+  kind: 'pack';
+  event: Stripe.Event;
+  userId: string;
+  sku: Sku;
+  session: Stripe.Checkout.Session;
+}
+
+export type PreparedStripeEvent = PreparedSubscriptionEvent | PreparedPackPurchaseEvent;
 
 export type StripeWebhookPersistResult = 'processed' | 'duplicate' | 'ignored';
 
@@ -73,14 +82,23 @@ export function getSubscriptionPeriod(subscription: Stripe.Subscription): {
   };
 }
 
-export function getPlanForSubscription(
+/**
+ * Which tier a subscription grants, resolved from its Stripe price.
+ *
+ * A price this cannot place produces a payment with no entitlement, so every
+ * price we have ever sold — including the pre-split legacy ones — must resolve.
+ */
+export function getSubscriptionTier(
   subscription: Stripe.Subscription,
-  prices: StripePriceConfig
-): PremiumPlanKey | null {
+  env: StripeEnv
+): PlanTier | null {
   const priceId = subscription.items.data[0]?.price.id;
-  if (priceId === prices.monthlyPriceId) return 'monthly';
-  if (priceId === prices.yearlyPriceId) return 'yearly';
-  return null;
+  if (!priceId) return null;
+  return getTierForPriceId(priceId, env);
+}
+
+export function getSubscriptionInterval(subscription: Stripe.Subscription): 'month' | 'year' {
+  return subscription.items.data[0]?.price.recurring?.interval === 'year' ? 'year' : 'month';
 }
 
 export function getStripeSubscriptionAnalytics(
@@ -101,10 +119,34 @@ export function getStripeSubscriptionAnalytics(
   };
 }
 
+/**
+ * A one-time card pack purchase.
+ *
+ * The SKU is resolved from the session's price id and cross-checked against the
+ * amount actually charged: granting credits on a mismatch would hand out cards
+ * the buyer did not pay for.
+ */
+export function preparePackPurchase(
+  event: Stripe.Event,
+  session: Stripe.Checkout.Session,
+  env: StripeEnv
+): PreparedPackPurchaseEvent | null {
+  const userId = session.metadata?.userId || null;
+  if (!userId || session.client_reference_id !== userId) return null;
+  if (session.payment_status !== 'paid') return null;
+
+  const priceId = session.metadata?.priceId || null;
+  const sku = priceId ? getPackForPriceId(priceId, env) : null;
+  if (!sku || !sku.cards) return null;
+  if (session.amount_total !== sku.amountCents) return null;
+
+  return { kind: 'pack', event, userId, sku, session };
+}
+
 async function prepareStripeEvent(
   event: Stripe.Event,
   client: StripeWebhookClient,
-  prices: StripePriceConfig
+  env: StripeEnv
 ): Promise<PreparedStripeEvent | null> {
   let userId: string | null = null;
   let subscription: Stripe.Subscription | null = null;
@@ -112,6 +154,11 @@ async function prepareStripeEvent(
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object as Stripe.Checkout.Session;
     const metadataUserId = session.metadata?.userId || null;
+
+    if (session.mode === 'payment') {
+      return preparePackPurchase(event, session, env);
+    }
+
     if (
       session.mode !== 'subscription' ||
       !metadataUserId ||
@@ -145,13 +192,15 @@ async function prepareStripeEvent(
     return null;
   }
 
-  const plan = getPlanForSubscription(subscription, prices);
-  if (!plan) return null;
+  const tier = getSubscriptionTier(subscription, env);
+  if (!tier || tier === 'free') return null;
 
   return {
+    kind: 'subscription',
     event,
     userId,
-    plan,
+    tier,
+    interval: getSubscriptionInterval(subscription),
     subscription,
     ...getSubscriptionPeriod(subscription),
     isBillingEvent:
@@ -163,7 +212,7 @@ export async function handleStripeWebhook(input: {
   body: string;
   signature: string;
   webhookSecret: string;
-  prices: StripePriceConfig;
+  env: StripeEnv;
   client: StripeWebhookClient;
   store: StripeWebhookStore;
   onError?: (error: unknown) => void;
@@ -181,7 +230,7 @@ export async function handleStripeWebhook(input: {
   }
 
   try {
-    const prepared = await prepareStripeEvent(event, input.client, input.prices);
+    const prepared = await prepareStripeEvent(event, input.client, input.env);
     if (!prepared) {
       return { status: 200, body: 'Webhook ignored' };
     }

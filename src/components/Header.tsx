@@ -4,7 +4,6 @@ import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname } from 'next/navigation'
-import SparklesText from '@/components/ui/sparkles-text'
 import { Menu, X, ChevronDown, Loader2, Crown, Search, SendHorizontal, Plus, Sparkles, Users, Send } from "lucide-react"
 import { useSession, signIn, signOut } from "next-auth/react"
 import { Button } from '@/components/ui/button'
@@ -292,12 +291,9 @@ function Header({ variant = 'default' }: { variant?: HeaderVariant }) {
                   className="drop-shadow-sm"
                 />
               </div>
-              <SparklesText
-                text='MewTruCard'
-                className="hidden truncate text-2xl font-caveat font-bold text-gray-800 min-[440px]:block"
-                sparklesCount={10}
-                colors={{ first: "#FF6B6B", second: "#FFD700" }}
-              />
+              <span className="hidden truncate font-serif text-2xl font-semibold tracking-tight text-[#202A3D] min-[440px]:block">
+                MewTruCard
+              </span>
             </Link>
 
             <div className="hidden items-center gap-3 md:flex">
@@ -450,25 +446,17 @@ function Header({ variant = 'default' }: { variant?: HeaderVariant }) {
                 className="drop-shadow-sm"
               />
             </div>
-            <SparklesText
-              text='MewTruCard'
-              className="text-2xl font-caveat font-bold text-gray-800"
-              sparklesCount={12}
-              colors={{ first: "#FF6B6B", second: "#FFD700" }}
-            />
+            <span className="font-serif text-2xl font-semibold tracking-tight text-[#202A3D]">
+              MewTruCard
+            </span>
           </Link>
 
           {/* Desktop Menu */}
           <div className="hidden md:flex items-center space-x-6">
-            <Link href="/cards/" className="text-gray-700 hover:text-primary font-quicksand font-semibold transition-colors text-base">
-              Create a card
-            </Link>
-
             <Link
               href={galleryEntryHref}
-              className="inline-flex min-h-[44px] items-center gap-2 rounded-lg border border-primary/20 bg-white px-4 py-2 text-sm font-semibold text-primary transition-all hover:-translate-y-0.5 hover:bg-primary/10 hover:text-primary"
+              className="text-gray-700 hover:text-primary font-quicksand font-semibold transition-colors text-base"
             >
-              <Search className="h-4 w-4" />
               Browse ideas
             </Link>
 
@@ -522,15 +510,26 @@ function Header({ variant = 'default' }: { variant?: HeaderVariant }) {
               </DropdownMenuContent>
             </DropdownMenu>
 
-            <Link href="/my-cards/" className="text-gray-700 hover:text-primary font-quicksand font-semibold transition-colors text-base">
-              My cards
-            </Link>
+            {status === 'authenticated' && (
+              <Link href="/my-cards/" className="text-gray-700 hover:text-primary font-quicksand font-semibold transition-colors text-base">
+                My cards
+              </Link>
+            )}
             <Link href={status === 'authenticated' ? '/creator/' : '/for/employee-birthday-cards/'} className="text-gray-700 hover:text-primary font-quicksand font-semibold transition-colors text-base">
               {status === 'authenticated' ? 'Creator workspace' : 'For teams'}
             </Link>
             <Link href="/pricing/" className="text-gray-700 hover:text-primary font-quicksand font-semibold transition-colors text-base">
               Pricing
             </Link>
+            {status === 'authenticated' && !isPremiumUser && (
+              <Link
+                href="/pricing/"
+                className="inline-flex items-center gap-1.5 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-primary/90"
+              >
+                <Sparkles className="h-4 w-4" />
+                Get more cards
+              </Link>
+            )}
 
             {/* Search Icon & Dropdown */}
             <div className="relative" ref={searchRef}>
@@ -710,6 +709,13 @@ function Header({ variant = 'default' }: { variant?: HeaderVariant }) {
                 )}
               </WarmButton>
             )}
+
+            <Link
+              href="/cards/"
+              className="inline-flex min-h-[40px] items-center rounded-full bg-primary px-5 text-sm font-semibold text-white shadow-sm transition-all hover:-translate-y-0.5 hover:bg-primary/90 hover:shadow-md"
+            >
+              Create a card
+            </Link>
           </div>
 
           <div className="md:hidden flex items-center space-x-3">
@@ -845,6 +851,15 @@ function Header({ variant = 'default' }: { variant?: HeaderVariant }) {
               <Link href="/pricing/" className="flex items-center px-4 py-3 text-gray-700 hover:bg-pink-50 rounded-xl transition-colors font-medium text-lg">
                 Pricing
               </Link>
+              {status === 'authenticated' && !isPremiumUser && (
+                <Link
+                  href="/pricing/"
+                  className="mx-4 mt-1 flex items-center justify-center gap-1.5 rounded-xl bg-primary px-4 py-3 text-base font-semibold text-white"
+                >
+                  <Sparkles className="h-4 w-4" />
+                  Get more cards
+                </Link>
+              )}
 
               <div className="px-4 pt-3">
                 <div className="text-xs font-semibold uppercase tracking-[0.18em] text-gray-400">

@@ -2,19 +2,47 @@ import assert from 'node:assert/strict';
 import Stripe from 'stripe';
 import {
   getInvoiceSubscriptionId,
-  getPlanForSubscription,
   getStripeSubscriptionAnalytics,
+  getSubscriptionInterval,
   getSubscriptionPeriod,
+  getSubscriptionTier,
   handleStripeWebhook,
   type PreparedStripeEvent,
+  type PreparedSubscriptionEvent,
   type StripeWebhookPersistResult,
 } from '../src/lib/stripe-webhook';
 
 const webhookSecret = 'whsec_test_secret';
-const prices = {
-  monthlyPriceId: 'price_monthly',
-  yearlyPriceId: 'price_yearly',
+const env = {
+  STRIPE_PLUS_MONTHLY_PRICE_ID: 'price_monthly',
+  STRIPE_PLUS_YEARLY_PRICE_ID: 'price_yearly',
+  STRIPE_CREATOR_PRO_MONTHLY_PRICE_ID: 'price_cp_monthly',
+  STRIPE_CREATOR_PRO_YEARLY_PRICE_ID: 'price_cp_yearly',
+  STRIPE_PACK_20_PRICE_ID: 'price_pack_20',
+  STRIPE_PACK_50_PRICE_ID: 'price_pack_50',
+  STRIPE_MONTHLY_PRICE_ID: 'price_legacy_monthly',
+  STRIPE_YEARLY_PRICE_ID: 'price_legacy_yearly',
 };
+
+function withPrice(priceId: string, unitAmount = 699): Stripe.Subscription {
+  const base = subscription();
+  return subscription({
+    items: {
+      ...base.items,
+      data: [
+        {
+          ...base.items.data[0],
+          price: { ...base.items.data[0].price, id: priceId, unit_amount: unitAmount },
+        },
+      ],
+    },
+  });
+}
+
+function asSubscriptionEvent(prepared: PreparedStripeEvent): PreparedSubscriptionEvent {
+  assert.equal(prepared.kind, 'subscription');
+  return prepared as PreparedSubscriptionEvent;
+}
 const stripe = new Stripe('sk_test_placeholder');
 
 function subscription(overrides: Record<string, unknown> = {}): Stripe.Subscription {
@@ -87,7 +115,7 @@ async function run(input: {
     body: request.body,
     signature: input.signature ?? request.signature,
     webhookSecret,
-    prices,
+    env,
     client: {
       constructEvent: (body, signature, secret) =>
         stripe.webhooks.constructEvent(body, signature, secret),
@@ -118,27 +146,21 @@ async function main() {
   assert.equal(valid.result.status, 200);
   assert.equal(valid.result.body, 'Webhook received');
   assert.equal(valid.persisted.length, 1);
-  assert.equal(valid.persisted[0].plan, 'monthly');
-  assert.equal(valid.persisted[0].periodStart.toISOString(), '2023-11-14T22:13:20.000Z');
-  assert.equal(valid.persisted[0].periodEnd.toISOString(), '2023-12-14T22:13:20.000Z');
+  const validPrepared = asSubscriptionEvent(valid.persisted[0]);
+  assert.equal(validPrepared.tier, 'plus');
+  assert.equal(validPrepared.interval, 'month');
+  assert.equal(validPrepared.periodStart.toISOString(), '2023-11-14T22:13:20.000Z');
+  assert.equal(validPrepared.periodEnd.toISOString(), '2023-12-14T22:13:20.000Z');
 
   const invalidSignature = await run({ stripeEvent: checkoutEvent, signature: 'invalid' });
   assert.equal(invalidSignature.result.status, 400);
   assert.equal(invalidSignature.persisted.length, 0);
 
+  // This Stripe account also bills other products, so their events arrive here
+  // too and must be ignored rather than mutating a MewTruCard user's plan.
   const unrelated = await run({
     stripeEvent: checkoutEvent,
-    retrievedSubscription: subscription({
-      items: {
-        ...subscription().items,
-        data: [
-          {
-            ...subscription().items.data[0],
-            price: { ...subscription().items.data[0].price, id: 'price_other_app' },
-          },
-        ],
-      },
-    }),
+    retrievedSubscription: withPrice('price_other_app'),
   });
   assert.equal(unrelated.result.status, 200);
   assert.equal(unrelated.result.body, 'Webhook ignored');
@@ -162,7 +184,7 @@ async function main() {
     ),
   });
   assert.equal(canceled.result.status, 200);
-  assert.equal(canceled.persisted[0].subscription.status, 'canceled');
+  assert.equal(asSubscriptionEvent(canceled.persisted[0]).subscription.status, 'canceled');
 
   const invoice = {
     id: 'in_123',
@@ -184,34 +206,89 @@ async function main() {
     stripeEvent: event('invoice.payment_succeeded', invoice),
   });
   assert.equal(invoiceResult.result.status, 200);
-  assert.equal(invoiceResult.persisted[0].isBillingEvent, true);
+  assert.equal(asSubscriptionEvent(invoiceResult.persisted[0]).isBillingEvent, true);
 
-  assert.equal(getPlanForSubscription(subscription(), prices), 'monthly');
+  assert.equal(getSubscriptionTier(subscription(), env), 'plus');
   assert.deepEqual(getStripeSubscriptionAnalytics(subscription()), {
     stripeSubscriptionId: 'sub_relevant',
     stripeCustomerId: 'cus_relevant',
-    stripePriceId: prices.monthlyPriceId,
+    stripePriceId: 'price_monthly',
     stripeUnitAmount: 699,
     stripeCurrency: 'usd',
     stripeLivemode: true,
   });
-  assert.equal(
-    getPlanForSubscription(
-      subscription({
-        items: {
-          ...subscription().items,
-          data: [
-            {
-              ...subscription().items.data[0],
-              price: { ...subscription().items.data[0].price, id: 'price_yearly' },
-            },
-          ],
-        },
-      }),
-      prices
-    ),
-    'yearly'
-  );
+  assert.equal(getSubscriptionTier(withPrice('price_yearly'), env), 'plus');
+  assert.equal(getSubscriptionTier(withPrice('price_cp_monthly', 1999), env), 'creator_pro');
+  assert.equal(getSubscriptionTier(withPrice('price_other_app'), env), null);
+  assert.equal(getSubscriptionInterval(subscription()), 'month');
+
+  // Every price we have ever sold must resolve, or a real payment lands with no
+  // entitlement attached. Legacy subscribers keep the full Creator Pro set.
+  assert.equal(getSubscriptionTier(withPrice('price_legacy_monthly'), env), 'creator_pro');
+  assert.equal(getSubscriptionTier(withPrice('price_legacy_yearly', 5299), env), 'creator_pro');
+
+  // --- one-time card packs ---
+  const packSession: Record<string, unknown> = {
+    id: 'cs_live_pack',
+    object: 'checkout.session',
+    mode: 'payment',
+    payment_status: 'paid',
+    livemode: true,
+    amount_total: 299,
+    currency: 'usd',
+    client_reference_id: 'user_123',
+    payment_intent: 'pi_123',
+    metadata: { userId: 'user_123', sku: 'pack_20', priceId: 'price_pack_20' },
+  };
+
+  const packResult = await run({ stripeEvent: event('checkout.session.completed', packSession) });
+  assert.equal(packResult.result.status, 200);
+  assert.equal(packResult.persisted.length, 1);
+  const packPrepared = packResult.persisted[0];
+  assert.equal(packPrepared.kind, 'pack');
+  assert.equal(packPrepared.kind === 'pack' && packPrepared.sku.key, 'pack_20');
+  assert.equal(packPrepared.kind === 'pack' && packPrepared.sku.cards, 20);
+
+  // An unpaid session must never grant cards.
+  const unpaidPack = await run({
+    stripeEvent: event('checkout.session.completed', {
+      ...packSession,
+      id: 'cs_live_pack_unpaid',
+      payment_status: 'unpaid',
+    }),
+  });
+  assert.equal(unpaidPack.persisted.length, 0);
+
+  // Neither must a session whose charged amount disagrees with the SKU.
+  const mismatchedPack = await run({
+    stripeEvent: event('checkout.session.completed', {
+      ...packSession,
+      id: 'cs_live_pack_mismatch',
+      amount_total: 1,
+    }),
+  });
+  assert.equal(mismatchedPack.persisted.length, 0);
+
+  // Nor one whose client_reference_id disagrees with the metadata user.
+  const spoofedPack = await run({
+    stripeEvent: event('checkout.session.completed', {
+      ...packSession,
+      id: 'cs_live_pack_spoofed',
+      client_reference_id: 'user_other',
+    }),
+  });
+  assert.equal(spoofedPack.persisted.length, 0);
+
+  // A payment-mode session for another product on this account is ignored.
+  const foreignPayment = await run({
+    stripeEvent: event('checkout.session.completed', {
+      ...packSession,
+      id: 'cs_live_foreign',
+      metadata: { userId: 'user_123', sku: 'pack_20', priceId: 'price_some_other_product' },
+    }),
+  });
+  assert.equal(foreignPayment.persisted.length, 0);
+
   assert.throws(
     () =>
       getSubscriptionPeriod(

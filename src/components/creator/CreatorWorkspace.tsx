@@ -25,7 +25,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { PricingCheckoutButton } from '@/components/PricingCheckoutButton';
+import { Paywall } from '@/components/paywall/Paywall';
+import type { PaywallIntent } from '@/lib/pricing/paywall';
 import { toast } from '@/hooks/use-toast';
 import {
   FREE_CREATOR_RECIPIENT_LIMIT,
@@ -177,6 +178,7 @@ export function CreatorWorkspace({
   const [generationProgress, setGenerationProgress] = useState({ completed: 0, total: 0 });
   const [paywallOpen, setPaywallOpen] = useState(false);
   const [paywallSource, setPaywallSource] = useState('creator_workspace');
+  const [paywallIntent, setPaywallIntent] = useState<PaywallIntent>('preview_used');
   const [brandForm, setBrandForm] = useState({
     organizationName: initialPreset?.organizationName || '',
     primaryColor: initialPreset?.primaryColor || '#B4375F',
@@ -248,6 +250,7 @@ export function CreatorWorkspace({
     } catch (error) {
       if ((error as Error & { code?: string }).code === 'creator_pro_required') {
         setPaywallSource('creator_recipient_limit');
+        setPaywallIntent('roster_limit');
         setPaywallOpen(true);
         setRecipientDialogOpen(false);
       } else {
@@ -297,12 +300,14 @@ export function CreatorWorkspace({
       });
       if (data.limited) {
         setPaywallSource('creator_csv_limit');
+        setPaywallIntent('csv_limit');
         setPaywallOpen(true);
       }
     } catch (error) {
       setCsvImportErrors([{ row: 0, message: (error as Error).message }]);
       if ((error as Error & { code?: string }).code === 'creator_pro_required') {
         setPaywallSource('creator_csv_limit');
+        setPaywallIntent('csv_limit');
         setPaywallOpen(true);
       } else {
         toast({ variant: 'destructive', title: 'CSV import failed', description: (error as Error).message });
@@ -446,6 +451,7 @@ export function CreatorWorkspace({
     } catch (error) {
       if ((error as Error & { code?: string }).code === 'creator_pro_required') {
         setPaywallSource(selectedRecipientIds.length > FREE_CREATOR_RECIPIENT_LIMIT ? 'creator_batch_size' : 'creator_preview_used');
+        setPaywallIntent(selectedRecipientIds.length > FREE_CREATOR_RECIPIENT_LIMIT ? 'batch_size' : 'preview_used');
         setPaywallOpen(true);
       } else {
         toast({ variant: 'destructive', title: 'Could not create batch', description: (error as Error).message });
@@ -486,6 +492,7 @@ export function CreatorWorkspace({
   const exportBatchManifest = (batch: CreatorBatch) => {
     if (!isPremium) {
       setPaywallSource('creator_batch_export');
+      setPaywallIntent('batch_export');
       setPaywallOpen(true);
       return;
     }
@@ -897,7 +904,7 @@ export function CreatorWorkspace({
                           ))}
                         </div>
                         {batch.isPreview && !isPremium && (
-                          <button type="button" onClick={() => { setPaywallSource('creator_preview_result'); setPaywallOpen(true); }} className="mt-5 inline-flex min-h-11 items-center text-sm font-semibold text-primary hover:underline">
+                          <button type="button" onClick={() => { setPaywallSource('creator_preview_result'); setPaywallIntent('preview_used'); setPaywallOpen(true); }} className="mt-5 inline-flex min-h-11 items-center text-sm font-semibold text-primary hover:underline">
                             Unlock every card, export, and reuse this batch <ArrowRight className="ml-2 h-4 w-4" />
                           </button>
                         )}
@@ -961,26 +968,14 @@ export function CreatorWorkspace({
         </DialogContent>
       </Dialog>
 
-      <Dialog open={paywallOpen} onOpenChange={setPaywallOpen}>
-        <DialogContent className="overflow-hidden border-[#E8CDD6] bg-white p-0 sm:max-w-xl">
-          <div className="bg-[#FFF8F6] p-7">
-            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-primary">Creator Pro</p>
-            <DialogHeader>
-              <DialogTitle className="mt-3 font-serif text-3xl font-semibold">Turn the preview into a repeatable workflow.</DialogTitle>
-              <DialogDescription className="mt-3 leading-6 text-[#596174]">Generate every selected card, keep an unlimited recipient roster, export delivery manifests, and reuse your brand preset for $6.99 per month.</DialogDescription>
-            </DialogHeader>
-            <div className="mt-6 space-y-3 text-sm font-semibold text-[#3F485B]">
-              {['Unlimited recipient roster', 'Complete personalized batches', 'Export and reopen finished cards'].map((benefit) => <p key={benefit} className="flex gap-2"><Check className="mt-0.5 h-4 w-4 text-primary" />{benefit}</p>)}
-            </div>
-          </div>
-          <div className="p-7">
-            <PricingCheckoutButton plan="monthly" source={paywallSource} taskSize={selectedRecipientIds.length || undefined} className="h-12 w-full bg-primary text-white hover:bg-primary/90">
-              Start Creator Pro — $6.99/month <ArrowRight className="ml-2 h-4 w-4" />
-            </PricingCheckoutButton>
-            <p className="mt-3 text-center text-xs text-[#7B8292]">Secure Stripe checkout · Cancel anytime</p>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <Paywall
+        isOpen={paywallOpen}
+        onOpenChange={setPaywallOpen}
+        intent={paywallIntent}
+        source={paywallSource}
+        taskSize={selectedRecipientIds.length || undefined}
+      />
+
     </main>
   );
 }

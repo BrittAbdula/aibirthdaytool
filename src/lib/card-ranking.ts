@@ -35,6 +35,8 @@ export const TEXT_QUALITY_MODELS = [
   'claude-3-5-haiku-20241022',
   'claude-haiku-4-5',
   'claude-haiku-4-5-20251001',
+  'grok-4-6',
+  'openai/gpt-5.6-luna',
   'gemini-3-flash-preview',
   'deepseek/deepseek-chat-v3-0324:free',
 ] as const;

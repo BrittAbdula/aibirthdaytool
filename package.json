@@ -13,7 +13,8 @@
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
     "test:gpt-image-2": "ts-node --compiler-options '{\"module\":\"commonjs\",\"moduleResolution\":\"node\"}' scripts/gpt-image-2.test.ts",
-    "test:kie-claude-svg": "ts-node --compiler-options '{\"module\":\"commonjs\",\"moduleResolution\":\"node\"}' scripts/kie-claude-svg.test.ts",
+    "test:openrouter-svg": "ts-node --compiler-options '{\"module\":\"commonjs\",\"moduleResolution\":\"node\"}' scripts/openrouter-svg.test.ts",
+    "test:kie-grok": "ts-node --compiler-options '{\"module\":\"commonjs\",\"moduleResolution\":\"node\"}' scripts/kie-grok.test.ts",
     "test:personalization-prompt": "ts-node --compiler-options '{\"module\":\"commonjs\",\"moduleResolution\":\"node\"}' scripts/personalization-prompt.test.ts",
     "test:checkout-pending": "ts-node --compiler-options '{\"module\":\"commonjs\",\"moduleResolution\":\"node\"}' scripts/checkout-pending.test.ts",
     "test:creator-pro": "ts-node --compiler-options '{\"module\":\"commonjs\",\"moduleResolution\":\"node\"}' scripts/creator-pro.test.ts",
@@ -34,7 +35,10 @@
     "seo:check": "ts-node --compiler-options '{\"module\":\"commonjs\",\"moduleResolution\":\"node\"}' scripts/seo-regression-check.ts",
     "postinstall": "pnpm prisma generate",
     "prisma:generate": "prisma generate",
-    "db:init": "pnpm run prisma:generate && prisma db push && node scripts/seed-system-generators.js"
+    "db:init": "pnpm run prisma:generate && prisma db push && node scripts/seed-system-generators.js",
+    "test:pricing": "ts-node --compiler-options '{\"module\":\"commonjs\",\"moduleResolution\":\"node\"}' scripts/pricing.test.ts",
+    "test:pricing-quota": "ts-node --compiler-options '{\"module\":\"commonjs\",\"moduleResolution\":\"node\"}' scripts/pricing-quota.test.ts",
+    "test:credits": "ts-node --compiler-options '{\"module\":\"commonjs\",\"moduleResolution\":\"node\"}' scripts/test-credits.ts"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.2",

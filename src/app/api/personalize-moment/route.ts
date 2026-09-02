@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { auth } from '@/auth'
 import { z } from 'zod'
-import { requestKieClaudeMessage, KIE_CLAUDE_HAIKU_4_5_MODEL } from '@/lib/kie-claude'
+import { requestKieGrokMessage, KIE_GROK_4_6_MODEL } from '@/lib/kie-grok'
 import {
   getDefaultMomentConfig,
   momentConfigSchema,
@@ -16,7 +16,7 @@ const requestSchema = z.object({
 })
 
 // Generates personalized Moment copy (the ask + dodge phrases) from the
-// sender's own words. One cheap Haiku call; falls back to the type defaults.
+// sender's own words. One Grok call; falls back to the type defaults.
 export async function POST(request: Request) {
   const session = await auth()
   if (!session?.user?.id) {
@@ -40,9 +40,8 @@ export async function POST(request: Request) {
   }
 
   try {
-    const response = await requestKieClaudeMessage({
-      model: KIE_CLAUDE_HAIKU_4_5_MODEL,
-      maxTokens: 600,
+    const response = await requestKieGrokMessage({
+      model: KIE_GROK_4_6_MODEL,
       messages: [
         {
           role: 'user',

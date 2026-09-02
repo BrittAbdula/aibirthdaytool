@@ -1,6 +1,7 @@
 import type { Prisma } from '@prisma/client';
 import { prisma } from './prisma';
-import { normalizeCheckoutReturnPath, type PremiumPlanKey } from './pricing';
+import { normalizeCheckoutReturnPath } from './pricing/checkout';
+import { isSkuKey, type SkuKey } from './pricing/plans';
 
 export const MONETIZATION_EVENT_TYPES = [
   'premium_modal_view',
@@ -22,6 +23,12 @@ export const MONETIZATION_EVENT_TYPES = [
   'creator_paywall_view',
   'creator_week_2_active',
   'creator_day_30_retained',
+  'offer_view',
+  'offer_click',
+  'pack_purchase_completed',
+  'quota_exhausted',
+  'ad_reward_offered',
+  'ad_reward_earned',
 ] as const;
 
 export type MonetizationEventType = typeof MONETIZATION_EVENT_TYPES[number];
@@ -39,7 +46,7 @@ export interface MonetizationEventInput {
 
 export interface NormalizedMonetizationEventInput {
   eventType: MonetizationEventType;
-  plan: PremiumPlanKey | null;
+  plan: SkuKey | LegacyPlanKey | null;
   source: string | null;
   path: string | null;
   stripeSessionId: string | null;
@@ -58,9 +65,13 @@ function normalizeOptionalString(value: unknown, maxLength: number): string | nu
   return normalized ? normalized.slice(0, maxLength) : null;
 }
 
-function normalizePlan(value: unknown): PremiumPlanKey | null {
+/** Values written before the Plus / Creator Pro split; still present in old rows. */
+type LegacyPlanKey = 'monthly' | 'yearly';
+
+function normalizePlan(value: unknown): SkuKey | LegacyPlanKey | null {
   if (value === null || value === undefined || value === '') return null;
   if (value === 'monthly' || value === 'yearly') return value;
+  if (isSkuKey(value)) return value;
   throw new Error('Invalid monetization plan');
 }
 

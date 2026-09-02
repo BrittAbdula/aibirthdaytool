@@ -11,17 +11,17 @@ import {
   buildPendingCheckout,
 } from "@/lib/checkout-pending"
 import { trackMonetizationEvent } from "@/lib/monetization-client"
-import type { PremiumPlanKey } from "@/lib/pricing"
+import type { SkuKey } from "@/lib/pricing/plans"
 
-interface PricingCheckoutButtonProps extends ButtonProps {
-  plan: PremiumPlanKey
+interface CheckoutButtonProps extends ButtonProps {
+  sku: SkuKey
   source: string
   loadingLabel?: string
   taskSize?: number
 }
 
-export function PricingCheckoutButton({
-  plan,
+export function CheckoutButton({
+  sku,
   source,
   loadingLabel = "Opening checkout...",
   taskSize,
@@ -29,7 +29,7 @@ export function PricingCheckoutButton({
   disabled,
   onClick,
   ...props
-}: PricingCheckoutButtonProps) {
+}: CheckoutButtonProps) {
   const { data: session, status } = useSession()
   const [isLoading, setIsLoading] = useState(false)
 
@@ -42,15 +42,17 @@ export function PricingCheckoutButton({
     const returnUrl = window.location.pathname
 
     trackMonetizationEvent({
-      eventType: "pricing_cta_click",
-      plan,
+      eventType: "offer_click",
+      plan: sku,
       source,
       path: returnUrl,
       metadata: taskSize ? { taskSize } : undefined,
     })
 
+    // Signing in navigates away, so the intent is parked in storage and picked
+    // up by PendingCheckoutResume once the user lands back here.
     if (!session) {
-      const pendingCheckout = buildPendingCheckout({ plan, source, returnUrl, taskSize })
+      const pendingCheckout = buildPendingCheckout({ sku, source, returnUrl, taskSize })
       window.localStorage.setItem(PENDING_CHECKOUT_STORAGE_KEY, JSON.stringify(pendingCheckout))
       await signIn("google", { callbackUrl: returnUrl })
       return
@@ -62,7 +64,7 @@ export function PricingCheckoutButton({
       const response = await fetch("/api/create-checkout-session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ plan, returnUrl, source, taskSize }),
+        body: JSON.stringify({ sku, returnUrl, source, taskSize }),
       })
       const data = await response.json()
 

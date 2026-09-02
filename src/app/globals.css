@@ -152,6 +152,48 @@
     }
 }
 
+/* ————— Card micro-animations (quiet idle loops, one light touch each) ————— */
+@keyframes mtc-bob {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-6px); }
+}
+
+@keyframes mtc-breathe {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.04); }
+}
+
+@keyframes mtc-flicker {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    42% { opacity: 0.78; transform: scale(0.92); }
+    68% { opacity: 0.95; transform: scale(1.06); }
+}
+
+@keyframes mtc-twinkle {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.35; }
+}
+
+.mtc-bob { animation: mtc-bob 5.5s ease-in-out infinite; }
+.mtc-bob-slow { animation: mtc-bob 7s ease-in-out infinite; }
+.mtc-breathe {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: mtc-breathe 4.5s ease-in-out infinite;
+}
+.mtc-flame {
+    transform-box: fill-box;
+    transform-origin: 50% 100%;
+    animation: mtc-flicker 1.7s ease-in-out infinite;
+}
+.mtc-twinkle { animation: mtc-twinkle 2.8s ease-in-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+    .mtc-bob, .mtc-bob-slow, .mtc-breathe, .mtc-flame, .mtc-twinkle {
+        animation: none !important;
+    }
+}
+
 /* Typography Overrides based on design system */
 h1,
 h2,
@@ -162,12 +204,5 @@ h6 {
     font-family: var(--font-caveat), cursive;
 }
 
-body,
-p,
-span,
-div,
-a,
-button,
-input {
-    font-family: var(--font-quicksand), sans-serif;
-}
+/* Body copy inherits the sans font set on <body>; inline elements inherit
+   from their parent so serif/italic passages keep their face. */

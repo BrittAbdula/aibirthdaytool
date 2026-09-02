@@ -7,9 +7,10 @@ import { nanoid } from 'nanoid';
 import { getModelConfig } from '@/lib/model-config';
 import { uploadSvgToR2 } from '@/lib/r2';
 import { stylePresets } from '@/lib/style-presets';
-import { getCountryCodeFromHeaders, getDailyCreditAllowance, isHighValueCountry } from '@/lib/credits';
+import { getEntitlements, consumeCards, refundCards } from '@/lib/pricing/entitlements';
+import { getCardCost, type CardFormat } from '@/lib/pricing/quota';
 import { buildReferenceEditPrompt, createNaturalPrompt } from '@/lib/personalization-prompt';
-import { generateCardContentWithKieClaude } from '@/lib/kie-claude-svg';
+import { generateCardSvg } from '@/lib/svg-generation';
 import { getSvgGenerationModel } from '@/lib/svg-models';
 
 // 增加超时限制到最大值
@@ -55,114 +56,74 @@ export async function POST(request: Request) {
     // 检查是否是修改请求
     const isModification = modificationFeedback && previousCardId;
 
-    const todayStart = new Date(new Date().setHours(0, 0, 0, 0));
-
-    // 优化：并行查询用户权限和使用情况
-    const [user, usage] = await Promise.all([
-      prisma.user.findUnique({
-        where: { id: userId },
-        select: { plan: true, createdAt: true },
-      }),
-      prisma.apiUsage.findUnique({
-        where: {
-          userId_date: {
-            userId,
-            date: todayStart,
-          },
-        },
-      })
-    ]);
-
     // 从modelId解析模型配置
     const modelConfig = getModelConfig(modelId);
     if (!modelConfig) {
       return NextResponse.json({ error: 'Invalid model ID' }, { status: 400 });
     }
 
-    const format = (outputFormat as 'image' | 'svg' | 'video') || modelConfig.format;
+    const format = (outputFormat as CardFormat) || modelConfig.format;
     const svgBillingModelConfig = getModelConfig('Free_SVG') || modelConfig;
     const billingModelConfig = format === 'svg' ? svgBillingModelConfig : modelConfig;
     const modelTier = format === 'svg' ? 'Free' : modelConfig.tier;
-
-    // 获取用户计划类型
-    const planType = user?.plan || 'FREE';
 
     if (format === 'video' && modelConfig.format !== 'video') {
       return NextResponse.json({ error: 'Invalid video model' }, { status: 400 });
     }
 
-    if (format === 'video' && planType !== 'PREMIUM') {
+    const entitlements = await getEntitlements(userId);
+
+    if (format === 'video' && !entitlements.canUseVideo) {
       return NextResponse.json({
         error: 'premium_required',
-        message: 'Video cards are available for Premium members.'
+        intent: 'video',
+        message: 'Video cards need a card pack or a subscription.'
       }, { status: 403 });
     }
 
-    // Compute style surcharge (only applies to static images per product rule)
-    const styleCost = (() => {
-      if (!styleId || format !== 'image') return 0;
-      const preset = stylePresets.find(p => p.id === styleId);
-      return preset?.cost ?? 0;
-    })();
+    const stylePreset = styleId ? stylePresets.find(p => p.id === styleId) : undefined;
+    const styleCost = format === 'image' ? (stylePreset?.cost ?? 0) : 0;
 
-    // Credits: static image baseline = 6, plus style cost; SVG/Video use model credits
-    let creditsUsed = (format === 'image' ? 6 : billingModelConfig.credits) + styleCost;
-    // Reference image edit special case: using reference images costs 6 (ignore style surcharge)
-    if (format === 'image' && Array.isArray(referenceImageUrls) && referenceImageUrls.length > 0) {
-      creditsUsed = 6;
-    }
-    const modelLevel = format === 'svg' ? 'FREE' : modelTier === 'Premium' && planType === 'PREMIUM' ? 'PREMIUM' : 'FREE';
-
-    // Check if user is on their first day (registration day)
-    const isFirstDay = !!user?.createdAt && user.createdAt >= todayStart;
-    const countryCode = getCountryCodeFromHeaders(request.headers);
-    const dailyCredits = getDailyCreditAllowance({ planType, isFirstDay, countryCode });
-    const usedCredits = usage?.count || 0;
-    const availableCredits = dailyCredits === Infinity ? Infinity : Math.max(0, dailyCredits - usedCredits);
-    const hasHighValueWelcomeCredits = planType === 'FREE' && isFirstDay && isHighValueCountry(countryCode);
-
-    // First-day FREE users outside high-value regions can only generate SVG cards.
-    if (isFirstDay && planType === 'FREE' && !hasHighValueWelcomeCredits && format !== 'svg') {
+    if (styleCost > 0 && !entitlements.canUsePremiumStyles) {
       return NextResponse.json({
-        error: 'first_day_svg_only',
-        message: '✨ Welcome to your creative journey! On your first day, you can create 2 magical animated cards. Static images and videos unlock tomorrow — trust us, the wait will be worth it!'
+        error: 'premium_required',
+        intent: 'premium_style',
+        message: 'This style needs a card pack or a subscription.'
       }, { status: 403 });
     }
 
-    // Check if user has enough credits
-    if (availableCredits < creditsUsed) {
+    // Paid access — a subscription or a pack balance — also buys the better model.
+    const modelLevel = format === 'svg'
+      ? 'FREE'
+      : modelTier === 'Premium' && entitlements.hasPaidAccess ? 'PREMIUM' : 'FREE';
+
+    // One generation costs one card; a video costs five, because it costs us an
+    // order of magnitude more to produce.
+    const cardCost = getCardCost(format);
+
+    // The pre-refactor credit value, recorded for the admin usage chart only.
+    const legacyCredits = format === 'image' && Array.isArray(referenceImageUrls) && referenceImageUrls.length > 0
+      ? 6
+      : (format === 'image' ? 6 : billingModelConfig.credits) + styleCost;
+
+    const consumption = await consumeCards(userId, cardCost, legacyCredits);
+
+    if (!consumption.ok) {
+      const { quota } = entitlements;
       return NextResponse.json({
         error: 'rate_limit',
-        message: isFirstDay
-          ? `🎨 You've used your ${dailyCredits} welcome credits for today. Come back tomorrow to claim more credits or upgrade to Premium for unlimited creations!`
-          : 'Daily limit reached. Claim your credits tomorrow or upgrade to Premium for unlimited creations!'
+        intent: 'daily_limit',
+        cardsRequired: cardCost,
+        cardsRemaining: quota.totalRemaining,
+        canEarnAdReward: quota.adCardsAvailableToEarn > 0,
+        // The cost comes out of one balance, so quoting the combined total here
+        // would read as "you have 6, this costs 5" right after a refusal.
+        message: cardCost > 1
+          ? `A video takes ${cardCost} cards from a single balance, and neither today's free cards (${quota.dailyRemaining}) nor your pack (${quota.packRemaining}) covers that yet. A card pack keeps it simple.`
+          : "That's today's free cards. Watch a short ad for one more, or get a card pack."
       }, { status: 429 });
     }
 
-    // 处理用户使用情况（保留用于统计）
-    let currentUsage = usage?.count || 0;
-    if (!usage) {
-      // 创建新的使用记录 - 这将在生成后异步完成
-      // 使用 catch 语句避免因数据库原因阻塞主流程
-      Promise.resolve().then(async () => {
-        try {
-          await prisma.apiUsage.create({
-            data: {
-              userId,
-              date: todayStart,
-              count: creditsUsed,
-            },
-          });
-        } catch (error) {
-          console.error('Error creating usage record:', error);
-        }
-      });
-    } else {
-      await prisma.apiUsage.update({
-        where: { id: usage.id },
-        data: { count: currentUsage + creditsUsed },
-      });
-    }
 
     // Generate a new cardId
     const cardId = nanoid(10);
@@ -261,7 +222,7 @@ export async function POST(request: Request) {
       } else if (format === 'video') {
         result = await generateCardVideo(cardParams, modelLevel);
       } else {
-        result = await generateCardContentWithKieClaude(cardParams, getSvgGenerationModel(modelLevel));
+        result = await generateCardSvg(cardParams, getSvgGenerationModel(modelLevel));
       }
 
       // console.log('result', result);
@@ -273,6 +234,10 @@ export async function POST(request: Request) {
       }
 
       const nextStatus = result.status || 'completed';
+
+      if (nextStatus === 'failed') {
+        await refundCards(userId, consumption.consumedFromDaily, consumption.consumedFromPack, legacyCredits);
+      }
 
       await prisma.apiLog.update({
         where: { cardId },
@@ -290,6 +255,7 @@ export async function POST(request: Request) {
       });
     } catch (error) {
       console.error('Error in async card generation:', error);
+      await refundCards(userId, consumption.consumedFromDaily, consumption.consumedFromPack, legacyCredits);
       // Update status to failed
       await prisma.apiLog.update({
         where: { cardId },

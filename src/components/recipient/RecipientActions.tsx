@@ -50,16 +50,10 @@ export default function RecipientActions({ editedCardId, originalCardId, cardTyp
         <Link
           href={theme.reply.href}
           onClick={() => track(originalCardId, 'recipient_reply_click')}
-          className="group relative inline-flex items-center justify-center px-8 py-3.5 overflow-hidden font-medium text-white transition-all duration-500 ease-out rounded-full shadow-lg hover:shadow-xl transform hover:scale-105"
-          style={{ background: theme.buttonGradient, backgroundSize: '200% 200%' }}
+          className="inline-flex items-center justify-center rounded-full px-8 py-3.5 text-sm sm:text-base font-semibold text-white shadow-lg transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl"
+          style={{ backgroundColor: theme.accent }}
         >
-          <span className="absolute top-0 left-0 w-full bg-gradient-to-b from-white/30 to-transparent h-1/2 rounded-full"></span>
-          <span className="relative flex items-center space-x-3">
-            <span className="text-sm sm:text-base font-semibold tracking-wide">{theme.reply.label}</span>
-            <span className="inline-block text-lg group-hover:animate-[wiggle_0.5s_ease-in-out_infinite]">
-              {theme.reply.emoji}
-            </span>
-          </span>
+          {theme.reply.label}
         </Link>
       </div>
 
@@ -68,15 +62,14 @@ export default function RecipientActions({ editedCardId, originalCardId, cardTyp
         <Link
           href={`/?ref=${encodeURIComponent(editedCardId)}&via=recipient`}
           onClick={handleCreateClick}
-          className="inline-flex items-center justify-center rounded-full border-2 px-6 py-2.5 text-sm sm:text-base font-semibold transition-all duration-300 backdrop-blur-sm bg-white/40 hover:bg-white/60"
+          className="inline-flex items-center justify-center rounded-full border bg-white/70 px-6 py-2.5 text-sm sm:text-base font-semibold backdrop-blur-sm transition-all duration-300 hover:bg-white"
           style={{ borderColor: `${theme.accent}4d`, color: theme.accent }}
         >
-          <span className="mr-2">✨</span>
-          Create your own card — free
+          Make one of your own — free
         </Link>
         <a
           href={`/${cardType}/edit/${editedCardId}/`}
-          className="inline-flex items-center justify-center rounded-full px-6 py-2.5 text-sm font-medium transition-colors duration-300 hover:underline"
+          className="inline-flex items-center justify-center rounded-full px-6 py-2.5 text-sm font-medium underline-offset-4 transition-colors duration-300 hover:underline"
           style={{ color: theme.textColor }}
         >
           Customize this card

@@ -9,7 +9,7 @@ import { recordUserAction } from '@/lib/action'
 import { useRouter } from 'next/navigation'
 import CardDisplay from './CardDisplay'
 import { ThumbsUpIcon, Crown } from 'lucide-react'
-import { PremiumModal } from '@/components/PremiumModal'
+import { Paywall } from '@/components/paywall/Paywall'
 
 interface ImageViewerProps {
   alt: string
@@ -28,7 +28,7 @@ export function ImageViewer({ alt, cardId, cardType, imgUrl, isNewCard, svgConte
   const [showPreview, setShowPreview] = useState(false)
   const [isLiked, setIsLiked] = useState(false)
   const [animateLike, setAnimateLike] = useState(false)
-  const [isPremiumModalOpen, setIsPremiumModalOpen] = useState(false)
+  const [isPaywallOpen, setIsPaywallOpen] = useState(false)
 
   useEffect(() => {
     const likedCards = JSON.parse(localStorage.getItem('likedCards') || '{}');
@@ -62,7 +62,7 @@ export function ImageViewer({ alt, cardId, cardType, imgUrl, isNewCard, svgConte
 
   const handlePremiumClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setIsPremiumModalOpen(true);
+    setIsPaywallOpen(true);
   };
 
   // Helper function to determine if URL is a video
@@ -219,9 +219,8 @@ export function ImageViewer({ alt, cardId, cardType, imgUrl, isNewCard, svgConte
         </DialogContent>
       </Dialog>
 
-      {/* PremiumModal - 直接使用 Modal 组件 */}
       {!isPremiumUser && (
-        <PremiumModal isOpen={isPremiumModalOpen} onOpenChange={setIsPremiumModalOpen} />
+        <Paywall isOpen={isPaywallOpen} onOpenChange={setIsPaywallOpen} intent="default" source="image_viewer" />
       )}
     </>
   )

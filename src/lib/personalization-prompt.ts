@@ -458,26 +458,97 @@ function buildCompositionSection(size: string): string {
   return 'Composition: square layout, centered with intentional balance.';
 }
 
+/**
+ * Named style families — each is a coherent print/illustration language a real
+ * studio could ship, instead of the generic "high-end digital art" soup.
+ */
+const STYLE_FAMILIES: Record<string, { name: string; direction: string }> = {
+  humor: {
+    name: 'riso-print poster',
+    direction:
+      'Two-to-three ink risograph print: flat shapes with slight mis-registration, visible paper grain, one loud accent color, bold hand-lettered display type. Playful through composition and wit, never through clutter.',
+  },
+  surprise: {
+    name: 'paper-collage diorama',
+    direction:
+      'Cut-paper collage with layered depth: torn edges, real cast shadows between layers, a pop of metallic foil paper on one element. The composition should feel hand-assembled, slightly imperfect, full of intention.',
+  },
+  touching: {
+    name: 'gouache storybook',
+    direction:
+      'Soft gouache illustration on cold-press paper: visible brush texture, muted grounds with one warm accent, dappled single-source light. Intimate scale — one quiet scene, not a collage of symbols.',
+  },
+  romantic: {
+    name: 'golden-hour still',
+    direction:
+      'A single cinematic frame: low warm sun, long soft shadows, shallow depth of field on one meaningful subject. Kodak-portra color grade — honey highlights, gentle teal shadows. Restraint over sweetness.',
+  },
+  nostalgic: {
+    name: 'faded letterpress keepsake',
+    direction:
+      'Letterpress-and-linocut keepsake: pressed ink texture, slightly uneven impression, sun-faded palette (cream, sepia, one dusty accent), generous margins like an old broadside poster.',
+  },
+  hopeful: {
+    name: 'watercolor dawn',
+    direction:
+      'Loose watercolor washes bleeding wet-into-wet: dawn gradient ground, crisp small focal subject in fine ink line, plenty of untouched paper as light. The white of the page does half the work.',
+  },
+  grateful: {
+    name: 'botanical plate',
+    direction:
+      'Modern botanical print: precise, loving linework of plants/objects tied to the message, warm earth palette with a breath of gold, composed like a museum plate with a typographic caption block.',
+  },
+};
+
+const DEFAULT_FAMILY = {
+  name: 'modern letterpress',
+  direction:
+    'Modern letterpress print: disciplined 2–3 ink palette, strong typographic hierarchy, paper grain, one embossed or foil detail. The words carry the card; the image frames them.',
+};
+
+function getStyleFamily(tone: string) {
+  const key = Object.keys(STYLE_FAMILIES).find(k => tone.includes(k));
+  return key ? STYLE_FAMILIES[key] : DEFAULT_FAMILY;
+}
+
+function buildSparkLine(brief: PersonalizationBrief): string {
+  const seeds = [
+    brief.insideJokeOrMotif && `the inside joke/motif ("${brief.insideJokeOrMotif}")`,
+    brief.sharedMemory && `the shared memory ("${brief.sharedMemory}")`,
+    brief.age && `their age (${brief.age}) — e.g., that many stars, candles, or rings`,
+    brief.yearsTogether && `the ${brief.yearsTogether} years together`,
+    brief.recipientName && `the initial "${brief.recipientName.charAt(0).toUpperCase()}"`,
+  ].filter(Boolean) as string[];
+  const seedText = seeds.length
+    ? `Work in ONE hidden detail only they would catch, drawn from ${seeds[0]}${seeds[1] ? ` or ${seeds[1]}` : ''}.`
+    : 'Work in ONE small surprising detail that rewards a second look.';
+  return `The spark: ${seedText} Subtle, discoverable, never labeled.`;
+}
+
 function buildMediumSection(
   brief: PersonalizationBrief,
   medium: OutputMedium,
   toneConfig: { animation: string }
 ): string {
+  const family = getStyleFamily(brief.tone);
+
   if (medium === 'image') {
     const inscriptionParts: string[] = [];
     if (brief.recipientName) inscriptionParts.push(`To ${brief.recipientName}`);
     if (brief.signed) inscriptionParts.push(`from ${brief.signed}`);
     const inscription = inscriptionParts.length
-      ? `Small elegant handwritten inscription: "${inscriptionParts.join(', ')}" in a quiet corner.`
-      : 'Rely entirely on visual storytelling; no large text.';
+      ? `Include a small, genuinely handwritten-looking inscription — "${inscriptionParts.join(', ')}" — placed where a person would write it, in an ink color pulled from the palette.`
+      : 'Rely on visual storytelling; any lettering must look hand-set, never default digital type.';
 
     return [
       'Image execution:',
-      'Full-bleed, edge-to-edge composition.',
-      'No borders or white margins.',
-      'Rich, fully opaque background.',
-      'Frame the main subject at 65-85% of canvas.',
-      'Style: high-end digital art, soft cinematic lighting, highly detailed.',
+      `Style family: ${family.name}. ${family.direction}`,
+      'Full-bleed, edge-to-edge, fully opaque; no borders, no letterboxing.',
+      'One light source, obeyed by every shadow.',
+      'Palette discipline: 2–3 grounded colors + 1 accent; never candy-saturated everything.',
+      'Material texture must be visible: paper tooth, ink bleed, print grain, or brush stroke.',
+      'Composition: one clear protagonist at 65–85% of canvas, generous breathing room, deliberate asymmetry.',
+      buildSparkLine(brief),
       inscription,
     ].join(' ');
   }
@@ -485,14 +556,26 @@ function buildMediumSection(
   if (medium === 'svg') {
     return [
       'SVG execution:',
-      'Use clean vector shapes, rich gradients, and a warm textured-feeling background; no plain white canvas.',
-      'Include ONE signature animation that embodies the emotional core.',
-      `Preferred animation behavior: ${toneConfig.animation}.`,
-      'The animation should be meditative, performant, and not distracting.',
+      `Set the card like a ${family.name}: ${family.direction}`,
+      'Give the ground a real material (grain filter or displacement-softened washes) — never a flat hex fill.',
+      'Choreograph three beats: a one-time arrival (elements settle in, or the message draws itself on), then a single meditative looping signature animation, plus at most one whisper-quiet secondary motion.',
+      `Signature motion direction: ${toneConfig.animation}.`,
+      'If the card earns it, use one lit element — an embossed seal, foil-shimmer lettering — via SVG lighting/gradient animation.',
+      buildSparkLine(brief),
     ].join(' ');
   }
 
-  return 'Video execution: Smooth, cinematic motion with emotional pacing.';
+  return [
+    'Video execution — direct it like a 6-second film, not a screensaver:',
+    `Art direction: ${family.name}. ${family.direction}`,
+    'Beat 1 (arrival): the scene assembles — light rises, elements drift into place, or a hand-drawn line completes.',
+    'Beat 2 (bloom): the single emotional peak — the flame catches, the petals release, the foil catches light. One peak only.',
+    'Beat 3 (settle): motion eases into a calm loopable idle; final frame is a composed card that could hold text.',
+    'Camera: one slow, deliberate move only (gentle push-in or parallax drift). No cuts, no shake, no whip pans.',
+    'Light behaves physically: one source, consistent shadows, warm practicals.',
+    'Must loop cleanly — first and last frames match in composition and tone.',
+    buildSparkLine(brief),
+  ].join(' ');
 }
 
 function buildAvoidanceSection(brief: PersonalizationBrief): string {

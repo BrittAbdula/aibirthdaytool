@@ -20,7 +20,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { RecommendedCards } from '@/components/RecommendedCards'
 import { useSession } from 'next-auth/react'
-import { PremiumModal } from '@/components/PremiumModal'
+import { Paywall } from '@/components/paywall/Paywall'
 import { Crown, MessageCircle, Sparkles } from "lucide-react"
 import {
   getDefaultMomentConfig,
@@ -82,7 +82,7 @@ export default function EditCardClient({ params }: { params: { cardId: string, c
   const [momentConfig, setMomentConfig] = useState<MomentConfig | null>(null)
   const [momentDirty, setMomentDirty] = useState(false)
   const [isPersonalizingMoment, setIsPersonalizingMoment] = useState(false)
-  const [isPremiumModalOpen, setIsPremiumModalOpen] = useState(false)
+  const [isPaywallOpen, setIsPaywallOpen] = useState(false)
   const [showPremiumTooltip, setShowPremiumTooltip] = useState(false)
   const { data: session } = useSession()
   const [isPremiumUser, setIsPremiumUser] = useState(false)
@@ -473,7 +473,7 @@ export default function EditCardClient({ params }: { params: { cardId: string, c
       // User is trying to set to private but is not premium
       setShowPremiumTooltip(true)
       setTimeout(() => {
-        setIsPremiumModalOpen(true)
+        setIsPaywallOpen(true)
       }, 300)
       return
     }
@@ -915,10 +915,11 @@ export default function EditCardClient({ params }: { params: { cardId: string, c
           </DialogContent>
         </Dialog>
 
-        {/* Premium Modal */}
-        <PremiumModal
-          isOpen={isPremiumModalOpen}
-          onOpenChange={setIsPremiumModalOpen}
+        <Paywall
+          isOpen={isPaywallOpen}
+          onOpenChange={setIsPaywallOpen}
+          intent="privacy"
+          source="edit_card_privacy"
         />
       </div>
     </div>

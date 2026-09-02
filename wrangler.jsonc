@@ -18,7 +18,15 @@
     "NEXT_PUBLIC_BASE_URL": "https://mewtrucard-preview.auroroa.workers.dev/",
     "NEXT_PUBLIC_SITE_URL": "https://mewtrucard-preview.auroroa.workers.dev/",
     "NEXTAUTH_URL": "https://mewtrucard-preview.auroroa.workers.dev/",
-    "AUTH_URL": "https://mewtrucard-preview.auroroa.workers.dev/"
+    "AUTH_URL": "https://mewtrucard-preview.auroroa.workers.dev/",
+    // Stripe price ids are public identifiers, not secrets: keeping them here
+    // pins preview to the test catalog and production to the live one.
+    "STRIPE_PLUS_MONTHLY_PRICE_ID": "price_1UB7uTI54muVmsd9fqvFF7pH",
+    "STRIPE_PLUS_YEARLY_PRICE_ID": "price_1UB7uUI54muVmsd9pI0zuZ1w",
+    "STRIPE_CREATOR_PRO_MONTHLY_PRICE_ID": "price_1UB7uWI54muVmsd9SzU2PJpT",
+    "STRIPE_CREATOR_PRO_YEARLY_PRICE_ID": "price_1UB7uXI54muVmsd91NMYtQeF",
+      "STRIPE_PACK_20_PRICE_ID": "price_1UB8CnI54muVmsd9Fs7qe2DU",
+      "STRIPE_PACK_50_PRICE_ID": "price_1UB8CoI54muVmsd91HikByKu"
   },
   "services": [
     {
@@ -56,7 +64,13 @@
         "NEXT_PUBLIC_BASE_URL": "https://mewtrucard.com/",
         "NEXT_PUBLIC_SITE_URL": "https://mewtrucard.com/",
         "NEXTAUTH_URL": "https://mewtrucard.com/",
-        "AUTH_URL": "https://mewtrucard.com/"
+        "AUTH_URL": "https://mewtrucard.com/",
+        "STRIPE_PLUS_MONTHLY_PRICE_ID": "price_1UB7xfG3yT9HLPAs96NP0xnO",
+        "STRIPE_PLUS_YEARLY_PRICE_ID": "price_1UB7xfG3yT9HLPAs5Xux0UQ8",
+        "STRIPE_CREATOR_PRO_MONTHLY_PRICE_ID": "price_1UB7xhG3yT9HLPAsgtDpTRHr",
+        "STRIPE_CREATOR_PRO_YEARLY_PRICE_ID": "price_1UB7xiG3yT9HLPAsdek8GLyC",
+        "STRIPE_PACK_20_PRICE_ID": "price_1UB8GUG3yT9HLPAsSmT075ng",
+        "STRIPE_PACK_50_PRICE_ID": "price_1UB8GUG3yT9HLPAsQphkjyQE"
       },
       "services": [
         {

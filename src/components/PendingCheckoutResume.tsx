@@ -29,7 +29,7 @@ export function PendingCheckoutResume() {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        plan: pending.plan,
+        sku: pending.sku,
         returnUrl: pending.returnUrl || pathname,
         source: pending.source,
         taskSize: pending.taskSize,

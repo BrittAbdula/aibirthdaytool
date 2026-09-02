@@ -1,130 +1,269 @@
 import type { Metadata } from 'next';
-import Image from 'next/image';
 import Link from 'next/link';
-import { ArrowRight, Check, CreditCard, ShieldCheck, Users } from 'lucide-react';
-import { PricingCheckoutButton } from '@/components/PricingCheckoutButton';
+import { ArrowRight, Check, CreditCard, ShieldCheck } from 'lucide-react';
+import { CheckoutButton } from '@/components/paywall/CheckoutButton';
 import { PricingPageTracker } from '@/components/PricingPageTracker';
-import { premiumFeatureRows, premiumPlans } from '@/lib/pricing';
+import {
+  SKUS,
+  formatPerCardPrice,
+  formatPrice,
+  getMonthlyEquivalent,
+  getYearlySavingsPercent,
+} from '@/lib/pricing/plans';
+import { PLAN_FEATURE_ROWS } from '@/lib/pricing/features';
+import { AD_REWARD_DAILY_CAP, FREE_DAILY_CARDS } from '@/lib/pricing/quota';
 
 export const metadata: Metadata = {
-  title: 'Creator Pro Pricing | MewTruCard',
-  description: 'Creator Pro is the recurring card workflow for HR and office managers: recipient roster, 30-day queue, brand preset, complete batches, and premium delivery.',
+  title: 'Pricing | MewTruCard',
+  description:
+    'Make three cards a day for free. Card packs from $2.99 never expire. Subscribe only if you make cards all the time.',
   alternates: { canonical: '/pricing' },
   openGraph: {
-    title: 'MewTruCard Creator Pro Pricing',
-    description: 'Create personalized team occasion cards in a reusable monthly workflow.',
+    title: 'MewTruCard Pricing',
+    description: 'Free cards every day, card packs that never expire, and subscriptions for regular creators.',
     url: 'https://mewtrucard.com/pricing',
-    images: [{ url: 'https://mewtrucard.com/og-cover.jpg', width: 1200, height: 630, alt: 'MewTruCard Creator Pro pricing' }],
+    images: [{ url: 'https://mewtrucard.com/og-cover.jpg', width: 1200, height: 630, alt: 'MewTruCard pricing' }],
   },
 };
 
+const packs = [SKUS.pack_20, SKUS.pack_50];
+
 export default function PricingPage() {
+  const plusSavings = getYearlySavingsPercent(SKUS.plus_monthly, SKUS.plus_yearly);
+  const creatorSavings = getYearlySavingsPercent(SKUS.creator_pro_monthly, SKUS.creator_pro_yearly);
+
   return (
-    <main className="min-h-screen overflow-hidden bg-[#FFFDFC] text-[#202A3D]">
+    <main className="min-h-screen bg-[#FFFDFC] text-[#202A3D]">
       <PricingPageTracker />
-      <section className="relative border-b border-[#E8CDD6] bg-[#FFF8F6]">
-        <div className="absolute inset-y-0 right-0 hidden w-[44%] bg-[#F5E2E7] lg:block" />
-        <div className="relative mx-auto grid min-h-[calc(100svh-4rem)] max-w-7xl items-center gap-12 px-4 py-14 sm:px-6 lg:grid-cols-[0.92fr_1.08fr] lg:px-8">
-          <div className="relative z-10 max-w-2xl animate-in fade-in slide-in-from-bottom-3 duration-700 motion-reduce:animate-none">
-            <p className="text-sm font-semibold uppercase tracking-[0.22em] text-primary">MewTruCard Creator Pro</p>
-            <h1 className="mt-5 font-serif text-4xl font-semibold leading-[1.06] sm:text-6xl lg:text-7xl">One monthly system for every team moment.</h1>
-            <p className="mt-6 max-w-xl text-base leading-7 text-[#596174] sm:text-lg sm:leading-8">Keep the roster, see what is coming, reuse your brand direction, and generate the complete batch without starting over.</p>
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <a href="#plans" className="inline-flex min-h-12 items-center justify-center rounded-md bg-primary px-6 text-sm font-semibold text-white hover:bg-primary/90">See monthly plan <ArrowRight className="ml-2 h-4 w-4" /></a>
-              <Link href="/creator/" className="inline-flex min-h-12 items-center justify-center rounded-md border border-[#CFAEBA] bg-white px-6 text-sm font-semibold text-[#4B4050] hover:bg-[#FFF3F5]">Try one batch preview</Link>
-            </div>
-            <div className="mt-9 space-y-3 text-sm font-semibold text-[#3F485B]">
-              {['Unlimited recipient roster and complete batches', 'Reusable brand preset and 30-day queue', 'Private, ad-free cards with premium formats'].map((item) => <p key={item} className="flex gap-3"><Check className="mt-0.5 h-4 w-4 text-primary" />{item}</p>)}
-            </div>
-          </div>
 
-          <div className="relative min-h-[440px] lg:min-h-[610px]" aria-label="Creator Pro team card examples">
-            <div className="absolute left-[1%] top-[14%] w-[44%] -rotate-6 rounded-md border border-white bg-white p-2 shadow-2xl transition-transform duration-300 hover:-translate-y-2 hover:-rotate-3 motion-reduce:transition-none motion-reduce:hover:translate-y-0 motion-reduce:hover:-rotate-6">
-              <Image src="/card/birthday_1.png" alt="Employee birthday card" width={440} height={650} priority className="h-auto w-full rounded-sm" />
-            </div>
-            <div className="absolute left-[29%] top-[3%] z-20 w-[47%] rotate-1 rounded-md border border-white bg-white p-2 shadow-2xl transition-transform duration-300 hover:-translate-y-2 hover:rotate-0 motion-reduce:transition-none motion-reduce:hover:translate-y-0 motion-reduce:hover:rotate-1">
-              <Image src="/card/anniversary.svg" alt="Work anniversary card" width={440} height={650} priority className="h-auto w-full rounded-sm" />
-            </div>
-            <div className="absolute right-0 top-[19%] w-[42%] rotate-6 rounded-md border border-white bg-white p-2 shadow-2xl transition-transform duration-300 hover:-translate-y-2 hover:rotate-3 motion-reduce:transition-none motion-reduce:hover:translate-y-0 motion-reduce:hover:rotate-6">
-              <Image src="/card/thankyou.svg" alt="Employee appreciation card" width={440} height={650} priority className="h-auto w-full rounded-sm" />
-            </div>
-            <div className="absolute bottom-3 left-1/2 z-30 w-[min(92%,540px)] -translate-x-1/2 border-y border-[#CFAEBA] bg-white/95 px-5 py-4 shadow-xl backdrop-blur">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">Recurring workflow</p>
-              <p className="mt-2 font-semibold">Roster → upcoming queue → branded batch → export</p>
-            </div>
-          </div>
+      <section className="border-b border-[#E8CDD6] bg-[#FFF8F6] px-4 py-16 sm:px-6 sm:py-20">
+        <div className="mx-auto max-w-3xl text-center">
+          <p className="text-sm font-semibold uppercase tracking-[0.22em] text-primary">Pricing</p>
+          <h1 className="mt-5 font-serif text-4xl font-semibold leading-[1.08] sm:text-6xl">
+            Start free. Pay only for what you actually need.
+          </h1>
+          <p className="mt-6 text-base leading-7 text-[#596174] sm:text-lg">
+            {FREE_DAILY_CARDS} cards every day at no cost, and up to {AD_REWARD_DAILY_CAP} more for
+            watching a short ad. When that is not enough, a card pack costs less than one card from a
+            shop and never expires.
+          </p>
         </div>
       </section>
 
-      <section id="plans" className="scroll-mt-16 border-b border-[#E8CDD6] bg-white py-16 sm:scroll-mt-20 sm:py-24">
-        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+      {/* One occasion — the case most people are actually in. */}
+      <section className="border-b border-[#E8CDD6] bg-white py-16 sm:py-20">
+        <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
           <div className="max-w-2xl">
-            <p className="text-sm font-semibold uppercase tracking-[0.22em] text-primary">Plans</p>
-            <h2 className="mt-4 font-serif text-3xl font-semibold sm:text-5xl">Prove the workflow free. Subscribe when it becomes repeat work.</h2>
+            <p className="text-sm font-semibold uppercase tracking-[0.22em] text-primary">For one occasion</p>
+            <h2 className="mt-4 font-serif text-3xl font-semibold sm:text-4xl">
+              A card pack, not a subscription.
+            </h2>
+            <p className="mt-4 text-[#596174]">
+              One payment. The cards sit in your account until you use them, and they unlock video,
+              premium styles, private sharing, and clean downloads while they last.
+            </p>
           </div>
 
-          <div className="mt-10 grid gap-8 lg:grid-cols-[0.75fr_1.25fr]">
-            <div className="border-t border-[#CFAEBA] pt-6">
-              <div className="flex items-start justify-between gap-5"><div><h3 className="text-2xl font-semibold">Free preview</h3><p className="mt-2 text-sm leading-6 text-[#687084]">Use your own recipient data before deciding.</p></div><p className="text-3xl font-bold">$0</p></div>
+          <div className="mt-10 grid gap-6 sm:grid-cols-3">
+            <div className="rounded-md border border-[#E8CDD6] bg-white p-6">
+              <h3 className="text-xl font-semibold">Free</h3>
+              <p className="mt-2 text-4xl font-bold">$0</p>
+              <p className="mt-3 text-sm leading-6 text-[#687084]">
+                {FREE_DAILY_CARDS} cards a day, every day. No card needed.
+              </p>
               <div className="mt-6 space-y-3 text-sm text-[#4C5568]">
-                {['Up to 3 recipients', 'One generated batch preview', '30-day queue and one brand preset'].map((item) => <p key={item} className="flex gap-2"><Check className="mt-0.5 h-4 w-4 text-primary" />{item}</p>)}
+                {[`${FREE_DAILY_CARDS} cards daily`, `+${AD_REWARD_DAILY_CAP} a day from short ads`, 'Animated and static cards'].map((item) => (
+                  <p key={item} className="flex gap-2">
+                    <Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                    {item}
+                  </p>
+                ))}
               </div>
-              <Link href="/creator/" className="mt-7 inline-flex min-h-11 w-full items-center justify-center rounded-md border border-[#CFAEBA] bg-white px-5 text-sm font-semibold text-primary hover:bg-[#FFF3F5]">Build free roster</Link>
+              <Link
+                href="/birthday/"
+                className="mt-7 inline-flex min-h-11 w-full items-center justify-center rounded-md border border-[#CFAEBA] bg-white px-5 text-sm font-semibold text-primary hover:bg-[#FFF3F5]"
+              >
+                Make a card
+              </Link>
             </div>
 
-            <div className="rounded-md border-2 border-primary bg-[#FFF8F6] p-6 shadow-[0_24px_60px_rgba(180,55,95,0.12)] sm:p-8">
-              <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
-                <div><div className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-primary"><Users className="h-3.5 w-3.5" />For repeat creators</div><h3 className="mt-4 text-3xl font-semibold">Creator Pro</h3><p className="mt-2 max-w-md text-sm leading-6 text-[#687084]">For the person responsible for recurring birthdays, work anniversaries, and personalized team batches.</p></div>
-                <div className="shrink-0 sm:text-right"><p className="text-4xl font-bold">{premiumPlans.monthly.price}</p><p className="mt-1 text-sm font-semibold text-primary">{premiumPlans.monthly.billingLabel}</p></div>
-              </div>
-              <div className="mt-7 grid gap-3 sm:grid-cols-2">
-                {['Unlimited roster', 'Up to 50 cards per batch', 'Batch export and history', 'Premium image and video', 'Private by default', 'No watermark or ads'].map((item) => <p key={item} className="flex gap-2 text-sm font-semibold text-[#3F485B]"><Check className="mt-0.5 h-4 w-4 text-primary" />{item}</p>)}
-              </div>
-              <PricingCheckoutButton plan="monthly" source="pricing_page_monthly" className="mt-8 h-12 w-full bg-primary text-white hover:bg-primary/90">Start Creator Pro monthly <ArrowRight className="ml-2 h-4 w-4" /></PricingCheckoutButton>
-              <div className="mt-4 flex flex-wrap justify-center gap-4 text-xs text-[#687084]"><span className="inline-flex items-center gap-2"><CreditCard className="h-4 w-4 text-primary" />Secure Stripe checkout</span><span className="inline-flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-primary" />Cancel anytime</span></div>
-            </div>
-          </div>
-
-          <div className="mt-8 flex flex-col gap-4 border-t border-[#E8CDD6] pt-6 sm:flex-row sm:items-center sm:justify-between">
-            <div><p className="font-semibold">Annual subscription</p><p className="mt-1 text-sm text-[#687084]">Available for teams that already know the workflow fits.</p></div>
-            <PricingCheckoutButton plan="yearly" source="pricing_page_yearly_secondary" variant="outline" className="h-11 border-[#CFAEBA] text-primary hover:bg-[#FFF3F5]">Choose yearly — {premiumPlans.yearly.price}</PricingCheckoutButton>
-          </div>
-        </div>
-      </section>
-
-      <section className="border-b border-[#E8CDD6] bg-[#FFF8F6] py-16 sm:py-24">
-        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-          <div className="grid gap-10 lg:grid-cols-[0.7fr_1.3fr]">
-            <div><p className="text-sm font-semibold uppercase tracking-[0.22em] text-primary">Compare</p><h2 className="mt-4 font-serif text-3xl font-semibold sm:text-5xl">A clear boundary between trying and operating.</h2></div>
-            <div className="overflow-x-auto border-y border-[#DDBDC8] bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2" tabIndex={0} aria-label="Scrollable plan comparison">
-              <table className="w-full min-w-[620px] border-collapse text-sm">
-                <caption className="sr-only">Compare the Free preview and Creator Pro plans</caption>
-                <thead className="bg-[#FFFDFC] font-semibold">
-                  <tr className="border-b border-[#DDBDC8]">
-                    <th scope="col" className="w-1/2 p-4 text-left">Capability</th>
-                    <th scope="col" className="w-1/4 p-4 text-center">Free</th>
-                    <th scope="col" className="w-1/4 p-4 text-center text-primary">Creator Pro</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {premiumFeatureRows.map((row) => (
-                    <tr key={row.feature} className="border-b border-[#E8CDD6] last:border-0">
-                      <th scope="row" className="p-4 text-left font-semibold">{row.feature}</th>
-                      <td className="p-4 text-center text-[#687084]">{row.free}</td>
-                      <td className="p-4 text-center font-semibold text-primary">{row.premium}</td>
-                    </tr>
+            {packs.map((pack, index) => (
+              <div
+                key={pack.key}
+                className={
+                  index === 0
+                    ? 'rounded-md border-2 border-primary bg-[#FFF8F6] p-6 shadow-[0_20px_50px_rgba(180,55,95,0.10)]'
+                    : 'rounded-md border border-[#E8CDD6] bg-white p-6'
+                }
+              >
+                {index === 0 && (
+                  <span className="inline-flex rounded-full bg-primary px-2.5 py-1 text-xs font-semibold text-white">
+                    Most popular
+                  </span>
+                )}
+                <h3 className={index === 0 ? 'mt-3 text-xl font-semibold' : 'text-xl font-semibold'}>
+                  {pack.label}
+                </h3>
+                <p className="mt-2 text-4xl font-bold">{formatPrice(pack.amountCents)}</p>
+                <p className="mt-1 text-sm font-semibold text-primary">{formatPerCardPrice(pack)}</p>
+                <p className="mt-3 text-sm leading-6 text-[#687084]">{pack.description}</p>
+                <div className="mt-6 space-y-3 text-sm text-[#4C5568]">
+                  {['Never expires', 'Video and premium styles', 'Private cards, no watermark, no ads'].map((item) => (
+                    <p key={item} className="flex gap-2">
+                      <Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                      {item}
+                    </p>
                   ))}
-                </tbody>
-              </table>
+                </div>
+                <CheckoutButton
+                  sku={pack.key}
+                  source={`pricing_page_${pack.key}`}
+                  className={
+                    index === 0
+                      ? 'mt-7 h-11 w-full bg-primary text-white hover:bg-primary/90'
+                      : 'mt-7 h-11 w-full border border-[#CFAEBA] bg-white text-primary hover:bg-[#FFF3F5]'
+                  }
+                >
+                  Get {pack.label} <ArrowRight className="ml-2 h-4 w-4" />
+                </CheckoutButton>
+              </div>
+            ))}
+          </div>
+
+          <p className="mt-6 flex flex-wrap justify-center gap-5 text-xs text-[#687084]">
+            <span className="inline-flex items-center gap-2">
+              <CreditCard className="h-4 w-4 text-primary" />
+              Secure Stripe checkout
+            </span>
+            <span className="inline-flex items-center gap-2">
+              <ShieldCheck className="h-4 w-4 text-primary" />
+              One payment, no renewal
+            </span>
+          </p>
+        </div>
+      </section>
+
+      {/* Every occasion — the recurring case. */}
+      <section className="border-b border-[#E8CDD6] bg-[#FFF8F6] py-16 sm:py-20">
+        <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
+          <div className="max-w-2xl">
+            <p className="text-sm font-semibold uppercase tracking-[0.22em] text-primary">For every occasion</p>
+            <h2 className="mt-4 font-serif text-3xl font-semibold sm:text-4xl">
+              Subscribe when card making is a habit.
+            </h2>
+            <p className="mt-4 text-[#596174]">
+              Worth it once you are making cards most weeks, or running the same list of birthdays
+              and work anniversaries every month.
+            </p>
+          </div>
+
+          <div className="mt-10 grid gap-6 md:grid-cols-2">
+            <div className="rounded-md border border-[#CFAEBA] bg-white p-6 sm:p-8">
+              <h3 className="text-2xl font-semibold">Plus</h3>
+              <p className="mt-2 text-sm leading-6 text-[#687084]">
+                For people who make cards for everyone they know.
+              </p>
+              <p className="mt-5 text-4xl font-bold">{formatPrice(SKUS.plus_monthly.amountCents)}</p>
+              <p className="mt-1 text-sm font-semibold text-primary">per month</p>
+              <div className="mt-6 space-y-3 text-sm text-[#4C5568]">
+                {['Unlimited cards', 'Video and every premium style', 'Private by default, no ads'].map((item) => (
+                  <p key={item} className="flex gap-2">
+                    <Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                    {item}
+                  </p>
+                ))}
+              </div>
+              <CheckoutButton
+                sku="plus_monthly"
+                source="pricing_page_plus_monthly"
+                className="mt-7 h-11 w-full bg-primary text-white hover:bg-primary/90"
+              >
+                Start Plus <ArrowRight className="ml-2 h-4 w-4" />
+              </CheckoutButton>
+              <CheckoutButton
+                sku="plus_yearly"
+                source="pricing_page_plus_yearly"
+                variant="outline"
+                className="mt-3 h-11 w-full border-[#CFAEBA] text-primary hover:bg-[#FFF3F5]"
+              >
+                Yearly — {formatPrice(SKUS.plus_yearly.amountCents)} ({getMonthlyEquivalent(SKUS.plus_yearly)}, save {plusSavings}%)
+              </CheckoutButton>
+            </div>
+
+            <div className="rounded-md border border-[#CFAEBA] bg-white p-6 sm:p-8">
+              <h3 className="text-2xl font-semibold">Creator Pro</h3>
+              <p className="mt-2 text-sm leading-6 text-[#687084]">
+                For the person responsible for a whole team&apos;s occasions.
+              </p>
+              <p className="mt-5 text-4xl font-bold">{formatPrice(SKUS.creator_pro_monthly.amountCents)}</p>
+              <p className="mt-1 text-sm font-semibold text-primary">per month</p>
+              <div className="mt-6 space-y-3 text-sm text-[#4C5568]">
+                {['Everything in Plus', 'Unlimited roster and 30-day queue', 'Batches up to 50, export and history'].map((item) => (
+                  <p key={item} className="flex gap-2">
+                    <Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                    {item}
+                  </p>
+                ))}
+              </div>
+              <CheckoutButton
+                sku="creator_pro_monthly"
+                source="pricing_page_creator_pro_monthly"
+                className="mt-7 h-11 w-full bg-primary text-white hover:bg-primary/90"
+              >
+                Start Creator Pro <ArrowRight className="ml-2 h-4 w-4" />
+              </CheckoutButton>
+              <CheckoutButton
+                sku="creator_pro_yearly"
+                source="pricing_page_creator_pro_yearly"
+                variant="outline"
+                className="mt-3 h-11 w-full border-[#CFAEBA] text-primary hover:bg-[#FFF3F5]"
+              >
+                Yearly — {formatPrice(SKUS.creator_pro_yearly.amountCents)} ({getMonthlyEquivalent(SKUS.creator_pro_yearly)}, save {creatorSavings}%)
+              </CheckoutButton>
+              <Link
+                href="/creator/"
+                className="mt-4 block text-center text-sm font-semibold text-primary hover:underline"
+              >
+                Try one batch preview free
+              </Link>
             </div>
           </div>
         </div>
       </section>
 
-      <section className="bg-[#202A3D] px-4 py-16 text-center text-white sm:px-6 sm:py-24">
-        <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#F7B6C9]">Creator Pro</p>
-        <h2 className="mx-auto mt-4 max-w-3xl font-serif text-4xl font-semibold sm:text-6xl">Be ready for the next occasion, and the one after that.</h2>
-        <Link href="/creator/" className="mt-8 inline-flex min-h-12 items-center justify-center rounded-md bg-[#F7B6C9] px-7 text-sm font-semibold text-[#202A3D] hover:bg-white">Create your free preview <ArrowRight className="ml-2 h-4 w-4" /></Link>
+      <section className="bg-white py-16 sm:py-20">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+          <h2 className="font-serif text-3xl font-semibold sm:text-4xl">Everything side by side</h2>
+          <div
+            className="mt-8 overflow-x-auto border-y border-[#DDBDC8] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+            tabIndex={0}
+            aria-label="Scrollable plan comparison"
+          >
+            <table className="w-full min-w-[760px] border-collapse text-sm">
+              <caption className="sr-only">Compare Free, card packs, Plus and Creator Pro</caption>
+              <thead className="bg-[#FFFDFC] font-semibold">
+                <tr className="border-b border-[#DDBDC8]">
+                  <th scope="col" className="w-1/3 p-4 text-left">Capability</th>
+                  <th scope="col" className="p-4 text-center">Free</th>
+                  <th scope="col" className="p-4 text-center text-primary">Card pack</th>
+                  <th scope="col" className="p-4 text-center">Plus</th>
+                  <th scope="col" className="p-4 text-center">Creator Pro</th>
+                </tr>
+              </thead>
+              <tbody>
+                {PLAN_FEATURE_ROWS.map((row) => (
+                  <tr key={row.feature} className="border-b border-[#E8CDD6] last:border-0">
+                    <th scope="row" className="p-4 text-left font-semibold">{row.feature}</th>
+                    <td className="p-4 text-center text-[#687084]">{row.free}</td>
+                    <td className="p-4 text-center font-semibold text-primary">{row.pack}</td>
+                    <td className="p-4 text-center text-[#4C5568]">{row.plus}</td>
+                    <td className="p-4 text-center text-[#4C5568]">{row.creatorPro}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
       </section>
     </main>
   );

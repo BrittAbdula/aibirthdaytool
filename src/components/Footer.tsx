@@ -4,144 +4,168 @@ import Link from 'next/link';
 import { CARD_TYPES, RELATIONSHIPS } from '@/lib/card-constants';
 import { TRUST_HUB_LINKS } from '@/lib/eeat-content';
 
+const FEATURED_TYPES = new Set([
+  'birthday',
+  'love',
+  'sorry',
+  'anniversary',
+  'thankyou',
+  'wedding',
+  'valentine',
+]);
+
+const FEATURED_RELATIONSHIPS = new Set([
+  'friend',
+  'mother',
+  'father',
+  'girlfriend',
+  'boyfriend',
+  'wife',
+]);
+
 export default function Footer() {
+  const featuredTypes = CARD_TYPES.filter((t) => FEATURED_TYPES.has(t.type));
+  const restTypes = CARD_TYPES.filter((t) => !FEATURED_TYPES.has(t.type));
+  const featuredRelationships = RELATIONSHIPS.filter((r) =>
+    FEATURED_RELATIONSHIPS.has(r.value)
+  );
+  const restRelationships = RELATIONSHIPS.filter(
+    (r) => !FEATURED_RELATIONSHIPS.has(r.value)
+  );
+
   return (
-    <footer className="bg-gradient-to-t from-white via-purple-50/50 to-white border-t border-purple-100/50">
-      <div className="container mx-auto px-4 py-8">
-        {/* Card Types and Relationships Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
-          {/* Card Types */}
+    <footer className="border-t border-[#F1D6DF]/70 bg-white">
+      <div className="container mx-auto px-4 py-10">
+        <div className="mb-8 grid grid-cols-1 gap-8 md:grid-cols-3">
           <div>
-            <h3 className="font-serif text-[#4A4A4A] text-lg mb-4">Card Types</h3>
+            <h3 className="mb-4 font-sans text-xs font-semibold uppercase tracking-[0.18em] text-[#8A93A6]">
+              Make a card
+            </h3>
             <div className="grid grid-cols-2 gap-2">
-              <Link 
-                href="/card-gallery/" 
-                className="text-sm text-gray-600 hover:text-purple-600 transition-colors font-medium"
-              >
-                All Cards
-              </Link>
-              {CARD_TYPES.map((cardType) => (
+              {featuredTypes.map((cardType) => (
                 <Link
                   key={cardType.type}
                   href={`/type/${cardType.type}/`}
-                  className="text-sm text-gray-600 hover:text-purple-600 transition-colors"
+                  className="text-sm text-[#525B70] transition-colors hover:text-primary"
                 >
                   {cardType.label}
                 </Link>
               ))}
+              <Link
+                href="/card-gallery/"
+                className="text-sm font-medium text-primary transition-colors hover:text-[#8C2247]"
+              >
+                All cards →
+              </Link>
             </div>
           </div>
-          
-          {/* Relationships */}
+
           <div>
-            <h3 className="font-serif text-[#4A4A4A] text-lg mb-4">For Someone Special</h3>
+            <h3 className="mb-4 font-sans text-xs font-semibold uppercase tracking-[0.18em] text-[#8A93A6]">
+              For someone special
+            </h3>
             <div className="grid grid-cols-2 gap-2">
-              {RELATIONSHIPS.map((relation) => (
+              {featuredRelationships.map((relation) => (
                 <Link
                   key={relation.value}
                   href={`/relationship/${relation.value}/`}
-                  className="text-sm text-gray-600 hover:text-purple-600 transition-colors"
+                  className="text-sm text-[#525B70] transition-colors hover:text-primary"
                 >
                   {relation.label}
                 </Link>
               ))}
+              <Link
+                href="/cards/#recipient"
+                className="text-sm font-medium text-primary transition-colors hover:text-[#8C2247]"
+              >
+                All recipients →
+              </Link>
             </div>
           </div>
 
-          {/* Trust and product context */}
           <div>
-            <h3 className="font-serif text-[#4A4A4A] text-lg mb-4">Learn & Trust</h3>
-            <div className="grid gap-3">
+            <h3 className="mb-4 font-sans text-xs font-semibold uppercase tracking-[0.18em] text-[#8A93A6]">
+              About
+            </h3>
+            <div className="grid gap-2">
               {TRUST_HUB_LINKS.map((link) => (
                 <Link
                   key={link.href}
                   href={link.href}
-                  className="rounded-xl border border-purple-100/80 bg-white/70 px-4 py-3 transition-colors hover:border-purple-200 hover:bg-white"
+                  className="text-sm text-[#525B70] transition-colors hover:text-primary"
                 >
-                  <div className="text-sm font-medium text-gray-700">{link.label}</div>
-                  <p className="mt-1 text-xs leading-5 text-gray-500">{link.description}</p>
+                  {link.label}
                 </Link>
               ))}
             </div>
           </div>
         </div>
 
-        {/* Links and Copyright */}
-        <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0 border-t border-purple-100/50 pt-6">
-          <p className="text-sm text-gray-600 order-2 md:order-1">
+        {/* Full directory, tucked away but crawlable */}
+        <details className="mb-8 border-t border-[#F1D6DF]/70 pt-5">
+          <summary className="cursor-pointer list-none text-sm text-[#8A93A6] transition-colors hover:text-[#525B70]">
+            More occasions and recipients →
+          </summary>
+          <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2">
+            {restTypes.map((cardType) => (
+              <Link
+                key={cardType.type}
+                href={`/type/${cardType.type}/`}
+                className="text-xs text-[#8A93A6] transition-colors hover:text-primary"
+              >
+                {cardType.label}
+              </Link>
+            ))}
+            {restRelationships.map((relation) => (
+              <Link
+                key={relation.value}
+                href={`/relationship/${relation.value}/`}
+                className="text-xs text-[#8A93A6] transition-colors hover:text-primary"
+              >
+                {relation.label}
+              </Link>
+            ))}
+          </div>
+        </details>
+
+        <div className="flex flex-col items-center justify-between space-y-4 border-t border-[#F1D6DF]/70 pt-6 md:flex-row md:space-y-0">
+          <p className="order-2 text-sm text-[#8A93A6] md:order-1">
             © {new Date().getFullYear()} MewTruCard. All rights reserved.
           </p>
           <nav className="order-1 md:order-2">
-            <ul className="flex space-x-6">
+            <ul className="flex flex-wrap justify-center gap-x-6 gap-y-2">
               <li>
                 <Link
                   href="/pricing/"
-                  className="text-sm text-gray-600 hover:text-purple-600 transition-colors"
+                  className="text-sm text-[#8A93A6] transition-colors hover:text-primary"
                 >
                   Pricing
                 </Link>
               </li>
               <li>
                 <Link
-                  href="/privacy-policy" 
-                  className="text-sm text-gray-600 hover:text-purple-600 transition-colors"
+                  href="/privacy-policy"
+                  className="text-sm text-[#8A93A6] transition-colors hover:text-primary"
                 >
                   Privacy Policy
                 </Link>
               </li>
               <li>
-                <Link 
-                  href="/terms-of-service" 
-                  className="text-sm text-gray-600 hover:text-purple-600 transition-colors"
+                <Link
+                  href="/terms-of-service"
+                  className="text-sm text-[#8A93A6] transition-colors hover:text-primary"
                 >
                   Terms of Service
                 </Link>
               </li>
               <li>
-                <Link 
-                  href="/refund-policy" 
-                  className="text-sm text-gray-600 hover:text-purple-600 transition-colors"
+                <Link
+                  href="/refund-policy"
+                  className="text-sm text-[#8A93A6] transition-colors hover:text-primary"
                 >
                   Refund Policy
                 </Link>
               </li>
-              <li>
-                <a 
-                  href="https://cleartok.io/" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="text-sm text-gray-600 hover:text-purple-600 transition-colors"
-                >
-                  ClearTok
-                </a>
-              </li>
-              {/* <li>
-                <a 
-                  href="https://linktr.ee/auroroa" 
-                  target="_blank" 
-                  className="text-sm text-gray-600 hover:text-purple-600 transition-colors"
-                >
-                  Aurora
-                </a>
-              </li>
-              <li>
-                <a 
-                  href="https://share.evernote.com/note/613065a4-8cb8-1736-d1e2-b81fcbf0b746" 
-                  target="_blank" 
-                  className="text-sm text-gray-600 hover:text-purple-600 transition-colors"
-                >
-                  Games
-                </a>
-              </li>
-              <li>
-                <a 
-                  href="https://picapica.app/" 
-                  target="_blank" 
-                  className="text-sm text-gray-600 hover:text-purple-600 transition-colors"
-                >
-                  PicaPica
-                </a>
-              </li> */}
             </ul>
           </nav>
         </div>

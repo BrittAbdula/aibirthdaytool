@@ -3,8 +3,8 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import Image from 'next/image'
 import { cn } from "@/lib/utils"
-// removed unused Button import if not needed, or keep if standard
 import confetti from "canvas-confetti"
+import { PaperGrain, WaxSeal } from '@/components/home/card-art'
 
 interface CardDisplayProps {
   card: {
@@ -13,444 +13,599 @@ interface CardDisplayProps {
     r2Url?: string
     svgContent?: string
   }
+  recipientName?: string | null
 }
 
-// Add optimized styles to the head
+/**
+ * The opening ritual, in five acts:
+ *   initial   — the envelope floats in a quiet spotlight; the seal glints.
+ *   cracking  — the wax presses in, splits, shards fly, a ring of light blooms.
+ *   opening   — the flap lifts and warm light leaks out; gold motes rise.
+ *   rising    — the card ascends out of the light as the envelope sinks away.
+ *   final     — the card floats in a breathing halo with a slow sheen.
+ */
+type Stage = 'initial' | 'cracking' | 'opening' | 'rising' | 'final'
+
 if (typeof document !== 'undefined' && !document.querySelector('#card-display-styles')) {
   const style = document.createElement('style');
   style.id = 'card-display-styles';
   style.textContent = `
-    /* Dreamy Easing & Animations */
     :root {
-      --ease-elastic: cubic-bezier(0.34, 1.56, 0.64, 1);
-      --ease-soft: cubic-bezier(0.4, 0.0, 0.2, 1);
-      --ease-dreamy: cubic-bezier(0.25, 0.1, 0.25, 1);
+      --ease-out-soft: cubic-bezier(0.4, 0.0, 0.2, 1);
+      --ease-rise: cubic-bezier(0.16, 1, 0.3, 1);
     }
 
     .no-touch-callout { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
 
-    /* Floating Heart/Star Particles */
-    @keyframes float-particle {
-      0% { transform: translateY(0) rotate(0deg); opacity: 0; }
-      10% { opacity: 0.8; }
-      100% { transform: translateY(-100px) rotate(360deg); opacity: 0; }
+    /* ——— ambient stage ——— */
+    @keyframes amb-drift {
+      0%, 100% { transform: translateY(0); opacity: 0.25; }
+      50% { transform: translateY(-16px); opacity: 0.7; }
     }
-    
-    @keyframes pulse-soft-glow {
-      0%, 100% { box-shadow: 0 0 20px 5px rgba(255, 182, 193, 0.3); }
-      50% { box-shadow: 0 0 30px 10px rgba(255, 223, 186, 0.5); }
+    @keyframes float-gentle {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-10px); }
+    }
+    .animate-float-gentle { animation: float-gentle 5.5s ease-in-out infinite; }
+    @keyframes float-soul {
+      0%, 100% { transform: translateY(0) rotate(-0.4deg); }
+      50% { transform: translateY(-10px) rotate(0.5deg); }
     }
 
-    /* Envelope Opening - Bouncier */
-    @keyframes envelope-open-flap-dreamy {
+    @keyframes spot-breathe {
+      0%, 100% { transform: scale(1); opacity: 0.75; }
+      50% { transform: scale(1.08); opacity: 1; }
+    }
+
+    /* the seal glints while it waits */
+    @keyframes seal-glint {
+      0%, 78%, 100% { transform: translateX(-130%) rotate(18deg); }
+      88% { transform: translateX(130%) rotate(18deg); }
+    }
+    @keyframes seal-ring-pulse {
+      0% { transform: scale(1); opacity: 0.4; }
+      75%, 100% { transform: scale(1.65); opacity: 0; }
+    }
+    @keyframes hint-in {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ——— act 1: the crack ——— */
+    @keyframes seal-press {
+      0% { transform: scale(1); }
+      45% { transform: scale(0.86); }
+      100% { transform: scale(1.02); }
+    }
+    @keyframes seal-half-left {
+      0% { transform: translate(0,0) rotate(0deg); opacity: 1; }
+      100% { transform: translate(-34px, 44px) rotate(-42deg); opacity: 0; }
+    }
+    @keyframes seal-half-right {
+      0% { transform: translate(0,0) rotate(0deg); opacity: 1; }
+      100% { transform: translate(30px, 38px) rotate(36deg); opacity: 0; }
+    }
+    @keyframes shard-fly {
+      0% { transform: translate(0,0) scale(1); opacity: 1; }
+      100% { transform: translate(var(--sx), var(--sy)) scale(0.4); opacity: 0; }
+    }
+    @keyframes ring-burst {
+      0% { transform: scale(0.2); opacity: 0.9; }
+      100% { transform: scale(3); opacity: 0; }
+    }
+    @keyframes envelope-jolt {
+      0%, 100% { transform: translateY(0); }
+      35% { transform: translateY(3px); }
+      65% { transform: translateY(-2px); }
+    }
+
+    /* ——— act 2: light leaks out ——— */
+    /* the flap lifts toward the viewer, then over the hinge — never through the envelope */
+    @keyframes envelope-open-flap {
       0% { transform: rotateX(0deg); }
-      100% { transform: rotateX(-180deg); }
+      100% { transform: rotateX(182deg); }
     }
-    
-    @keyframes envelope-slide-down-dreamy {
-      0% { transform: translateY(0); opacity: 1; }
-      100% { transform: translateY(150px); opacity: 0; }
+    @keyframes glow-bloom {
+      0% { opacity: 0; transform: scale(0.5); }
+      60% { opacity: 0.95; }
+      100% { opacity: 0.8; transform: scale(1.15); }
+    }
+    @keyframes mote-rise {
+      0% { transform: translateY(0) translateX(0); opacity: 0; }
+      15% { opacity: 0.9; }
+      100% { transform: translateY(var(--my, -120px)) translateX(var(--mx, 0px)); opacity: 0; }
     }
 
-    /* Card Reveal - Magical Pop */
-    @keyframes card-reveal-dreamy {
-      0% { transform: translateY(100px) scale(0.8) rotate(-5deg); opacity: 0; }
-      60% { transform: translateY(-20px) scale(1.05) rotate(2deg); opacity: 1; }
+    /* ——— act 3: ascension ——— */
+    @keyframes preview-ascend {
+      0% { transform: translate(-50%, 0) rotate(0deg); }
+      100% { transform: translate(-50%, -46%) rotate(-2deg); }
+    }
+    @keyframes envelope-sink {
+      0% { transform: translateY(0) scale(1); opacity: 1; }
+      100% { transform: translateY(80px) scale(0.94); opacity: 0; }
+    }
+    @keyframes card-ascend {
+      0% { transform: translateY(180px) scale(0.88) rotate(-2.5deg); opacity: 0; }
+      55% { opacity: 1; }
+      70% { transform: translateY(-16px) scale(1.03) rotate(1deg); }
       100% { transform: translateY(0) scale(1) rotate(0deg); opacity: 1; }
     }
 
-    .animate-envelope-open-flap-dreamy {
-      animation: envelope-open-flap-dreamy 1.2s var(--ease-elastic) forwards;
+    /* ——— act 4: presence ——— */
+    @keyframes halo-breathe {
+      0%, 100% { transform: scale(1); opacity: 0.7; }
+      50% { transform: scale(1.07); opacity: 1; }
+    }
+    @keyframes sheen-sweep {
+      0%, 72%, 100% { transform: translateX(-160%) rotate(12deg); }
+      86% { transform: translateX(160%) rotate(12deg); }
+    }
+
+    .animate-envelope-open-flap {
+      animation: envelope-open-flap 1s var(--ease-out-soft) forwards;
       transform-origin: top;
       will-change: transform;
     }
-    
-    .animate-envelope-slide-down-dreamy {
-      animation: envelope-slide-down-dreamy 1.2s var(--ease-soft) forwards;
-      will-change: transform, opacity;
-    }
 
-    .animate-card-reveal-dreamy {
-      animation: card-reveal-dreamy 1.5s var(--ease-elastic) forwards;
-      will-change: transform, opacity;
-    }
-
-    /* Cute Wiggle Interaction */
-    @keyframes wiggle-cute {
-      0%, 100% { transform: rotate(0deg); }
-      25% { transform: rotate(-3deg); }
-      75% { transform: rotate(3deg); }
-    }
-    
-    .animate-wiggle-cute {
-      animation: wiggle-cute 0.5s ease-in-out infinite;
-    }
-
-    /* Soft Floating */
-    @keyframes float-dreamy {
-      0%, 100% { transform: translateY(0px); }
-      50% { transform: translateY(-12px); }
-    }
-
-    .animate-float-dreamy {
-      animation: float-dreamy 5s ease-in-out infinite;
-    }
-
-    .perspective-1000 { perspective: 1000px; }
     .perspective-envelope { perspective: 1200px; }
     .transform-style-3d { transform-style: preserve-3d; }
-    
-    /* Dreamy Shadows */
-    .shadow-envelope-dreamy {
-      box-shadow: 0 20px 50px -10px rgba(255, 105, 180, 0.15), 0 10px 20px -5px rgba(255, 182, 193, 0.2);
-    }
-    
-    .shadow-card-dreamy {
-      box-shadow: 0 25px 60px -12px rgba(147, 112, 219, 0.25);
-    }
-    
-    /* Magic Burst */
-    @keyframes magic-burst-ring {
-      0% { width: 0; height: 0; opacity: 1; border-width: 20px; }
-      100% { width: 500px; height: 500px; opacity: 0; border-width: 0px; }
-    }
-    
-    /* Frosted Glass */
-    .glass-morphism {
-      background: rgba(255, 255, 255, 0.7);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      border: 1px solid rgba(255, 255, 255, 0.5);
+
+    @media (prefers-reduced-motion: reduce) {
+      .ritual-anim, .animate-float-gentle, .animate-envelope-open-flap { animation: none !important; }
     }
   `;
   document.head.appendChild(style);
 }
 
-// Subtle Sparkle Component - minimal and elegant
-const SubtleSparkles = () => {
-  const sparkles = Array.from({ length: 6 }).map((_, i) => ({
-    id: i,
-    left: `${15 + Math.random() * 70}%`,
-    top: `${10 + Math.random() * 80}%`,
-    size: Math.random() * 4 + 3 + 'px',
-    duration: Math.random() * 3 + 4 + 's',
-    delay: Math.random() * 3 + 's',
-  }));
+/** Sparse gold dust that lives on the stage the whole time. */
+const AMBIENT_MOTES = [
+  { left: '8%', top: '18%', size: 5, dur: 7, delay: 0 },
+  { left: '16%', top: '64%', size: 4, dur: 9, delay: 1.8 },
+  { left: '28%', top: '34%', size: 3, dur: 8, delay: 3.1 },
+  { left: '72%', top: '22%', size: 4, dur: 8.5, delay: 0.9 },
+  { left: '84%', top: '58%', size: 5, dur: 7.5, delay: 2.4 },
+  { left: '90%', top: '30%', size: 3, dur: 9.5, delay: 4.0 },
+];
 
-  return (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
-      {sparkles.map((s) => (
-        <div
-          key={s.id}
-          className="absolute rounded-full bg-white/60"
-          style={{
-            left: s.left,
-            top: s.top,
-            width: s.size,
-            height: s.size,
-            animation: `twinkle ${s.duration} ease-in-out infinite`,
-            animationDelay: s.delay,
-            boxShadow: '0 0 6px 2px rgba(255,255,255,0.4)'
-          }}
-        />
-      ))}
-    </div>
-  );
-};
+/** Wax shards that fly when the seal cracks. */
+const SEAL_SHARDS = [
+  { sx: '-42px', sy: '18px', size: 6, delay: 0 },
+  { sx: '38px', sy: '10px', size: 5, delay: 0.02 },
+  { sx: '-20px', sy: '-30px', size: 4, delay: 0.04 },
+  { sx: '26px', sy: '-24px', size: 5, delay: 0.01 },
+  { sx: '4px', sy: '40px', size: 4, delay: 0.05 },
+];
 
-export default function CardDisplay({ card }: CardDisplayProps) {
-  const [stage, setStage] = useState<'initial' | 'opening' | 'revealing' | 'final'>('initial')
-  const [showEnvelope, setShowEnvelope] = useState(true)
-  const [showCard, setShowCard] = useState(false)
-  const [showBurst, setShowBurst] = useState(false)
+/** Gold motes that rise out of the opened envelope. */
+const RISING_MOTES = [
+  { left: '34%', mx: '-14px', my: '-110px', size: 5, dur: 2.2, delay: 0 },
+  { left: '46%', mx: '8px', my: '-150px', size: 4, dur: 2.6, delay: 0.25 },
+  { left: '58%', mx: '18px', my: '-120px', size: 5, dur: 2.3, delay: 0.5 },
+  { left: '40%', mx: '-22px', my: '-140px', size: 3, dur: 2.8, delay: 0.75 },
+  { left: '64%', mx: '-6px', my: '-100px', size: 4, dur: 2.4, delay: 1.0 },
+  { left: '52%', mx: '14px', my: '-160px', size: 3, dur: 3.0, delay: 1.25 },
+];
+
+export default function CardDisplay({ card, recipientName }: CardDisplayProps) {
+  const [stage, setStage] = useState<Stage>('initial')
   const [imageSrc, setImageSrc] = useState<string | null>(null)
-  
-  // Interaction states
   const [isHovering, setIsHovering] = useState(false)
   const [cardRotation, setCardRotation] = useState({ x: 0, y: 0 })
   const cardRef = useRef<HTMLDivElement>(null)
-  
-  // Interaction / Shake
-  const [isInteracting, setIsInteracting] = useState(false)
-  
-  // Device Motion
   const lastShakeRef = useRef<number>(0)
   const shakeThreshold = 15
 
-  // Helper function to determine if URL is a video
   const isVideo = (url?: string) => {
     if (!url) return false;
     const videoExtensions = ['.mp4', '.mov', '.avi', '.webm', '.ogg'];
     return videoExtensions.some(ext => url.toLowerCase().includes(ext));
   };
- 
-  // Set image source from props on component mount
+
   useEffect(() => {
     if (card.svgContent) {
-      const svgDataUrl = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(card.svgContent)}`
-      setImageSrc(svgDataUrl)
+      setImageSrc(`data:image/svg+xml;charset=utf-8,${encodeURIComponent(card.svgContent)}`)
     } else if (card.r2Url) {
       setImageSrc(card.r2Url)
     }
   }, [card.r2Url, card.svgContent])
 
-  // Elegant single confetti burst - simple and refined
-  const triggerElegantConfetti = useCallback(() => {
-    // Single elegant burst from center
+  // Two-beat confetti in the house palette: an upward fan, then a soft echo.
+  const triggerConfetti = useCallback(() => {
+    const colors = ["#B4375F", "#E5B72E", "#F8B7C7", "#B1A0FF", "#FFF3C4"];
     confetti({
-      particleCount: 30,
-      spread: 70,
-      origin: { x: 0.5, y: 0.5 },
-      colors: ["#c41e3a", "#2d5a3f", "#daa520", "#ffffff"],
-      shapes: ['circle'],
-      scalar: 0.8,
-      gravity: 0.6,
-      decay: 0.94,
-      startVelocity: 25,
-      ticks: 200
+      particleCount: 44,
+      angle: 90,
+      spread: 68,
+      origin: { x: 0.5, y: 0.52 },
+      colors,
+      shapes: ['circle', 'square'],
+      scalar: 0.85,
+      gravity: 0.55,
+      decay: 0.93,
+      startVelocity: 34,
+      ticks: 260,
     });
+    setTimeout(() => {
+      confetti({
+        particleCount: 22,
+        angle: 90,
+        spread: 110,
+        origin: { x: 0.5, y: 0.48 },
+        colors,
+        shapes: ['circle'],
+        scalar: 0.6,
+        gravity: 0.35,
+        decay: 0.95,
+        startVelocity: 16,
+        ticks: 300,
+      });
+    }, 420);
   }, []);
 
-  // Device Motion (Shake)
+  const handleOpen = useCallback(() => {
+    if (stage !== 'initial') return;
+    setStage('cracking');
+    setTimeout(() => setStage('opening'), 520);
+    setTimeout(() => setStage('rising'), 1750);
+    setTimeout(() => {
+      setStage('final');
+      requestAnimationFrame(triggerConfetti);
+      window.dispatchEvent(new CustomEvent('mtc:card-revealed'));
+    }, 3150);
+  }, [stage, triggerConfetti]);
+
+  // Shake to open
   useEffect(() => {
     if (stage !== 'initial') return;
-
     let lastX = 0, lastY = 0, lastZ = 0;
-    
     const handleDeviceMotion = (event: DeviceMotionEvent) => {
-      const acceleration = event.accelerationIncludingGravity;
-      if (!acceleration) return;
-
-      const x = acceleration.x ?? 0;
-      const y = acceleration.y ?? 0;
-      const z = acceleration.z ?? 0;
-      
-      const deltaX = Math.abs(x - lastX);
-      const deltaY = Math.abs(y - lastY);
-      const deltaZ = Math.abs(z - lastZ);
-      const totalDelta = deltaX + deltaY + deltaZ;
-      
-      if (totalDelta > shakeThreshold) {
+      const a = event.accelerationIncludingGravity;
+      if (!a) return;
+      const delta = Math.abs((a.x ?? 0) - lastX) + Math.abs((a.y ?? 0) - lastY) + Math.abs((a.z ?? 0) - lastZ);
+      if (delta > shakeThreshold) {
         const now = Date.now();
         if (now - lastShakeRef.current > 500) {
           lastShakeRef.current = now;
-          setIsInteracting(true);
-          setTimeout(() => setIsInteracting(false), 800);
           handleOpen();
         }
       }
-      
-      lastX = x; lastY = y; lastZ = z;
+      lastX = a.x ?? 0; lastY = a.y ?? 0; lastZ = a.z ?? 0;
     };
-
     const requestPermission = async () => {
       if (typeof (DeviceMotionEvent as any)?.requestPermission === 'function') {
         try {
-          const permission = await (DeviceMotionEvent as any).requestPermission();
-          if (permission === 'granted') {
+          if ((await (DeviceMotionEvent as any).requestPermission()) === 'granted') {
             window.addEventListener('devicemotion', handleDeviceMotion);
           }
-        } catch (e) { console.log('Permission denied'); }
+        } catch { /* denied */ }
       } else {
         window.addEventListener('devicemotion', handleDeviceMotion);
       }
     };
-
     requestPermission();
     return () => window.removeEventListener('devicemotion', handleDeviceMotion);
-  }, [stage]);
+  }, [stage, handleOpen]);
 
   const handleCardMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!cardRef.current) return;
     const rect = cardRef.current.getBoundingClientRect();
-    const centerX = rect.left + rect.width / 2;
-    const centerY = rect.top + rect.height / 2;
-    const rotateX = (e.clientY - centerY) / 25; // Gentler rotation
-    const rotateY = (centerX - e.clientX) / 25;
-    setCardRotation({ x: rotateX, y: rotateY });
+    setCardRotation({
+      x: (e.clientY - (rect.top + rect.height / 2)) / 25,
+      y: ((rect.left + rect.width / 2) - e.clientX) / 25,
+    });
   };
-
-  const handleOpen = useCallback(() => {
-    if (stage !== 'initial') return;
-    setStage('opening');
-    
-    // Animation sequence
-    setTimeout(() => {
-        setStage('revealing');
-        setShowBurst(true); // Trigger burst
-    }, 800);
-    
-    setTimeout(() => {
-      setStage('final');
-      setShowEnvelope(false);
-      setShowCard(true);
-      setShowBurst(false); // End burst
-      requestAnimationFrame(triggerElegantConfetti);
-      // Let the Moment layer (typed message + ask) start after the reveal
-      window.dispatchEvent(new CustomEvent('mtc:card-revealed'));
-    }, 1800);
-  }, [stage, triggerElegantConfetti]);
 
   if (!imageSrc) {
     return (
       <div className="w-full flex items-center justify-center h-[60vh]">
-        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-pink-300"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary/60"></div>
       </div>
     )
   }
 
+  const opened = stage !== 'initial';
+  const envelopeGone = stage === 'final';
+
   return (
     <div className="relative w-full max-w-2xl mx-auto min-h-[80vh] flex items-center justify-center">
-      {/* Light Burst Overlay */}
-      {showBurst && (
-        <div className="absolute inset-0 z-50 flex items-center justify-center pointer-events-none">
-           <div className="relative">
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border-[10px] border-pink-200/50 animate-[magic-burst-ring_0.8s_ease-out_forwards]"></div>
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border-[20px] border-white/80 animate-[magic-burst-ring_1s_ease-out_0.1s_forwards]"></div>
-           </div>
-        </div>
-      )}
+      {/* ambient gold dust, always on stage */}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden>
+        {AMBIENT_MOTES.map((m, i) => (
+          <span
+            key={i}
+            className="ritual-anim absolute rounded-full bg-[#E5B72E]"
+            style={{
+              left: m.left, top: m.top, width: m.size, height: m.size,
+              boxShadow: '0 0 8px 2px rgba(229,183,46,0.35)',
+              animation: `amb-drift ${m.dur}s ease-in-out ${m.delay}s infinite`,
+            }}
+          />
+        ))}
+      </div>
 
-      {/* FINAL CARD DISPLAY */}
+      {/* ——— FINAL CARD ——— */}
       <div className={cn(
-        "transition-all duration-1000 w-full perspective-1000 relative z-10",
-        !showEnvelope ? "opacity-100 scale-100" : "opacity-0 scale-95 pointer-events-none absolute"
+        "w-full relative z-10 transition-opacity duration-500",
+        envelopeGone ? "opacity-100" : "opacity-0 pointer-events-none absolute"
       )}>
-        {/* Subtle Sparkles - minimal ambiance */}
-        {showCard && <SubtleSparkles />}
-
-        <div className={cn(
-          "w-full mx-auto relative",
-          showCard ? 'animate-card-reveal-dreamy' : 'opacity-0'
-        )}>
-           {/* Card Container with Soft Glow and Float */}
-           <div className="relative w-full max-w-[400px] mx-auto animate-float-dreamy">
-              {/* Back Glow - Stronger Halo */}
-              <div className="absolute -inset-8 rounded-full bg-pink-300 blur-3xl opacity-60 animate-[pulse-soft-glow_4s_infinite]"></div>
-              
-              <div 
-                ref={cardRef}
-                className={cn(
-                   "relative aspect-[2/3] transform-gpu transition-all duration-300 cursor-pointer shadow-card-dreamy rounded-xl overflow-hidden bg-white/40 backdrop-blur-md border border-white/60",
-                )}
-                style={{ 
-                  transform: `perspective(1000px) rotateX(${cardRotation.x}deg) rotateY(${cardRotation.y}deg)`,
-                  boxShadow: '0 0 50px 10px rgba(255, 192, 203, 0.5)' // Inline override for stronger halo
-                }}
-                onMouseMove={handleCardMouseMove}
-                onMouseEnter={() => setIsHovering(true)}
-                onMouseLeave={() => {
-                  setCardRotation({ x: 0, y: 0 });
-                  setIsHovering(false);
-                }}
-                onClick={triggerElegantConfetti}
-              >
+        <div className={cn("w-full mx-auto relative", envelopeGone && "ritual-anim")}
+          style={envelopeGone ? { animation: 'card-ascend 1.5s var(--ease-rise) both' } : undefined}
+        >
+          <div className="relative w-full max-w-[400px] mx-auto animate-float-gentle">
+            {/* breathing halo: blush core, gold rim */}
+            <div
+              aria-hidden
+              className="ritual-anim absolute -inset-12 rounded-full"
+              style={{
+                background: 'radial-gradient(closest-side, rgba(248,183,199,0.55) 0%, rgba(229,183,46,0.18) 55%, transparent 75%)',
+                animation: 'halo-breathe 5s ease-in-out infinite',
+              }}
+            />
+            <div
+              ref={cardRef}
+              className="relative transform-gpu cursor-pointer rounded-xl bg-white p-2 ring-1 ring-[#F1D6DF] transition-all duration-300 shadow-[0_3px_5px_rgba(32,42,61,0.12),14px_26px_48px_-18px_rgba(140,34,71,0.4)]"
+              style={{ transform: `perspective(1000px) rotateX(${cardRotation.x}deg) rotateY(${cardRotation.y}deg)` }}
+              onMouseMove={handleCardMouseMove}
+              onMouseEnter={() => setIsHovering(true)}
+              onMouseLeave={() => { setCardRotation({ x: 0, y: 0 }); setIsHovering(false); }}
+              onClick={triggerConfetti}
+            >
+              <div className="relative aspect-[2/3] overflow-hidden rounded-lg bg-[#FFF8F6]">
                 {isVideo(imageSrc) ? (
-                  <video
-                    src={imageSrc}
-                    controls
-                    autoPlay
-                    muted
-                    loop
-                    className="w-full h-full object-cover"
-                  >
+                  <video src={imageSrc} controls autoPlay muted loop className="w-full h-full object-cover">
                     <source src={imageSrc} type="video/mp4" />
                   </video>
                 ) : (
-                  <Image
-                    src={imageSrc}
-                    alt={`${card.cardType} card`}
-                    fill
-                    priority
-                    className="object-cover"
-                    unoptimized
-                  />
+                  <Image src={imageSrc} alt={`${card.cardType} card`} fill priority className="object-cover" unoptimized />
                 )}
-                
-                {/* Dreamy Overlays */}
-                <div className="absolute inset-0 bg-gradient-to-tr from-pink-100/20 via-transparent to-blue-100/20 mix-blend-overlay pointer-events-none"></div>
-                
-                {/* Subtle Grain */}
-                <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.03] mix-blend-overlay pointer-events-none"></div>
+                {/* a slow light sweep across the kept card */}
+                <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden rounded-lg">
+                  <div
+                    className="ritual-anim absolute -inset-y-8 w-1/3"
+                    style={{
+                      background: 'linear-gradient(105deg, transparent 20%, rgba(255,255,255,0.28) 50%, transparent 80%)',
+                      animation: 'sheen-sweep 7.5s ease-in-out 1.8s infinite',
+                    }}
+                  />
+                </div>
               </div>
-           </div>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* DREAMY ENVELOPE */}
-      {showEnvelope && (
-        <div className={cn(
-          "absolute inset-0 w-full perspective-envelope flex items-center justify-center transition-opacity duration-1000 z-20",
-          stage === 'final' ? "opacity-0 pointer-events-none" : "opacity-100"
-        )}>
-          <div 
+      {/* ——— THE SEALED ENVELOPE ———
+          Real anatomy: one body, three lower flaps meeting at an apex, and a
+          top flap whose edges land on that same apex — so the closed envelope
+          shows a single set of creases, and opening reveals a cream liner. */}
+      {!envelopeGone && (
+        <div className="absolute inset-0 w-full perspective-envelope flex items-center justify-center z-20">
+          {/* spotlight behind the envelope */}
+          <div
+            aria-hidden
+            className="ritual-anim pointer-events-none absolute h-[480px] w-[480px] rounded-full"
+            style={{
+              background: 'radial-gradient(closest-side, rgba(255,236,240,0.95) 0%, rgba(229,183,46,0.10) 55%, transparent 75%)',
+              animation: 'spot-breathe 6s ease-in-out infinite',
+            }}
+          />
+          <div
             className={cn(
-              "relative w-full max-w-[450px] aspect-[4/3] transition-transform duration-500",
-              isInteracting || isHovering ? "animate-wiggle-cute" : "animate-float-dreamy",
-              stage === 'revealing' ? "animate-envelope-slide-down-dreamy" : ""
+              "relative w-full max-w-[420px] cursor-pointer",
+              stage === 'initial' && "ritual-anim",
+              stage === 'cracking' && "ritual-anim"
             )}
+            style={
+              stage === 'initial'
+                ? { animation: 'float-soul 6.5s ease-in-out infinite' }
+                : stage === 'cracking'
+                  ? { animation: 'envelope-jolt 0.5s ease-out both' }
+                  : stage === 'rising'
+                    ? { animation: 'envelope-sink 1.4s var(--ease-out-soft) 0.35s both' }
+                    : undefined
+            }
             onClick={handleOpen}
             onMouseEnter={() => setIsHovering(true)}
             onMouseLeave={() => setIsHovering(false)}
+            role="button"
+            aria-label="Open your card"
           >
-            {/* Envelope Body (Back) */}
-            <div className="absolute inset-0 bg-[#fff0f5] rounded-xl shadow-envelope-dreamy border border-white/80"></div>
-            
-            {/* Card Preview Inside */}
-            <div className={cn(
-               "absolute top-2 left-4 right-4 bottom-2 bg-white shadow-sm transition-transform duration-700 ease-[cubic-bezier(0.25,0.1,0.25,1)]",
-               stage === 'opening' || stage === 'revealing' ? "translate-y-[-15%]" : "translate-y-0"
-            )}>
-              <div className="w-full h-full bg-slate-50 overflow-hidden relative">
-                 <div className="absolute inset-0 bg-gradient-to-br from-pink-200 to-purple-200 opacity-30"></div>
-                 {/* Sparkle Hint */}
-                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-4xl animate-pulse">✨</div>
+            <div className="relative aspect-[4/3] transform-style-3d">
+              {/* body + liner (the inside you see once the flap lifts) */}
+              <div className="absolute inset-0 overflow-hidden rounded-2xl bg-[#FFF5F0] shadow-[10px_26px_54px_-18px_rgba(140,34,71,0.42)]">
+                <svg width="100%" height="100%" aria-hidden className="absolute inset-0 opacity-70">
+                  <pattern id="reveal-liner" width="14" height="14" patternUnits="userSpaceOnUse">
+                    <circle cx="3" cy="3" r="1.1" fill="#E5B72E" opacity="0.35" />
+                  </pattern>
+                  <rect width="100%" height="100%" fill="url(#reveal-liner)" />
+                </svg>
+                <div className="absolute inset-0 shadow-[inset_0_22px_30px_-16px_rgba(140,34,71,0.28)]" />
               </div>
-            </div>
 
-            {/* Envelope Front (Bottom) */}
-            <div className="absolute bottom-0 left-0 right-0 h-[60%] bg-[#fff5f8] rounded-b-xl shadow-sm z-20 border-t border-white/50 backdrop-blur-sm">
-               <div className="absolute inset-0 bg-gradient-to-b from-transparent to-pink-100/30 rounded-b-xl"></div>
-            </div>
-            
-            {/* Envelope Front (Sides) */}
-             <div className="absolute inset-0 z-20 pointer-events-none">
-                 <div className="absolute top-[40%] left-0 w-[50%] h-[60%] bg-[#fff0f5] origin-bottom-left skew-y-6 shadow-sm rounded-bl-xl border-r border-white/20"></div>
-                 <div className="absolute top-[40%] right-0 w-[50%] h-[60%] bg-[#fff0f5] origin-bottom-right -skew-y-6 shadow-sm rounded-br-xl border-l border-white/20"></div>
-             </div>
+              {/* warm light leaking from inside once the flap lifts */}
+              <div
+                aria-hidden
+                className={cn("ritual-anim absolute left-1/2 top-[18%] z-[15] h-[52%] w-[88%] -translate-x-1/2 rounded-[50%]", !opened && "opacity-0")}
+                style={{
+                  background: 'radial-gradient(closest-side, rgba(255,243,196,0.95) 0%, rgba(248,183,199,0.45) 60%, transparent 80%)',
+                  filter: 'blur(6px)',
+                  animation: stage === 'opening' || stage === 'rising' ? 'glow-bloom 1.1s var(--ease-out-soft) 0.45s both' : undefined,
+                }}
+              />
 
-            {/* Top Flap */}
-            <div className={cn(
-              "absolute top-0 left-0 right-0 h-[50%] bg-[#ffe4e1] rounded-t-xl z-30 origin-top shadow-md transition-all duration-800 transform-style-3d",
-              stage !== 'initial' ? "animate-envelope-open-flap-dreamy" : ""
-            )}>
-               {/* Flap Texture */}
-               <div className="absolute inset-0 bg-gradient-to-b from-white/40 to-transparent rounded-t-xl"></div>
-               
-               {/* Cute Heart Seal */}
-               <div className={cn(
-                  "absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 transition-all duration-300 z-40",
-                  stage === 'initial' ? "scale-100 opacity-100" : "scale-0 opacity-0"
-               )}>
-                  <div className="relative group cursor-pointer">
-                     {/* Pulse Ring */}
-                     <div className="absolute inset-0 bg-pink-400 rounded-full animate-ping opacity-20"></div>
-                     
-                     {/* Heart Icon */}
-                     <div className="w-16 h-16 bg-gradient-to-br from-pink-400 to-rose-400 rounded-full shadow-lg flex items-center justify-center border-4 border-white transform transition-transform group-hover:scale-110">
-                        <svg viewBox="0 0 24 24" fill="white" className="w-8 h-8 drop-shadow-sm">
-                           <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-                        </svg>
-                     </div>
+              {/* gold motes rising out of the mouth */}
+              {(stage === 'opening' || stage === 'rising') && (
+                <div className="pointer-events-none absolute inset-0 z-[16]" aria-hidden>
+                  {RISING_MOTES.map((m, i) => (
+                    <span
+                      key={i}
+                      className="ritual-anim absolute top-[40%] rounded-full bg-[#E5B72E]"
+                      style={{
+                        left: m.left, width: m.size, height: m.size,
+                        boxShadow: '0 0 10px 3px rgba(229,183,46,0.4)',
+                        ['--mx' as any]: m.mx, ['--my' as any]: m.my,
+                        animation: `mote-rise ${m.dur}s ease-out ${m.delay}s both`,
+                      }}
+                    />
+                  ))}
+                </div>
+              )}
+
+              {/* the card waiting inside, ascending with the light */}
+              <div
+                className="ritual-anim absolute left-1/2 top-[15%] z-10 w-[60%] -translate-x-1/2"
+                style={
+                  stage === 'opening' || stage === 'rising'
+                    ? { animation: 'preview-ascend 1.6s var(--ease-rise) 0.75s both' }
+                    : undefined
+                }
+              >
+                <div className="relative rounded-lg bg-[#FFFEFB] p-2 shadow-[6px_10px_22px_-10px_rgba(32,42,61,0.35)] ring-1 ring-[#F1D6DF]">
+                  <PaperGrain id="grain-reveal-card" className="absolute inset-0 rounded-lg opacity-[0.45]" />
+                  <div className="relative flex aspect-[3/2] flex-col items-center justify-center rounded-md border border-[#E9D3A8]">
+                    <p className="font-hand text-2xl leading-none text-[#525B70]">
+                      {recipientName ? `For ${recipientName}.` : 'For you.'}
+                    </p>
                   </div>
-               </div>
+                </div>
+              </div>
+
+              {/* lower flaps: left, right, bottom — meeting at the apex */}
+              <div className="absolute inset-0 z-20 overflow-hidden rounded-2xl">
+                <svg viewBox="0 0 100 75" preserveAspectRatio="none" className="h-full w-full">
+                  <defs>
+                    <linearGradient id="reveal-flap-l" x1="0" y1="0" x2="1" y2="1">
+                      <stop offset="0%" stopColor="#F9CAD5" />
+                      <stop offset="100%" stopColor="#F3B2C1" />
+                    </linearGradient>
+                    <linearGradient id="reveal-flap-r" x1="1" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#F8C5D1" />
+                      <stop offset="100%" stopColor="#F1AEBE" />
+                    </linearGradient>
+                    <linearGradient id="reveal-flap-b" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#F5B9C7" />
+                      <stop offset="100%" stopColor="#F0A9BA" />
+                    </linearGradient>
+                  </defs>
+                  <polygon points="0,0 50,44 0,75" fill="url(#reveal-flap-l)" />
+                  <polygon points="100,0 50,44 100,75" fill="url(#reveal-flap-r)" />
+                  <polygon points="0,75 50,44 100,75" fill="url(#reveal-flap-b)" />
+                  {/* creases: shadow, then highlight */}
+                  <path d="M0 75 L50 44 L100 75" fill="none" stroke="#DC8AA3" strokeWidth="0.7" opacity="0.55" />
+                  <path d="M0 74 L50 43.2 L100 74" fill="none" stroke="#FFE1E8" strokeWidth="0.6" opacity="0.8" />
+                  <path d="M0 0 L50 44 L100 0" fill="none" stroke="#FFE6EC" strokeWidth="0.7" opacity="0.9" />
+                </svg>
+                <PaperGrain id="grain-reveal-pocket" className="absolute inset-0 opacity-[0.3]" />
+              </div>
+
+              {/* top flap — two faces, so lifting it reveals the liner underneath */}
+              <div
+                className={cn(
+                  "absolute inset-x-0 top-0 z-30 h-[58.7%] transform-style-3d transition-transform duration-300 ease-out",
+                  opened && "animate-envelope-open-flap"
+                )}
+                style={
+                  opened
+                    ? { animationDelay: '0.85s', transformOrigin: 'top', transform: 'rotateX(0deg)' }
+                    : { transformOrigin: 'top', transform: isHovering ? 'rotateX(7deg)' : 'rotateX(0deg)' }
+                }
+              >
+                {/* outside of the flap */}
+                <svg viewBox="0 0 100 44" preserveAspectRatio="none" className="absolute inset-0 h-full w-full drop-shadow-[0_6px_8px_rgba(140,34,71,0.18)] [backface-visibility:hidden]">
+                  <defs>
+                    <linearGradient id="reveal-flap-top" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#FBD3DC" />
+                      <stop offset="100%" stopColor="#F3B4C3" />
+                    </linearGradient>
+                  </defs>
+                  <path d="M0 0 H100 L51.8 42.6 Q50 44.2 48.2 42.6 Z" fill="url(#reveal-flap-top)" />
+                  <path d="M0 0 L50 43.4 L100 0" fill="none" stroke="#DC8AA3" strokeWidth="0.8" opacity="0.7" />
+                </svg>
+                {/* inside of the flap */}
+                <svg viewBox="0 0 100 44" preserveAspectRatio="none" className="absolute inset-0 h-full w-full [backface-visibility:hidden] [transform:rotateY(180deg)]">
+                  <path d="M0 0 H100 L51.8 42.6 Q50 44.2 48.2 42.6 Z" fill="#FFF3EE" />
+                  <path d="M0 0 L50 43.4 L100 0" fill="none" stroke="#F0CBB8" strokeWidth="0.8" opacity="0.8" />
+                </svg>
+
+                {/* the intact wax seal sits on the flap's tip — outermost, and it moves with the flap */}
+                {stage === 'initial' && (
+                  <div className="absolute left-1/2 top-full z-10 aspect-square w-[17%] -translate-x-1/2 -translate-y-1/2 [backface-visibility:hidden]">
+                    <span
+                      aria-hidden
+                      className="ritual-anim absolute inset-0 rounded-full bg-primary/40"
+                      style={{ animation: 'seal-ring-pulse 2.4s ease-out infinite' }}
+                    />
+                    <div className={cn("relative transition-transform duration-300", isHovering && "scale-110")}>
+                      <WaxSeal className="w-full drop-shadow-[2px_6px_8px_rgba(140,34,71,0.4)]" />
+                      {/* glint sweeping across the wax */}
+                      <div aria-hidden className="absolute inset-[8%] overflow-hidden rounded-full">
+                        <div
+                          className="ritual-anim absolute -inset-y-2 w-1/3"
+                          style={{
+                            background: 'linear-gradient(105deg, transparent 25%, rgba(255,255,255,0.5) 50%, transparent 75%)',
+                            animation: 'seal-glint 4.2s ease-in-out 1s infinite',
+                          }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+                {/* the crack happens on the flap tip too — same plane as the wax, never behind it */}
+                {(stage === 'cracking' || stage === 'opening') && (
+                  <div className="pointer-events-none absolute left-1/2 top-full z-20 aspect-square w-[17%] -translate-x-1/2 -translate-y-1/2 [backface-visibility:hidden]">
+                    {/* ring of light from the break point */}
+                    <span
+                      aria-hidden
+                      className="ritual-anim absolute inset-[-30%] rounded-full border-2 border-[#E5B72E]/70"
+                      style={{ animation: 'ring-burst 0.7s ease-out 0.18s both' }}
+                    />
+                    <span
+                      aria-hidden
+                      className="ritual-anim absolute inset-[-30%] rounded-full border border-white/80"
+                      style={{ animation: 'ring-burst 0.9s ease-out 0.26s both' }}
+                    />
+                    {/* the seal presses in, then splits */}
+                    <div className="ritual-anim relative" style={{ animation: 'seal-press 0.34s ease-in both' }}>
+                      <WaxSeal className="w-full opacity-0" />
+                      <div className="absolute inset-0" style={{ clipPath: 'polygon(0 0, 56% 0, 44% 100%, 0 100%)' }}>
+                        <div className="ritual-anim" style={{ animation: 'seal-half-left 0.85s ease-in 0.3s both' }}>
+                          <WaxSeal className="w-full" />
+                        </div>
+                      </div>
+                      <div className="absolute inset-0" style={{ clipPath: 'polygon(56% 0, 100% 0, 100% 100%, 44% 100%)' }}>
+                        <div className="ritual-anim" style={{ animation: 'seal-half-right 0.8s ease-in 0.3s both' }}>
+                          <WaxSeal className="w-full" />
+                        </div>
+                      </div>
+                    </div>
+                    {/* wax shards */}
+                    {SEAL_SHARDS.map((sh, i) => (
+                      <span
+                        key={i}
+                        aria-hidden
+                        className="ritual-anim absolute left-1/2 top-1/2 rounded-[2px] bg-[#A03053]"
+                        style={{
+                          width: sh.size, height: sh.size,
+                          ['--sx' as any]: sh.sx, ['--sy' as any]: sh.sy,
+                          animation: `shard-fly 0.75s ease-out ${0.3 + sh.delay}s both`,
+                        }}
+                      />
+                    ))}
+                  </div>
+              )}
+              </div>
+
             </div>
 
-            {/* Instruction Text */}
+            {/* Invitation */}
             {stage === 'initial' && (
-              <div className="absolute -bottom-20 left-0 right-0 text-center animate-bounce">
-                <p className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/80 backdrop-blur text-pink-500 text-sm font-medium shadow-sm border border-pink-100">
-                  <span>💌</span> Tap to open for a surprise! <span>✨</span>
+              <div className="absolute -bottom-16 left-0 right-0 text-center">
+                <p
+                  className="ritual-anim inline-flex items-center gap-2 rounded-full bg-white/90 px-5 py-2.5 text-sm font-semibold text-[#202A3D] shadow-sm ring-1 ring-[#F1D6DF] backdrop-blur"
+                  style={{ animation: 'hint-in 0.8s ease-out 0.9s both' }}
+                >
+                  {recipientName ? `Sealed for ${recipientName} — break the wax` : 'Sealed for you — break the wax'}
                 </p>
               </div>
             )}

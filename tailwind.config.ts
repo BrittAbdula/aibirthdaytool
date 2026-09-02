@@ -70,6 +70,7 @@ const config = {
 				serif: ["var(--font-caveat)", "cursive"],
 				caveat: ["var(--font-caveat)", "cursive"],
 				quicksand: ["var(--font-quicksand)", "sans-serif"],
+				hand: ["var(--font-hand)", "cursive"],
 			},
 			keyframes: {
 				'accordion-down': {

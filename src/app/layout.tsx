@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { Fraunces, Plus_Jakarta_Sans } from "next/font/google";
+import { Caveat, Fraunces, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import '@/styles/globals.css';
 import { Toaster } from "@/components/ui/toaster";
@@ -17,6 +17,7 @@ import { buildOrganizationSchema, buildWebsiteSchema, toAbsoluteUrl } from "@/li
 
 const displayFont = Fraunces({
   subsets: ["latin"],
+  style: ["normal", "italic"],
   variable: '--font-caveat',
   display: 'swap',
 });
@@ -24,6 +25,13 @@ const displayFont = Fraunces({
 const sansFont = Plus_Jakarta_Sans({
   subsets: ["latin"],
   variable: '--font-quicksand',
+  display: 'swap',
+});
+
+const handFont = Caveat({
+  subsets: ["latin"],
+  weight: ["400", "600"],
+  variable: '--font-hand',
   display: 'swap',
 });
 
@@ -96,7 +104,7 @@ export default function RootLayout({
         {/* Google Tag Manager should be inside <head> */}
         <GoogleTagManager gtmId="GTM-57P7BF4D" />
       </head>
-      <body className={`${displayFont.variable} ${sansFont.variable} font-sans text-[#202A3D]`}>
+      <body className={`${displayFont.variable} ${sansFont.variable} ${handFont.variable} font-sans text-[#202A3D]`}>
         <JsonLd data={buildOrganizationSchema()} />
         <JsonLd data={buildWebsiteSchema()} />
         <SessionProvider>

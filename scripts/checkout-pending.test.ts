@@ -4,26 +4,29 @@ import {
   buildPendingCheckout,
   parsePendingCheckout,
 } from '../src/lib/checkout-pending';
-import { buildCheckoutRedirectUrls } from '../src/lib/pricing';
+import { buildCheckoutRedirectUrls } from '../src/lib/pricing/checkout';
 
 assert.equal(PENDING_CHECKOUT_STORAGE_KEY, 'mewtrucard.pendingCheckout');
 
 const pending = buildPendingCheckout({
-  plan: 'monthly',
-  source: 'premium_modal_limit',
+  sku: 'pack_20',
+  source: 'paywall_daily_limit',
   returnUrl: '/birthday?foo=bar#card',
   taskSize: 72,
 });
 
-assert.equal(pending.plan, 'monthly');
-assert.equal(pending.source, 'premium_modal_limit');
+assert.equal(pending.sku, 'pack_20');
+assert.equal(pending.source, 'paywall_daily_limit');
 assert.equal(pending.returnUrl, '/birthday');
 assert.equal(pending.taskSize, 50);
 assert.equal(typeof pending.createdAt, 'number');
 
 assert.deepEqual(parsePendingCheckout(JSON.stringify(pending)), pending);
 assert.equal(parsePendingCheckout('{bad json'), null);
-assert.equal(parsePendingCheckout(JSON.stringify({ ...pending, plan: 'weekly' })), null);
+assert.equal(parsePendingCheckout(JSON.stringify({ ...pending, sku: 'weekly' })), null);
+// Pre-split entries stored a `plan` and no `sku`; they must not resume as a
+// checkout for whichever SKU happens to sort first.
+assert.equal(parsePendingCheckout(JSON.stringify({ plan: 'monthly', source: 'x', returnUrl: '/', createdAt: Date.now() })), null);
 assert.equal(parsePendingCheckout(JSON.stringify({ ...pending, returnUrl: 'https://evil.example' })), null);
 
 const redirects = buildCheckoutRedirectUrls('https://mewtrucard.com/', '/birthday?recipientName=Private&message=Secret#card');

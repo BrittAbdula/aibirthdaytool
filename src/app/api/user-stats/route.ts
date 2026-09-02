@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { getAllSubscriptionPriceIds } from "@/lib/pricing/plans";
 import { requireAdminRequest } from "@/lib/admin-auth";
 import {
   SUBSCRIPTION_LIFECYCLE_RELIABLE_FROM,
@@ -32,11 +34,13 @@ export async function GET(request: Request) {
       previousStartDate,
       previousEndDate,
     } = range;
-    const monthlyPriceId = process.env.STRIPE_MONTHLY_PRICE_ID;
-    const yearlyPriceId = process.env.STRIPE_YEARLY_PRICE_ID;
-    if (!monthlyPriceId || !yearlyPriceId) {
+    // Filtering on the catalog rather than a hardcoded pair: a subscription on a
+    // newly added tier must show up in revenue and funnel reporting immediately.
+    const subscriptionPriceIds = getAllSubscriptionPriceIds();
+    if (subscriptionPriceIds.length === 0) {
       throw new Error('Stripe price IDs are not configured');
     }
+    const priceIdList = Prisma.join(subscriptionPriceIds);
 
 
     // Collect raw query results first, without destructuring
@@ -481,7 +485,7 @@ export async function GET(request: Request) {
           SELECT *
           FROM "Subscription"
           WHERE "stripeLivemode" = true
-            AND "stripePriceId" IN (${monthlyPriceId}, ${yearlyPriceId})
+            AND "stripePriceId" IN (${priceIdList})
         )
         SELECT
           COUNT(*) FILTER (WHERE status IN ('active', 'trialing'))::integer AS live_subscribers,
@@ -494,20 +498,20 @@ export async function GET(request: Request) {
             WHERE u.plan = 'PREMIUM'
               AND NOT (
                 COALESCE(s."stripeLivemode", false) = true
-                AND s."stripePriceId" IN (${monthlyPriceId}, ${yearlyPriceId})
+                AND s."stripePriceId" IN (${priceIdList})
                 AND s.status IN ('active', 'trialing')
               )) AS unmapped_premium_entitlements,
           (SELECT COALESCE(SUM(amount), 0)::integer
             FROM "StripeLog"
             WHERE "stripeLivemode" = true
-              AND "stripePriceId" IN (${monthlyPriceId}, ${yearlyPriceId})
+              AND "stripePriceId" IN (${priceIdList})
               AND "eventType" = 'invoice.payment_succeeded'
               AND "createdAt" >= ${startDate}::date
               AND "createdAt" < (${endDate}::date + interval '1 day')) AS gross_revenue_cents,
           (SELECT COALESCE(SUM(amount), 0)::integer
             FROM "StripeLog"
             WHERE "stripeLivemode" = true
-              AND "stripePriceId" IN (${monthlyPriceId}, ${yearlyPriceId})
+              AND "stripePriceId" IN (${priceIdList})
               AND "eventType" = 'invoice.payment_succeeded'
               AND "createdAt" >= ${previousStartDate}::date
               AND "createdAt" < (${previousEndDate}::date + interval '1 day')) AS previous_gross_revenue_cents
@@ -526,7 +530,7 @@ export async function GET(request: Request) {
             COALESCE(SUM(amount) FILTER (WHERE "eventType" = 'invoice.payment_succeeded'), 0)::integer AS gross_revenue_cents
           FROM "StripeLog"
           WHERE "stripeLivemode" = true
-            AND "stripePriceId" IN (${monthlyPriceId}, ${yearlyPriceId})
+            AND "stripePriceId" IN (${priceIdList})
             AND "createdAt" >= ${startDate}::date
             AND "createdAt" < (${endDate}::date + interval '1 day')
           GROUP BY 1
@@ -546,7 +550,7 @@ export async function GET(request: Request) {
         SELECT status, COUNT(*)::integer AS count
         FROM "Subscription"
         WHERE "stripeLivemode" = true
-          AND "stripePriceId" IN (${monthlyPriceId}, ${yearlyPriceId})
+          AND "stripePriceId" IN (${priceIdList})
         GROUP BY status
         ORDER BY count DESC, status ASC
       `,
@@ -559,7 +563,7 @@ export async function GET(request: Request) {
           COUNT(*)::integer AS count
         FROM "Subscription"
         WHERE "stripeLivemode" = true
-          AND "stripePriceId" IN (${monthlyPriceId}, ${yearlyPriceId})
+          AND "stripePriceId" IN (${priceIdList})
           AND status IN ('active', 'trialing')
         GROUP BY "billingPeriod", "stripeUnitAmount", "stripeCurrency"
         ORDER BY billing_period ASC

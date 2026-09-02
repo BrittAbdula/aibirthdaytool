@@ -2,11 +2,8 @@ import { CardType, CARD_SIZES } from './card-config';
 import { prisma } from './prisma';
 import { generatePrompt } from './prompt';
 import { fetchSvgContent } from './utils';
-import {
-  KIE_CLAUDE_OPUS_4_7_MODEL,
-  extractSvgContentFromKieClaudeText,
-  requestKieClaudeMessage,
-} from './kie-claude';
+import { extractSvgContent } from './svg-extract';
+import { OPENROUTER_SVG_MODEL, requestOpenRouterMessage } from './openrouter';
 
 interface CardContentParams {
   cardType: CardType;
@@ -27,7 +24,7 @@ type SvgGenerationResult = {
   status?: string;
 };
 
-export async function generateCardContentWithKieClaude(params: CardContentParams, model = KIE_CLAUDE_OPUS_4_7_MODEL): Promise<SvgGenerationResult> {
+export async function generateCardSvg(params: CardContentParams, model = OPENROUTER_SVG_MODEL): Promise<SvgGenerationResult> {
   const { cardType, size, userPrompt, modificationFeedback, previousCardId } = params;
   const startTime = Date.now();
 
@@ -40,35 +37,22 @@ export async function generateCardContentWithKieClaude(params: CardContentParams
       throw new Error('User prompt too long');
     }
 
-    const response = await requestKieClaudeMessage({
+    const response = await requestOpenRouterMessage({
       model,
       messages: [
-        {
-          role: 'user',
-          content: [
-            'You are generating an animated greeting card SVG.',
-            'Follow the complete SVG system instructions and user brief below.',
-            'Return ONLY one complete SVG document. Do not wrap it in markdown.',
-            '',
-            'SVG system instructions:',
-            systemPrompt,
-            '',
-            'User brief:',
-            finalUserPrompt,
-          ].join('\n'),
-        },
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: finalUserPrompt },
       ],
-      maxTokens: 4096,
     });
 
-    const svgContent = extractSvgContentFromKieClaudeText(response.text);
+    const svgContent = extractSvgContent(response.text);
     if (!svgContent) throw new Error('No valid SVG content found');
 
     return {
       taskId: '',
       r2Url: '',
       svgContent,
-      model: response.model || KIE_CLAUDE_OPUS_4_7_MODEL,
+      model: response.model || OPENROUTER_SVG_MODEL,
       tokensUsed: response.tokensUsed,
       duration: Date.now() - startTime,
       errorMessage: '',

@@ -1,9 +1,10 @@
-import { normalizeCheckoutReturnPath, type PremiumPlanKey } from './pricing';
+import { normalizeCheckoutReturnPath } from './pricing/checkout';
+import { isSkuKey, type SkuKey } from './pricing/plans';
 
 export const PENDING_CHECKOUT_STORAGE_KEY = 'mewtrucard.pendingCheckout';
 
 export interface PendingCheckout {
-  plan: PremiumPlanKey;
+  sku: SkuKey;
   source: string;
   returnUrl: string;
   taskSize?: number;
@@ -11,31 +12,33 @@ export interface PendingCheckout {
 }
 
 interface BuildPendingCheckoutInput {
-  plan: PremiumPlanKey;
+  sku: SkuKey;
   source: string;
   returnUrl: string;
   taskSize?: number;
-}
-
-function isPremiumPlanKey(value: unknown): value is PremiumPlanKey {
-  return value === 'monthly' || value === 'yearly';
 }
 
 function normalizeSource(value: unknown): string {
   return typeof value === 'string' && value.trim() ? value.trim().slice(0, 120) : 'unknown';
 }
 
+function normalizeTaskSize(value: unknown): number | undefined {
+  return typeof value === 'number' && Number.isFinite(value)
+    ? Math.max(1, Math.min(50, Math.floor(value)))
+    : undefined;
+}
+
 export function buildPendingCheckout({
-  plan,
+  sku,
   source,
   returnUrl,
   taskSize,
 }: BuildPendingCheckoutInput): PendingCheckout {
   return {
-    plan,
+    sku,
     source: normalizeSource(source),
     returnUrl: normalizeCheckoutReturnPath(returnUrl),
-    taskSize: typeof taskSize === 'number' && Number.isFinite(taskSize) ? Math.max(1, Math.min(50, Math.floor(taskSize))) : undefined,
+    taskSize: normalizeTaskSize(taskSize),
     createdAt: Date.now(),
   };
 }
@@ -45,19 +48,17 @@ export function parsePendingCheckout(raw: string | null | undefined): PendingChe
 
   try {
     const parsed = JSON.parse(raw) as Partial<PendingCheckout>;
-    if (!isPremiumPlanKey(parsed.plan)) return null;
+    if (!isSkuKey(parsed.sku)) return null;
     if (typeof parsed.createdAt !== 'number' || !Number.isFinite(parsed.createdAt)) return null;
 
     const returnUrl = normalizeCheckoutReturnPath(parsed.returnUrl);
     if (returnUrl !== parsed.returnUrl) return null;
 
     return {
-      plan: parsed.plan,
+      sku: parsed.sku,
       source: normalizeSource(parsed.source),
       returnUrl,
-      taskSize: typeof parsed.taskSize === 'number' && Number.isFinite(parsed.taskSize)
-        ? Math.max(1, Math.min(50, Math.floor(parsed.taskSize)))
-        : undefined,
+      taskSize: normalizeTaskSize(parsed.taskSize),
       createdAt: parsed.createdAt,
     };
   } catch {

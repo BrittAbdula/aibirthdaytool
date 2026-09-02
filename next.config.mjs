@@ -2,6 +2,7 @@ import { initOpenNextCloudflareForDev } from '@opennextjs/cloudflare'
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+    devIndicators: false,
     // These packages publish workerd-specific exports that Wrangler must resolve.
     serverExternalPackages: ['@prisma/client', '.prisma/client'],
     async redirects() {
