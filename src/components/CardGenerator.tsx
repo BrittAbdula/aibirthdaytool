@@ -31,7 +31,6 @@ import {
   buildPendingCardGeneration,
   parsePendingCardGeneration,
 } from '@/lib/pending-card-generation'
-import { RepeatCreatorNudge } from '@/components/creator/RepeatCreatorNudge'
 
 const MagicalCardCreation = () => {
   const [loadingText, setLoadingText] = useState("Weaving your magical words...");
@@ -1082,9 +1081,6 @@ export default function CardGenerator({
   return (
     <>
       <div ref={generatorRootRef} className="bg-transparent pb-28 lg:pb-24">
-        <div className="mx-auto max-w-6xl">
-          <RepeatCreatorNudge />
-        </div>
         <div className="mx-auto max-w-6xl overflow-hidden rounded-xl border border-[#F1D6DF] bg-white shadow-xl">
           <div className="grid lg:grid-cols-[minmax(0,1.02fr)_minmax(340px,0.98fr)]">
             <section className="p-5 sm:p-6 lg:p-8">

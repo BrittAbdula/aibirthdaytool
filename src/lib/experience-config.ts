@@ -60,7 +60,7 @@ export const PRIMARY_CREATION_PATHS: CreationPath[] = [
 export const BROWSE_INTENT_LINKS: ExperienceLink[] = [
   {
     href: "/card-gallery/",
-    label: "Browse public card ideas",
+    label: "Card gallery",
     description: "Use real examples to find a layout, tone, or message direction before creating.",
   },
   {

@@ -1,972 +1,123 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
-import Link from 'next/link'
+import { useCallback, useEffect, useState } from 'react'
 import Image from 'next/image'
+import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Menu, X, ChevronDown, Loader2, Crown, Search, SendHorizontal, Plus, Sparkles, Users, Send } from "lucide-react"
-import { useSession, signIn, signOut } from "next-auth/react"
-import { Button } from '@/components/ui/button'
-import { WarmButton } from '@/components/ui/warm-button'
+import { Menu, X } from 'lucide-react'
+import { CreateMenu } from '@/components/nav/CreateMenu'
+import { GeneratorSearchButton } from '@/components/nav/GeneratorSearch'
+import { MobileMenu } from '@/components/nav/MobileMenu'
+import { UserMenu } from '@/components/nav/UserMenu'
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Input } from '@/components/ui/input'
-import {
-  EXPLORE_OCCASION_LINKS,
-  EXPLORE_RECIPIENT_LINKS,
-  EXPLORE_SURPRISE_LINKS,
-} from '@/lib/discovery-links'
-import { cn } from '@/lib/utils'
+  GALLERY_HREF,
+  PRIMARY_CREATE_HREF,
+  PRIMARY_NAV_LINKS,
+  isActivePath,
+  isGeneratorComposePath,
+} from '@/lib/nav-config'
 
 type HeaderVariant = 'default' | 'compose'
 
-// 定义生成器类型
-const GENERATORS = [
-  { slug: 'birthday', label: 'Birthday' },
-  { slug: 'eidmubarak', label: 'Eid Mubarak' },
-  { slug: 'mothersday', label: 'Mother\'s Day' },
-  { slug: 'anniversary', label: 'Anniversary' },
-  { slug: 'love', label: 'Love' },
-  { slug: 'thankyou', label: 'Thank You' },
-  { slug: 'wedding', label: 'Wedding' },
-  { slug: 'graduation', label: 'Graduation' },
-  { slug: 'baby', label: 'Baby' },
-  { slug: 'congratulations', label: 'Congratulations' },
-  { slug: 'goodluck', label: 'Good Luck' },
-  { slug: 'sorry', label: 'Sorry' },
-  { slug: 'christmas', label: 'Christmas' },
-  { slug: 'valentine', label: 'Valentine' },
-  { slug: 'goodmorning', label: 'Good Morning' },
-  { slug: 'goodnight', label: 'Good Night' },
-  { slug: 'teacher', label: 'Teacher' },
-  { slug: 'easter', label: 'Easter' },
-  { slug: 'womensday', label: 'Women\'s Day' },
-]
-export const GENERATOR_SLUGS = new Set(GENERATORS.map((generator) => generator.slug))
+const navLinkClass =
+  'inline-flex h-10 items-center rounded-full px-3 text-[15px] font-semibold text-[#47536B] transition-colors hover:text-[#202A3D] aria-[current=page]:text-[#202A3D] aria-[current=page]:underline aria-[current=page]:decoration-primary aria-[current=page]:decoration-2 aria-[current=page]:underline-offset-8'
 
-export function isGeneratorComposePath(pathname: string) {
-  const pathSegments = pathname.split('/').filter(Boolean)
-  return pathSegments.length === 1 && GENERATOR_SLUGS.has(pathSegments[0])
-}
+const ctaClass =
+  'inline-flex h-10 items-center justify-center whitespace-nowrap rounded-full bg-primary px-4 text-sm font-semibold text-white shadow-sm transition-all hover:-translate-y-0.5 hover:bg-primary/90 hover:shadow-md'
 
-const EXPLORE_CATEGORY_LINKS = [
-  {
-    href: '/cards/#moments',
-    label: 'By moment',
-    description: 'Birthday, valentine, apology, anniversary',
-    icon: <Sparkles className="h-4 w-4" />,
-  },
-  {
-    href: '/cards/#recipient',
-    label: 'By recipient',
-    description: 'Friend, mom, partner, spouse',
-    icon: <Users className="h-4 w-4" />,
-  },
-  {
-    href: '/cards/#surprise',
-    label: 'Surprise links',
-    description: 'Playful reveal pages before the final card',
-    icon: <Send className="h-4 w-4" />,
-  },
-]
-
-const EXPLORE_QUICK_LINKS = [
-  { href: EXPLORE_OCCASION_LINKS[0].href, label: 'Birthday' },
-  { href: EXPLORE_RECIPIENT_LINKS[0].href, label: 'For a friend' },
-  { href: EXPLORE_SURPRISE_LINKS[0].href, label: 'Birthday surprise' },
-  { href: '/card-gallery/', label: 'All ideas' },
-]
-
-// 记录搜索不存在的生成器类型
-async function reportMissingGenerator(searchTerm: string) {
-  try {
-    const response = await fetch('/api/report-missing-generator', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ searchTerm }),
-    })
-
-    if (!response.ok) {
-      throw new Error('Failed to report missing generator')
-    }
-    return response.json()
-  } catch (error) {
-    console.error('Error reporting missing generator:', error)
-    return { success: false }
-  }
-}
-
+/**
+ * Site header.
+ * - `default`: Create menu, Gallery, Pricing, search, primary CTA, account.
+ * - `compose`: generator pages keep only the brand, Gallery, and account so the
+ *   maker stays the focus.
+ * Session-dependent UI lives only in the trailing account slot, so the bar does
+ * not shift while the session resolves.
+ */
 function Header({ variant = 'default' }: { variant?: HeaderVariant }) {
-  const [isMenuOpen, setIsMenuOpen] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
-  const [isMobile, setIsMobile] = useState(false)
-  const pathname = usePathname()
-  const { data: session, status } = useSession()
-  const [isSearchOpen, setIsSearchOpen] = useState(false)
-  const [searchTerm, setSearchTerm] = useState('')
-  const [filteredGenerators, setFilteredGenerators] = useState(GENERATORS)
-  const [hasExactMatch, setHasExactMatch] = useState(false)
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [showComingSoon, setShowComingSoon] = useState(false)
-  const searchRef = useRef<HTMLDivElement>(null)
-  const inputRef = useRef<HTMLInputElement>(null)
-  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null)
-  const isGeneratorLandingPage = isGeneratorComposePath(pathname)
-  const galleryEntryHref = isGeneratorLandingPage ? `${pathname}#live-gallery` : '/card-gallery/'
-  
-  // 检查用户是否为Premium会员
-  const isPremiumUser = session?.user?.plan === "PREMIUM"
+  const pathname = usePathname() || '/'
+  const [menuOpen, setMenuOpen] = useState(false)
+  const closeMenu = useCallback(() => setMenuOpen(false), [])
+  const isCompose = variant === 'compose'
+  const links = isCompose ? PRIMARY_NAV_LINKS.filter((link) => link.href === GALLERY_HREF) : PRIMARY_NAV_LINKS
 
   useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth < 768)
-      if (window.innerWidth >= 768) {
-        setIsMenuOpen(false)
-      }
-    }
-
-    handleResize()
-    window.addEventListener('resize', handleResize)
-    return () => window.removeEventListener('resize', handleResize)
-  }, [])
-
-  useEffect(() => {
-    setIsMenuOpen(false)
-    setIsSearchOpen(false)
-    setSearchTerm('')
-    setShowComingSoon(false)
+    setMenuOpen(false)
   }, [pathname])
 
-  // 监听认证状态
-  useEffect(() => {
-    if (status === 'loading') {
-      setIsLoading(true)
-    } else {
-      setIsLoading(false)
-    }
-  }, [status])
-
-  // 处理搜索输入变化
-  useEffect(() => {
-    if (typingTimeoutRef.current) {
-      clearTimeout(typingTimeoutRef.current)
-      typingTimeoutRef.current = null
-    }
-
-    if (searchTerm) {
-      const filtered = GENERATORS.filter(generator =>
-        generator.label.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        generator.slug.toLowerCase().includes(searchTerm.toLowerCase())
-      )
-
-      setFilteredGenerators(filtered)
-
-      // 检查是否有完全匹配
-      const exactMatch = GENERATORS.some(g =>
-        g.label.toLowerCase() === searchTerm.toLowerCase() ||
-        g.slug.toLowerCase() === searchTerm.toLowerCase()
-      )
-
-      setHasExactMatch(exactMatch)
-
-      // 设置定时器，当用户停止输入3秒后，如果没有匹配项且输入长度足够，自动上报
-      if (filtered.length === 0 && searchTerm.length >= 3) {
-        typingTimeoutRef.current = setTimeout(() => {
-          // 只有当搜索框仍然打开且内容未变时才上报
-          if (isSearchOpen && searchTerm.length >= 3) {
-            reportMissingGenerator(searchTerm)
-          }
-        }, 3000)
-      }
-    } else {
-      setFilteredGenerators(GENERATORS) // Show all generators as recommendations
-      setHasExactMatch(false)
-    }
-
-    // 清除Coming Soon提示
-    setShowComingSoon(false)
-
-    return () => {
-      if (typingTimeoutRef.current) {
-        clearTimeout(typingTimeoutRef.current)
-        typingTimeoutRef.current = null
-      }
-    }
-  }, [searchTerm, isSearchOpen])
-
-  // 点击外部关闭搜索
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
-        setIsSearchOpen(false)
-      }
-    }
-
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [])
-
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault()
-
-    // 如果有匹配的生成器，导航到第一个匹配的生成器
-    if (filteredGenerators.length > 0) {
-      window.location.href = `/${filteredGenerators[0].slug}/`
-      return
-    }
-
-    // 如果没有匹配项，显示Coming Soon信息
-    if (searchTerm.length >= 2) {
-      handleRequestGenerator()
-    }
-  }
-
-  const handleRequestGenerator = async () => {
-    if (!searchTerm || searchTerm.length < 2 || isSubmitting) return
-
-    setIsSubmitting(true)
-
-    try {
-      await reportMissingGenerator(searchTerm)
-      setShowComingSoon(true)
-
-      // 清空搜索框，但保持聚焦
-      setTimeout(() => {
-        if (inputRef.current) {
-          inputRef.current.focus()
-        }
-      }, 100)
-    } catch (error) {
-      console.error('Error requesting generator:', error)
-    } finally {
-      setIsSubmitting(false)
-    }
-  }
-
-  const handleLogin = async () => {
-    try {
-      setIsLoading(true)
-      await signIn('google', { callbackUrl: window.location.href })
-    } catch (error) {
-      console.error('Login failed:', error)
-      setIsLoading(false)
-    }
-  }
-
-  const handleLogout = async () => {
-    try {
-      setIsLoading(true)
-      await signOut({ callbackUrl: window.location.href })
-    } catch (error) {
-      console.error('Logout failed:', error)
-      setIsLoading(false)
-    }
-  }
-
-  const handleSurfaceLinkClick = () => {
-    setIsMenuOpen(false)
-    setIsSearchOpen(false)
-  }
-
-  if (variant === 'compose') {
-    return (
-      <header className="sticky top-0 z-50 w-full border-b border-pink-100/70 bg-white/90 backdrop-blur-xl">
-        <nav className="container mx-auto px-4">
-          <div className="flex h-16 items-center justify-between gap-3">
-            <Link href="/" className="flex min-w-0 items-center space-x-2 group">
-              <div className="relative transition-transform duration-300 group-hover:scale-105">
-                <Image
-                  src="/logo.png"
-                  alt="MewTruCard Logo"
-                  width={38}
-                  height={38}
-                  className="drop-shadow-sm"
-                />
-              </div>
-              <span className="hidden truncate font-serif text-2xl font-semibold tracking-tight text-[#202A3D] min-[440px]:block">
-                MewTruCard
-              </span>
-            </Link>
-
-            <div className="hidden items-center gap-3 md:flex">
-              <Link
-                href={galleryEntryHref}
-                className="inline-flex h-10 items-center rounded-full border border-pink-200 bg-pink-50/80 px-4 text-sm font-semibold text-rose-800 transition-colors hover:bg-pink-100"
-              >
-                Browse ideas
-              </Link>
-              {status === 'authenticated' && session ? (
-                <>
-                  <Link
-                    href="/creator/"
-                    className="inline-flex h-10 items-center rounded-full border border-primary/20 bg-white px-4 text-sm font-semibold text-primary transition-colors hover:bg-primary/10"
-                  >
-                    Creator workspace
-                  </Link>
-                  <Link
-                    href="/my-cards/"
-                    className="inline-flex h-10 items-center rounded-full border border-gray-200 bg-white px-4 text-sm font-semibold text-gray-700 transition-colors hover:border-primary/20 hover:text-primary"
-                  >
-                    My cards
-                  </Link>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <button className="flex items-center space-x-2 hover:opacity-80 transition-opacity">
-                        {session.user?.image && (
-                          <div className={cn(
-                            "relative",
-                            isPremiumUser && "ring-2 ring-primary ring-offset-2 rounded-full"
-                          )}>
-                            <Image
-                              src={session.user.image}
-                              alt={session.user.name || ''}
-                              width={32}
-                              height={32}
-                              className={cn(
-                                "rounded-full border border-gray-100",
-                                isPremiumUser && "border-2 border-white"
-                              )}
-                            />
-                            {isPremiumUser && (
-                              <div className="absolute -top-1 -right-1 bg-primary text-white rounded-full w-4 h-4 flex items-center justify-center shadow-sm">
-                                <Crown className="h-2.5 w-2.5" />
-                              </div>
-                            )}
-                          </div>
-                        )}
-                        <ChevronDown className="h-4 w-4 text-gray-400" />
-                      </button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-56 rounded-2xl p-2 bg-white/95 backdrop-blur shadow-xl border-pink-100">
-                      <DropdownMenuItem className="focus:bg-pink-50 rounded-xl cursor-default">
-                        <div className="flex flex-col text-sm">
-                          <span className="font-semibold text-gray-800">{session.user?.name}</span>
-                          {isPremiumUser && (
-                            <span className="flex items-center mt-1 text-xs text-primary font-medium">
-                              <Crown className="h-3 w-3 mr-1" />
-                              Creator Pro member
-                            </span>
-                          )}
-                        </div>
-                      </DropdownMenuItem>
-                      <div className="my-1 border-t border-pink-50" />
-                      <DropdownMenuItem asChild className="focus:bg-pink-50 rounded-xl p-2">
-                        <Link href="/my-cards/">My cards</Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={handleLogout}
-                        disabled={isLoading}
-                        className="focus:bg-red-50 focus:text-red-600 rounded-xl cursor-pointer p-2"
-                      >
-                        {isLoading ? (
-                          <>
-                            <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                            Signing out...
-                          </>
-                        ) : (
-                          'Sign Out'
-                        )}
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </>
-              ) : null}
-            </div>
-
-            <div className="flex items-center gap-2 md:hidden">
-              {!isGeneratorLandingPage && (
-                <Link
-                  href={galleryEntryHref}
-                  onClick={handleSurfaceLinkClick}
-                  className="inline-flex h-10 items-center rounded-full border border-pink-200 bg-pink-50/80 px-3 text-sm font-semibold text-rose-800 transition-colors hover:bg-pink-100"
-                >
-                  Browse ideas
-                </Link>
-              )}
-              {status === 'authenticated' && session ? (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <button className="flex h-10 w-10 items-center justify-center rounded-full border border-gray-200 bg-white">
-                      {session.user?.image ? (
-                        <Image
-                          src={session.user.image}
-                          alt={session.user.name || ''}
-                          width={32}
-                          height={32}
-                          className="rounded-full"
-                        />
-                      ) : (
-                        <ChevronDown className="h-4 w-4 text-gray-500" />
-                      )}
-                    </button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-48 rounded-2xl p-2 bg-white/95 backdrop-blur shadow-xl border-pink-100">
-                    <DropdownMenuItem asChild className="rounded-xl">
-                      <Link href="/creator/">Creator workspace</Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild className="rounded-xl">
-                      <Link href="/my-cards/">My cards</Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={handleLogout}
-                      disabled={isLoading}
-                      className="focus:bg-red-50 focus:text-red-600 rounded-xl cursor-pointer"
-                    >
-                      {isLoading ? 'Signing out...' : 'Sign Out'}
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              ) : null}
-            </div>
-          </div>
-        </nav>
-      </header>
-    )
-  }
-
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-pink-100/50 bg-white/80 backdrop-blur-xl transition-all duration-300">
-      <nav className="container mx-auto px-4">
-        <div className="flex justify-between items-center h-16">
-          <Link href="/" className="flex items-center space-x-2 group">
-            <div className="relative transition-transform duration-300 group-hover:scale-110">
-              <Image
-                src="/logo.png"
-                alt="MewTruCard Logo"
-                width={40}
-                height={40}
-                className="drop-shadow-sm"
-              />
-            </div>
-            <span className="font-serif text-2xl font-semibold tracking-tight text-[#202A3D]">
-              MewTruCard
-            </span>
-          </Link>
+    <header className="sticky top-0 z-50 w-full">
+      {/* The blur lives on this wrapper, not the header: backdrop-filter would otherwise
+          turn the header into the containing block for the fixed mobile drawer. */}
+      <div className="border-b border-[#F1D6DF]/70 bg-[#FFF8F6]/90 backdrop-blur-xl">
+      <nav className="container mx-auto flex h-16 items-center justify-between gap-3" aria-label="Main">
+        <Link href="/" className="group flex min-w-0 items-center gap-2" aria-label="MewTruCard home">
+          <Image
+            src="/logo.png"
+            alt=""
+            width={40}
+            height={40}
+            priority
+            className="h-9 w-9 shrink-0 drop-shadow-sm transition-transform duration-300 group-hover:scale-105 sm:h-10 sm:w-10"
+          />
+          <span className="hidden truncate font-serif text-xl font-semibold tracking-tight text-[#202A3D] min-[360px]:block sm:text-2xl">
+            MewTruCard
+          </span>
+        </Link>
 
-          {/* Desktop Menu */}
-          <div className="hidden md:flex items-center space-x-6">
+        <div className="hidden flex-1 items-center gap-1 md:flex">
+          {!isCompose && <CreateMenu />}
+          {links.map((link) => (
             <Link
-              href={galleryEntryHref}
-              className="text-gray-700 hover:text-primary font-quicksand font-semibold transition-colors text-base"
+              key={link.href}
+              href={link.href}
+              aria-current={isActivePath(pathname, link.href) ? 'page' : undefined}
+              className={navLinkClass}
             >
-              Browse ideas
+              {link.label}
             </Link>
-
-            {/* Secondary discovery paths stay available without competing with the main two choices. */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button className="inline-flex min-h-[44px] items-center gap-1 text-gray-500 hover:text-primary font-quicksand font-medium transition-colors text-sm">
-                  More
-                  <ChevronDown className="h-4 w-4" />
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="w-[26rem] rounded-2xl border-pink-100 bg-white/95 p-3 shadow-xl backdrop-blur">
-                <DropdownMenuLabel className="px-1 pt-1 pb-3 text-xs uppercase tracking-[0.18em] text-gray-400">
-                  Explore by category
-                </DropdownMenuLabel>
-                <div className="grid gap-2">
-                  {EXPLORE_CATEGORY_LINKS.map((link) => (
-                    <DropdownMenuItem key={link.href} asChild className="rounded-2xl p-0 focus:bg-transparent">
-                      <Link
-                        href={link.href}
-                        className="flex items-start gap-3 rounded-2xl border border-pink-100/80 bg-white/80 px-4 py-3 transition-colors hover:bg-pink-50"
-                      >
-                        <div className="mt-0.5 rounded-xl bg-pink-50 p-2 text-primary ring-1 ring-pink-100">
-                          {link.icon}
-                        </div>
-                        <div>
-                          <div className="text-sm font-semibold text-gray-800">{link.label}</div>
-                          <div className="mt-1 text-xs leading-5 text-gray-500">{link.description}</div>
-                        </div>
-                      </Link>
-                    </DropdownMenuItem>
-                  ))}
-                </div>
-                <DropdownMenuSeparator className="my-3 bg-pink-100/60" />
-                <div className="px-1 pb-1">
-                  <div className="mb-3 text-xs uppercase tracking-[0.18em] text-gray-400">
-                    Quick picks
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {EXPLORE_QUICK_LINKS.map((link) => (
-                      <Link
-                        key={link.href}
-                        href={link.href}
-                        className="rounded-full border border-pink-100 bg-pink-50/60 px-3 py-2 text-xs font-semibold text-gray-700 transition-colors hover:border-primary/20 hover:bg-pink-50 hover:text-primary"
-                      >
-                        {link.label}
-                      </Link>
-                    ))}
-                  </div>
-                </div>
-              </DropdownMenuContent>
-            </DropdownMenu>
-
-            {status === 'authenticated' && (
-              <Link href="/my-cards/" className="text-gray-700 hover:text-primary font-quicksand font-semibold transition-colors text-base">
-                My cards
-              </Link>
-            )}
-            <Link href={status === 'authenticated' ? '/creator/' : '/for/employee-birthday-cards/'} className="text-gray-700 hover:text-primary font-quicksand font-semibold transition-colors text-base">
-              {status === 'authenticated' ? 'Creator workspace' : 'For teams'}
-            </Link>
-            <Link href="/pricing/" className="text-gray-700 hover:text-primary font-quicksand font-semibold transition-colors text-base">
-              Pricing
-            </Link>
-            {status === 'authenticated' && !isPremiumUser && (
-              <Link
-                href="/pricing/"
-                className="inline-flex items-center gap-1.5 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-primary/90"
-              >
-                <Sparkles className="h-4 w-4" />
-                Get more cards
-              </Link>
-            )}
-
-            {/* Search Icon & Dropdown */}
-            <div className="relative" ref={searchRef}>
-              <button
-                onClick={() => setIsSearchOpen(!isSearchOpen)}
-                className="text-gray-500 hover:text-primary p-2 rounded-full hover:bg-pink-50 transition-colors"
-                aria-label="Search card ideas"
-              >
-                <Search className="h-5 w-5" />
-              </button>
-
-              {isSearchOpen && (
-                <div className="absolute right-0 top-full mt-4 w-96 bg-white/95 backdrop-blur-xl rounded-2xl shadow-xl border border-pink-100 overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200">
-                  <form onSubmit={handleSearch} className="p-4 border-b border-pink-50">
-                    <div className="relative">
-                      <Input
-                        ref={inputRef}
-                        type="text"
-                        placeholder="Search birthdays, apologies, weddings..."
-                        className="pl-10 pr-4 py-6 w-full bg-pink-50/50 border-pink-100 focus:ring-primary/20 focus:border-primary rounded-xl"
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        autoFocus
-                      />
-                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                      <button
-                        type="submit"
-                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-primary hover:text-primary/80 transition-colors"
-                        aria-label="Search"
-                      >
-                        <SendHorizontal className="h-5 w-5" />
-                      </button>
-                    </div>
-                  </form>
-
-                  <div className="max-h-[300px] overflow-y-auto p-2 scrollbar-thin scrollbar-thumb-pink-200 scrollbar-track-transparent">
-                    {showComingSoon ? (
-                      <div className="px-4 py-8 text-center bg-pink-50/30 rounded-xl mx-2">
-                        <div className="text-primary font-caveat text-xl mb-2">
-                          Thanks for your suggestion!
-                        </div>
-                        <div className="text-sm text-gray-600 mb-4">
-                          &quot;{searchTerm}&quot; card idea is coming soon.
-                        </div>
-                        <Link
-                          href="/cards/"
-                          className="text-sm text-primary hover:underline font-medium"
-                          onClick={() => setIsSearchOpen(false)}
-                        >
-                          Browse all card ideas
-                        </Link>
-                      </div>
-                    ) : filteredGenerators.length > 0 ? (
-                      <div className="grid grid-cols-1 gap-1">
-                        {filteredGenerators.map((generator) => (
-                          <Link
-                            key={generator.slug}
-                            href={`/${generator.slug}/`}
-                            className="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-pink-50 hover:text-primary rounded-xl transition-colors group"
-                            onClick={() => setIsSearchOpen(false)}
-                          >
-                            <span className="w-1.5 h-1.5 rounded-full bg-pink-200 group-hover:bg-primary mr-3 transition-colors"></span>
-                            {generator.label}
-                          </Link>
-                        ))}
-                      </div>
-                    ) : searchTerm.length >= 2 ? (
-                      <div className="px-4 py-6 text-center">
-                        <div className="text-sm text-gray-500 mb-4">
-                          No matching card ideas found
-                        </div>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="text-primary border-primary/20 hover:bg-pink-50 hover:text-primary hover:border-primary"
-                          onClick={handleRequestGenerator}
-                          disabled={isSubmitting}
-                        >
-                          {isSubmitting ? (
-                            <Loader2 className="h-3 w-3 animate-spin mr-2" />
-                          ) : (
-                            <Plus className="h-3 w-3 mr-2" />
-                          )}
-                          Request &quot;{searchTerm}&quot; card idea
-                        </Button>
-                      </div>
-                    ) : null}
-                  </div>
-
-                  <div className="p-3 border-t border-pink-50 bg-pink-50/20">
-                    <Link
-                      href="/cards/"
-                      className="block px-4 py-2 text-sm text-center text-primary hover:bg-pink-100/50 rounded-lg font-medium transition-colors"
-                      onClick={() => setIsSearchOpen(false)}
-                    >
-                      View all card ideas
-                    </Link>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {status === 'authenticated' && session ? (
-              <>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button className="flex items-center space-x-2 hover:opacity-80 transition-opacity">
-                    {session.user?.image && (
-                      <div className={cn(
-                        "relative",
-                        isPremiumUser && "ring-2 ring-primary ring-offset-2 rounded-full"
-                      )}>
-                        <Image
-                          src={session.user.image}
-                          alt={session.user.name || ''}
-                          width={32}
-                          height={32}
-                          className={cn(
-                            "rounded-full border border-gray-100",
-                            isPremiumUser && "border-2 border-white"
-                          )}
-                        />
-                        {isPremiumUser && (
-                          <div className="absolute -top-1 -right-1 bg-primary text-white rounded-full w-4 h-4 flex items-center justify-center shadow-sm">
-                            <Crown className="h-2.5 w-2.5" />
-                          </div>
-                        )}
-                      </div>
-                    )}
-                    <ChevronDown className="h-4 w-4 text-gray-400" />
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56 rounded-2xl p-2 bg-white/95 backdrop-blur shadow-xl border-pink-100">
-                  <DropdownMenuItem className="focus:bg-pink-50 rounded-xl cursor-default">
-                    <div className="flex flex-col text-sm">
-                      <span className="font-semibold text-gray-800">{session.user?.name}</span>
-                      {isPremiumUser && (
-                        <span className="flex items-center mt-1 text-xs text-primary font-medium">
-                          <Crown className="h-3 w-3 mr-1" />
-                          Creator Pro member
-                        </span>
-                      )}
-                    </div>
-                  </DropdownMenuItem>
-                  <div className="my-1 border-t border-pink-50" />
-                  <DropdownMenuItem
-                    onClick={handleLogout}
-                    disabled={isLoading}
-                    className="focus:bg-red-50 focus:text-red-600 rounded-xl cursor-pointer p-2"
-                  >
-                    {isLoading ? (
-                      <>
-                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                        Signing out...
-                      </>
-                    ) : (
-                      'Sign Out'
-                    )}
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-              </>
-            ) : (
-              <WarmButton
-                variant="outline"
-                onClick={handleLogin}
-                disabled={isLoading}
-                className="rounded-full border-gray-200 text-gray-600 hover:text-primary hover:border-primary/20 hover:bg-pink-50 px-6 h-10"
-              >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                    Signing in...
-                  </>
-                ) : (
-                  'Sign In'
-                )}
-              </WarmButton>
-            )}
-
-            <Link
-              href="/cards/"
-              className="inline-flex min-h-[40px] items-center rounded-full bg-primary px-5 text-sm font-semibold text-white shadow-sm transition-all hover:-translate-y-0.5 hover:bg-primary/90 hover:shadow-md"
-            >
-              Create a card
-            </Link>
-          </div>
-
-          <div className="md:hidden flex items-center space-x-3">
-            <button
-              onClick={() => setIsSearchOpen(!isSearchOpen)}
-              className="text-gray-500 p-2 rounded-full hover:bg-pink-50 active:bg-pink-100 transition-colors"
-              aria-label="Search card ideas"
-            >
-              <Search className="h-6 w-6" />
-            </button>
-
-            <button
-              aria-label="Toggle menu"
-              className="text-gray-600 relative w-10 h-10 flex items-center justify-center rounded-full hover:bg-pink-50 active:bg-pink-100 transition-colors"
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-            >
-              <div className="relative w-6 h-6">
-                <Menu className={`absolute inset-0 h-6 w-6 transition-all duration-300 ${isMenuOpen ? 'opacity-0 rotate-90 scale-50' : 'opacity-100 rotate-0 scale-100'}`} />
-                <X className={`absolute inset-0 h-6 w-6 transition-all duration-300 ${isMenuOpen ? 'opacity-100 rotate-0 scale-100' : 'opacity-0 -rotate-90 scale-50'}`} />
-              </div>
-            </button>
-          </div>
+          ))}
         </div>
 
-        {isSearchOpen && isMobile && (
-          <div className="mt-2 md:hidden animate-in slide-in-from-top-4 duration-300 pb-4" ref={searchRef}>
-            <form onSubmit={handleSearch} className="mb-4">
-              <div className="relative">
-                <Input
-                  ref={inputRef}
-                  type="text"
-                  placeholder="Search birthdays, apologies, weddings..."
-                  className="pl-10 pr-10 py-3 w-full bg-pink-50/80 border-pink-100 focus:ring-primary focus:border-primary rounded-xl h-12 text-lg"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  autoFocus
-                />
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                <button
-                  type="submit"
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 p-2 text-primary active:scale-95 transition-transform"
-                >
-                  <SendHorizontal className="h-5 w-5" />
-                </button>
-              </div>
-            </form>
+        <div className="hidden items-center gap-2 md:flex">
+          {!isCompose && <GeneratorSearchButton />}
+          {!isCompose && (
+            <Link href={PRIMARY_CREATE_HREF} className={ctaClass}>
+              Make a card
+            </Link>
+          )}
+          <UserMenu />
+        </div>
 
-            <div className="bg-white/80 backdrop-blur-md rounded-2xl shadow-sm border border-pink-100 overflow-hidden">
-              {showComingSoon ? (
-                 <div className="p-6 text-center">
-                  <div className="text-primary font-medium mb-2">
-                    Thanks for your suggestion!
-                  </div>
-                  <div className="text-sm text-gray-600 mb-4">
-                    &quot;{searchTerm}&quot; card idea is coming soon.
-                  </div>
-                  <Link
-                    href="/cards/"
-                    className="block w-full py-3 text-center text-primary font-medium border border-pink-100 rounded-xl hover:bg-pink-50 active:scale-[0.98] transition-all"
-                    onClick={() => setIsSearchOpen(false)}
-                  >
-                    Browse all card ideas
-                  </Link>
-                </div>
-              ) : filteredGenerators.length > 0 ? (
-                <div className="max-h-[60vh] overflow-y-auto">
-                  {filteredGenerators.map((generator) => (
-                    <Link
-                      key={generator.slug}
-                      href={`/${generator.slug}/`}
-                      className="flex items-center px-5 py-4 text-base text-gray-700 border-b border-pink-50 last:border-0 active:bg-pink-50"
-                      onClick={() => setIsSearchOpen(false)}
-                    >
-                      <span className="w-2 h-2 rounded-full bg-pink-200 mr-4"></span>
-                      {generator.label}
-                    </Link>
-                  ))}
-                </div>
-              ) : searchTerm.length >= 2 ? (
-                <div className="p-6 text-center">
-                  <div className="text-gray-500 mb-4">
-                    No matching card ideas found
-                  </div>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="w-full py-6 text-primary border-primary/20 hover:bg-pink-50 hover:border-primary"
-                    onClick={handleRequestGenerator}
-                    disabled={isSubmitting}
-                  >
-                    {isSubmitting ? (
-                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                    ) : (
-                      <Plus className="h-4 w-4 mr-2" />
-                    )}
-                    Request &quot;{searchTerm}&quot; card idea
-                  </Button>
-                </div>
-              ) : null}
-            </div>
-          </div>
-        )}
-
-        {isMenuOpen && (
-          <div className="md:hidden py-4 animate-in slide-in-from-top-4 duration-300">
-            <div className="flex flex-col space-y-2 bg-white/80 backdrop-blur-xl rounded-2xl border border-pink-100 p-4 shadow-lg">
-              <Link href="/" className="flex items-center px-4 py-3 text-gray-700 hover:bg-pink-50 rounded-xl transition-colors font-medium text-lg">
-                Home
-              </Link>
-              <Link href="/cards/" className="flex items-center px-4 py-3 text-gray-700 hover:bg-pink-50 rounded-xl transition-colors font-medium text-lg">
-                Create a card
-              </Link>
-              <Link
-                href={galleryEntryHref}
-                onClick={handleSurfaceLinkClick}
-                className="flex items-center justify-between rounded-xl border border-pink-200 bg-pink-50/80 px-4 py-3 text-rose-800 transition-colors hover:bg-pink-100"
-              >
-                <div className="flex items-center gap-3">
-                  <Search className="h-5 w-5" />
-                  <div>
-                    <div className="font-semibold text-lg">Browse ideas</div>
-                    <div className="text-xs text-rose-700">Browse real cards before you generate</div>
-                  </div>
-                </div>
-                <ChevronDown className="-rotate-90 h-5 w-5 text-pink-500" />
-              </Link>
-              <Link href="/my-cards/" className="flex items-center px-4 py-3 text-gray-700 hover:bg-pink-50 rounded-xl transition-colors font-medium text-lg">
-                My Cards
-              </Link>
-              <Link href={status === 'authenticated' ? '/creator/' : '/for/employee-birthday-cards/'} className="flex items-center px-4 py-3 text-gray-700 hover:bg-pink-50 rounded-xl transition-colors font-medium text-lg">
-                {status === 'authenticated' ? 'Creator workspace' : 'For teams'}
-              </Link>
-              <Link href="/pricing/" className="flex items-center px-4 py-3 text-gray-700 hover:bg-pink-50 rounded-xl transition-colors font-medium text-lg">
-                Pricing
-              </Link>
-              {status === 'authenticated' && !isPremiumUser && (
-                <Link
-                  href="/pricing/"
-                  className="mx-4 mt-1 flex items-center justify-center gap-1.5 rounded-xl bg-primary px-4 py-3 text-base font-semibold text-white"
-                >
-                  <Sparkles className="h-4 w-4" />
-                  Get more cards
-                </Link>
-              )}
-
-              <div className="px-4 pt-3">
-                <div className="text-xs font-semibold uppercase tracking-[0.18em] text-gray-400">
-                  Explore by category
-                </div>
-              </div>
-              {EXPLORE_CATEGORY_LINKS.map((link) => (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className="flex items-start gap-3 rounded-xl border border-pink-100/80 bg-white/70 px-4 py-3 text-gray-700 transition-colors hover:bg-pink-50"
-                >
-                  <div className="mt-0.5 rounded-xl bg-pink-50 p-2 text-primary ring-1 ring-pink-100">
-                    {link.icon}
-                  </div>
-                  <div>
-                    <div className="font-medium">{link.label}</div>
-                    <div className="mt-1 text-xs font-normal leading-5 text-gray-500">{link.description}</div>
-                  </div>
-                </Link>
-              ))}
-
-              <div className="px-4 pt-3">
-                <div className="text-xs font-semibold uppercase tracking-[0.18em] text-gray-400">
-                  Quick picks
-                </div>
-              </div>
-              <div className="flex flex-wrap gap-2 px-4">
-                {EXPLORE_QUICK_LINKS.map((link) => (
-                  <Link
-                    key={link.href}
-                    href={link.href}
-                    className="rounded-full border border-pink-100 bg-pink-50/60 px-3 py-2 text-xs font-semibold text-gray-700 transition-colors hover:border-primary/20 hover:bg-pink-50 hover:text-primary"
-                  >
-                    {link.label}
-                  </Link>
-                ))}
-              </div>
-
-              <div className="my-2 border-t border-pink-100/50"></div>
-
-              {status === 'authenticated' && session ? (
-                <div className="pt-2">
-                  <div className="flex items-center px-4 py-3 mb-2 bg-pink-50/50 rounded-xl">
-                    {session.user?.image && (
-                      <Image
-                        src={session.user.image}
-                        alt={session.user.name || ''}
-                        width={40}
-                        height={40}
-                        className="rounded-full border border-white shadow-sm mr-3"
-                      />
-                    )}
-                    <div className="flex flex-col">
-                      <span className="font-semibold text-gray-800">{session.user?.name}</span>
-                      {isPremiumUser && (
-                        <span className="text-xs text-primary font-medium flex items-center">
-                          <Crown className="h-3 w-3 mr-1" /> Creator Pro member
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                  
-                  <div className="grid gap-2">
-                    <Button
-                      variant="ghost"
-                      onClick={handleLogout}
-                      disabled={isLoading}
-                      className="w-full justify-start text-red-500 hover:text-red-600 hover:bg-red-50 rounded-xl h-12 text-base"
-                    >
-                      {isLoading ? (
-                        <>
-                          <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                          Signing out...
-                        </>
-                      ) : (
-                        'Sign Out'
-                      )}
-                    </Button>
-                  </div>
-                </div>
-              ) : (
-                <div className="pt-2 flex flex-col gap-3">
-                  <WarmButton
-                    variant="outline"
-                    onClick={handleLogin}
-                    disabled={isLoading}
-                    className="w-full text-gray-700 border-gray-200 hover:bg-gray-50 rounded-xl h-12 text-base"
-                  >
-                    {isLoading ? (
-                      <>
-                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                        Signing in...
-                      </>
-                    ) : (
-                      'Sign In'
-                    )}
-                  </WarmButton>
-                  
-                </div>
-              )}
-            </div>
-          </div>
-        )}
+        <div className="flex items-center gap-2 md:hidden">
+          {isCompose ? (
+            <Link
+              href={GALLERY_HREF}
+              className="inline-flex h-10 items-center rounded-full border border-[#F1D6DF] bg-white px-4 text-sm font-semibold text-[#202A3D]"
+            >
+              Gallery
+            </Link>
+          ) : (
+            <Link href={PRIMARY_CREATE_HREF} className={ctaClass}>
+              Make a card
+            </Link>
+          )}
+          <button
+            type="button"
+            onClick={() => setMenuOpen((open) => !open)}
+            aria-expanded={menuOpen}
+            aria-controls="mobile-menu"
+            aria-label={menuOpen ? 'Close menu' : 'Open menu'}
+            className="inline-flex h-10 w-10 items-center justify-center rounded-full text-[#202A3D] transition-colors hover:bg-[#FFF1F5]"
+          >
+            {menuOpen ? <X className="h-6 w-6" aria-hidden /> : <Menu className="h-6 w-6" aria-hidden />}
+          </button>
+        </div>
       </nav>
+      </div>
+
+      <MobileMenu open={menuOpen} onClose={closeMenu} pathname={pathname} />
     </header>
   )
 }
 
-export { Header }
+export { Header, isGeneratorComposePath }

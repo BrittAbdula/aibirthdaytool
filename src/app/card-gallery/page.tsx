@@ -1,19 +1,23 @@
 import { Suspense } from 'react'
 import { Metadata } from 'next'
-import { getFeaturedCardsServer } from '@/lib/cards'
-import CardGalleryContent from './CardGalleryContent'
+import { GalleryBrowser } from '@/components/gallery/GalleryBrowser'
+import { GalleryBrowserSkeleton } from '@/components/gallery/GalleryBrowserSkeleton'
+import { getFeaturedCardsServer, type GalleryCardsResult } from '@/lib/cards'
 import { GALLERY_PAGE_SIZE } from '@/lib/gallery-pagination'
 import { toAbsoluteUrl } from '@/lib/seo'
 
+const description =
+  'Browse public card ideas by occasion and recipient, compare real examples, and open any card as a starting point for your own.'
+
 export const metadata: Metadata = {
   title: 'Card Gallery Ideas | MewTruCard',
-  description: 'Browse public card ideas by occasion, compare examples, and open the right generator once you know the tone you want.',
+  description,
   alternates: {
     canonical: toAbsoluteUrl('/card-gallery/'),
   },
   openGraph: {
     title: 'Card Gallery Ideas | MewTruCard',
-    description: 'Browse public card ideas by occasion, compare examples, and open the right generator once you know the tone you want.',
+    description,
     type: 'website',
     url: toAbsoluteUrl('/card-gallery/'),
     images: [
@@ -28,56 +32,41 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'Card Gallery Ideas | MewTruCard',
-    description: 'Browse public card ideas by occasion, compare examples, and open the right generator once you know the tone you want.',
+    description,
     images: ['https://mewtrucard.com/mewtrucard-generator.jpg'],
   },
 }
 
-// Set revalidation period to 1 hours (3600 seconds)
 export const dynamic = 'force-static'
 export const revalidate = 3600
 
-// Server Component
 export default async function CardGalleryPage() {
-  const initialCardsData = await getFeaturedCardsServer(1, GALLERY_PAGE_SIZE, null)
-  
-  return (
-    <article className="min-h-screen bg-gradient-to-br from-white via-purple-50 to-pink-50">
-      <div className="container mx-auto px-4 py-8">
-        <header className="text-center">
-          <h1 className="text-4xl sm:text-5xl md:text-6xl font-serif font-bold mb-4 tracking-tight">
-            <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-pink-600">
-              Card Gallery Ideas
-            </span>
-          </h1>
-          <p className="text-lg sm:text-xl text-gray-600 max-w-2xl mx-auto px-4 ">
-            Browse public card ideas by occasion, compare examples, and open the right generator once you know the tone you want.
-          </p>
-            <div className="flex flex-wrap justify-center gap-4 text-sm">
-              <span className="px-3 py-1 bg-purple-50 rounded-full">Public examples</span>
-              <span className="px-3 py-1 bg-purple-50 rounded-full">Filter by occasion</span>
-              <span className="px-3 py-1 bg-purple-50 rounded-full">Featured by default</span>
-              <span className="px-3 py-1 bg-purple-50 rounded-full">Open a generator next</span>
-            </div>
-        </header>
+  let initialCards: GalleryCardsResult = { cards: [], hasMore: false, totalPages: 0 }
 
-        <section aria-label="Card Gallery">
-          <Suspense 
-            fallback={
-              <div className="flex flex-col items-center justify-center h-64 space-y-4">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500"></div>
-                <p className="text-gray-500">Loading your personalized gallery...</p>
-              </div>
-            }
-          >
-            <CardGalleryContent 
-              initialCardsData={initialCardsData!} 
-              defaultType={null} 
-              activeTab="featured"
-            />
-          </Suspense>
-        </section>
+  try {
+    initialCards = await getFeaturedCardsServer(1, GALLERY_PAGE_SIZE, null)
+  } catch (error) {
+    console.error('Failed to load the card gallery', error)
+  }
+
+  return (
+    <main className="min-h-screen bg-warm-cream text-[#202A3D]">
+      <section className="border-b border-[#F1D6DF]/70 bg-[#FFF8F6]">
+        <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8 lg:py-14">
+          <p className="text-sm font-semibold uppercase tracking-[0.22em] text-primary">Gallery</p>
+          <h1 className="mt-3 font-serif text-4xl font-semibold leading-tight sm:text-5xl">Card gallery</h1>
+          <p className="mt-4 max-w-2xl text-base leading-7 text-[#596174] sm:text-lg">
+            Public cards people made and shared. Browse by occasion or recipient, then open any card as a
+            starting point for your own.
+          </p>
+        </div>
+      </section>
+
+      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
+        <Suspense fallback={<GalleryBrowserSkeleton />}>
+          <GalleryBrowser initialCards={initialCards} scope={{ type: null, relationship: null }} />
+        </Suspense>
       </div>
-    </article>
+    </main>
   )
 }

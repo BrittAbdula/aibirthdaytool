@@ -275,7 +275,7 @@ export default async function GeneratorsPage() {
         </div>
       </section>
 
-      <section className="bg-white py-16">
+      <section id="moments" className="scroll-mt-24 bg-white py-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <SectionHeading
             eyebrow="Main makers"
@@ -294,7 +294,7 @@ export default async function GeneratorsPage() {
         <div className="mx-auto grid max-w-7xl gap-8 px-4 sm:px-6 lg:grid-cols-[0.8fr_1.2fr] lg:px-8">
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.22em] text-primary">
-              Browse ideas
+              Gallery
             </p>
             <h2 className="mt-3 font-serif text-3xl font-semibold leading-tight text-[#202A3D] sm:text-4xl">
               Need examples before writing?
@@ -312,7 +312,7 @@ export default async function GeneratorsPage() {
         </div>
       </section>
 
-      <section className="border-b border-[#F1D6DF]/70 bg-[#FFF8F6] py-16">
+      <section id="recipient" className="scroll-mt-24 border-b border-[#F1D6DF]/70 bg-[#FFF8F6] py-16">
         <div className="mx-auto grid max-w-7xl gap-8 px-4 sm:px-6 lg:grid-cols-3 lg:px-8">
           <div>
             <div className="mb-4 inline-flex h-11 w-11 items-center justify-center rounded-lg bg-primary text-white">
@@ -380,10 +380,12 @@ export default async function GeneratorsPage() {
         </div>
       </section>
 
-      <ViralMicrositeGrid
-        title="Interactive surprise pages"
-        description="Use these when the reveal needs a small moment before the recipient opens the final card."
-      />
+      <div id="surprise" className="scroll-mt-24">
+        <ViralMicrositeGrid
+          title="Interactive surprise pages"
+          description="Use these when the reveal needs a small moment before the recipient opens the final card."
+        />
+      </div>
 
       <section className="border-t border-[#F1D6DF]/70 bg-[#FFF8F6] py-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -407,7 +409,7 @@ export default async function GeneratorsPage() {
               },
               {
                 href: "/card-gallery/",
-                label: "Browse public card ideas",
+                label: "Card gallery",
                 description: "See public examples when you need inspiration first.",
               },
             ]}

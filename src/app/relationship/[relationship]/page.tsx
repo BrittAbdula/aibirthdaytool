@@ -1,7 +1,8 @@
 import { Metadata } from 'next'
 import { Suspense } from 'react'
 import Link from 'next/link'
-import RelationshipGalleryContent from './RelationshipGalleryContent'
+import { GalleryBrowser } from '@/components/gallery/GalleryBrowser'
+import { GalleryBrowserSkeleton } from '@/components/gallery/GalleryBrowserSkeleton'
 import GalleryComboLinkSection from '@/components/gallery/GalleryComboLinkSection'
 import { GalleryCardsResult, getFeaturedCardsServer } from '@/lib/cards'
 import { GALLERY_PAGE_SIZE } from '@/lib/gallery-pagination'
@@ -89,66 +90,44 @@ export default async function RelationshipPage({ params }: Props) {
   }))
 
   return (
-    <article className="min-h-screen bg-gradient-to-br from-white via-purple-50 to-pink-50">
-      <div className="container mx-auto px-4 py-8">
-        <header className="text-center mb-12">
-          <h1 className="text-4xl sm:text-5xl md:text-6xl font-serif font-bold mb-4 tracking-tight">
-            <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-pink-600">
-              {relationship} Card Ideas
-            </span>
+    <article className="min-h-screen bg-warm-cream text-[#202A3D]">
+      <header className="border-b border-[#F1D6DF]/70 bg-[#FFF8F6]">
+        <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8 lg:py-14">
+          <p className="text-sm font-semibold uppercase tracking-[0.22em] text-primary">Gallery</p>
+          <h1 className="mt-3 font-serif text-4xl font-semibold leading-tight sm:text-5xl">
+            Cards for {relationship.toLowerCase()}
           </h1>
-          <p className="text-lg sm:text-xl text-gray-600 max-w-2xl mx-auto px-4 mb-6">
-            Browse public card ideas for your {relationship.toLowerCase()}, compare tone and message direction,
-            then open the best generator once you know the occasion you want.
+          <p className="mt-4 max-w-2xl text-base leading-7 text-[#596174] sm:text-lg">
+            Public card ideas made for a {relationship.toLowerCase()}. Compare tone and message direction, then open
+            the generator for the occasion you need.
           </p>
-          <div className="flex flex-wrap justify-center gap-4 text-sm">
-            <span className="px-3 py-1 bg-purple-50 rounded-full">Public examples</span>
-            <span className="px-3 py-1 bg-purple-50 rounded-full">Filter by occasion</span>
-            <span className="px-3 py-1 bg-purple-50 rounded-full">Relationship-first browsing</span>
-            <span className="px-3 py-1 bg-purple-50 rounded-full">Jump to a generator next</span>
-          </div>
-        </header>
-
-        <GalleryComboLinkSection
-          title={`Popular card types for ${relationship}`}
-          description={`These combination pages turn the broad ${relationship.toLowerCase()} gallery into stronger occasion-led landing pages with clearer search intent.`}
-          links={comboLinks}
-        />
-
-        <section className="mb-12 rounded-[28px] border border-orange-100 bg-gradient-to-r from-orange-50 to-pink-50 p-6 shadow-sm sm:p-8">
-          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-            <div className="max-w-2xl">
-              <h2 className="text-2xl font-bold text-gray-800">Ready to make a card for {relationship}?</h2>
-              <p className="mt-2 text-sm leading-6 text-gray-600 sm:text-base">
-                Use the examples below to choose the tone first, then open the generator that best matches the occasion you want to send.
-              </p>
-            </div>
+          <div className="mt-6">
             <Link
               href="/cards/"
-              className="inline-flex rounded-full bg-gradient-to-r from-orange-500 to-pink-500 px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:opacity-90"
+              className="inline-flex min-h-11 items-center rounded-full bg-primary px-6 text-sm font-semibold text-white shadow-sm transition-all hover:-translate-y-0.5 hover:bg-primary/90 hover:shadow-md"
             >
-              Open the card library
+              Choose an occasion
             </Link>
           </div>
-        </section>
+        </div>
+      </header>
 
-        <section aria-label={`${relationship} Card Gallery`}>
-          <Suspense 
-            fallback={
-              <div className="flex flex-col items-center justify-center h-64 space-y-4">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500"></div>
-                <p className="text-gray-500">Loading your personalized gallery...</p>
-              </div>
-            }
-          >
-            <RelationshipGalleryContent 
-              params={resolvedParams}
-              initialCardsData={initialCardsData}
-              defaultType={null}
-              activeTab="featured"
-            />
-          </Suspense>
-        </section>
+      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
+        <Suspense fallback={<GalleryBrowserSkeleton />}>
+          <GalleryBrowser
+            initialCards={initialCardsData}
+            scope={{ type: null, relationship: relationshipValue }}
+            label={`${relationship} card gallery`}
+          />
+        </Suspense>
+
+        <div className="mt-14">
+          <GalleryComboLinkSection
+            title={`Popular card types for ${relationship.toLowerCase()}`}
+            description={`Occasion-specific galleries for your ${relationship.toLowerCase()}, when you already know the moment.`}
+            links={comboLinks}
+          />
+        </div>
       </div>
     </article>
   )

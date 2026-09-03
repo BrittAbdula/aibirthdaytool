@@ -2,7 +2,8 @@ import { Metadata } from 'next'
 import { Suspense } from 'react'
 import Link from 'next/link'
 import { CardType } from '@/lib/card-config'
-import TypeGalleryContent from './TypeGalleryContent'
+import { GalleryBrowser } from '@/components/gallery/GalleryBrowser'
+import { GalleryBrowserSkeleton } from '@/components/gallery/GalleryBrowserSkeleton'
 import GalleryComboLinkSection from '@/components/gallery/GalleryComboLinkSection'
 import GuidanceGridSection from '@/components/eeat/GuidanceGridSection'
 import TrustSignalsSection from '@/components/eeat/TrustSignalsSection'
@@ -97,7 +98,7 @@ export default async function TypePage({ params }: Props) {
   }))
 
   return (
-    <article className="min-h-screen bg-gradient-to-br from-white via-purple-50 to-pink-50">
+    <article className="min-h-screen bg-warm-cream text-[#202A3D]">
       <JsonLd
         data={buildBreadcrumbSchema([
           { name: 'Home', href: '/' },
@@ -118,87 +119,83 @@ export default async function TypePage({ params }: Props) {
       {comboSchemaLinks.length > 0 && (
         <JsonLd data={buildItemListSchema(`${cardTypeLabel} relationship galleries`, comboSchemaLinks)} />
       )}
-      <div className="container mx-auto px-4 py-8">
-        <header className="text-center mb-12">
-          <h1 className="text-4xl sm:text-5xl md:text-6xl font-serif font-bold mb-4 tracking-tight">
-            <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-pink-600">
-              {isBirthdayType ? 'Birthday Card Ideas' : `${cardTypeLabel} Card Ideas`}
-            </span>
+
+      <header className="border-b border-[#F1D6DF]/70 bg-[#FFF8F6]">
+        <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8 lg:py-14">
+          <p className="text-sm font-semibold uppercase tracking-[0.22em] text-primary">Gallery</p>
+          <h1 className="mt-3 font-serif text-4xl font-semibold leading-tight sm:text-5xl">
+            {isBirthdayType ? 'Birthday card ideas' : `${cardTypeLabel} card ideas`}
           </h1>
-          <p className="text-lg sm:text-xl text-gray-600 max-w-2xl mx-auto px-4 mb-6">
-            Browse public {cardTypeLabel.toLowerCase()} card ideas and templates, compare tone and layout,
-            then open the generator when you are ready to make your own card.
+          <p className="mt-4 max-w-2xl text-base leading-7 text-[#596174] sm:text-lg">
+            Browse public {cardTypeLabel.toLowerCase()} cards and templates, compare tone and layout, then open the
+            generator when you are ready to make your own.
           </p>
-          <div className="flex flex-wrap justify-center gap-4 text-sm">
-            <span className="px-3 py-1 bg-purple-50 rounded-full">Public examples</span>
-            <span className="px-3 py-1 bg-purple-50 rounded-full">Templates and ideas</span>
-            <span className="px-3 py-1 bg-purple-50 rounded-full">Relationship filters</span>
-            <span className="px-3 py-1 bg-purple-50 rounded-full">Open the generator next</span>
-          </div>
-        </header>
-
-        <GalleryComboLinkSection
-          title={isBirthdayType ? 'Birthday cards by relationship' : `${cardTypeLabel} cards by relationship`}
-          description={`These are the strongest relationship-led gallery pages for ${cardTypeLabel.toLowerCase()} intent, and they are better SEO landing pages than query-string filters.`}
-          links={comboLinks}
-        />
-
-        <TrustSignalsSection
-          title={`How to use this ${cardTypeLabel} gallery`}
-          description={`This page is designed to help visitors compare public ${cardTypeLabel.toLowerCase()} examples, choose a tone faster, and move into the generator with a clearer plan.`}
-          reviewedBy={trustGuide.reviewedBy}
-          lastReviewed={trustGuide.lastReviewed}
-          purpose={trustGuide.purpose}
-          methodology={trustGuide.methodology}
-          links={trustLinks}
-        />
-
-        <section aria-label={`${type} Card Gallery`}>
-          <Suspense 
-            fallback={
-              <div className="flex flex-col items-center justify-center h-64 space-y-4">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500"></div>
-                <p className="text-gray-500">Loading your personalized gallery...</p>
-              </div>
-            }
-          >
-            <TypeGalleryContent 
-              params={resolvedParams}
-              initialCardsData={initialCardsData}
-              defaultRelationship={null}
-              activeTab="featured"
-            />
-          </Suspense>
-        </section>
-
-        <div className="mt-12">
-          {trustGuide.sections.map((section) => (
-            <GuidanceGridSection
-              key={section.title}
-              title={section.title}
-              description={section.description}
-              cards={section.cards}
-            />
-          ))}
-        </div>
-
-        <section className="mb-12 rounded-[28px] border border-orange-100 bg-gradient-to-r from-orange-50 to-pink-50 p-6 shadow-sm sm:p-8">
-          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-            <div className="max-w-2xl">
-              <h2 className="text-2xl font-bold text-gray-800">Ready to turn a direction into a real card?</h2>
-              <p className="mt-2 text-sm leading-6 text-gray-600 sm:text-base">
-                Use the examples above to choose the tone, then open the generator and personalize the result with your own recipient details and message.
-              </p>
-            </div>
+          <div className="mt-6">
             <Link
               href={`/${type}/`}
-              className="inline-flex rounded-full bg-gradient-to-r from-orange-500 to-pink-500 px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:opacity-90"
+              className="inline-flex min-h-11 items-center rounded-full bg-primary px-6 text-sm font-semibold text-white shadow-sm transition-all hover:-translate-y-0.5 hover:bg-primary/90 hover:shadow-md"
             >
-              Open the {cardTypeLabel} generator
+              Make a {cardTypeLabel.toLowerCase()} card
             </Link>
           </div>
-        </section>
+        </div>
+      </header>
+
+      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
+        <Suspense fallback={<GalleryBrowserSkeleton />}>
+          <GalleryBrowser
+            initialCards={initialCardsData}
+            scope={{ type, relationship: null }}
+            label={`${cardTypeLabel} card gallery`}
+          />
+        </Suspense>
+
+        <div className="mt-14 flex flex-col gap-10">
+          <GalleryComboLinkSection
+            title={isBirthdayType ? 'Birthday cards by relationship' : `${cardTypeLabel} cards by relationship`}
+            description={`Relationship-specific ${cardTypeLabel.toLowerCase()} galleries, when the person matters more than the occasion.`}
+            links={comboLinks}
+          />
+
+          <TrustSignalsSection
+            title={`How to use this ${cardTypeLabel} gallery`}
+            description={`This page is designed to help visitors compare public ${cardTypeLabel.toLowerCase()} examples, choose a tone faster, and move into the generator with a clearer plan.`}
+            reviewedBy={trustGuide.reviewedBy}
+            lastReviewed={trustGuide.lastReviewed}
+            purpose={trustGuide.purpose}
+            methodology={trustGuide.methodology}
+            links={trustLinks}
+          />
+
+          <div>
+            {trustGuide.sections.map((section) => (
+              <GuidanceGridSection
+                key={section.title}
+                title={section.title}
+                description={section.description}
+                cards={section.cards}
+              />
+            ))}
+          </div>
+
+          <section className="rounded-2xl border border-[#F1D6DF] bg-white p-6 sm:p-8">
+            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+              <div className="max-w-2xl">
+                <h2 className="font-serif text-2xl font-semibold text-[#202A3D] sm:text-3xl">Ready to turn a direction into a real card?</h2>
+                <p className="mt-2 text-sm leading-6 text-[#6B7280] sm:text-base">
+                  Use the examples above to choose the tone, then open the generator and personalize the result with your own recipient details and message.
+                </p>
+              </div>
+              <Link
+                href={`/${type}/`}
+                className="inline-flex min-h-11 items-center justify-center rounded-full bg-primary px-6 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-primary/90"
+              >
+                Open the {cardTypeLabel} generator
+              </Link>
+            </div>
+          </section>
+        </div>
       </div>
     </article>
   )
-} 
+}

@@ -55,7 +55,7 @@ export default function Footer() {
                 href="/card-gallery/"
                 className="text-sm font-medium text-primary transition-colors hover:text-[#8C2247]"
               >
-                All cards →
+                Browse the gallery →
               </Link>
             </div>
           </div>
@@ -97,6 +97,12 @@ export default function Footer() {
                   {link.label}
                 </Link>
               ))}
+              <Link
+                href="/for/employee-birthday-cards/"
+                className="text-sm text-[#525B70] transition-colors hover:text-primary"
+              >
+                For teams
+              </Link>
             </div>
           </div>
         </div>

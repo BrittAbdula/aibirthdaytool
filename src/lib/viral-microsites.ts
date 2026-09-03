@@ -153,7 +153,7 @@ export const VIRAL_MICROSITES: ViralMicrositeConfig[] = [
     acceptedCaption: "Now turn it into a card and send it to your bestie.",
     replayLabel: "Ask again",
     primaryCta: { href: "/wedding/", label: "Create a keepsake card" },
-    secondaryCta: { href: "/type/wedding/", label: "Browse card ideas" },
+    secondaryCta: { href: "/type/wedding/", label: "Browse wedding cards" },
     theme: "violet",
   },
 ];

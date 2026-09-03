@@ -99,7 +99,7 @@ export default function Home() {
               </Link>
               <Link href="/card-gallery/" className="sm:w-auto">
                 <WarmButton variant="secondary" size="lg" className="w-full sm:w-auto">
-                  Browse card ideas
+                  Browse the gallery
                   <Search className="ml-2 h-5 w-5" />
                 </WarmButton>
               </Link>

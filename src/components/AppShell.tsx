@@ -2,8 +2,9 @@
 
 import { ReactNode } from "react";
 import { usePathname } from "next/navigation";
-import { Header, isGeneratorComposePath } from "@/components/Header";
+import { Header } from "@/components/Header";
 import Footer from "@/components/Footer";
+import { isGeneratorComposePath } from "@/lib/nav-config";
 import { VIRAL_MICROSITE_PATHS } from "@/lib/viral-microsites";
 
 interface AppShellProps {

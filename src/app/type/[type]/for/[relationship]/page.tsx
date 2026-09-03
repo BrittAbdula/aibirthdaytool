@@ -1,6 +1,8 @@
 import { Metadata } from 'next'
 import { Suspense } from 'react'
 import Link from 'next/link'
+import { GalleryBrowser } from '@/components/gallery/GalleryBrowser'
+import { GalleryBrowserSkeleton } from '@/components/gallery/GalleryBrowserSkeleton'
 import GalleryComboLinkSection from '@/components/gallery/GalleryComboLinkSection'
 import { CardType } from '@/lib/card-config'
 import GuidanceGridSection from '@/components/eeat/GuidanceGridSection'
@@ -21,7 +23,6 @@ import {
   getTrustHubRelatedLinks,
 } from '@/lib/eeat-content'
 import { buildBreadcrumbSchema, buildItemListSchema, buildWebPageSchema, toAbsoluteUrl } from '@/lib/seo'
-import TypeRelationshipGalleryContent from './TypeRelationshipGalleryContent'
 
 interface Props {
   params: Promise<{ type: CardType; relationship: string }>
@@ -107,7 +108,7 @@ export default async function TypeRelationshipPage({ params }: Props) {
   }))
 
   return (
-    <article className="min-h-screen bg-gradient-to-br from-white via-purple-50 to-pink-50">
+    <article className="min-h-screen bg-warm-cream text-[#202A3D]">
       <JsonLd
         data={buildBreadcrumbSchema([
           { name: 'Home', href: '/' },
@@ -129,79 +130,70 @@ export default async function TypeRelationshipPage({ params }: Props) {
       {relatedSchemaLinks.length > 0 && (
         <JsonLd data={buildItemListSchema(`More ${cardTypeLabel} galleries`, relatedSchemaLinks)} />
       )}
-      <div className="container mx-auto px-4 py-8">
-        <header className="mb-10 text-center">
-          <h1 className="text-4xl sm:text-5xl md:text-6xl font-serif font-bold mb-4 tracking-tight">
-            <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-pink-600">
-              {cardTypeLabel} Cards for {relationshipLabel}
-            </span>
+
+      <header className="border-b border-[#F1D6DF]/70 bg-[#FFF8F6]">
+        <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8 lg:py-14">
+          <p className="text-sm font-semibold uppercase tracking-[0.22em] text-primary">Gallery</p>
+          <h1 className="mt-3 font-serif text-4xl font-semibold leading-tight sm:text-5xl">
+            {cardTypeLabel} cards for {relationshipLabel.toLowerCase()}
           </h1>
-          <p className="mx-auto mb-6 max-w-3xl px-4 text-lg text-gray-600 sm:text-xl">
-            Explore public AI {cardTypeLabel.toLowerCase()} card ideas for your {relationshipLabel.toLowerCase()}, then create your own shareable {cardTypeLabel.toLowerCase()} card link in a few steps.
+          <p className="mt-4 max-w-2xl text-base leading-7 text-[#596174] sm:text-lg">
+            Public {cardTypeLabel.toLowerCase()} card ideas made for a {relationshipLabel.toLowerCase()}. Pick the tone
+            you like, then make your own shareable card in a few steps.
           </p>
-          <div className="mb-8 flex flex-wrap justify-center gap-3 text-sm">
-            <span className="rounded-full bg-purple-50 px-3 py-1">Filtered for {relationshipLabel}</span>
-            <span className="rounded-full bg-purple-50 px-3 py-1">Public gallery ideas</span>
-            <span className="rounded-full bg-purple-50 px-3 py-1">Shareable card links</span>
-          </div>
-          <div className="flex flex-col items-center justify-center gap-3 sm:flex-row">
+          <div className="mt-6 flex flex-col gap-3 sm:flex-row">
             <Link
               href={generatorHref}
-              className="w-full rounded-full bg-gradient-to-r from-orange-500 to-pink-500 px-8 py-3 text-center text-sm font-semibold text-white shadow-lg transition hover:scale-[1.02] sm:w-auto"
+              className="inline-flex min-h-11 items-center justify-center rounded-full bg-primary px-6 text-sm font-semibold text-white shadow-sm transition-all hover:-translate-y-0.5 hover:bg-primary/90 hover:shadow-md"
             >
-              Make a {cardTypeLabel} Card for {relationshipLabel}
+              Make a {cardTypeLabel.toLowerCase()} card for {relationshipLabel.toLowerCase()}
             </Link>
             <Link
               href={`/type/${type}/`}
-              className="w-full rounded-full border border-purple-200 bg-white/80 px-8 py-3 text-center text-sm font-semibold text-purple-700 transition hover:bg-purple-50 sm:w-auto"
+              className="inline-flex min-h-11 items-center justify-center rounded-full border border-[#F1D6DF] bg-white px-6 text-sm font-semibold text-[#202A3D] transition-colors hover:border-primary/40 hover:bg-[#FFF1F5]"
             >
-              View All {cardTypeLabel} Cards
+              All {cardTypeLabel.toLowerCase()} cards
             </Link>
           </div>
-        </header>
+        </div>
+      </header>
 
-        <GalleryComboLinkSection
-          title={`More ${cardTypeLabel} Galleries by Relationship`}
-          description={`Use these high-intent gallery combinations to browse stronger examples before you generate a card of your own.`}
-          links={relatedRelationshipLinks}
-        />
+      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
+        <Suspense fallback={<GalleryBrowserSkeleton />}>
+          <GalleryBrowser
+            initialCards={initialCardsData}
+            scope={{ type, relationship: relationshipValue }}
+            label={`${cardTypeLabel} cards for ${relationshipLabel}`}
+          />
+        </Suspense>
 
-        <TrustSignalsSection
-          title={`How to use these ${cardTypeLabel} examples for ${relationshipLabel}`}
-          description={`This page is meant to narrow the writing tone and visual direction for a ${relationshipLabel.toLowerCase()} relationship before you open the generator.`}
-          reviewedBy={trustGuide.reviewedBy}
-          lastReviewed={trustGuide.lastReviewed}
-          purpose={trustGuide.purpose}
-          methodology={trustGuide.methodology}
-          links={trustLinks}
-        />
+        <div className="mt-14 flex flex-col gap-10">
+          <GalleryComboLinkSection
+            title={`More ${cardTypeLabel} galleries by relationship`}
+            description={`Other relationship-specific ${cardTypeLabel.toLowerCase()} galleries worth a look before you generate a card of your own.`}
+            links={relatedRelationshipLinks}
+          />
 
-        <section aria-label={`${cardTypeLabel} cards for ${relationshipLabel}`}>
-          <Suspense
-            fallback={
-              <div className="flex flex-col items-center justify-center h-64 space-y-4">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500"></div>
-                <p className="text-gray-500">Loading your personalized gallery...</p>
-              </div>
-            }
-          >
-            <TypeRelationshipGalleryContent
-              params={resolvedParams}
-              initialCardsData={initialCardsData}
-              activeTab="featured"
-            />
-          </Suspense>
-        </section>
+          <TrustSignalsSection
+            title={`How to use these ${cardTypeLabel} examples for ${relationshipLabel}`}
+            description={`This page is meant to narrow the writing tone and visual direction for a ${relationshipLabel.toLowerCase()} relationship before you open the generator.`}
+            reviewedBy={trustGuide.reviewedBy}
+            lastReviewed={trustGuide.lastReviewed}
+            purpose={trustGuide.purpose}
+            methodology={trustGuide.methodology}
+            links={trustLinks}
+          />
 
-        <div className="mt-12">
-          {trustGuide.sections.map((section) => (
-            <GuidanceGridSection
-              key={section.title}
-              title={section.title}
-              description={section.description}
-              cards={section.cards}
-            />
-          ))}
+          <div>
+            {trustGuide.sections.map((section) => (
+              <GuidanceGridSection
+                key={section.title}
+                title={section.title}
+                description={section.description}
+                cards={section.cards}
+              />
+            ))}
+          </div>
         </div>
       </div>
     </article>
