@@ -6,37 +6,55 @@ export interface NavLink {
   description?: string
 }
 
+export interface CardMaker {
+  slug: string
+  label: string
+}
+
 /**
- * Generator slugs that render the "compose" header (generator landing pages).
- * Also used by the header search to match against typed occasions.
+ * Last-resort list of card makers, used only when the database read fails.
+ * The live list comes from getNavCardMakers() in nav-card-makers.ts.
  */
-export const GENERATORS: { slug: string; label: string }[] = [
-  { slug: 'birthday', label: 'Birthday' },
-  { slug: 'eidmubarak', label: 'Eid Mubarak' },
-  { slug: 'mothersday', label: "Mother's Day" },
+export const FALLBACK_CARD_MAKERS: CardMaker[] = [
   { slug: 'anniversary', label: 'Anniversary' },
-  { slug: 'love', label: 'Love' },
-  { slug: 'thankyou', label: 'Thank You' },
-  { slug: 'wedding', label: 'Wedding' },
-  { slug: 'graduation', label: 'Graduation' },
   { slug: 'baby', label: 'Baby' },
-  { slug: 'congratulations', label: 'Congratulations' },
-  { slug: 'goodluck', label: 'Good Luck' },
-  { slug: 'sorry', label: 'Sorry' },
+  { slug: 'birthday', label: 'Birthday' },
   { slug: 'christmas', label: 'Christmas' },
-  { slug: 'valentine', label: 'Valentine' },
+  { slug: 'congratulations', label: 'Congratulations' },
+  { slug: 'easter', label: 'Easter' },
+  { slug: 'eidmubarak', label: 'Eid Mubarak' },
+  { slug: 'goodluck', label: 'Good Luck' },
   { slug: 'goodmorning', label: 'Good Morning' },
   { slug: 'goodnight', label: 'Good Night' },
+  { slug: 'graduation', label: 'Graduation' },
+  { slug: 'love', label: 'Love' },
+  { slug: 'mothersday', label: "Mother's Day" },
+  { slug: 'newyear', label: 'New Year' },
+  { slug: 'sorry', label: 'Sorry' },
   { slug: 'teacher', label: 'Teacher' },
-  { slug: 'easter', label: 'Easter' },
+  { slug: 'thankyou', label: 'Thank You' },
+  { slug: 'valentine', label: 'Valentine' },
+  { slug: 'wedding', label: 'Wedding' },
   { slug: 'womensday', label: "Women's Day" },
 ]
 
-export const GENERATOR_SLUGS = new Set(GENERATORS.map((generator) => generator.slug))
+/** Generator landing pages (single-segment paths) render the compose header. */
+export function isGeneratorComposePath(pathname: string, cardMakers: CardMaker[]) {
+  const segments = pathname.split('/').filter(Boolean)
+  return segments.length === 1 && cardMakers.some((maker) => maker.slug === segments[0])
+}
 
-export function isGeneratorComposePath(pathname: string) {
-  const pathSegments = pathname.split('/').filter(Boolean)
-  return pathSegments.length === 1 && GENERATOR_SLUGS.has(pathSegments[0])
+export function matchCardMakers(cardMakers: CardMaker[], term: string) {
+  const query = term.trim().toLowerCase()
+  if (!query) return cardMakers
+  // Match "new year" against the newyear slug as well as the label.
+  const collapsed = query.replace(/[\s-]+/g, '')
+  return cardMakers.filter(
+    (maker) =>
+      maker.label.toLowerCase().includes(query) ||
+      maker.slug.includes(collapsed) ||
+      maker.label.toLowerCase().replace(/[\s'-]+/g, '').includes(collapsed)
+  )
 }
 
 export const HOME_HREF = '/'

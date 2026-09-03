@@ -9,6 +9,7 @@ import { SessionProvider } from "next-auth/react"
 import GoogleAdsense from "@/components/GoogleAdsense";
 import Script from "next/script";
 import AppShell from "@/components/AppShell";
+import { getNavCardMakers } from "@/lib/nav-card-makers";
 import JsonLd from "@/components/JsonLd";
 import { ScrollToTop } from "@/components/ScrollToTop";
 import { CheckoutStatusToast } from "@/components/CheckoutStatusToast";
@@ -72,11 +73,13 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const cardMakers = await getNavCardMakers();
+
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
@@ -109,7 +112,7 @@ export default function RootLayout({
         <JsonLd data={buildWebsiteSchema()} />
         <SessionProvider>
           <GoogleAdsense />
-          <AppShell>{children}</AppShell>
+          <AppShell cardMakers={cardMakers}>{children}</AppShell>
           <ScrollToTop />
           <Toaster />
           <Suspense fallback={null}>

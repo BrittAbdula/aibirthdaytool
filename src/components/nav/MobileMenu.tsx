@@ -14,6 +14,7 @@ import {
   MY_CARDS_HREF,
   PRIMARY_NAV_LINKS,
   isActivePath,
+  type CardMaker,
 } from '@/lib/nav-config'
 import { cn } from '@/lib/utils'
 
@@ -21,12 +22,13 @@ interface MobileMenuProps {
   open: boolean
   onClose: () => void
   pathname: string
+  cardMakers: CardMaker[]
 }
 
 const rowClass =
   'flex min-h-12 items-center justify-between rounded-xl px-4 text-base font-semibold text-[#202A3D] transition-colors hover:bg-[#FFF1F5]'
 
-export function MobileMenu({ open, onClose, pathname }: MobileMenuProps) {
+export function MobileMenu({ open, onClose, pathname, cardMakers }: MobileMenuProps) {
   const { data: session, status } = useSession()
 
   useEffect(() => {
@@ -51,7 +53,7 @@ export function MobileMenu({ open, onClose, pathname }: MobileMenuProps) {
       className="fixed inset-x-0 bottom-0 top-16 z-40 overflow-y-auto border-t border-[#F1D6DF]/70 bg-[#FFF8F6] md:hidden"
     >
       <div className="container mx-auto flex flex-col gap-6 py-5">
-        <GeneratorSearchInline onNavigate={onClose} />
+        <GeneratorSearchInline onNavigate={onClose} cardMakers={cardMakers} />
 
         <section aria-labelledby="mobile-create-heading">
           <p id="mobile-create-heading" className="px-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8A93A6]">

@@ -6,7 +6,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { Loader2, Plus, Search, SendHorizontal } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
-import { ALL_MAKERS_HREF, GENERATORS } from '@/lib/nav-config'
+import { ALL_MAKERS_HREF, matchCardMakers, type CardMaker } from '@/lib/nav-config'
 import { cn } from '@/lib/utils'
 
 // Unmatched searches are reported so new makers can be prioritised.
@@ -24,19 +24,13 @@ async function reportMissingGenerator(searchTerm: string) {
   }
 }
 
-function useGeneratorSearch() {
+function useGeneratorSearch(cardMakers: CardMaker[]) {
   const [term, setTerm] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [requested, setRequested] = useState(false)
   const reportTimeout = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  const matches = useMemo(() => {
-    const query = term.trim().toLowerCase()
-    if (!query) return GENERATORS
-    return GENERATORS.filter(
-      (generator) => generator.label.toLowerCase().includes(query) || generator.slug.includes(query)
-    )
-  }, [term])
+  const matches = useMemo(() => matchCardMakers(cardMakers, term), [cardMakers, term])
 
   // Report a miss once the user has paused typing for a few seconds.
   useEffect(() => {
@@ -78,11 +72,12 @@ interface SearchPanelProps {
   className?: string
   /** Popover mode lists every maker before typing; the inline drawer stays compact. */
   listWhenEmpty?: boolean
+  cardMakers: CardMaker[]
 }
 
-function SearchPanel({ onNavigate, autoFocus, className, listWhenEmpty = true }: SearchPanelProps) {
+function SearchPanel({ onNavigate, autoFocus, className, listWhenEmpty = true, cardMakers }: SearchPanelProps) {
   const router = useRouter()
-  const search = useGeneratorSearch()
+  const search = useGeneratorSearch(cardMakers)
 
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault()
@@ -175,7 +170,7 @@ function SearchPanel({ onNavigate, autoFocus, className, listWhenEmpty = true }:
 }
 
 /** Desktop: icon button that opens the search in a popover. */
-export function GeneratorSearchButton({ className }: { className?: string }) {
+export function GeneratorSearchButton({ className, cardMakers }: { className?: string; cardMakers: CardMaker[] }) {
   const [open, setOpen] = useState(false)
   const pathname = usePathname()
 
@@ -202,13 +197,13 @@ export function GeneratorSearchButton({ className }: { className?: string }) {
         sideOffset={10}
         className="w-[22rem] rounded-2xl border-[#F1D6DF] bg-white p-3 shadow-xl"
       >
-        <SearchPanel autoFocus onNavigate={() => setOpen(false)} />
+        <SearchPanel autoFocus onNavigate={() => setOpen(false)} cardMakers={cardMakers} />
       </PopoverContent>
     </Popover>
   )
 }
 
 /** Mobile: rendered inline at the top of the menu drawer. */
-export function GeneratorSearchInline({ onNavigate }: { onNavigate?: () => void }) {
-  return <SearchPanel onNavigate={onNavigate} listWhenEmpty={false} />
+export function GeneratorSearchInline({ onNavigate, cardMakers }: { onNavigate?: () => void; cardMakers: CardMaker[] }) {
+  return <SearchPanel onNavigate={onNavigate} listWhenEmpty={false} cardMakers={cardMakers} />
 }

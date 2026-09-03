@@ -39,7 +39,8 @@
     "test:pricing": "ts-node --compiler-options '{\"module\":\"commonjs\",\"moduleResolution\":\"node\"}' scripts/pricing.test.ts",
     "test:pricing-quota": "ts-node --compiler-options '{\"module\":\"commonjs\",\"moduleResolution\":\"node\"}' scripts/pricing-quota.test.ts",
     "test:credits": "ts-node --compiler-options '{\"module\":\"commonjs\",\"moduleResolution\":\"node\"}' scripts/test-credits.ts",
-    "test:gallery-navigation": "ts-node -r ./scripts/register-alias.js --compiler-options '{\"module\":\"commonjs\",\"moduleResolution\":\"node\"}' scripts/gallery-navigation.test.ts"
+    "test:gallery-navigation": "ts-node -r ./scripts/register-alias.js --compiler-options '{\"module\":\"commonjs\",\"moduleResolution\":\"node\"}' scripts/gallery-navigation.test.ts",
+    "test:nav-config": "ts-node -r ./scripts/register-alias.js --compiler-options '{\"module\":\"commonjs\",\"moduleResolution\":\"node\"}' scripts/nav-config.test.ts"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.2",

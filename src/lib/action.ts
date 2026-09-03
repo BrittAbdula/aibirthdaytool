@@ -3,8 +3,14 @@
 import { auth } from '@/auth'
 import { prisma } from '@/lib/prisma'
 
-// NOTE: UserAction.cardId is a foreign key to ApiLog.cardId — always pass the
-// original card id (EditedCard.originalCardId), never an EditedCard.id.
+// NOTE: cardId accepts either an ApiLog.cardId or an EditedCard.id. The gallery
+// ranking in lib/cards.ts joins UserAction on both, and roughly a third of the
+// stored 'up' rows reference EditedCard ids, so both must keep working.
+//
+// The Prisma schema declares UserAction.cardId as a foreign key to ApiLog.cardId,
+// but that constraint does not exist in the live database, which is why those
+// rows could be written. Adding it would need those rows reconciled first, so
+// `prisma db push` would fail against production today.
 export type UserActionType =
   | 'copy'
   | 'download'

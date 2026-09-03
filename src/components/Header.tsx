@@ -14,7 +14,7 @@ import {
   PRIMARY_CREATE_HREF,
   PRIMARY_NAV_LINKS,
   isActivePath,
-  isGeneratorComposePath,
+  type CardMaker,
 } from '@/lib/nav-config'
 
 type HeaderVariant = 'default' | 'compose'
@@ -33,7 +33,7 @@ const ctaClass =
  * Session-dependent UI lives only in the trailing account slot, so the bar does
  * not shift while the session resolves.
  */
-function Header({ variant = 'default' }: { variant?: HeaderVariant }) {
+function Header({ variant = 'default', cardMakers }: { variant?: HeaderVariant; cardMakers: CardMaker[] }) {
   const pathname = usePathname() || '/'
   const [menuOpen, setMenuOpen] = useState(false)
   const closeMenu = useCallback(() => setMenuOpen(false), [])
@@ -79,7 +79,7 @@ function Header({ variant = 'default' }: { variant?: HeaderVariant }) {
         </div>
 
         <div className="hidden items-center gap-2 md:flex">
-          {!isCompose && <GeneratorSearchButton />}
+          {!isCompose && <GeneratorSearchButton cardMakers={cardMakers} />}
           {!isCompose && (
             <Link href={PRIMARY_CREATE_HREF} className={ctaClass}>
               Make a card
@@ -115,9 +115,9 @@ function Header({ variant = 'default' }: { variant?: HeaderVariant }) {
       </nav>
       </div>
 
-      <MobileMenu open={menuOpen} onClose={closeMenu} pathname={pathname} />
+      <MobileMenu open={menuOpen} onClose={closeMenu} pathname={pathname} cardMakers={cardMakers} />
     </header>
   )
 }
 
-export { Header, isGeneratorComposePath }
+export { Header }
