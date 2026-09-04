@@ -4,11 +4,14 @@ import { generatePrompt } from './prompt';
 import { fetchSvgContent } from './utils';
 import { extractSvgContent } from './svg-extract';
 import { OPENROUTER_SVG_MODEL, requestOpenRouterMessage } from './openrouter';
+import type { CardDirection } from './emotion-director';
 
 interface CardContentParams {
   cardType: CardType;
   size: string;
   userPrompt: string;
+  /** The director's read; shapes the system prompt's register section. */
+  direction?: CardDirection;
   modificationFeedback?: string;
   previousCardId?: string;
 }
@@ -25,12 +28,12 @@ type SvgGenerationResult = {
 };
 
 export async function generateCardSvg(params: CardContentParams, model = OPENROUTER_SVG_MODEL): Promise<SvgGenerationResult> {
-  const { cardType, size, userPrompt, modificationFeedback, previousCardId } = params;
+  const { cardType, size, userPrompt, direction, modificationFeedback, previousCardId } = params;
   const startTime = Date.now();
 
   try {
-    const cardSize = CARD_SIZES[size || 'portrait'];
-    const systemPrompt = generatePrompt(cardType, cardSize);
+    const cardSize = CARD_SIZES[size || 'portrait'] || CARD_SIZES.portrait;
+    const systemPrompt = generatePrompt(cardType, cardSize, direction);
     const finalUserPrompt = await buildFinalSvgUserPrompt(userPrompt, modificationFeedback, previousCardId);
 
     if (finalUserPrompt.length >= 12000) {

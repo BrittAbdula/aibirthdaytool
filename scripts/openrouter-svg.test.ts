@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 
 import { OPENROUTER_SVG_MODEL, requestOpenRouterMessage } from '../src/lib/openrouter';
-import { extractSvgContent } from '../src/lib/svg-extract';
+import { extractSvgContent, repairDuplicateAttributes } from '../src/lib/svg-extract';
 
 assert.equal(OPENROUTER_SVG_MODEL, 'openai/gpt-5.6-luna');
 
@@ -87,6 +87,13 @@ async function main() {
   );
 
   assert.equal(extractSvgContent('no svg here'), null);
+
+  // A duplicated attribute makes browsers reject the whole document; classes merge, other duplicates keep the first value.
+  assert.equal(
+    extractSvgContent('<svg><text x="1" class="serif" fill="#000" class="rise" x="2">Hi</text><rect width="1"/></svg>'),
+    '<svg xmlns="http://www.w3.org/2000/svg"><text x="1" class="serif rise" fill="#000">Hi</text><rect width="1"/></svg>'
+  );
+  assert.equal(repairDuplicateAttributes('<g class="a b"><path d="M0 0" /></g>'), '<g class="a b"><path d="M0 0" /></g>');
 
   console.log('openrouter svg helpers passed');
 }

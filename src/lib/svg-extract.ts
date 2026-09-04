@@ -15,7 +15,42 @@ export function extractSvgContent(content: string): string | null {
     svgContent = svgContent.replace(/<svg\b/i, '<svg xmlns="http://www.w3.org/2000/svg"');
   }
 
-  return svgContent;
+  return repairDuplicateAttributes(svgContent);
+}
+
+const TAG_PATTERN = /<([A-Za-z][\w:-]*)((?:\s+[^\s=<>"']+\s*=\s*(?:"[^"]*"|'[^']*'))*)\s*(\/?)>/g;
+const ATTRIBUTE_PATTERN = /([^\s=<>"']+)\s*=\s*("[^"]*"|'[^']*')/g;
+
+/**
+ * A model occasionally writes the same attribute twice on one element
+ * (`class="a" ... class="b"`). Browsers treat the SVG as malformed XML and
+ * render nothing, so merge class lists and keep the first value of anything else.
+ */
+export function repairDuplicateAttributes(svg: string): string {
+  return svg.replace(TAG_PATTERN, (whole, name: string, attributes: string, selfClose: string) => {
+    if (!attributes) return whole;
+    const seen = new Map<string, string>();
+    let duplicated = false;
+    for (const match of attributes.matchAll(ATTRIBUTE_PATTERN)) {
+      const key = match[1];
+      const value = match[2];
+      if (!seen.has(key)) {
+        seen.set(key, value);
+        continue;
+      }
+      duplicated = true;
+      if (key === 'class') {
+        const quote = value[0];
+        const merged = `${seen.get(key)!.slice(1, -1)} ${value.slice(1, -1)}`.trim();
+        seen.set(key, `${quote}${merged}${quote}`);
+      }
+    }
+    if (!duplicated) return whole;
+    const rebuilt = Array.from(seen.entries())
+      .map(([key, value]) => `${key}=${value}`)
+      .join(' ');
+    return `<${name} ${rebuilt}${selfClose ? ' /' : ''}>`;
+  });
 }
 
 function normalizeSvgCandidateText(content: string): string {

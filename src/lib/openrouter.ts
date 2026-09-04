@@ -13,6 +13,8 @@ interface OpenRouterMessageOptions {
   maxTokens?: number;
   temperature?: number;
   reasoningEffort?: 'low' | 'medium' | 'high';
+  /** Abort the request after this long; callers that have a fallback set it. */
+  timeoutMs?: number;
 }
 
 interface OpenRouterResponse {
@@ -49,23 +51,42 @@ export async function requestOpenRouterMessage(
     reasoning: { effort: options.reasoningEffort || 'low', exclude: true },
   };
 
-  const response = await fetchImpl(`${baseUrl}/chat/completions`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${apiKey}`,
-      'HTTP-Referer': process.env.NEXT_PUBLIC_SITE_URL || 'https://mewtrucard.com',
-      'X-Title': 'MewTruCard',
-    },
-    body: JSON.stringify(body),
-  });
+  const controller = options.timeoutMs ? new AbortController() : undefined;
+  const timer = controller ? setTimeout(() => controller.abort(), options.timeoutMs) : undefined;
 
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`OpenRouter error ${response.status}: ${errorText}`);
+  let data: OpenRouterResponse;
+  try {
+    const response = await fetchImpl(`${baseUrl}/chat/completions`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${apiKey}`,
+        'HTTP-Referer': process.env.NEXT_PUBLIC_SITE_URL || 'https://mewtrucard.com',
+        'X-Title': 'MewTruCard',
+      },
+      body: JSON.stringify(body),
+      signal: controller?.signal,
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`OpenRouter error ${response.status}: ${errorText}`);
+    }
+
+    data = (await response.json()) as OpenRouterResponse;
+  } catch (error) {
+    if (controller?.signal.aborted) {
+      throw new Error(`OpenRouter request timed out after ${options.timeoutMs}ms`);
+    }
+    // undici reports every network failure as "fetch failed"; the cause carries the real reason.
+    const cause = (error as { cause?: { code?: string; message?: string } })?.cause;
+    if (cause && (cause.code || cause.message)) {
+      throw new Error(`OpenRouter request failed: ${cause.code || ''} ${cause.message || ''}`.trim());
+    }
+    throw error;
+  } finally {
+    if (timer) clearTimeout(timer);
   }
-
-  const data: OpenRouterResponse = await response.json();
   if (data.error?.message) {
     throw new Error(`OpenRouter error: ${data.error.message}`);
   }

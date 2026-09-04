@@ -10,6 +10,8 @@ import { stylePresets } from '@/lib/style-presets';
 import { getEntitlements, consumeCards, refundCards } from '@/lib/pricing/entitlements';
 import { getCardCost, type CardFormat } from '@/lib/pricing/quota';
 import { buildReferenceEditPrompt, createNaturalPrompt } from '@/lib/personalization-prompt';
+import { buildPersonalizationBrief } from '@/lib/card-brief';
+import { directCard, hashSeed, type CardDirection } from '@/lib/emotion-director';
 import { generateCardSvg } from '@/lib/svg-generation';
 import { getSvgGenerationModel } from '@/lib/svg-models';
 
@@ -129,13 +131,27 @@ export async function POST(request: Request) {
     const cardId = nanoid(10);
     const startTime = Date.now();
 
-    // Create initial API log entry with pending status
+    // Read the brief before designing anything: which emotional register is
+    // this sender in, and what exactly should the card say and look like?
+    // A modification keeps the previous card's read; the feedback is the brief.
+    const variationIndex = Number(defaultFields.variationIndex) || 0;
+    const seed = (hashSeed(cardId) + variationIndex * 97) % 1000;
+    const direction: CardDirection | undefined = isModification
+      ? undefined
+      : await directCard({
+          brief: buildPersonalizationBrief(requestData, defaultFields.cardType),
+          medium: format,
+          seed,
+        });
+
+    // Create initial API log entry with pending status. The read is stored
+    // beside the inputs so the stats page shows why a card looks the way it does.
     await prisma.apiLog.create({
       data: {
         userId,
         cardId,
         cardType: defaultFields.cardType,
-        userInputs: requestData,
+        userInputs: direction ? { ...requestData, _direction: direction } : requestData,
         promptVersion: format === 'image' ? 'image' : format === 'video' ? 'video' : 'svg',
         responseContent: '',
         tokensUsed: 0,
@@ -147,30 +163,15 @@ export async function POST(request: Request) {
 
     // Before generating card, create the proper params object.
     const styleSegment = (() => {
-      // Only apply style presets to static images; SVG/video keep backend-driven phrasing
-      if (format !== 'image') return '';
+      // Only apply style presets to static images; SVG/video keep backend-driven phrasing.
+      // With no explicit choice the register's own style family leads — a random
+      // preset would fight the read (pixel art on a pleading apology).
+      if (format !== 'image' || !styleId) return '';
 
-      let targetStyleId = styleId;
-      // Random style logic: if no style selected for image, pick one randomly
-      if (!targetStyleId) {
-        const availableStyles = stylePresets.filter(p => p.formats.includes('image') && p.prompts.image);
-        if (availableStyles.length > 0) {
-          const randomStyle = availableStyles[Math.floor(Math.random() * availableStyles.length)];
-          targetStyleId = randomStyle.id;
-          // output log for debugging
-          // console.log(`[Auto-Style] Selected random style: ${randomStyle.name} (${randomStyle.id})`);
-        }
-      }
-
-      if (!targetStyleId) return '';
-
-      const preset = stylePresets.find(p => p.id === targetStyleId);
+      const preset = stylePresets.find(p => p.id === styleId);
       if (!preset) return '';
       const promptForFmt = preset.prompts?.image;
-
-      // If random, we might want to tell the prompt it was an artistic choice, or just treat it normally.
-      // Treating it normally works best.
-      return promptForFmt ? ` Style preset: ${promptForFmt}.` : '';
+      return promptForFmt ? ` Style preset requested by the sender (blend it into the read's palette and world): ${promptForFmt}.` : '';
     })();
 
     // Advanced options segment (optional)
@@ -192,7 +193,7 @@ export async function POST(request: Request) {
 
     const basePrompt = isModification
       ? modificationFeedback
-      : createNaturalPrompt(requestData, defaultFields.cardType, { size: defaultFields.size || 'portrait', medium: format });
+      : createNaturalPrompt(requestData, defaultFields.cardType, { size: defaultFields.size || 'portrait', medium: format, direction, seed });
 
     const finalPrompt = `${basePrompt}${styleSegment}${advancedSegment}`.trim();
 
@@ -200,6 +201,7 @@ export async function POST(request: Request) {
       cardType: defaultFields.cardType,
       size: defaultFields.size || 'portrait', // Add a default size if not provided
       userPrompt: finalPrompt,
+      direction,
       // Only include these if it's a modification request
       ...(isModification && {
         modificationFeedback,
@@ -213,8 +215,8 @@ export async function POST(request: Request) {
       let result;
       // If reference images are provided, use gpt-image-2 edits API.
       if (format === 'image' && Array.isArray(referenceImageUrls) && referenceImageUrls.length > 0) {
-        const basePromptRef = createNaturalPrompt(requestData, defaultFields.cardType, { size: defaultFields.size || 'portrait', medium: 'image' });
-        const likeness = buildReferenceEditPrompt(requestData, defaultFields.cardType, { size: defaultFields.size || 'portrait' });
+        const basePromptRef = createNaturalPrompt(requestData, defaultFields.cardType, { size: defaultFields.size || 'portrait', medium: 'image', direction, seed });
+        const likeness = buildReferenceEditPrompt(requestData, defaultFields.cardType, { size: defaultFields.size || 'portrait', direction });
         const prompt = `${basePromptRef}${styleSegment}${advancedSegment} ${likeness}`.slice(0, 5000);
         result = await generateCardImageWithGptImage2Edit({ size: defaultFields.size || 'portrait', userPrompt: prompt, imageUrls: referenceImageUrls });
       } else if (format === 'image') {

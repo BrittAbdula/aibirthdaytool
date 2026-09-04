@@ -1,644 +1,214 @@
-type OutputMedium = 'image' | 'svg' | 'video';
+/**
+ * Renders a brief plus its read into the user prompt for each medium.
+ *
+ * The read (CardDirection) carries the register, the palette, the world and
+ * the exact text to set; this module turns it into prose for the SVG model,
+ * the image model and the video model.
+ */
 
-export interface PersonalizationBrief {
-  cardType: string;
-  relationship: string;
-  recipientName: string;
-  message: string;
-  signed: string;
-  tone: string;
-  design: string;
-  customDesign: string;
-  yearsTogether: string;
-  age: string;
-  cardRequirements: string;
-  sharedMemory: string;
-  recipientTraits: string[];
-  relationshipVibe: string;
-  insideJokeOrMotif: string;
-  avoidDetails: string;
-  additionalDetails: string[];
-}
+import { buildPersonalizationBrief, type PersonalizationBrief } from './card-brief';
+import { describeDirection, inferDirectionHeuristically, hashSeed, type CardDirection, type CardMedium } from './emotion-director';
+import { getRegister } from './emotion-registers';
+
+export type { PersonalizationBrief } from './card-brief';
+export { buildPersonalizationBrief } from './card-brief';
 
 interface PromptOptions {
   size?: string;
-  medium?: OutputMedium;
+  medium?: CardMedium;
+  /** The director's read. When absent, a heuristic read is used so the prompt still has a register. */
+  direction?: CardDirection;
+  seed?: number;
 }
 
-const EXCLUDED_EXTRA_FIELDS = new Set([
-  'to',
-  'relationship',
-  'recipientName',
-  'message',
-  'signed',
-  'senderName',
-  'design',
-  'customDesign',
-  'design_custom',
-  'yearsTogether',
-  'age',
-  'cardRequirements',
-  'tone',
-  'sharedMemory',
-  'recipientTraits',
-  'relationshipVibe',
-  'insideJokeOrMotif',
-  'avoidDetails',
-  'size',
-  'modelId',
-  'styleId',
-  'outputFormat',
-  'imageCount',
-  'referenceImageUrls',
-  'animationSpeed',
-  'loop',
-  'styleStrength',
-  'duration',
-  'variationIndex',
-  'isPublic',
-]);
+const IMAGE_PROMPT_LIMIT = 4800;
+const VIDEO_PROMPT_LIMIT = 4200;
+const MESSAGE_CONTEXT_LIMIT = 1600;
 
-const toneMapping: Record<string, { style: string; philosophy: string; animation: string }> = {
-  humor: {
-    style: 'whimsical, playful, light-hearted yet sophisticated with delightful surprises',
-    philosophy: 'Laughter connects souls; find the gentle humor that brings warmth',
-    animation: 'bouncy but restrained motion with one delightful reveal',
-  },
-  surprise: {
-    style: 'dynamic, vibrant, celebratory with moments of wonder and discovery',
-    philosophy: 'The best surprises reveal what we always hoped was true',
-    animation: 'soft reveals and elements that emerge with anticipation',
-  },
-  touching: {
-    style: 'deeply emotional, tender, intimate with soft atmospheric quality',
-    philosophy: 'True emotion needs no excess; let the visuals speak to the heart',
-    animation: 'breathing rhythms, gentle heartbeat pulses, slow graceful movements',
-  },
-  romantic: {
-    style: 'sensual, warm, intimate with dreamy soft-focus quality',
-    philosophy: 'Love is seeing someone fully and choosing them',
-    animation: 'intertwining elements, synchronized movement, magnetic attraction',
-  },
-  nostalgic: {
-    style: 'warm sepia-tinted, memory-like, bittersweet beauty',
-    philosophy: 'Memories are how love defeats time; honor the past while celebrating now',
-    animation: 'gentle fades and floating drift like memories surfacing',
-  },
-  hopeful: {
-    style: 'bright, ascending, dawn-like with emerging light',
-    philosophy: 'Hope is courage in the face of uncertainty; show light breaking through',
-    animation: 'upward motion, gradual brightening, unfurling growth',
-  },
-  grateful: {
-    style: 'warm, grounded, rich earth tones with golden light',
-    philosophy: 'Gratitude transforms what we have into enough; show abundance in simplicity',
-    animation: 'gentle blooming, warming glow, assembling elements',
-  },
-};
-
-const relationshipEmotions: Record<string, string> = {
-  mom: 'Honor the quiet sacrifices of maternal love: hands that held, arms that comforted.',
-  mother: 'Honor the quiet sacrifices of maternal love: hands that held, arms that comforted.',
-  dad: 'Celebrate steadfast presence: the silent strength that shapes who we become.',
-  father: 'Celebrate steadfast presence: the silent strength that shapes who we become.',
-  friend: 'True friendship is chosen family: souls that recognized each other.',
-  partner: 'Two people choosing each other again and again: love as a daily decision.',
-  wife: 'The miracle of being truly known and loved anyway.',
-  husband: 'The miracle of being truly known and loved anyway.',
-  child: 'Each child rewrites possibility: pure potential wrapped in wonder.',
-  grandparent: 'Living bridges to our history: wisdom and unconditional love.',
-  sibling: 'Shared childhood and parallel journeys: the first friends we ever had.',
-  colleague: 'Recognize the person behind the role with warmth and respect.',
-  myself: 'Self-compassion is the foundation of all love; this deserves celebration.',
-};
-
-const messageContextDeep: Record<string, { emotion: string; visual: string }> = {
-  sorry: {
-    emotion: 'the courage of vulnerability, the hope for reconciliation, regret transformed into bridge-building',
-    visual: 'mending, bridges forming, light returning after storm, hands reaching across gaps',
-  },
-  birthday: {
-    emotion: 'another year of existence as a miracle; celebrate not just age but the gift of being alive',
-    visual: 'rising elements, life force glowing, cycles of renewal, wishes taking flight',
-  },
-  'thank-you': {
-    emotion: 'gratitude as recognition of grace in others',
-    visual: 'blooming flowers, light emerging, hands giving and receiving, seeds of kindness sprouting',
-  },
-  congratulations: {
-    emotion: 'achievement witnessed and joy shared',
-    visual: 'ascending paths, stars rising, doors opening, peaks reached, light bursting forth',
-  },
-  love: {
-    emotion: 'love as seeing someone fully and choosing them',
-    visual: 'intertwining elements, hearts as vessels, magnetic attraction, two becoming constellation',
-  },
-  'get-well': {
-    emotion: 'healing witnessed with comfort and hope',
-    visual: 'warm light breaking through, gentle embrace, new growth after rain, protective warmth',
-  },
-  graduation: {
-    emotion: 'threshold crossing; effort honored while possibility opens ahead',
-    visual: 'doors opening, paths ascending, light at horizon, wings unfurling',
-  },
-  wedding: {
-    emotion: 'two people choosing to build a world together',
-    visual: 'rings interlinked, flames merging, roots intertwining, two paths becoming one',
-  },
-  holiday: {
-    emotion: 'traditions connecting us across time',
-    visual: 'gathering lights, warm hearth, circles of connection, seasonal magic',
-  },
-  anniversary: {
-    emotion: 'love as a choice made every day',
-    visual: 'intertwined paths, tree rings marking years, two moons in eternal dance',
-  },
-  baby: {
-    emotion: 'new life as pure possibility',
-    visual: 'stars being born, dawn breaking, seeds sprouting, delicate new leaves',
-  },
-};
-
-const motifsMapEnhanced: Record<string, { motifs: string; mood: string }> = {
-  birthday: {
-    motifs: 'gentle candle flames as life force, floating wishes like stars, elegant balloons ascending, soft celebration particles',
-    mood: "joyful wonder with a touch of time's preciousness",
-  },
-  anniversary: {
-    motifs: 'intertwined paths or ribbons, warm golden light, two elements in harmony, rings or circles of continuity',
-    mood: 'deep gratitude, the comfort of being truly known',
-  },
-  valentine: {
-    motifs: 'hearts as vessels rather than cliches, silk ribbons, soft rose petals drifting, warm intimate glow',
-    mood: 'romantic intimacy, the vulnerability of love',
-  },
-  love: {
-    motifs: 'two elements in gravitational dance, ethereal glow, intertwined forms, magnetic attraction visualized',
-    mood: 'devotion, the miracle of choosing and being chosen',
-  },
-  'thank-you': {
-    motifs: 'blooming florals, light emerging from darkness, hands in gesture of giving, seeds transforming',
-    mood: 'humble gratitude, recognition of grace',
-  },
-  congratulations: {
-    motifs: 'ascending elements, stars rising, paths reaching peaks, light breaking through, triumphant arcs',
-    mood: 'earned pride, boundless possibility',
-  },
-  'get-well': {
-    motifs: 'warm light breaking through clouds, gentle protective embrace, new growth, soothing natural elements',
-    mood: 'tender care, quiet strength, gentle hope',
-  },
-  graduation: {
-    motifs: 'doors opening, paths ascending toward light, wings unfurling, threshold symbols',
-    mood: 'achievement honored, future embraced',
-  },
-  wedding: {
-    motifs: 'two flames becoming one, interlinked rings, roots growing together, white florals with golden light',
-    mood: 'sacred joy, lasting promise',
-  },
-  holiday: {
-    motifs: 'gathering warm lights, cozy glowing elements, seasonal magic, circles of connection',
-    mood: 'warmth of belonging, comfort of tradition',
-  },
-  baby: {
-    motifs: 'soft clouds and stars, gentle dawn colors, tiny precious elements, nurturing embrace shapes',
-    mood: 'pure wonder, tender new beginning',
-  },
-  sorry: {
-    motifs: 'bridge forming across gap, light returning after storm, gentle rain washing clean, hands reaching',
-    mood: 'humble hope, the courage of vulnerability',
-  },
-};
-
-export function buildPersonalizationBrief(formData: any, cardType: string): PersonalizationBrief {
-  const base = (formData?.formData ?? formData ?? {}) as Record<string, unknown>;
-  const relationship = stringValue(base.to || base.relationship);
-  const signed = stringValue(base.signed || base.senderName);
-  const customDesign = stringValue(base.customDesign || base.design_custom);
-
-  return {
-    cardType,
-    relationship,
-    recipientName: stringValue(base.recipientName),
-    message: stringValue(base.message),
-    signed,
-    tone: stringValue(base.tone).toLowerCase(),
-    design: stringValue(base.design),
-    customDesign,
-    yearsTogether: stringValue(base.yearsTogether),
-    age: stringValue(base.age),
-    cardRequirements: stringValue(base.cardRequirements),
-    sharedMemory: stringValue(base.sharedMemory),
-    recipientTraits: normalizeTraits(base.recipientTraits),
-    relationshipVibe: stringValue(base.relationshipVibe),
-    insideJokeOrMotif: stringValue(base.insideJokeOrMotif),
-    avoidDetails: stringValue(base.avoidDetails),
-    additionalDetails: collectAdditionalDetails(base),
-  };
-}
-
-export function createNaturalPrompt(
-  formData: any,
-  cardType: string,
-  opts?: PromptOptions
-): string {
+export function createNaturalPrompt(formData: any, cardType: string, opts?: PromptOptions): string {
   const size = opts?.size || 'portrait';
   const medium = opts?.medium || 'image';
   const brief = buildPersonalizationBrief(formData, cardType);
-  const toneConfig = getToneConfig(brief.tone);
-  const messageContext = messageContextDeep[cardType] || {
-    emotion: 'heartfelt sentiment rooted in the sender and recipient',
-    visual: 'elegant thematic elements that serve the emotional core',
-  };
-  const motifsConfig = motifsMapEnhanced[cardType] || {
-    motifs: 'tasteful, meaningful thematic elements that serve the emotional core',
-    mood: 'elegant and heartfelt',
-  };
+  const direction = opts?.direction || inferDirectionHeuristically(brief, opts?.seed ?? hashSeed(JSON.stringify(brief)));
+
+  if (medium === 'svg') return buildSvgPrompt(brief, direction, size);
+  if (medium === 'video') return buildVideoPrompt(brief, direction, size).slice(0, VIDEO_PROMPT_LIMIT);
+  return buildImagePrompt(brief, direction, size).slice(0, IMAGE_PROMPT_LIMIT);
+}
+
+/** Likeness instructions appended when the sender uploaded reference photos. */
+export function buildReferenceEditPrompt(formData: any, cardType: string, opts?: { size?: string; direction?: CardDirection }): string {
+  const brief = buildPersonalizationBrief(formData, cardType);
+  const direction = opts?.direction || inferDirectionHeuristically(brief, hashSeed(JSON.stringify(brief)));
+  const register = getRegister(direction.register);
+  const size = opts?.size || 'portrait';
+  const orientationLine =
+    size === 'landscape'
+      ? 'Use a balanced horizontal composition.'
+      : size === 'square' || size === 'instagram'
+        ? 'Use a centered, balanced square composition.'
+        : 'Use a balanced vertical composition.';
+
+  return [
+    'Create a high-quality, elegant transformation of the reference photo.',
+    'Keep the subject clearly recognizable (face geometry, hairstyle, skin tone, accessories).',
+    'Preserve the main clothing colours and patterns but refine them for a premium look.',
+    'Make the subject the star; place them inside the world described above.',
+    'Subject scale: 65-85% of canvas.',
+    orientationLine,
+    `Background and mood: ${direction.world} Rendered as ${register.imageStyle}.`,
+    `Palette: ground ${direction.palette.ground}, ink ${direction.palette.ink}, accent ${direction.palette.accent}, accent2 ${direction.palette.accent2}; tints and shades only.`,
+    'Extend the background to the edges (full-bleed, opaque).',
+    direction.spark ? `Hidden detail: ${direction.spark}.` : '',
+    direction.avoid.length ? `Avoid: ${direction.avoid.join(', ')}.` : '',
+    'NO text. NO white borders. NO letterboxing.',
+    'Respect the reference pose. No watermarks or logos.',
+  ]
+    .filter(Boolean)
+    .join(' ');
+}
+
+// ---------------------------------------------------------------------------
+// SVG
+// ---------------------------------------------------------------------------
+
+function buildSvgPrompt(brief: PersonalizationBrief, direction: CardDirection, size: string): string {
+  return [
+    'THE BRIEF',
+    describeBrief(brief, size),
+    '',
+    'THE READ (art direction — obey it, improvise inside the register for the rest)',
+    describeDirection(direction),
+    '',
+    fullMessageContext(brief, direction),
+    'Return only the SVG.',
+  ]
+    .filter((part) => part !== null)
+    .join('\n')
+    .trim();
+}
+
+// ---------------------------------------------------------------------------
+// Image
+// ---------------------------------------------------------------------------
+
+function buildImagePrompt(brief: PersonalizationBrief, direction: CardDirection, size: string): string {
+  const register = getRegister(direction.register);
+  const orientation =
+    size === 'landscape'
+      ? 'landscape orientation, cinematic depth and horizontal flow'
+      : size === 'square' || size === 'instagram'
+        ? 'square layout with intentional balance'
+        : 'portrait orientation with a clear focal point and breathing room';
+
+  const lettering = buildImageLettering(direction);
 
   const sections = [
-    buildOpeningSection(brief, medium, toneConfig),
-    buildRecipientSection(brief, medium),
-    buildMemorySection(brief),
-    buildMessageSection(brief, medium, messageContext),
-    buildMilestoneSection(brief),
-    buildVisualSection(brief, medium, toneConfig, motifsConfig),
-    buildCompositionSection(size),
-    buildMediumSection(brief, medium, toneConfig),
-    buildAvoidanceSection(brief),
-    'Final quality: Pristine, no watermarks, no artifacts. A gift worth giving.',
+    `Creative intent: a ${brief.cardType} greeting-card image that catches one specific person's mood. ${direction.read}`,
+    `Recipient: ${describeRecipient(brief)}${brief.signed ? ` From ${brief.signed}.` : ''}`,
+    `Sender's voice: ${direction.voice}`,
+    `Register: ${register.name} — ${register.feeling}`,
+    `Style family: ${register.imageStyle}.`,
+    `World: ${direction.world} Story, frozen at its peak: ${direction.arc}`,
+    `Palette "${direction.palette.name}": ground ${direction.palette.ground}, ink ${direction.palette.ink}, accent ${direction.palette.accent}, accent2 ${direction.palette.accent2}. Use these and their tints and shades only. ${direction.palette.note}`,
+    `Composition: ${direction.composition} ${orientation}. One clear protagonist at 65-85% of the canvas, generous breathing room, deliberate asymmetry unless the register is ceremonial.`,
+    `Material and light: ${direction.texture}. One light source, obeyed by every shadow.`,
+    lettering,
+    `Hidden detail only they would catch: ${direction.spark}`,
+    brief.cardRequirements ? `Specific requests: ${brief.cardRequirements}.` : '',
+    brief.additionalDetails.length ? `Additional details: ${brief.additionalDetails.join(' ')}` : '',
+    `Avoid: ${[...direction.avoid, 'watermarks', 'logos', 'visual artifacts', 'awkward empty margins', 'stock-card composition'].join(', ')}.`,
+    'Full-bleed, edge-to-edge, fully opaque; no borders, no letterboxing. Pristine finish — a gift worth giving.',
   ];
 
   return sections.filter(Boolean).join('\n\n').trim();
 }
 
-export function buildReferenceEditPrompt(
-  formData: any,
-  cardType: string,
-  opts?: { size?: string }
-): string {
-  const brief = buildPersonalizationBrief(formData, cardType);
-  const toneStyle = brief.tone.includes('humor')
-    ? 'whimsical, playful, light-hearted'
-    : brief.tone.includes('surprise')
-      ? 'dynamic, vibrant, celebratory'
-      : brief.tone.includes('touching')
-        ? 'deeply emotional, tender, heartwarming, atmospheric'
-        : 'elegant, polished, and welcoming';
+function buildImageLettering(direction: CardDirection): string {
+  const parts: string[] = [];
+  if (direction.headline) parts.push(`the headline "${direction.headline}" in ${direction.type.display}`);
+  const shortLine = direction.lines.find((line) => line.length <= 70);
+  if (shortLine) parts.push(`one line "${shortLine}" in ${direction.type.body}`);
+  if (direction.closing) parts.push(`the sign-off "${direction.closing}" small, like a real signature`);
+  if (!parts.length) return 'No lettering; let the image carry the feeling.';
+  return `Lettering, spelled exactly as written (keep emoji, elongated words and non-English words untouched): ${parts.join('; ')}. ${direction.type.treatment}. No other text anywhere in the image.`;
+}
 
-  const motifsMap: Record<string, string> = {
-    birthday: 'elegant balloons, soft confetti, streamers, cake',
-    anniversary: 'romantic lighting, roses, gold accents',
-    valentine: 'petals, soft pinks and reds, intimate glow',
-    love: 'warm glow, soft romantic symbols',
-    'thank-you': 'botanicals, fresh flowers',
-    congratulations: 'stars, sparkles, confetti',
-    'get-well': 'soothing nature elements',
-    graduation: 'mortarboard, scroll, gold details',
-    wedding: 'floral arrangements, lace, rings',
-    holiday: 'seasonal decor, lights, cozy atmosphere',
-    baby: 'soft toys, clouds, stars',
-    sorry: 'peaceful, muted tones',
+// ---------------------------------------------------------------------------
+// Video
+// ---------------------------------------------------------------------------
+
+function buildVideoPrompt(brief: PersonalizationBrief, direction: CardDirection, size: string): string {
+  const register = getRegister(direction.register);
+  const tempoCamera: Record<CardDirection['motion']['tempo'], string> = {
+    still: 'a locked camera with one almost imperceptible drift',
+    slow: 'a very slow push-in, nothing else',
+    steady: 'a gentle parallax drift',
+    lively: 'a slow push-in with one soft reveal',
+    bouncy: 'a static frame that lets the elements do the moving',
   };
-  const motifs = motifsMap[cardType] || 'festive, elegant thematic elements';
-  const paletteLine = getPaletteLine(brief);
-  const size = opts?.size || 'portrait';
-  const orientationLine = size === 'landscape'
-    ? 'Use a balanced horizontal composition.'
-    : size === 'square'
-      ? 'Use a centered, balanced square composition.'
-      : 'Use a balanced vertical composition.';
 
   return [
-    'Create a high-quality, elegant transformation.',
-    'Keep the subject clearly recognizable (face geometry, hairstyle, skin tone, accessories).',
-    'Preserve main clothing colors/patterns but refine them for a premium look.',
-    'Make the subject the star; place on a subtle, aesthetic base if needed.',
-    'Subject scale: 65-85% of canvas.',
-    orientationLine,
-    `Background: ${motifs} matching the ${toneStyle} mood. Extend background to edges (full-bleed, opaque).`,
-    brief.sharedMemory ? `Subtle personal cue: ${brief.sharedMemory}.` : '',
-    brief.insideJokeOrMotif ? `Personal motif: ${brief.insideJokeOrMotif}.` : '',
-    paletteLine,
-    brief.avoidDetails ? `Avoid: ${brief.avoidDetails}.` : '',
-    'NO text. NO white borders. NO letterboxing.',
-    'Render as a polished, high-definition 2D illustration (or photorealistic if appropriate) with cohesive color grading, soft cinematic lighting, and depth.',
-    'Respect the reference pose.',
-    'No watermarks/logos. Best quality, 8k, masterpiece.',
-  ].filter(Boolean).join(' ');
-}
-
-function buildOpeningSection(
-  brief: PersonalizationBrief,
-  medium: OutputMedium,
-  toneConfig: { philosophy: string }
-): string {
-  if (medium === 'svg') {
-    return `Creative intent: Create a deeply moving ${brief.cardType} card that touches the heart. ${toneConfig.philosophy}.`;
-  }
-  if (medium === 'image') {
-    return `Creative intent: Create a masterpiece ${brief.cardType} greeting card visual of award-winning quality. The image should feel personal, elegant, and emotionally specific.`;
-  }
-  return `Creative intent: Create a personalized ${brief.cardType} video card with emotional pacing.`;
-}
-
-function buildRecipientSection(brief: PersonalizationBrief, medium: OutputMedium): string {
-  const lines = ['Recipient context:'];
-  if (brief.relationship && brief.recipientName) {
-    const relationship = brief.relationship.toLowerCase() === 'myself'
-      ? 'myself'
-      : `my ${brief.relationship.toLowerCase()}`;
-    lines.push(`This is for ${relationship}, ${brief.recipientName}.`);
-  } else if (brief.recipientName) {
-    lines.push(`This is for ${brief.recipientName}.`);
-  }
-
-  if (medium === 'svg' && brief.relationship) {
-    const relationshipKey = Object.keys(relationshipEmotions).find(key =>
-      brief.relationship.toLowerCase().includes(key)
-    );
-    if (relationshipKey) lines.push(relationshipEmotions[relationshipKey]);
-  }
-
-  if (brief.signed && medium !== 'image') {
-    lines.push(`From ${brief.signed}; infuse personal warmth into the design.`);
-  }
-
-  return lines.length > 1 ? lines.join(' ') : '';
-}
-
-function buildMemorySection(brief: PersonalizationBrief): string {
-  const lines = ['Memory and personality:'];
-  if (brief.sharedMemory) lines.push(`Shared memory: ${brief.sharedMemory}.`);
-  if (brief.recipientTraits.length) lines.push(`Recipient traits: ${brief.recipientTraits.join(', ')}.`);
-  if (brief.relationshipVibe) lines.push(`Relationship vibe: ${brief.relationshipVibe}.`);
-  if (brief.insideJokeOrMotif) lines.push(`Personal motif: ${brief.insideJokeOrMotif}.`);
-  return lines.length > 1 ? lines.join(' ') : '';
-}
-
-function buildMessageSection(
-  brief: PersonalizationBrief,
-  medium: OutputMedium,
-  context: { emotion: string; visual: string }
-): string {
-  const lines = ['Message intent:'];
-  if (brief.message) {
-    lines.push(`Core message: "${brief.message}".`);
-  }
-
-  if (medium === 'svg') {
-    lines.push(`Emotional essence: ${context.emotion}.`);
-    lines.push(`Translate this into visual metaphor: ${context.visual}.`);
-  } else if (medium === 'image') {
-    lines.push(`Transform the sentiment into rich visual storytelling with emotional depth.`);
-  }
-
-  return lines.join(' ');
-}
-
-function buildMilestoneSection(brief: PersonalizationBrief): string {
-  const lines = ['Milestone context:'];
-  if (brief.yearsTogether) {
-    const yearsNum = parseInt(brief.yearsTogether);
-    if (yearsNum >= 25) {
-      lines.push(`Celebrating ${brief.yearsTogether} remarkable years together: a testament to enduring love.`);
-    } else if (yearsNum >= 10) {
-      lines.push(`Honoring ${brief.yearsTogether} years of choosing each other: a decade of shared life.`);
-    } else {
-      lines.push(`Marking ${brief.yearsTogether} years together: each year a chapter in an ongoing story.`);
-    }
-  }
-
-  if (brief.age) {
-    const ageNum = parseInt(brief.age);
-    if (ageNum >= 80) {
-      lines.push(`A life of ${brief.age} years: rich with wisdom, stories, and love given.`);
-    } else if (ageNum >= 50) {
-      lines.push(`${brief.age} years of living, learning, and loving: a milestone worth celebrating deeply.`);
-    } else if (ageNum <= 10) {
-      lines.push(`${brief.age} years young: all of life's wonder still ahead.`);
-    } else {
-      lines.push(`Celebrating ${brief.age} years.`);
-    }
-  }
-
-  return lines.length > 1 ? lines.join(' ') : '';
-}
-
-function buildVisualSection(
-  brief: PersonalizationBrief,
-  medium: OutputMedium,
-  toneConfig: { style: string; animation: string },
-  motifsConfig: { motifs: string; mood: string }
-): string {
-  const lines = ['Visual direction:'];
-  if (toneConfig.style) lines.push(`Overall mood: ${toneConfig.style}.`);
-  const paletteLine = getPaletteLine(brief);
-  if (paletteLine) lines.push(paletteLine);
-  if (brief.cardRequirements) lines.push(`Specific requests: ${brief.cardRequirements}.`);
-  if (brief.additionalDetails.length) lines.push(`Additional details: ${brief.additionalDetails.join(' ')}`);
-
-  if (medium === 'svg') {
-    lines.push(`Visual metaphors to consider: ${motifsConfig.motifs}.`);
-    lines.push(`Emotional atmosphere: ${motifsConfig.mood}.`);
-    lines.push(`Animation spirit: ${toneConfig.animation}.`);
-  } else {
-    lines.push(`Use elegant motifs: ${motifsConfig.motifs}.`);
-  }
-
-  return lines.join(' ');
-}
-
-function buildCompositionSection(size: string): string {
-  if (size === 'portrait' || size === 'story') {
-    return 'Composition: portrait orientation with a clear focal point and visual breathing room.';
-  }
-  if (size === 'landscape') {
-    return 'Composition: landscape orientation with cinematic depth and horizontal flow.';
-  }
-  return 'Composition: square layout, centered with intentional balance.';
-}
-
-/**
- * Named style families — each is a coherent print/illustration language a real
- * studio could ship, instead of the generic "high-end digital art" soup.
- */
-const STYLE_FAMILIES: Record<string, { name: string; direction: string }> = {
-  humor: {
-    name: 'riso-print poster',
-    direction:
-      'Two-to-three ink risograph print: flat shapes with slight mis-registration, visible paper grain, one loud accent color, bold hand-lettered display type. Playful through composition and wit, never through clutter.',
-  },
-  surprise: {
-    name: 'paper-collage diorama',
-    direction:
-      'Cut-paper collage with layered depth: torn edges, real cast shadows between layers, a pop of metallic foil paper on one element. The composition should feel hand-assembled, slightly imperfect, full of intention.',
-  },
-  touching: {
-    name: 'gouache storybook',
-    direction:
-      'Soft gouache illustration on cold-press paper: visible brush texture, muted grounds with one warm accent, dappled single-source light. Intimate scale — one quiet scene, not a collage of symbols.',
-  },
-  romantic: {
-    name: 'golden-hour still',
-    direction:
-      'A single cinematic frame: low warm sun, long soft shadows, shallow depth of field on one meaningful subject. Kodak-portra color grade — honey highlights, gentle teal shadows. Restraint over sweetness.',
-  },
-  nostalgic: {
-    name: 'faded letterpress keepsake',
-    direction:
-      'Letterpress-and-linocut keepsake: pressed ink texture, slightly uneven impression, sun-faded palette (cream, sepia, one dusty accent), generous margins like an old broadside poster.',
-  },
-  hopeful: {
-    name: 'watercolor dawn',
-    direction:
-      'Loose watercolor washes bleeding wet-into-wet: dawn gradient ground, crisp small focal subject in fine ink line, plenty of untouched paper as light. The white of the page does half the work.',
-  },
-  grateful: {
-    name: 'botanical plate',
-    direction:
-      'Modern botanical print: precise, loving linework of plants/objects tied to the message, warm earth palette with a breath of gold, composed like a museum plate with a typographic caption block.',
-  },
-};
-
-const DEFAULT_FAMILY = {
-  name: 'modern letterpress',
-  direction:
-    'Modern letterpress print: disciplined 2–3 ink palette, strong typographic hierarchy, paper grain, one embossed or foil detail. The words carry the card; the image frames them.',
-};
-
-function getStyleFamily(tone: string) {
-  const key = Object.keys(STYLE_FAMILIES).find(k => tone.includes(k));
-  return key ? STYLE_FAMILIES[key] : DEFAULT_FAMILY;
-}
-
-function buildSparkLine(brief: PersonalizationBrief): string {
-  const seeds = [
-    brief.insideJokeOrMotif && `the inside joke/motif ("${brief.insideJokeOrMotif}")`,
-    brief.sharedMemory && `the shared memory ("${brief.sharedMemory}")`,
-    brief.age && `their age (${brief.age}) — e.g., that many stars, candles, or rings`,
-    brief.yearsTogether && `the ${brief.yearsTogether} years together`,
-    brief.recipientName && `the initial "${brief.recipientName.charAt(0).toUpperCase()}"`,
-  ].filter(Boolean) as string[];
-  const seedText = seeds.length
-    ? `Work in ONE hidden detail only they would catch, drawn from ${seeds[0]}${seeds[1] ? ` or ${seeds[1]}` : ''}.`
-    : 'Work in ONE small surprising detail that rewards a second look.';
-  return `The spark: ${seedText} Subtle, discoverable, never labeled.`;
-}
-
-function buildMediumSection(
-  brief: PersonalizationBrief,
-  medium: OutputMedium,
-  toneConfig: { animation: string }
-): string {
-  const family = getStyleFamily(brief.tone);
-
-  if (medium === 'image') {
-    const inscriptionParts: string[] = [];
-    if (brief.recipientName) inscriptionParts.push(`To ${brief.recipientName}`);
-    if (brief.signed) inscriptionParts.push(`from ${brief.signed}`);
-    const inscription = inscriptionParts.length
-      ? `Include a small, genuinely handwritten-looking inscription — "${inscriptionParts.join(', ')}" — placed where a person would write it, in an ink color pulled from the palette.`
-      : 'Rely on visual storytelling; any lettering must look hand-set, never default digital type.';
-
-    return [
-      'Image execution:',
-      `Style family: ${family.name}. ${family.direction}`,
-      'Full-bleed, edge-to-edge, fully opaque; no borders, no letterboxing.',
-      'One light source, obeyed by every shadow.',
-      'Palette discipline: 2–3 grounded colors + 1 accent; never candy-saturated everything.',
-      'Material texture must be visible: paper tooth, ink bleed, print grain, or brush stroke.',
-      'Composition: one clear protagonist at 65–85% of canvas, generous breathing room, deliberate asymmetry.',
-      buildSparkLine(brief),
-      inscription,
-    ].join(' ');
-  }
-
-  if (medium === 'svg') {
-    return [
-      'SVG execution:',
-      `Set the card like a ${family.name}: ${family.direction}`,
-      'Give the ground a real material (grain filter or displacement-softened washes) — never a flat hex fill.',
-      'Choreograph three beats: a one-time arrival (elements settle in, or the message draws itself on), then a single meditative looping signature animation, plus at most one whisper-quiet secondary motion.',
-      `Signature motion direction: ${toneConfig.animation}.`,
-      'If the card earns it, use one lit element — an embossed seal, foil-shimmer lettering — via SVG lighting/gradient animation.',
-      buildSparkLine(brief),
-    ].join(' ');
-  }
-
-  return [
-    'Video execution — direct it like a 6-second film, not a screensaver:',
-    `Art direction: ${family.name}. ${family.direction}`,
-    'Beat 1 (arrival): the scene assembles — light rises, elements drift into place, or a hand-drawn line completes.',
-    'Beat 2 (bloom): the single emotional peak — the flame catches, the petals release, the foil catches light. One peak only.',
-    'Beat 3 (settle): motion eases into a calm loopable idle; final frame is a composed card that could hold text.',
-    'Camera: one slow, deliberate move only (gentle push-in or parallax drift). No cuts, no shake, no whip pans.',
-    'Light behaves physically: one source, consistent shadows, warm practicals.',
+    `Direct a five-second greeting-card film for ${describeRecipient(brief)}. ${direction.read}`,
+    `Register: ${register.name} — ${register.feeling} Sender's voice: ${direction.voice}`,
+    `Art direction: ${register.imageStyle}. World: ${direction.world}`,
+    `Palette "${direction.palette.name}": ground ${direction.palette.ground}, ink ${direction.palette.ink}, accent ${direction.palette.accent}, accent2 ${direction.palette.accent2}; tints and shades only.`,
+    `Beat 1 (arrival): ${direction.motion.arrival}`,
+    `Beat 2 (peak): ${direction.arc}`,
+    `Beat 3 (settle): ${direction.motion.presence} The final frame is a composed card that could hold text.`,
+    `Tempo: ${direction.motion.tempo}. Camera: ${tempoCamera[direction.motion.tempo]}. No cuts, no shake, no whip pans.`,
+    `Material and light: ${direction.texture}. One light source, consistent shadows, warm practicals where they belong.`,
+    `Hidden detail only they would catch: ${direction.spark}`,
     'Must loop cleanly — first and last frames match in composition and tone.',
-    buildSparkLine(brief),
-  ].join(' ');
-}
-
-function buildAvoidanceSection(brief: PersonalizationBrief): string {
-  const defaults = [
-    'watermarks',
-    'logos',
-    'visual artifacts',
-    'awkward empty margins',
-    'generic stock-card composition',
-  ];
-  const line = brief.avoidDetails
-    ? `Avoid: ${brief.avoidDetails}. Also avoid ${defaults.join(', ')}.`
-    : `Avoid: ${defaults.join(', ')}.`;
-  return line;
-}
-
-function getToneConfig(tone: string) {
-  const toneKey = Object.keys(toneMapping).find(key => tone.includes(key)) || '';
-  return toneMapping[toneKey] || {
-    style: 'elegant, heartfelt, and emotionally resonant',
-    philosophy: 'Every card is a moment of connection between two people',
-    animation: 'subtle breathing motion and gentle presence',
-  };
-}
-
-function getPaletteLine(brief: PersonalizationBrief): string {
-  if (!brief.design) return '';
-  if (brief.design === 'custom') {
-    return brief.customDesign ? `Color palette: ${brief.customDesign}.` : '';
-  }
-  return `Color palette: ${brief.design}.`;
-}
-
-function normalizeTraits(value: unknown): string[] {
-  if (Array.isArray(value)) {
-    return value.map(item => stringValue(item)).filter(Boolean).slice(0, 3);
-  }
-
-  return stringValue(value)
-    .split(/[,|\n]/)
-    .map(item => item.trim())
+    `Avoid: ${[...direction.avoid, 'overlaid text', 'watermarks', 'logos'].join(', ')}.`,
+  ]
     .filter(Boolean)
-    .slice(0, 3);
+    .join('\n');
 }
 
-function collectAdditionalDetails(base: Record<string, unknown>): string[] {
-  const extras: string[] = [];
-  Object.entries(base).forEach(([key, value]) => {
-    if (EXCLUDED_EXTRA_FIELDS.has(key)) return;
-    if (value === null || value === undefined) return;
-    if (typeof value === 'string' && value.trim() === '') return;
-    if (typeof value === 'object') return;
-    const human = key.replace(/([a-z])([A-Z])/g, '$1 $2').replace(/[-_]/g, ' ').toLowerCase();
-    if (typeof value === 'boolean') {
-      if (value) extras.push(`Include ${human} element.`);
-    } else {
-      extras.push(`${human}: ${String(value)}.`);
-    }
-  });
-  return extras;
+// ---------------------------------------------------------------------------
+// Shared pieces
+// ---------------------------------------------------------------------------
+
+function describeRecipient(brief: PersonalizationBrief): string {
+  if (brief.relationship && brief.recipientName) {
+    const relationship = brief.relationship.toLowerCase() === 'myself' ? 'myself' : `my ${brief.relationship.toLowerCase()}`;
+    return `${relationship}, ${brief.recipientName}.`;
+  }
+  if (brief.recipientName) return `${brief.recipientName}.`;
+  if (brief.relationship) return `my ${brief.relationship.toLowerCase()}.`;
+  return 'someone dear.';
 }
 
-function stringValue(value: unknown): string {
-  if (value === null || value === undefined) return '';
-  return String(value).trim();
+function describeBrief(brief: PersonalizationBrief, size: string): string {
+  const lines = [
+    `- Occasion: ${brief.cardType}`,
+    `- For: ${describeRecipient(brief)}`,
+    brief.signed ? `- Signed: «${brief.signed}»` : '',
+    brief.age ? `- Age: ${brief.age}` : '',
+    brief.yearsTogether ? `- Years together: ${brief.yearsTogether}` : '',
+    brief.sharedMemory ? `- Shared memory: «${brief.sharedMemory}»` : '',
+    brief.insideJokeOrMotif ? `- Inside joke or motif: «${brief.insideJokeOrMotif}»` : '',
+    brief.recipientTraits.length ? `- Recipient traits: ${brief.recipientTraits.join(', ')}` : '',
+    brief.relationshipVibe ? `- Relationship vibe: ${brief.relationshipVibe}` : '',
+    brief.cardRequirements ? `- Specific requests: «${brief.cardRequirements}»` : '',
+    brief.design && brief.design !== 'custom' ? `- Requested design note: ${brief.design} (interpret it inside the read's palette)` : '',
+    brief.design === 'custom' && brief.customDesign ? `- Requested design note: ${brief.customDesign} (interpret it inside the read's palette)` : '',
+    brief.additionalDetails.length ? `- Other details: ${brief.additionalDetails.join(' ')}` : '',
+    `- Canvas: ${size}`,
+  ];
+  return lines.filter(Boolean).join('\n');
+}
+
+function fullMessageContext(brief: PersonalizationBrief, direction: CardDirection): string | null {
+  if (!brief.message) return null;
+  const message = brief.message.length > MESSAGE_CONTEXT_LIMIT ? `${brief.message.slice(0, MESSAGE_CONTEXT_LIMIT).trimEnd()} …` : brief.message;
+  const allSet = direction.lines.length && brief.message.length <= 320;
+  return [
+    allSet
+      ? 'FULL MESSAGE (for context; the lines above are the same words):'
+      : 'FULL MESSAGE (for context only — set the lines from THE READ, not this whole text):',
+    `«${message}»`,
+    '',
+  ].join('\n');
 }
