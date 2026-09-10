@@ -100,7 +100,7 @@ export const useCardGeneration = () => {
     
     // Get model config to determine format
     const modelConfig = await import('@/lib/model-config').then(m => m.getModelConfig(modelId));
-    const isVideoMode = modelConfig?.format === 'video';
+    const generationFormat = outputFormat || modelConfig?.format || 'image';
     
     // Initialize states with animation timer
     const initialImageStates: ImageState[] = Array.from({ length: imageCount }).map((_, index) => {
@@ -133,7 +133,7 @@ export const useCardGeneration = () => {
         isLoading: true,
         progress: 10, // Start at 10%
         error: null,
-        format: modelConfig?.format || 'image',
+        format: generationFormat,
         animationTimer: animationIntervalId, // Store timer ID
       };
     });
@@ -181,7 +181,7 @@ export const useCardGeneration = () => {
           const { cardId } = await response.json();
           let isCompleted = false;
           const startPollingTime = Date.now();
-          const maxPollingDuration = isVideoMode ? 300000 : 180000; // 300 seconds for video, 180 for image/svg
+          const maxPollingDuration = generationFormat === 'svg' ? 180000 : 300000;
 
           // Update the state with the generated cardId
           setImageStates(prev => {
@@ -212,6 +212,10 @@ export const useCardGeneration = () => {
             }
 
             const statusData = await statusResponse.json();
+            if (statusData.status === 'failed') {
+              throw new Error(statusData.errorMessage || 'Generation failed');
+            }
+            isCompleted = statusData.status === 'completed';
             
             // Update progress and state based on status
             setImageStates(prev => {
@@ -231,15 +235,8 @@ export const useCardGeneration = () => {
                 case 'completed': 
                   newProgress = 100; 
                   newIsLoading = false; 
-                  isCompleted = true; 
                   newUrl = statusData.r2Url || (statusData.responseContent ? `data:image/svg+xml;charset=utf-8,${encodeURIComponent(statusData.responseContent)}` : currentState.url);
                   newSvgContent = statusData.responseContent || currentState.svgContent;
-                  break;
-                case 'failed': 
-                  newProgress = 0; 
-                  newIsLoading = false; 
-                  newError = statusData.errorMessage || 'Generation failed'; 
-                  isCompleted = true; 
                   break;
               }
 

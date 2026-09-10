@@ -28,14 +28,14 @@ export const modelConfigs: ModelConfig[] = [
   {
     id: 'Free_Image',
     name: 'Basic Static',
-    description: 'High-quality static card images',
-    time: '5 sec',
+    description: '1K images with clear lettering and optional photo references',
+    time: 'May take a few minutes',
     format: 'image',
     tier: 'Free',
     credits: 6,
     icon: '🎨',
-    badge: 'Fast',
-    features: ['Static image', 'Quick delivery', 'Standard quality']
+    badge: null,
+    features: ['1K resolution', 'Clear lettering', 'Photo references']
   },
   {
     id: 'Premium_SVG',
@@ -52,14 +52,14 @@ export const modelConfigs: ModelConfig[] = [
   {
     id: 'Premium_Image',
     name: 'Pro Static',
-    description: 'Ultimate quality static cards with premium styling',
-    time: '10 sec',
+    description: '2K images for finer details, crisp lettering, and photo references',
+    time: 'May take a few minutes',
     format: 'image',
     tier: 'Premium',
     credits: 6,
     icon: '💎',
     badge: 'Premium',
-    features: ['Premium quality', 'Advanced styling', 'High resolution']
+    features: ['2K resolution', 'Clear lettering', 'Photo references']
   },
   {
     id: 'Premium_Video_Fast',

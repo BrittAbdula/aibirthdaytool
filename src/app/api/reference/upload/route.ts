@@ -15,8 +15,14 @@ export async function POST(request: Request) {
     const uploadPath = (formData.get('uploadPath') as string) || 'images/user-uploads'
     const fileName = (formData.get('fileName') as string) || undefined
 
-    if (!file) {
+    if (!(file instanceof File)) {
       return NextResponse.json({ success: false, code: 400, msg: 'Missing file' }, { status: 400 })
+    }
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+      return NextResponse.json({ success: false, code: 400, msg: 'Please upload a JPG, PNG, or WebP image.' }, { status: 400 })
+    }
+    if (file.size === 0 || file.size > 30 * 1024 * 1024) {
+      return NextResponse.json({ success: false, code: 400, msg: 'Please upload a non-empty image up to 30 MB.' }, { status: 400 })
     }
 
     const upstreamForm = new FormData()
@@ -43,4 +49,3 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: false, code: 500, msg: 'Internal server error' }, { status: 500 })
   }
 }
-

@@ -215,10 +215,11 @@ export async function POST(request: Request) {
       let result;
       // If reference images are provided, use gpt-image-2 edits API.
       if (format === 'image' && Array.isArray(referenceImageUrls) && referenceImageUrls.length > 0) {
-        const basePromptRef = createNaturalPrompt(requestData, defaultFields.cardType, { size: defaultFields.size || 'portrait', medium: 'image', direction, seed });
-        const likeness = buildReferenceEditPrompt(requestData, defaultFields.cardType, { size: defaultFields.size || 'portrait', direction });
-        const prompt = `${basePromptRef}${styleSegment}${advancedSegment} ${likeness}`.slice(0, 5000);
-        result = await generateCardImageWithGptImage2Edit({ size: defaultFields.size || 'portrait', userPrompt: prompt, imageUrls: referenceImageUrls });
+        const likeness = isModification
+          ? 'Apply the requested changes to the reference image. Preserve the subject, composition, and lettering unless the sender explicitly asks to change them.'
+          : buildReferenceEditPrompt(requestData, defaultFields.cardType, { size: defaultFields.size || 'portrait', direction });
+        const prompt = `${finalPrompt} ${likeness}`;
+        result = await generateCardImageWithGptImage2Edit({ size: defaultFields.size || 'portrait', userPrompt: prompt, imageUrls: referenceImageUrls }, modelLevel);
       } else if (format === 'image') {
         result = await generateCardImage(cardParams, modelLevel);
       } else if (format === 'video') {

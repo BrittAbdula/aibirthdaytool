@@ -1,6 +1,7 @@
 export const LEGACY_GPT_IMAGE_2_MODEL = 'gpt-image-2';
 export const GPT_IMAGE_2_MODEL = 'gpt-image-2-text-to-image';
 export const GPT_IMAGE_2_EDIT_MODEL = 'gpt-image-2-image-to-image';
+export const GPT_IMAGE_2_PROMPT_LIMIT = 20000;
 
 type GptImage2Quality = 'low' | 'medium' | 'high' | 'auto';
 type GptImage2AspectRatio = 'auto' | '1:1' | '9:16' | '16:9' | '4:3' | '3:4';
@@ -87,9 +88,18 @@ export async function requestGptImage2Edit(
   params: GptImage2EditParams,
   fetchImpl: typeof fetch = fetch
 ): Promise<GptImage2Result> {
-  const imageUrls = params.imageUrls.filter((url) => typeof url === 'string' && url.length > 0);
+  const imageUrls = params.imageUrls;
   if (!imageUrls.length) {
     throw new Error('No reference images provided');
+  }
+  if (imageUrls.length > 16 || imageUrls.some((url) => {
+    try {
+      return !['https:', 'http:'].includes(new URL(url).protocol);
+    } catch {
+      return true;
+    }
+  })) {
+    throw new Error('Provide up to 16 reference images using public HTTP or HTTPS URLs');
   }
 
   return createGptImage2Task(
@@ -136,6 +146,9 @@ export async function requestGptImage2Status(
 }
 
 export function normalizeGptImage2Status(data: any): NormalizedGptImage2Status {
+  if (data?.code !== undefined && Number(data.code) !== 200) {
+    throw new Error(`GPT Image 2 status unavailable: ${data.msg || data.code}`);
+  }
   const record = data?.data || data || {};
   const state = String(record?.state || record?.status || '').toLowerCase();
   const imageUrl = getFirstResultUrl(record);
@@ -182,6 +195,12 @@ async function createGptImage2Task(
   label: string,
   fetchImpl: typeof fetch
 ): Promise<GptImage2Result> {
+  if (typeof options.input.prompt !== 'string' || !options.input.prompt.trim()) {
+    throw new Error('An image prompt is required');
+  }
+  if (options.input.prompt.length > GPT_IMAGE_2_PROMPT_LIMIT) {
+    throw new Error(`Image prompt must be ${GPT_IMAGE_2_PROMPT_LIMIT} characters or fewer`);
+  }
   const { apiKey, baseUrl } = resolveRequestConfig(options);
   const body: Record<string, unknown> = {
     model: options.model,

@@ -32,7 +32,7 @@ import {
   parsePendingCardGeneration,
 } from '@/lib/pending-card-generation'
 
-const MagicalCardCreation = () => {
+const MagicalCardCreation = ({ format }: { format?: OutputFormat }) => {
   const [loadingText, setLoadingText] = useState("Weaving your magical words...");
   const [progress, setProgress] = useState(0);
   
@@ -123,6 +123,7 @@ const MagicalCardCreation = () => {
          {/* Loading Text */}
          <div className="mt-8 text-center space-y-2">
             <h3 className="text-xl font-caveat font-bold text-gray-800 animate-fade-in">{loadingText}</h3>
+            {format === 'image' && <p className="text-sm text-gray-600">Your image may take a few minutes. Keep this page open for the result.</p>}
             <div className="flex items-center justify-center gap-1">
                <span className="w-2 h-2 bg-warm-coral rounded-full animate-bounce delay-0"></span>
                <span className="w-2 h-2 bg-warm-coral rounded-full animate-bounce delay-150"></span>
@@ -389,6 +390,12 @@ export default function CardGenerator({
 
     setIsRefUploading(true)
     try {
+      if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+        throw new Error('Please upload a JPG, PNG, or WebP image.')
+      }
+      if (file.size === 0 || file.size > 30 * 1024 * 1024) {
+        throw new Error('Please upload a non-empty image up to 30 MB.')
+      }
       const fd = new FormData()
       fd.append('file', file)
       fd.append('uploadPath', 'images/user-uploads')
@@ -396,14 +403,15 @@ export default function CardGenerator({
 
       const res = await fetch('/api/reference/upload', { method: 'POST', body: fd })
       const data = await res.json()
-      if (data?.data?.downloadUrl) {
-        setUploadedRefUrls([data.data.downloadUrl])
+      if (!res.ok || !data?.data?.downloadUrl) {
+        throw new Error(data?.msg || 'We could not upload that reference image. Try again.')
       }
+      setUploadedRefUrls([data.data.downloadUrl])
     } catch (uploadError) {
       console.error(uploadError)
       setErrorToast({
         title: 'Upload failed',
-        message: 'We could not upload that reference image. Try a different file.',
+        message: uploadError instanceof Error ? uploadError.message : 'We could not upload that reference image. Try a different file.',
         type: 'warning'
       })
     } finally {
@@ -675,7 +683,7 @@ export default function CardGenerator({
   const HeadingTag = headingLevel === 'h2' ? 'h2' : 'h1'
   const finalActionLabel = isLoading
     ? 'Generating card...'
-    : 'Generate card'
+    : selectedFormat === 'image' && isRefUploading ? 'Uploading photo...' : 'Generate card'
   const hasGeneratedPreview = Boolean(imageStates[0]?.url) && imageStates[0]?.url !== initialImgUrl
   const shouldRenderPreview = showMobilePreview || hasGeneratedPreview || Boolean(imageStates[0]?.isLoading)
   const currentStepMeta = STEP_LABELS[currentStep - 1]
@@ -881,7 +889,7 @@ export default function CardGenerator({
                   {qualityOptions.base.name}
                   {qualityOptions.base.tier === 'Premium' && <Crown className="ml-1 h-3.5 w-3.5 text-amber-500" />}
                 </div>
-                <div className="mt-1 text-sm text-[#6B7280]">{qualityOptions.base.time} · Faster first draft</div>
+                <div className="mt-1 text-sm text-[#6B7280]">{selectedFormat === 'image' ? qualityOptions.base.description : `${qualityOptions.base.time} · Faster first draft`}</div>
               </div>
               {selectedTier === 'base' && <Check className="h-5 w-5 text-primary" />}
             </div>
@@ -903,7 +911,7 @@ export default function CardGenerator({
                     <Crown className="ml-1 h-3.5 w-3.5 text-amber-500" />
                   </div>
                   <div className="mt-1 text-sm text-[#6B7280]">
-                    {qualityOptions.pro.time} · Highest quality output
+                    {selectedFormat === 'image' ? qualityOptions.pro.description : `${qualityOptions.pro.time} · Highest quality output`}
                   </div>
                 </div>
                 {selectedTier === 'pro' && <Check className="h-5 w-5 text-primary" />}
@@ -980,10 +988,12 @@ export default function CardGenerator({
                     uploadedRefUrls.length > 0 && "border-primary bg-primary/5"
                   )}
                   onClick={() => refPhotoInputRef.current?.click()}
+                  disabled={isRefUploading || isLoading}
                 >
                   <input
                     ref={refPhotoInputRef}
                     type="file"
+                    accept="image/jpeg,image/png,image/webp"
                     className="hidden"
                     onChange={handleReferenceUpload}
                   />
@@ -999,10 +1009,15 @@ export default function CardGenerator({
                   ) : (
                     <div className="space-y-2">
                       <div className="text-sm font-medium text-[#202A3D]">Upload a reference image</div>
-                      <div className="text-xs text-[#6B7280]">Useful for matching a person, palette, or mood.</div>
+                      <div className="text-xs text-[#6B7280]">Match a person, palette, or mood. JPG, PNG, or WebP, up to 30 MB.</div>
                     </div>
                   )}
                 </button>
+                {uploadedRefUrls.length > 0 && (
+                  <Button type="button" variant="ghost" size="sm" disabled={isRefUploading || isLoading} onClick={() => setUploadedRefUrls([])}>
+                    Remove reference image
+                  </Button>
+                )}
               </div>
             )}
 
@@ -1067,7 +1082,7 @@ export default function CardGenerator({
         <WarmButton
           onClick={handleGenerateCard}
           className={cn("flex-[1.6] py-6 text-base shadow-warm hover:shadow-warm-lg", mobile && "h-12 py-0 text-sm")}
-          disabled={isLoading}
+          disabled={isLoading || (selectedFormat === 'image' && isRefUploading)}
         >
           {isLoading ? <Loader2 className="animate-spin mr-2" /> : <Sparkles className="mr-2" />}
           {finalActionLabel}
@@ -1170,7 +1185,7 @@ export default function CardGenerator({
                   <div className="flex min-h-[300px] flex-col items-center justify-center">
                     {imageStates[0]?.isLoading ? (
                       <div className="relative aspect-[2/3] w-full max-w-sm overflow-hidden rounded-2xl shadow-2xl">
-                        <MagicalCardCreation />
+                        <MagicalCardCreation format={imageStates[0]?.format} />
                       </div>
                     ) : imageStates[0]?.url ? (
                       <div className="w-full max-w-sm">

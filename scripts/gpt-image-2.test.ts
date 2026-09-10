@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict';
 
 import * as gptImage2 from '../src/lib/gpt-image-2';
+import { generateCardImage } from '../src/lib/image';
+import { generateCardImageWithGptImage2Edit } from '../src/lib/image-and-video';
 
 assert.equal(gptImage2.getGptImage2AspectRatio('portrait'), '9:16');
 assert.equal(gptImage2.getGptImage2AspectRatio('story'), '9:16');
@@ -37,6 +39,60 @@ assert.deepEqual(
 );
 
 async function main() {
+  {
+    const calls: any[] = [];
+    const fetchImpl: typeof fetch = async (_url, init) => {
+      calls.push(JSON.parse(init?.body as string));
+      return Response.json({ code: 200, data: { taskId: 'long-prompt' } });
+    };
+    const params = { apiKey: 'test-key', size: 'square', prompt: 'x'.repeat(20000) };
+    await gptImage2.requestGptImage2Generation(params, fetchImpl);
+    await gptImage2.requestGptImage2Edit({ ...params, imageUrls: ['https://example.com/photo.png'] }, fetchImpl);
+    assert.equal(calls.length, 2);
+    assert.equal(calls[0].input.prompt.length, 20000);
+    assert.equal(calls[1].input.prompt.length, 20000);
+    await assert.rejects(gptImage2.requestGptImage2Generation({ ...params, prompt: 'x'.repeat(20001) }, fetchImpl), /20000/);
+    await assert.rejects(gptImage2.requestGptImage2Generation({ ...params, prompt: '  ' }, fetchImpl), /prompt is required/);
+    for (const imageUrls of [[], ['data:image/png;base64,abc'], Array(17).fill('https://example.com/photo.png')]) {
+      await assert.rejects(gptImage2.requestGptImage2Edit({ ...params, imageUrls }, fetchImpl));
+    }
+    assert.equal(calls.length, 2, 'invalid requests must not reach the provider');
+    await assert.rejects(gptImage2.requestGptImage2Generation(params, async () => Response.json({ code: 402, msg: 'Credits insufficient' })), /Credits insufficient/);
+    await assert.rejects(gptImage2.requestGptImage2Generation(params, async () => Response.json({ code: 200, data: {} })), /taskId/);
+    assert.throws(() => gptImage2.normalizeGptImage2Status({ code: 401, msg: 'Unauthorized' }), /Unauthorized/);
+    assert.equal(gptImage2.normalizeGptImage2Status({ code: 200, data: { state: 'generating' } }).status, 'processing');
+    const failed = gptImage2.normalizeGptImage2Status({ code: 200, data: { state: 'fail', failMsg: 'Unable to process image' } });
+    assert.equal(failed.status, 'failed');
+    assert.equal(failed.errorMessage, 'Unable to process image');
+  }
+
+  {
+    const originalFetch = globalThis.fetch;
+    const originalKey = process.env.KIE_API_KEY;
+    const calls: any[] = [];
+    process.env.KIE_API_KEY = 'test-key';
+    globalThis.fetch = async (_url, init) => {
+      calls.push(JSON.parse(init?.body as string));
+      return Response.json({ code: 200, data: { taskId: 'quality-check' } });
+    };
+    try {
+      for (const tier of ['FREE', 'PREMIUM']) {
+        const params = { cardType: 'birthday' as const, size: 'portrait', userPrompt: 'x'.repeat(6000) };
+        const text = await generateCardImage(params, tier);
+        const edit = await generateCardImageWithGptImage2Edit({ ...params, imageUrls: ['https://example.com/photo.png'] }, tier);
+        assert.equal(text.status, 'processing');
+        assert.equal(edit.status, 'processing');
+        assert.equal(text.model, gptImage2.GPT_IMAGE_2_MODEL);
+        assert.equal(edit.model, gptImage2.GPT_IMAGE_2_EDIT_MODEL);
+      }
+      assert.deepEqual(calls.map(call => call.input.resolution), ['1K', '1K', '2K', '2K']);
+    } finally {
+      globalThis.fetch = originalFetch;
+      if (originalKey === undefined) Reflect.deleteProperty(process.env, 'KIE_API_KEY');
+      else process.env.KIE_API_KEY = originalKey;
+    }
+  }
+
   {
     const calls: Array<{ input: RequestInfo | URL; init?: RequestInit }> = [];
     const fetchImpl: typeof fetch = async (input, init) => {

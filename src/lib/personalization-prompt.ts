@@ -9,6 +9,7 @@
 import { buildPersonalizationBrief, type PersonalizationBrief } from './card-brief';
 import { describeDirection, inferDirectionHeuristically, hashSeed, type CardDirection, type CardMedium } from './emotion-director';
 import { getRegister } from './emotion-registers';
+import { GPT_IMAGE_2_PROMPT_LIMIT } from './gpt-image-2';
 
 export type { PersonalizationBrief } from './card-brief';
 export { buildPersonalizationBrief } from './card-brief';
@@ -21,7 +22,8 @@ interface PromptOptions {
   seed?: number;
 }
 
-const IMAGE_PROMPT_LIMIT = 4800;
+// Leave room for the selected style and reference-photo instructions.
+const IMAGE_PROMPT_LIMIT = GPT_IMAGE_2_PROMPT_LIMIT - 4000;
 const VIDEO_PROMPT_LIMIT = 4200;
 const MESSAGE_CONTEXT_LIMIT = 1600;
 
@@ -61,7 +63,7 @@ export function buildReferenceEditPrompt(formData: any, cardType: string, opts?:
     'Extend the background to the edges (full-bleed, opaque).',
     direction.spark ? `Hidden detail: ${direction.spark}.` : '',
     direction.avoid.length ? `Avoid: ${direction.avoid.join(', ')}.` : '',
-    'NO text. NO white borders. NO letterboxing.',
+    'Keep the exact greeting, recipient name, and signature specified above, with clear, readable lettering. No additional text. No white borders. No letterboxing.',
     'Respect the reference pose. No watermarks or logos.',
   ]
     .filter(Boolean)

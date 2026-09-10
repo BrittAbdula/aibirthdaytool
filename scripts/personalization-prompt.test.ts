@@ -92,7 +92,13 @@ assert.match(imagePrompt, /the headline "Happy Birthday, Maya"/);
 assert.match(imagePrompt, /one line "Happy birthday to the person who makes ordinary Tuesdays hilarious\."/);
 assert.match(imagePrompt, /Avoid: no cheesy hearts, no childish style/);
 assert.match(imagePrompt, /Full-bleed, edge-to-edge/);
-assert.ok(imagePrompt.length < 4800, 'image prompts must stay under the provider limit');
+assert.ok(imagePrompt.length <= 16000, 'image prompts reserve space for style and reference instructions');
+const detailedImagePrompt = createNaturalPrompt(richInput, 'birthday', {
+  medium: 'image',
+  direction: { ...direction, read: 'Detailed personal context. '.repeat(220) },
+});
+assert.ok(detailedImagePrompt.length > 5000, 'GPT Image 2 supports detailed prompts beyond the old limit');
+assert.match(detailedImagePrompt, /Lettering, spelled exactly as written/);
 
 // --- video prompt -------------------------------------------------------------
 
@@ -110,7 +116,8 @@ const likeness = buildReferenceEditPrompt(richInput, 'birthday', { size: 'landsc
 assert.match(likeness, /Keep the subject clearly recognizable/);
 assert.match(likeness, /Use a balanced horizontal composition\./);
 assert.match(likeness, /Palette: ground #[0-9a-f]{6}/);
-assert.match(likeness, /NO text\./);
+assert.match(likeness, /Keep the exact greeting, recipient name, and signature/);
+assert.doesNotMatch(likeness, /NO text\./, 'reference instructions must not contradict the greeting lettering');
 
 // --- a thin brief still produces a complete, specific prompt ------------------
 

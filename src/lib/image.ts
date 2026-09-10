@@ -33,10 +33,6 @@ export async function generateCardImageWithGptImage2(params: CardContentParams, 
     const startTime = Date.now();
 
     try {
-        if (userPrompt.length >= 5000) {
-            throw new Error('User prompt too long');
-        }
-
         const result = await requestGptImage2Generation({
             prompt: userPrompt,
             size,
