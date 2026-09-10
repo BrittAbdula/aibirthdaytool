@@ -12,7 +12,7 @@ import {
 } from '../src/lib/gallery-navigation';
 
 // Static routes win over query params.
-assert.equal(buildGalleryHref({ type: null, relationship: null, tab: 'featured' }), '/card-gallery/');
+assert.equal(buildGalleryHref({ type: null, relationship: null, tab: 'featured' }), '/card-gallery/?tab=featured');
 assert.equal(buildGalleryHref({ type: 'birthday', relationship: null, tab: 'featured' }), '/type/birthday/');
 assert.equal(buildGalleryHref({ type: null, relationship: 'friend', tab: 'featured' }), '/relationship/friend/');
 assert.equal(buildGalleryHref({ type: 'birthday', relationship: 'friend', tab: 'featured' }), '/type/birthday/for/friend/');
@@ -50,3 +50,8 @@ assert.equal(
 );
 
 console.log('gallery navigation checks passed');
+
+assert.equal(parseGalleryTab(null, 'recent'), 'recent');
+assert.equal(parseGalleryTab('invalid', 'recent'), 'recent');
+assert.equal(parseGalleryTab('featured', 'recent'), 'featured');
+assert.equal(buildGalleryHref({ type: null, relationship: null, tab: 'recent' }), '/card-gallery/');

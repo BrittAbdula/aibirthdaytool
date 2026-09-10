@@ -23,6 +23,7 @@ import {
   YAxis,
 } from 'recharts';
 
+import { PurchaseStats } from '@/components/stats/PurchaseStats';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -385,7 +386,7 @@ export default function StatsPage() {
               <MetricCard title="活跃创作者" value={formatNumber(overview.activeCreators.value || 0)} comparison={overview.activeCreators} />
               <MetricCard title="生成请求" value={formatNumber(overview.totalGenerations.value || 0)} comparison={overview.totalGenerations} />
               <MetricCard title="生成成功率" value={formatPercent(overview.successRate.value)} comparison={overview.successRate} />
-              <MetricCard title="选定期回款" value={formatMoney(overview.grossRevenueCents.value || 0)} comparison={overview.grossRevenueCents} />
+              <MetricCard title="选定期订阅回款" value={formatMoney(overview.grossRevenueCents.value || 0)} comparison={overview.grossRevenueCents} />
               <MetricCard title="Live 订阅" value={formatNumber(subscriptions.current.liveSubscribers)} note="当前快照" />
             </section>
 
@@ -446,13 +447,14 @@ export default function StatsPage() {
           </TabsContent>
 
           <TabsContent value="subscriptions" className="space-y-6">
+            <PurchaseStats key={`${meta.startDate}-${meta.endDate}-${meta.generatedAt}`} startDate={meta.startDate} endDate={meta.endDate} />
             <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6">
               <MetricCard title="Live 订阅" value={formatNumber(subscriptions.current.liveSubscribers)} note="active + trialing" />
               <MetricCard title="MRR" value={formatMoney(subscriptions.current.mrrCents, subscriptions.current.currency)} note="当前月度经常性收入" />
               <MetricCard title="ARR" value={formatMoney(subscriptions.current.arrCents, subscriptions.current.currency)} note="当前年化收入" />
               <MetricCard title="月付 / 年付" value={`${subscriptions.current.monthlySubscribers} / ${subscriptions.current.yearlySubscribers}`} note="当前套餐组合" />
               <MetricCard title="待取消" value={formatNumber(subscriptions.current.scheduledToCancel)} note="期末停止续费" />
-              <MetricCard title="选定期回款" value={formatMoney(subscriptions.current.grossRevenueCents, subscriptions.current.currency)} note={`${meta.startDate} 至 ${meta.endDate}`} />
+              <MetricCard title="选定期订阅回款" value={formatMoney(subscriptions.current.grossRevenueCents, subscriptions.current.currency)} note={`${meta.startDate} 至 ${meta.endDate}`} />
             </section>
 
             <section className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">

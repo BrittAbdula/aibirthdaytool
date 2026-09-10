@@ -14,6 +14,7 @@ import {
   normalizeGalleryType,
   parseGalleryTab,
   type GalleryFilterState,
+  type GalleryTab,
   type GalleryScope,
 } from '@/lib/gallery-navigation'
 import { GALLERY_PAGE_SIZE } from '@/lib/gallery-pagination'
@@ -23,13 +24,12 @@ import { GalleryFilters } from './GalleryFilters'
 import { GalleryPreviewDialog } from './GalleryPreviewDialog'
 import { useLikedCards } from './useLikedCards'
 
-/** Pages loaded on scroll before a "Show more" button takes over, so the footer stays reachable. */
-const AUTO_LOAD_PAGES = 4
 const EAGER_IMAGE_COUNT = 6
 
 interface GalleryBrowserProps {
   initialCards: GalleryCardsResult
   scope: GalleryScope
+  initialTab?: GalleryTab
   label?: string
 }
 
@@ -79,28 +79,27 @@ function EmptyState({ type }: { type: string | null }) {
  * it, everything else lives in query params. The grid is never unmounted while data
  * loads, and every card reserves its frame, so nothing reflows.
  */
-export function GalleryBrowser({ initialCards, scope, label = 'Card gallery' }: GalleryBrowserProps) {
+export function GalleryBrowser({ initialCards, scope, initialTab = 'featured', label = 'Card gallery' }: GalleryBrowserProps) {
   const router = useRouter()
   const pathname = usePathname() || '/'
   const searchParams = useSearchParams()
 
-  const tab = parseGalleryTab(searchParams.get('tab'))
+  const tab = parseGalleryTab(searchParams.get('tab'), initialTab)
   const type = scope.type ?? normalizeGalleryType(searchParams.get('type'))
   const relationship = scope.relationship ?? normalizeGalleryRelationship(searchParams.get('relationship'))
-  const isDefaultView = tab === 'featured' && type === scope.type && relationship === scope.relationship
+  const isDefaultView = tab === initialTab && type === scope.type && relationship === scope.relationship
   const feedKey = `${tab}|${type ?? ''}|${relationship ?? ''}`
 
   const [feed, setFeed] = useState<Feed>({
-    key: feedKey,
+    key: `${initialTab}|${scope.type ?? ''}|${scope.relationship ?? ''}`,
     cards: initialCards.cards,
     page: 1,
     hasMore: initialCards.hasMore,
   })
-  const [refreshing, setRefreshing] = useState(false)
+  const [refreshing, setRefreshing] = useState(!isDefaultView)
   const [loadingMore, setLoadingMore] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [retryToken, setRetryToken] = useState(0)
-  const [autoLoads, setAutoLoads] = useState(0)
   const [previewCard, setPreviewCard] = useState<Card | null>(null)
   const { isLiked, toggle, delta } = useLikedCards()
 
@@ -108,14 +107,14 @@ export function GalleryBrowser({ initialCards, scope, label = 'Card gallery' }: 
   const sentinelRef = useRef<HTMLDivElement | null>(null)
   const observerRef = useRef<IntersectionObserver | null>(null)
   const loadMoreRef = useRef<() => Promise<boolean>>(async () => false)
-  const autoLoadsRef = useRef(0)
+  const loadingRequest = useRef<number | null>(null)
 
   // Page 1: the default view uses server-rendered data; any other view fetches while
   // the previous grid stays visible.
   useEffect(() => {
     const id = ++requestId.current
-    autoLoadsRef.current = 0
-    setAutoLoads(0)
+    loadingRequest.current = null
+    setLoadingMore(false)
     setError(null)
 
     if (isDefaultView) {
@@ -146,9 +145,10 @@ export function GalleryBrowser({ initialCards, scope, label = 'Card gallery' }: 
   }, [feedKey, isDefaultView, initialCards, tab, type, relationship, retryToken])
 
   const loadMore = useCallback(async () => {
-    if (loadingMore || refreshing || !feed.hasMore || feed.key !== feedKey) return false
+    if (loadingRequest.current !== null || loadingMore || refreshing || !feed.hasMore || feed.key !== feedKey) return false
     const id = requestId.current
     const nextPage = feed.page + 1
+    loadingRequest.current = id
     setLoadingMore(true)
     setError(null)
     try {
@@ -165,7 +165,10 @@ export function GalleryBrowser({ initialCards, scope, label = 'Card gallery' }: 
         setError('Could not load more cards.')
       }
     } finally {
-      setLoadingMore(false)
+      if (loadingRequest.current === id) {
+        loadingRequest.current = null
+        setLoadingMore(false)
+      }
     }
     return true
   }, [feed.hasMore, feed.key, feed.page, feedKey, loadingMore, refreshing, tab, type, relationship])
@@ -174,19 +177,14 @@ export function GalleryBrowser({ initialCards, scope, label = 'Card gallery' }: 
     loadMoreRef.current = loadMore
   }, [loadMore])
 
-  // One observer for the life of the component; it reads the latest loader through a ref.
+  // Pause automatic loading on errors or filter refreshes; retry remains explicit.
   useEffect(() => {
     const node = sentinelRef.current
-    if (!node || typeof IntersectionObserver === 'undefined') return
+    if (error || refreshing || !node || typeof IntersectionObserver === 'undefined') return
     const observer = new IntersectionObserver(
       (entries) => {
         if (!entries.some((entry) => entry.isIntersecting)) return
-        if (autoLoadsRef.current >= AUTO_LOAD_PAGES) return
-        void loadMoreRef.current().then((started) => {
-          if (!started) return
-          autoLoadsRef.current += 1
-          setAutoLoads(autoLoadsRef.current)
-        })
+        void loadMoreRef.current()
       },
       { rootMargin: '900px 0px' }
     )
@@ -196,7 +194,7 @@ export function GalleryBrowser({ initialCards, scope, label = 'Card gallery' }: 
       observer.disconnect()
       observerRef.current = null
     }
-  }, [])
+  }, [error, refreshing])
 
   // After cards are appended the sentinel may still sit inside the margin without a new
   // intersection event; re-observing asks the browser for a fresh entry.
@@ -206,7 +204,7 @@ export function GalleryBrowser({ initialCards, scope, label = 'Card gallery' }: 
     if (!observer || !node || loadingMore) return
     observer.unobserve(node)
     observer.observe(node)
-  }, [feed.cards.length, loadingMore])
+  }, [feedKey, feed.cards.length, loadingMore, refreshing])
 
   const navigate = useCallback(
     (next: GalleryFilterState) => {
@@ -229,7 +227,7 @@ export function GalleryBrowser({ initialCards, scope, label = 'Card gallery' }: 
 
   const showSkeletonGrid = refreshing && feed.cards.length === 0
   const showEmpty = !refreshing && feed.cards.length === 0
-  const showMoreButton = feed.hasMore && !loadingMore && !refreshing && autoLoads >= AUTO_LOAD_PAGES
+  const showMoreButton = feed.hasMore && !loadingMore && !refreshing && !error
 
   return (
     <section aria-label={label} className="flex flex-col gap-5">

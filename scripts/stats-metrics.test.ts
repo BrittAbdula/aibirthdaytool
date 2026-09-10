@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { parseStatsPage } from '../src/lib/stats-purchases';
 
 import {
   buildFunnelMetrics,
@@ -64,3 +65,9 @@ assert.equal(isSubscriptionLifecyclePartial('2026-07-15'), true);
 assert.equal(isSubscriptionLifecyclePartial('2026-07-16'), false);
 
 console.log('stats metric helpers passed');
+
+assert.equal(parseStatsPage(null), 1);
+assert.equal(parseStatsPage('2'), 2);
+for (const value of ['0', '-1', '1abc', '1.5', '', '9007199254740992']) {
+  assert.equal(parseStatsPage(value), null);
+}

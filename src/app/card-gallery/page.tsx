@@ -2,7 +2,7 @@ import { Suspense } from 'react'
 import { Metadata } from 'next'
 import { GalleryBrowser } from '@/components/gallery/GalleryBrowser'
 import { GalleryBrowserSkeleton } from '@/components/gallery/GalleryBrowserSkeleton'
-import { getFeaturedCardsServer, type GalleryCardsResult } from '@/lib/cards'
+import { getRecentCardsServer, type GalleryCardsResult } from '@/lib/cards'
 import { GALLERY_PAGE_SIZE } from '@/lib/gallery-pagination'
 import { toAbsoluteUrl } from '@/lib/seo'
 
@@ -38,13 +38,13 @@ export const metadata: Metadata = {
 }
 
 export const dynamic = 'force-static'
-export const revalidate = 3600
+export const revalidate = 300
 
 export default async function CardGalleryPage() {
   let initialCards: GalleryCardsResult = { cards: [], hasMore: false, totalPages: 0 }
 
   try {
-    initialCards = await getFeaturedCardsServer(1, GALLERY_PAGE_SIZE, null)
+    initialCards = await getRecentCardsServer(1, GALLERY_PAGE_SIZE, null)
   } catch (error) {
     console.error('Failed to load the card gallery', error)
   }
@@ -64,7 +64,7 @@ export default async function CardGalleryPage() {
 
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
         <Suspense fallback={<GalleryBrowserSkeleton />}>
-          <GalleryBrowser initialCards={initialCards} scope={{ type: null, relationship: null }} />
+          <GalleryBrowser initialTab="recent" initialCards={initialCards} scope={{ type: null, relationship: null }} />
         </Suspense>
       </div>
     </main>

@@ -177,6 +177,7 @@ model User {
   plan          PlanType       @default(FREE)
   packCredits   Int            @default(0)  // purchased card credits, never expire
   purchases     Purchase[]
+  creditLedger  CreditLedger[]
   bonusCredits  BonusCredit[]
   stripeLogs    StripeLog[]
   monetizationEvents MonetizationEvent[]
@@ -313,6 +314,18 @@ model Purchase {
 
   @@index([userId, createdAt])
   @@index([sku, createdAt])
+}
+
+model CreditLedger {
+  id           Int      @id @default(autoincrement())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  amount       Int
+  balanceAfter Int
+  reason       String
+  createdAt    DateTime @default(now())
+
+  @@index([userId, id])
 }
 
 model BonusCredit {

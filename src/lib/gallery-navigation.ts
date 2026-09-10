@@ -41,8 +41,8 @@ export interface GalleryFilterState extends GalleryScope {
   tab: GalleryTab
 }
 
-export function parseGalleryTab(value: string | null | undefined): GalleryTab {
-  return GALLERY_TABS.some((tab) => tab.id === value) ? (value as GalleryTab) : DEFAULT_GALLERY_TAB
+export function parseGalleryTab(value: string | null | undefined, defaultTab = DEFAULT_GALLERY_TAB): GalleryTab {
+  return GALLERY_TABS.some((tab) => tab.id === value) ? (value as GalleryTab) : defaultTab
 }
 
 export function normalizeGalleryType(value: string | null | undefined): string | null {
@@ -84,7 +84,8 @@ export function buildGalleryHref(state: GalleryFilterState): string {
     base = `/relationship/${relationship}/`
   }
 
-  if (tab !== DEFAULT_GALLERY_TAB) query.set('tab', tab)
+  const defaultTab = base === GALLERY_ROOT_HREF ? 'recent' : DEFAULT_GALLERY_TAB
+  if (tab !== defaultTab) query.set('tab', tab)
   const search = query.toString()
   return search ? `${base}?${search}` : base
 }
