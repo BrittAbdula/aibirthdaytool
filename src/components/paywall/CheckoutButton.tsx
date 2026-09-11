@@ -17,6 +17,7 @@ interface CheckoutButtonProps extends ButtonProps {
   sku: SkuKey
   source: string
   loadingLabel?: string
+  quantity?: number
   taskSize?: number
 }
 
@@ -25,6 +26,7 @@ export function CheckoutButton({
   source,
   loadingLabel = "Opening checkout...",
   taskSize,
+  quantity = 1,
   children,
   disabled,
   onClick,
@@ -46,13 +48,13 @@ export function CheckoutButton({
       plan: sku,
       source,
       path: returnUrl,
-      metadata: taskSize ? { taskSize } : undefined,
+      metadata: { quantity, ...(taskSize ? { taskSize } : {}) },
     })
 
     // Signing in navigates away, so the intent is parked in storage and picked
     // up by PendingCheckoutResume once the user lands back here.
     if (!session) {
-      const pendingCheckout = buildPendingCheckout({ sku, source, returnUrl, taskSize })
+      const pendingCheckout = buildPendingCheckout({ sku, source, returnUrl, taskSize, quantity })
       window.localStorage.setItem(PENDING_CHECKOUT_STORAGE_KEY, JSON.stringify(pendingCheckout))
       await signIn("google", { callbackUrl: returnUrl })
       return
@@ -64,7 +66,7 @@ export function CheckoutButton({
       const response = await fetch("/api/create-checkout-session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sku, returnUrl, source, taskSize }),
+        body: JSON.stringify({ sku, returnUrl, source, taskSize, quantity }),
       })
       const data = await response.json()
 

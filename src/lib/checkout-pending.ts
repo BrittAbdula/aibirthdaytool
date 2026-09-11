@@ -1,4 +1,4 @@
-import { normalizeCheckoutReturnPath } from './pricing/checkout';
+import { getCheckoutQuantity, normalizeCheckoutReturnPath } from './pricing/checkout';
 import { isSkuKey, type SkuKey } from './pricing/plans';
 
 export const PENDING_CHECKOUT_STORAGE_KEY = 'mewtrucard.pendingCheckout';
@@ -8,6 +8,7 @@ export interface PendingCheckout {
   source: string;
   returnUrl: string;
   taskSize?: number;
+  quantity?: number;
   createdAt: number;
 }
 
@@ -16,6 +17,7 @@ interface BuildPendingCheckoutInput {
   source: string;
   returnUrl: string;
   taskSize?: number;
+  quantity?: number;
 }
 
 function normalizeSource(value: unknown): string {
@@ -33,12 +35,14 @@ export function buildPendingCheckout({
   source,
   returnUrl,
   taskSize,
+  quantity,
 }: BuildPendingCheckoutInput): PendingCheckout {
   return {
     sku,
     source: normalizeSource(source),
     returnUrl: normalizeCheckoutReturnPath(returnUrl),
     taskSize: normalizeTaskSize(taskSize),
+    quantity,
     createdAt: Date.now(),
   };
 }
@@ -51,6 +55,9 @@ export function parsePendingCheckout(raw: string | null | undefined): PendingChe
     if (!isSkuKey(parsed.sku)) return null;
     if (typeof parsed.createdAt !== 'number' || !Number.isFinite(parsed.createdAt)) return null;
 
+    const quantity = getCheckoutQuantity(parsed.sku, parsed.quantity);
+    if (quantity === null) return null;
+
     const returnUrl = normalizeCheckoutReturnPath(parsed.returnUrl);
     if (returnUrl !== parsed.returnUrl) return null;
 
@@ -59,6 +66,7 @@ export function parsePendingCheckout(raw: string | null | undefined): PendingChe
       source: normalizeSource(parsed.source),
       returnUrl,
       taskSize: normalizeTaskSize(parsed.taskSize),
+      quantity: parsed.quantity === undefined ? undefined : quantity,
       createdAt: parsed.createdAt,
     };
   } catch {

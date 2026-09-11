@@ -188,7 +188,7 @@ async function persistPackPurchase(
   if (existingPurchase) return 'duplicate';
 
   const { sku, session } = prepared;
-  const cards = sku.cards ?? 0;
+  const cards = prepared.cardsGranted;
 
   await tx.purchase.create({
     data: {
@@ -200,7 +200,7 @@ async function persistPackPurchase(
         typeof session.payment_intent === 'string'
           ? session.payment_intent
           : session.payment_intent?.id || null,
-      amountCents: session.amount_total ?? sku.amountCents,
+      amountCents: session.amount_total ?? sku.amountCents * prepared.quantity,
       currency: session.currency || 'usd',
       cardsGranted: cards,
       stripeLivemode: session.livemode,
@@ -222,8 +222,9 @@ async function persistPackPurchase(
       stripeSessionId: session.id,
       metadata: {
         eventId: prepared.event.id,
+        quantity: prepared.quantity,
         cards,
-        amountCents: session.amount_total ?? sku.amountCents,
+        amountCents: session.amount_total ?? sku.amountCents * prepared.quantity,
       },
     },
   });

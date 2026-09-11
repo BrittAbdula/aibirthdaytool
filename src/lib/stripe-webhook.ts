@@ -1,4 +1,5 @@
 import type Stripe from 'stripe';
+import { getCheckoutQuantity } from './pricing/checkout';
 import { getPackForPriceId, getTierForPriceId, type PlanTier, type Sku } from './pricing/plans';
 
 export const STRIPE_WEBHOOK_EVENT_TYPES = [
@@ -33,6 +34,8 @@ export interface PreparedPackPurchaseEvent {
   event: Stripe.Event;
   userId: string;
   sku: Sku;
+  quantity: number;
+  cardsGranted: number;
   session: Stripe.Checkout.Session;
 }
 
@@ -138,9 +141,12 @@ export function preparePackPurchase(
   const priceId = session.metadata?.priceId || null;
   const sku = priceId ? getPackForPriceId(priceId, env) : null;
   if (!sku || !sku.cards) return null;
-  if (session.amount_total !== sku.amountCents) return null;
+  const rawQuantity = session.metadata?.quantity;
+  if (rawQuantity !== undefined && !/^[1-9]\d*$/.test(rawQuantity)) return null;
+  const quantity = getCheckoutQuantity(sku.key, rawQuantity === undefined ? undefined : Number(rawQuantity));
+  if (quantity === null || session.amount_total !== sku.amountCents * quantity) return null;
 
-  return { kind: 'pack', event, userId, sku, session };
+  return { kind: 'pack', event, userId, sku, quantity, cardsGranted: sku.cards * quantity, session };
 }
 
 async function prepareStripeEvent(

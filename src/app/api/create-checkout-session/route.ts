@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { auth } from "@/auth"
 import Stripe from "stripe"
-import { buildCheckoutRedirectUrls } from "@/lib/pricing/checkout"
+import { buildCheckoutRedirectUrls, getCheckoutQuantity } from "@/lib/pricing/checkout"
 import { SKUS, getStripePriceId, isSkuKey } from "@/lib/pricing/plans"
 import { recordMonetizationEvent } from "@/lib/monetization"
 import { getCreatorDevice } from "@/lib/creator-pro"
@@ -73,6 +73,14 @@ export async function POST(request: Request) {
       )
     }
 
+    const quantity = getCheckoutQuantity(sku, body.quantity)
+    if (quantity === null) {
+      return NextResponse.json(
+        { error: "Choose a whole number of packs from 1 to 99", code: "invalid_quantity" },
+        { status: 400 }
+      )
+    }
+
     const selectedSku = SKUS[sku]
 
     let priceId: string
@@ -104,6 +112,7 @@ export async function POST(request: Request) {
       userId,
       sku,
       priceId,
+      quantity: String(quantity),
       source,
       country,
       device,
@@ -115,7 +124,7 @@ export async function POST(request: Request) {
     const checkoutSession = await stripe.checkout.sessions.create({
       customer_email: customer_email || undefined,
       client_reference_id: userId,
-      line_items: [{ price: priceId, quantity: 1 }],
+      line_items: [{ price: priceId, quantity }],
       mode: isPack ? "payment" : "subscription",
       allow_promotion_codes: true,
       ...(isPack

@@ -249,6 +249,36 @@ async function main() {
   assert.equal(packPrepared.kind === 'pack' && packPrepared.sku.key, 'pack_20');
   assert.equal(packPrepared.kind === 'pack' && packPrepared.sku.cards, 20);
 
+  assert.equal(packPrepared.kind === 'pack' && packPrepared.quantity, 1);
+  assert.equal(packPrepared.kind === 'pack' && packPrepared.cardsGranted, 20);
+  for (const [sku, quantity, amount, cards] of [
+    ['pack_20', 3, 897, 60],
+    ['pack_50', 2, 998, 100],
+    ['pack_20', 99, 29601, 1980],
+  ] as const) {
+    const multiSession = {
+      ...packSession,
+      amount_total: amount,
+      metadata: { userId: 'user_123', sku, priceId: `price_${sku}`, quantity: String(quantity) },
+    };
+    const multi = await run({ stripeEvent: event('checkout.session.completed', multiSession) });
+    assert.equal(multi.persisted.length, 1);
+    const prepared = multi.persisted[0];
+    assert.equal(prepared.kind === 'pack' && prepared.quantity, quantity);
+    assert.equal(prepared.kind === 'pack' && prepared.cardsGranted, cards);
+    const mismatch = await run({ stripeEvent: event('checkout.session.completed', { ...multiSession, amount_total: 299 }) });
+    assert.equal(mismatch.persisted.length, 0);
+    const duplicate = await run({ stripeEvent: event('checkout.session.completed', multiSession), persistResult: 'duplicate' });
+    assert.equal(duplicate.result.body, 'Webhook duplicate');
+  }
+  for (const quantity of ['', '0', '-1', '1.5', '100', 'NaN', '3e0', ' 3']) {
+    const invalid = await run({ stripeEvent: event('checkout.session.completed', {
+      ...packSession,
+      metadata: { userId: 'user_123', sku: 'pack_20', priceId: 'price_pack_20', quantity },
+    }) });
+    assert.equal(invalid.persisted.length, 0);
+  }
+
   // An unpaid session must never grant cards.
   const unpaidPack = await run({
     stripeEvent: event('checkout.session.completed', {

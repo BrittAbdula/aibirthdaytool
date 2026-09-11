@@ -4,7 +4,7 @@ import {
   buildPendingCheckout,
   parsePendingCheckout,
 } from '../src/lib/checkout-pending';
-import { buildCheckoutRedirectUrls } from '../src/lib/pricing/checkout';
+import { buildCheckoutRedirectUrls, getCheckoutQuantity } from '../src/lib/pricing/checkout';
 
 assert.equal(PENDING_CHECKOUT_STORAGE_KEY, 'mewtrucard.pendingCheckout');
 
@@ -35,4 +35,19 @@ assert.equal(redirects.cancelUrl, 'https://mewtrucard.com/birthday?status=cancel
 assert.equal(redirects.successUrl.includes('Private'), false);
 assert.equal(redirects.successUrl.includes('Secret'), false);
 
+// API quantity contract: do not coerce malformed caller input.
+for (const sku of ['pack_20', 'pack_50'] as const) {
+  assert.equal(getCheckoutQuantity(sku, undefined), 1);
+  for (const quantity of [1, 2, 3, 99]) assert.equal(getCheckoutQuantity(sku, quantity), quantity);
+  for (const quantity of [null, '3', '', 0, -1, 1.5, 100, NaN, Infinity, {}, true]) {
+    assert.equal(getCheckoutQuantity(sku, quantity), null);
+  }
+}
+assert.equal(getCheckoutQuantity('plus_monthly', 3), 1);
+assert.equal(getCheckoutQuantity('creator_pro_yearly', undefined), 1);
+const multiple = buildPendingCheckout({ sku: 'pack_20', source: 'pricing', returnUrl: '/pricing/', quantity: 3 });
+assert.equal(parsePendingCheckout(JSON.stringify(multiple))?.quantity, 3);
+for (const quantity of [null, '3', 0, -1, 1.5, 100]) {
+  assert.equal(parsePendingCheckout(JSON.stringify({ ...multiple, quantity })), null);
+}
 console.log('pending checkout rules ok');

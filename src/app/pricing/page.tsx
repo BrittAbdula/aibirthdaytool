@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { ArrowRight, Check, CreditCard, ShieldCheck } from 'lucide-react';
+import { PackCheckout } from '@/components/paywall/PackCheckout';
 import { CheckoutButton } from '@/components/paywall/CheckoutButton';
 import { PricingPageTracker } from '@/components/PricingPageTracker';
 import {
@@ -115,17 +116,14 @@ export default function PricingPage() {
                     </p>
                   ))}
                 </div>
-                <CheckoutButton
-                  sku={pack.key}
-                  source={`pricing_page_${pack.key}`}
+                <PackCheckout
+                  pack={pack}
                   className={
                     index === 0
-                      ? 'mt-7 h-11 w-full bg-primary text-white hover:bg-primary/90'
-                      : 'mt-7 h-11 w-full border border-[#CFAEBA] bg-white text-primary hover:bg-[#FFF3F5]'
+                      ? 'h-11 w-full bg-primary text-white hover:bg-primary/90'
+                      : 'h-11 w-full border border-[#CFAEBA] bg-white text-primary hover:bg-[#FFF3F5]'
                   }
-                >
-                  Get {pack.label} <ArrowRight className="ml-2 h-4 w-4" />
-                </CheckoutButton>
+                />
               </div>
             ))}
           </div>
