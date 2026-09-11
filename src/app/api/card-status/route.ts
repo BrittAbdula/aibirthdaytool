@@ -3,6 +3,7 @@ import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
 import { uploadVideoToR2, uploadToCloudflareImages } from '@/lib/r2';
 import { SEEDANCE_VIDEO_MODEL, requestSeedanceVideoStatus } from '@/lib/seedance-video';
+import { WAN_VIDEO_MODEL, requestWanVideoStatus } from '@/lib/wan-video';
 import { GPT_IMAGE_2_EDIT_MODEL, GPT_IMAGE_2_MODEL, LEGACY_GPT_IMAGE_2_MODEL, requestGptImage2Status } from '@/lib/gpt-image-2';
 import { getRetryAfterSeconds, isTerminalCardStatus } from '@/lib/card-status';
 import { Prisma } from '@prisma/client';
@@ -304,10 +305,12 @@ export async function GET(request: Request) {
       return processingResponse();
     }
 
-    // Handle Seedance video generation status
-    if (card.promptVersion === SEEDANCE_VIDEO_MODEL || card.promptVersion?.includes('seedance')) {
+    // New Wan tasks and previously submitted Seedance tasks use different status APIs.
+    if (card.promptVersion === WAN_VIDEO_MODEL || card.promptVersion === SEEDANCE_VIDEO_MODEL || card.promptVersion?.includes('seedance')) {
       try {
-        const videoData = await requestSeedanceVideoStatus(card.taskId || '');
+        const videoData = card.promptVersion === WAN_VIDEO_MODEL
+          ? await requestWanVideoStatus(card.taskId || '')
+          : await requestSeedanceVideoStatus(card.taskId || '');
 
         if (videoData.status === 'completed') {
           if (videoData.videoUrl) {
@@ -332,14 +335,14 @@ export async function GET(request: Request) {
         if (videoData.status === 'failed') {
           await updateCardIfNotTerminal(cardId, {
             status: 'failed',
-            errorMessage: videoData.errorMessage || 'Seedance video generation failed',
+            errorMessage: videoData.errorMessage || 'Video generation failed',
           });
 
           const response = NextResponse.json({
             status: 'failed',
             r2Url: '',
             responseContent: '',
-            errorMessage: videoData.errorMessage || 'Seedance video generation failed',
+            errorMessage: videoData.errorMessage || 'Video generation failed',
           });
 
           return applyNoStoreHeaders(response);
@@ -351,7 +354,7 @@ export async function GET(request: Request) {
         });
       } catch (error) {
         return processingResponse({
-          message: error instanceof Error ? error.message : 'Seedance video is being generated',
+          message: error instanceof Error ? error.message : 'Video is being generated',
         });
       }
     }

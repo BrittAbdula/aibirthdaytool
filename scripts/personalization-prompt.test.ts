@@ -103,7 +103,7 @@ assert.match(detailedImagePrompt, /Lettering, spelled exactly as written/);
 // --- video prompt -------------------------------------------------------------
 
 const videoPrompt = createNaturalPrompt(richInput, 'birthday', { size: 'landscape', medium: 'video', direction });
-assert.match(videoPrompt, /Direct a five-second greeting-card film/);
+assert.match(videoPrompt, /Direct a 3-second vertical 9:16 greeting-card film/);
 assert.match(videoPrompt, /Beat 1 \(arrival\)/);
 assert.match(videoPrompt, /Beat 3 \(settle\)/);
 assert.match(videoPrompt, /Tempo: bouncy/);

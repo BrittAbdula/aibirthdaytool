@@ -63,27 +63,27 @@ export const modelConfigs: ModelConfig[] = [
   },
   {
     id: 'Premium_Video_Fast',
-    name: 'Pro Video Fast',
-    description: '5-second video cards with smooth motion and cinematic effects',
-    time: '60 sec',
+    name: 'Short Video',
+    description: '3-second vertical video · 9:16 · 480P',
+    time: 'May take a few minutes',
     format: 'video',
     tier: 'Premium',
     credits: 6,
     icon: '🎬',
     badge: 'Premium',
-    features: ['Fast video generation', '5-second video', 'HD motion output']
+    features: ['3-second video', '9:16 portrait', '480P resolution']
   },
   {
     id: 'Premium_Video_Pro',
-    name: 'Pro Video Fast',
-    description: '5-second video cards with smooth motion and cinematic effects',
-    time: '60 sec',
+    name: 'Short Video',
+    description: '3-second vertical video · 9:16 · 480P',
+    time: 'May take a few minutes',
     format: 'video',
     tier: 'Premium',
     credits: 6,
     icon: '🎥',
     badge: 'Premium',
-    features: ['Fast video generation', '5-second video', 'HD motion output']
+    features: ['3-second video', '9:16 portrait', '480P resolution']
   }
 ];
 

@@ -10,6 +10,7 @@ import { buildPersonalizationBrief, type PersonalizationBrief } from './card-bri
 import { describeDirection, inferDirectionHeuristically, hashSeed, type CardDirection, type CardMedium } from './emotion-director';
 import { getRegister } from './emotion-registers';
 import { GPT_IMAGE_2_PROMPT_LIMIT } from './gpt-image-2';
+import { WAN_VIDEO_DURATION, WAN_VIDEO_ASPECT_RATIO } from './wan-video';
 
 export type { PersonalizationBrief } from './card-brief';
 export { buildPersonalizationBrief } from './card-brief';
@@ -151,7 +152,7 @@ function buildVideoPrompt(brief: PersonalizationBrief, direction: CardDirection,
   };
 
   return [
-    `Direct a five-second greeting-card film for ${describeRecipient(brief)}. ${direction.read}`,
+    `Direct a ${WAN_VIDEO_DURATION}-second vertical ${WAN_VIDEO_ASPECT_RATIO} greeting-card film for ${describeRecipient(brief)}. ${direction.read}`,
     `Register: ${register.name} — ${register.feeling} Sender's voice: ${direction.voice}`,
     `Art direction: ${register.imageStyle}. World: ${direction.world}`,
     `Palette "${direction.palette.name}": ground ${direction.palette.ground}, ink ${direction.palette.ink}, accent ${direction.palette.accent}, accent2 ${direction.palette.accent2}; tints and shades only.`,

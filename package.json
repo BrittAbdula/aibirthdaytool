@@ -27,6 +27,7 @@
     "test:stats-metrics": "ts-node --compiler-options '{\"module\":\"commonjs\",\"moduleResolution\":\"node\"}' scripts/stats-metrics.test.ts",
     "stats:backfill-stripe": "ts-node --compiler-options '{\"module\":\"commonjs\",\"moduleResolution\":\"node\"}' scripts/backfill-stripe-analytics.ts",
     "test:seedance-video": "ts-node --compiler-options '{\"module\":\"commonjs\",\"moduleResolution\":\"node\"}' scripts/seedance-video.test.ts",
+    "test:wan-video": "ts-node --compiler-options '{\"module\":\"commonjs\",\"moduleResolution\":\"node\"}' scripts/wan-video.test.ts",
     "test:svg-models": "ts-node --compiler-options '{\"module\":\"commonjs\",\"moduleResolution\":\"node\"}' scripts/svg-models.test.ts",
     "test:stats-preview": "ts-node --compiler-options '{\"module\":\"commonjs\",\"moduleResolution\":\"node\"}' scripts/stats-preview.test.ts",
     "test:gallery-ranking": "ts-node --compiler-options '{\"module\":\"commonjs\",\"moduleResolution\":\"node\"}' scripts/gallery-ranking.test.ts",

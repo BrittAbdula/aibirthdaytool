@@ -12,6 +12,7 @@ export const PREMIUM_QUALITY_MODELS = [
   'veo-veo3-fast-video',
   'luma-ray-v2-video',
   'doubao-seedance-2-0-fast-260128',
+  'wan/3-0-video',
 ] as const;
 
 export const DISABLED_MODELS = [

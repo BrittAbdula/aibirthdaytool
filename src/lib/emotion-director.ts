@@ -177,7 +177,7 @@ export function buildDirectorUserPrompt(
       ? `an animated SVG card (${opts.size || 'portrait'})`
       : opts.medium === 'image'
         ? 'a static image card'
-        : 'a five-second video card';
+        : 'a three-second vertical 9:16 video card';
 
   const lines = [
     'BRIEF',

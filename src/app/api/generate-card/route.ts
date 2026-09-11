@@ -185,8 +185,7 @@ export async function POST(request: Request) {
         // Keep minimal guidance; rely on style preset for rendering details
         if (f.styleStrength) seg += ` Style intensity: ${f.styleStrength}.`;
       } else if (format === 'video') {
-        // Keep only duration as a minimal controllable parameter
-        if (f.duration) seg += ` Target duration: ${f.duration} seconds.`;
+        seg += ' Use a 3-second vertical 9:16 composition.';
       }
       return seg;
     })();

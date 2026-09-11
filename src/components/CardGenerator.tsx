@@ -889,7 +889,7 @@ export default function CardGenerator({
                   {qualityOptions.base.name}
                   {qualityOptions.base.tier === 'Premium' && <Crown className="ml-1 h-3.5 w-3.5 text-amber-500" />}
                 </div>
-                <div className="mt-1 text-sm text-[#6B7280]">{selectedFormat === 'image' ? qualityOptions.base.description : `${qualityOptions.base.time} · Faster first draft`}</div>
+                <div className="mt-1 text-sm text-[#6B7280]">{selectedFormat !== 'svg' ? qualityOptions.base.description : `${qualityOptions.base.time} · Faster first draft`}</div>
               </div>
               {selectedTier === 'base' && <Check className="h-5 w-5 text-primary" />}
             </div>

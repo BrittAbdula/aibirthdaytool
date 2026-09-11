@@ -1,6 +1,6 @@
 import { CardType } from './card-config';
 import { GPT_IMAGE_2_EDIT_MODEL, requestGptImage2Edit } from './gpt-image-2';
-import { SEEDANCE_VIDEO_MODEL, requestSeedanceVideoGeneration } from './seedance-video';
+import { WAN_VIDEO_MODEL, WAN_VIDEO_DURATION, requestWanVideoGeneration } from './wan-video';
 
 interface CardContentParams {
     cardType: CardType;
@@ -12,52 +12,47 @@ interface CardContentParams {
 
 export async function generateCardVideo(params: CardContentParams, modelLevel: string): Promise<{ taskId: string, r2Url: string, svgContent: string, model: string, tokensUsed: number, duration: number, errorMessage?: string, status?: string }> {
     if (modelLevel === 'PREMIUM') {
-        return await generateCardVideoWithSeedance(params);
+        return await generateCardVideoWithWan(params);
     } else {
         throw new Error('Video generation not supported for this model level');
     }
 }
 
-export async function generateCardVideoWithSeedance(params: CardContentParams): Promise<{ taskId: string, r2Url: string, svgContent: string, model: string, tokensUsed: number, duration: number, errorMessage?: string, status?: string }> {
-    const { size, userPrompt } = params;
+export async function generateCardVideoWithWan(params: CardContentParams): Promise<{ taskId: string, r2Url: string, svgContent: string, model: string, tokensUsed: number, duration: number, errorMessage?: string, status?: string }> {
+    const { userPrompt } = params;
     const startTime = Date.now();
 
-    console.log(`<----Using model : ${SEEDANCE_VIDEO_MODEL}---->`);
+    console.log(`<----Using model : ${WAN_VIDEO_MODEL}---->`);
 
     try {
-        if (userPrompt.length >= 5000) {
-            throw new Error('User prompt too long');
-        }
-
         const prompt = [
             userPrompt,
-            'Create a polished 5-second greeting-card video with smooth cinematic motion.',
+            `Create a polished ${WAN_VIDEO_DURATION}-second vertical 9:16 greeting-card video with smooth cinematic motion.`,
             'Use full-bleed composition, no borders, no letterboxing, no overlaid text, no watermark.',
             'Focus on visual storytelling, warm lighting, cohesive colors, and one clear emotional motion idea.',
         ].join(' ');
 
-        const result = await requestSeedanceVideoGeneration({
+        const result = await requestWanVideoGeneration({
             prompt,
-            size,
         });
 
         return {
             taskId: result.taskId,
             r2Url: '',
             svgContent: '',
-            model: SEEDANCE_VIDEO_MODEL,
+            model: WAN_VIDEO_MODEL,
             tokensUsed: 0,
             duration: Date.now() - startTime,
             errorMessage: '',
             status: 'processing',
         };
     } catch (error) {
-        console.error('Error in generateCardVideoWithSeedance:', error);
+        console.error('Error in generateCardVideoWithWan:', error);
         return {
             taskId: '',
             r2Url: '',
             svgContent: '',
-            model: SEEDANCE_VIDEO_MODEL,
+            model: WAN_VIDEO_MODEL,
             tokensUsed: 0,
             duration: Date.now() - startTime,
             errorMessage: error instanceof Error ? error.message : 'Unknown error',
