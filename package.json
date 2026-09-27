@@ -15,6 +15,7 @@
     "test:gpt-image-2": "ts-node --compiler-options '{\"module\":\"commonjs\",\"moduleResolution\":\"node\"}' scripts/gpt-image-2.test.ts",
     "test:openrouter-svg": "ts-node --compiler-options '{\"module\":\"commonjs\",\"moduleResolution\":\"node\"}' scripts/openrouter-svg.test.ts",
     "test:kie-grok": "ts-node --compiler-options '{\"module\":\"commonjs\",\"moduleResolution\":\"node\"}' scripts/kie-grok.test.ts",
+    "test:kie-svg": "ts-node --compiler-options '{\"module\":\"commonjs\",\"moduleResolution\":\"node\"}' scripts/kie-svg.test.ts",
     "test:personalization-prompt": "ts-node --compiler-options '{\"module\":\"commonjs\",\"moduleResolution\":\"node\"}' scripts/personalization-prompt.test.ts",
     "test:emotion-director": "ts-node --compiler-options '{\"module\":\"commonjs\",\"moduleResolution\":\"node\"}' scripts/emotion-director.test.ts",
     "test:prompt": "ts-node --compiler-options '{\"module\":\"commonjs\",\"moduleResolution\":\"node\"}' scripts/prompt.test.ts",

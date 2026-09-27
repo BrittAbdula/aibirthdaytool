@@ -2,8 +2,8 @@ import { CardType, CARD_SIZES } from './card-config';
 import { prisma } from './prisma';
 import { generatePrompt } from './prompt';
 import { fetchSvgContent } from './utils';
-import { extractSvgContent } from './svg-extract';
-import { OPENROUTER_SVG_MODEL, requestOpenRouterMessage } from './openrouter';
+import { requestKieSvg } from './kie-svg';
+import { FREE_SVG_MODEL } from './svg-models';
 import type { CardDirection } from './emotion-director';
 
 interface CardContentParams {
@@ -27,7 +27,7 @@ type SvgGenerationResult = {
   status?: string;
 };
 
-export async function generateCardSvg(params: CardContentParams, model = OPENROUTER_SVG_MODEL): Promise<SvgGenerationResult> {
+export async function generateCardSvg(params: CardContentParams, model = FREE_SVG_MODEL): Promise<SvgGenerationResult> {
   const { cardType, size, userPrompt, direction, modificationFeedback, previousCardId } = params;
   const startTime = Date.now();
 
@@ -40,22 +40,13 @@ export async function generateCardSvg(params: CardContentParams, model = OPENROU
       throw new Error('User prompt too long');
     }
 
-    const response = await requestOpenRouterMessage({
-      model,
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: finalUserPrompt },
-      ],
-    });
-
-    const svgContent = extractSvgContent(response.text);
-    if (!svgContent) throw new Error('No valid SVG content found');
+    const response = await requestKieSvg({ model, systemPrompt, userPrompt: finalUserPrompt });
 
     return {
       taskId: '',
       r2Url: '',
-      svgContent,
-      model: response.model || OPENROUTER_SVG_MODEL,
+      svgContent: response.svgContent,
+      model: response.model,
       tokensUsed: response.tokensUsed,
       duration: Date.now() - startTime,
       errorMessage: '',

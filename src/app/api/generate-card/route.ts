@@ -16,7 +16,7 @@ import { generateCardSvg } from '@/lib/svg-generation';
 import { getSvgGenerationModel } from '@/lib/svg-models';
 
 // 增加超时限制到最大值
-export const maxDuration = 60; // 增加到 60 秒
+export const maxDuration = 300; // Allow the primary SVG request and fallback to finish.
 
 // 使用边缘运行时，提高性能
 // export const runtime = 'edge';
@@ -94,9 +94,9 @@ export async function POST(request: Request) {
       }, { status: 403 });
     }
 
-    // Paid access — a subscription or a pack balance — also buys the better model.
+    // SVG model quality follows membership; image/video retain paid-access routing.
     const modelLevel = format === 'svg'
-      ? 'FREE'
+      ? entitlements.tier !== 'free' ? 'PREMIUM' : 'FREE'
       : modelTier === 'Premium' && entitlements.hasPaidAccess ? 'PREMIUM' : 'FREE';
 
     // One generation costs one card; a video costs five, because it costs us an
