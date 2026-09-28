@@ -4,7 +4,7 @@ import { requestKieSvg } from '../src/lib/kie-svg';
 const options = { model: 'gpt-6-luna', systemPrompt: 'Design an SVG', userPrompt: 'Happy birthday', apiKey: 'test-key' };
 const success = () => new Response(JSON.stringify({
   status: 'completed',
-  output: [{ type: 'message', content: [{ type: 'output_text', text: '<svg><text>Hi</text></svg>' }] }],
+  output: [{ type: 'message', content: [{ type: 'output_text', text: '<svg viewBox="0 0 480 760"><text>Hi</text></svg>' }] }],
   usage: { input_tokens: 10, output_tokens: 20 },
 }));
 
@@ -34,6 +34,8 @@ async function main() {
     async () => new Response(JSON.stringify({ error: { message: 'upstream failed' } })),
     async () => new Response(JSON.stringify({ status: 'incomplete' })),
     async () => new Response(JSON.stringify({ output: [] })),
+    // A closing SVG tag alone does not make this malformed animation valid.
+    async () => new Response(JSON.stringify({ output: [{ type: 'message', content: [{ type: 'output_text', text: '<svg viewBox="0 0 480 760"><text>Hi</text><animate on the text</svg>' }] }] })),
     async (_url, init) => new Promise((_resolve, reject) => {
       init?.signal?.addEventListener('abort', () => reject(new Error('aborted')), { once: true });
     }),
@@ -55,6 +57,12 @@ async function main() {
     return new Response('', { status: 502 });
   }), /grok-4-7 error 502/);
   assert.equal(attempts, 2);
+  attempts = 0;
+  await assert.rejects(requestKieSvg(options, async () => {
+    attempts++;
+    return new Response(JSON.stringify({ output: [{ type: 'message', content: [{ type: 'output_text', text: '<svg viewBox="0 0 480 760"><g></svg>' }] }] }));
+  }), /Invalid SVG/);
+  assert.equal(attempts, 2, 'Invalid primary and fallback must fail, never report success');
   console.log('Kie SVG primary and fallback tests passed');
 }
 

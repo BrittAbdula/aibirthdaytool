@@ -1,4 +1,5 @@
 import { getCloudflareContext } from '@opennextjs/cloudflare';
+import { validateSvgContent } from './svg-validation';
 
 interface CardAssetsBucket {
     put(
@@ -116,6 +117,8 @@ export function classifyStorageUrl(fileUrl: string | null | undefined): StorageD
 }
 
 export async function uploadSvgToR2(svgContent: string, cardId: string, createdAt: Date): Promise<string> {
+    // Also guards edited cards and legacy uploads, which bypass generation.
+    validateSvgContent(svgContent);
     try {
         const bucket = getAssetsBucket();
         // 使用 UTC 时间来保持一致性

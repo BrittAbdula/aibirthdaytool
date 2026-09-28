@@ -1,5 +1,6 @@
 import { extractSvgContent } from './svg-extract';
 import { FALLBACK_SVG_MODEL } from './svg-models';
+import { validateSvgContent } from './svg-validation';
 
 interface KieSvgOptions {
   model: string;
@@ -59,6 +60,11 @@ export async function requestKieSvg(options: KieSvgOptions, fetchImpl: typeof fe
         .join('\n');
       const svgContent = extractSvgContent(text);
       if (!svgContent) throw new Error(`Kie ${model}: No valid SVG content found`);
+      try {
+        validateSvgContent(svgContent);
+      } catch (error) {
+        throw new Error(`Kie ${model}: ${error instanceof Error ? error.message : 'Invalid SVG'}`);
+      }
       return {
         svgContent,
         model,
@@ -76,6 +82,7 @@ export async function requestKieSvg(options: KieSvgOptions, fetchImpl: typeof fe
   try {
     return await attempt(options.model);
   } catch (error) {
+    if (options.model === FALLBACK_SVG_MODEL) throw error;
     console.warn(`[svg] ${options.model} failed; falling back to ${FALLBACK_SVG_MODEL}:`,
       error instanceof Error ? error.message : 'Unknown error');
     return attempt(FALLBACK_SVG_MODEL);

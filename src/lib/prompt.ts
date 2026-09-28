@@ -146,7 +146,10 @@ Tempo table (from the read):
 3. Include <title> and <desc>. The desc is one sentence about the mood; it does not contain the message.
 4. Fill the full canvas with the ground — no accidental margins, no letterboxing.
 5. Every piece of text stays inside the canvas with margin, legible at 50% scale.
-6. Well-formed XML: every tag closed, attributes quoted, entities escaped, and never the same attribute twice on one element (one class attribute per element — browsers reject the whole file otherwise).`;
+6. Well-formed XML: every tag closed, attributes quoted, entities escaped, and never the same attribute twice on one element (one class attribute per element — browsers reject the whole file otherwise).
+7. Prefer href="#id" to xlink:href. If using xlink:href, declare xmlns:xlink="http://www.w3.org/1999/xlink" on the root.
+8. Animation must be executable SVG/CSS, never prose such as "on the text" inside a tag. Nest each <animate ... /> or <animateTransform ... /> inside its target element and close every tag. SMIL uses fill="freeze" and repeatCount="indefinite"; CSS keyframes need from/to or percentage blocks.
+9. Before returning, check XML nesting, namespace declarations, positive canvas dimensions and a visible static composition. If an animation is uncertain, omit that animation and keep the finished card visible.`;
 
 function measureHint(width: number): string {
   const scale = width / 480;

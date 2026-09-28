@@ -14,6 +14,10 @@ export function extractSvgContent(content: string): string | null {
   if (openingTag && !/\sxmlns=/.test(openingTag)) {
     svgContent = svgContent.replace(/<svg\b/i, '<svg xmlns="http://www.w3.org/2000/svg"');
   }
+  // Models still emit SVG 1.1 xlink:href; browsers reject unbound prefixes.
+  if (/\bxlink:href\s*=/.test(svgContent) && !/\sxmlns:xlink\s*=/.test(openingTag)) {
+    svgContent = svgContent.replace(/<svg\b/i, '<svg xmlns:xlink="http://www.w3.org/1999/xlink"');
+  }
 
   return repairDuplicateAttributes(svgContent);
 }
